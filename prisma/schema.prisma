@@ -1,0 +1,414 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Survey {
+  id            String     @id @default(uuid())
+  userId        String
+  title         String
+  description   String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  bannerUrl     String?
+  googleMapsUrl String?
+  hexColor      String?    @default("#8b5cf6")
+  socialConfig  Json?      // Stores { enabled: boolean, instagram?: string, facebook?: string }
+  alertConfig   Json?      // Stores { enabled: boolean, emails: string[], phones: string[], threshold: number }
+  questions     Question[]
+  responses     Response[]
+
+  @@index([userId])
+}
+
+model Question {
+  id       String   @id @default(uuid())
+  surveyId String
+  text     String
+  type     String
+  options  Json?
+  order    Int
+  required Boolean  @default(true)
+  answers  Answer[]
+  survey   Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([surveyId])
+}
+
+model Response {
+  id            String   @id @default(uuid())
+  surveyId      String
+  createdAt     DateTime @default(now())
+  customerName  String?
+  customerEmail String?
+  customerPhone String?
+  customerBirthday DateTime?
+  photo         String?   // URL or Base64 of the uploaded evidence
+  answers       Answer[]
+  survey        Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([surveyId])
+}
+
+model Answer {
+  id         String   @id @default(uuid())
+  responseId String
+  questionId String
+  value      String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  @@index([responseId])
+  @@index([questionId])
+}
+
+model UserSettings {
+  id                  String    @id @default(uuid())
+  userId              String    @unique
+  plan                String    @default("FREE")
+  maxSurveys          Int       @default(3)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  businessName        String?
+  isOnboarded         Boolean   @default(false)
+  phone               String?
+  socialLinks         Json?
+  isPhoneVerified     Boolean   @default(false)
+  phoneVerifiedAt     DateTime?
+  notificationPreferences Json?   // Stores { whatsapp: boolean, email: boolean, surveyAlerts: boolean }
+  hasSeenTour         Boolean   @default(false)
+  industry            String?   @default("restaurant")
+  gameConfig          Json?     // Stores personalization for games (roulette, bottle, etc.)
+  
+  // Stripe & Subscription
+  stripeCustomerId    String?   @unique
+  stripeSubscriptionId String?  @unique
+  subscriptionStatus  String?   // active, trialing, past_due, canceled
+  subscriptionPeriodEnd DateTime?
+
+  affiliateProfile    AffiliateProfile?
+  role                UserRole  @default(USER)
+}
+
+enum UserRole {
+  USER
+  STAFF
+  ADMIN
+  SUPER_ADMIN
+}
+
+// ... existing models ...
+
+
+
+model SystemSettings {
+  id                  String   @id @default("global")
+  maintenanceMode     Boolean  @default(false)
+  allowNewSignups     Boolean  @default(true)
+  globalAnnouncement  String? 
+  updatedAt           DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  adminId   String
+  action    String
+  entity    String?
+  entityId  String?
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model Coupon {
+  id        String     @id @default(uuid())
+  code      String     @unique
+  type      CouponType
+  value     Float
+  maxUses   Int?
+  usedCount Int        @default(0)
+  expiresAt DateTime?
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+}
+
+model AffiliateProfile {
+  id          String       @id @default(uuid())
+  userId      String       @unique
+  code        String       @unique
+  stripeConnectId String?  @unique // Stripe Express Account ID
+  paypalEmail String?
+  balance     Float        @default(0)
+  commissionRate Float     @default(40.0)
+  status      String       @default("ACTIVE") // ACTIVE, SUSPENDED, PENDING
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  assignedAdminId String?
+  notes           String?      @db.Text
+
+  // Qualification Data
+  instagram       String?
+  tiktok          String?
+  youtube         String?
+  facebook        String?   // New
+  otherSocials    String?  // New: LinkedIn, Portfolio, etc.
+  whatsapp        String?   // New: For notifications
+  niche           String?    // e.g. Belleza, Tech, Hogar
+  audienceSize    String?    // e.g. 1k-10k, 10k-50k
+  contentStrategy String?    @db.Text
+  
+  // Rating
+  avgRating       Float      @default(0)
+  reviewCount     Int        @default(0)
+
+  user            UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  commissions Commission[]
+  payouts     Payout[]
+  referrals   Referral[]
+  visits      PlaceVisit[]
+  reviews     CreatorReview[]
+  achievements CreatorAchievement[]
+  chats           AdminChat[]
+}
+
+model Referral {
+  id             String           @id @default(uuid())
+  affiliateId    String
+  referredUserId String           @unique
+  status         ReferralStatus   @default(LEAD)
+  createdAt      DateTime         @default(now())
+  convertedAt    DateTime?
+  leadEmail      String?
+  leadName       String?
+  socialLink     String?
+  affiliate      AffiliateProfile @relation(fields: [affiliateId], references: [id])
+}
+
+model Commission {
+  id          String           @id @default(uuid())
+  affiliateId String
+  amount      Float
+  description String
+  status      CommissionStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  affiliate   AffiliateProfile @relation(fields: [affiliateId], references: [id])
+}
+
+model Payout {
+  id          String           @id @default(uuid())
+  affiliateId String
+  amount      Float
+  status      String
+  createdAt   DateTime         @default(now())
+  affiliate   AffiliateProfile @relation(fields: [affiliateId], references: [id])
+}
+
+model BrandAsset {
+  id        String   @id @default(uuid())
+  name      String
+  url       String
+  type      String
+  createdAt DateTime @default(now())
+}
+
+model Sale {
+  id        String   @id @default(uuid())
+  userId    String
+  plan      String
+  amount    Float
+  currency  String   @default("USD")
+  status    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+  TRIAL
+}
+
+enum ReferralStatus {
+  LEAD
+  CONVERTED
+}
+
+enum CommissionStatus {
+  PENDING
+  PAID
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // CRISIS, SYSTEM, INFO, UPDATE
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  meta      Json?    // Stores { responseId, surveyId } for linking
+  createdAt DateTime @default(now())
+}
+
+model ChatThread {
+  id        String        @id @default(uuid())
+  userId    String
+  title     String        @default("Nuevo Chat")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String     @id @default(uuid())
+  threadId  String
+  role      String     // 'user' | 'assistant' | 'system'
+  content   String     @db.Text
+  createdAt DateTime   @default(now())
+  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+}
+
+model AIInsight {
+  id        String   @id @default(uuid())
+  userId    String
+  content   String   // "Users prefer casual tone", "Focus on family audience"
+  createdAt DateTime @default(now())
+  source    String?  // Source thread ID or context
+  isActive  Boolean  @default(true)
+
+
+  @@index([userId])
+}
+
+model Place {
+  id               String       @id @default(uuid())
+  name             String
+  description      String?      @db.Text
+  address          String?
+  coverImage       String?
+  contactName      String?
+  contactPhone     String?
+  agreementDetails String?      @db.Text
+  requiredDeliverables String?   @db.Text
+  exampleContentUrl String?      @db.Text
+  exampleLinks     Json?         // ["url1", "url2"]
+  contentIdeas     String?       @db.Text
+  contentGallery   Json?         // ["url1", "url2"]
+  scheduleConfig   Json?        // { allowedDays: number[], timeRange: { start: string, end: string } }
+  isActive         Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  visits           PlaceVisit[]
+}
+
+model PlaceVisit {
+  id          String           @id @default(uuid())
+  placeId     String
+  creatorId   String
+  visitDate   DateTime
+  status      String           @default("PENDING") // PENDING, APPROVED, REJECTED
+  evidenceUrl String?
+  createdAt   DateTime         @default(now())
+  metrics     Json?            // { views: 1000, likes: 50, reach: 5000 }
+  place       Place            @relation(fields: [placeId], references: [id])
+  creator     AffiliateProfile @relation(fields: [creatorId], references: [id])
+  review      CreatorReview?
+
+  @@index([placeId])
+  @@index([creatorId])
+}
+
+model Achievement {
+  id            String   @id @default(uuid())
+  name          String
+  description   String   @db.Text
+  icon          String   // Emoji or lucide icon name
+  level         Int      @default(1) // 1-20
+  
+  // Criteria
+  type          String   // VISITS_COUNT, EARNINGS_THRESHOLD, MANUAL, METRIC_THRESHOLD
+  threshold     Float    // e.g. 5 (visits), 500 (dollars), 1000 (views/likes)
+  metricKey     String?  // If METRIC_THRESHOLD, which key? e.g. "likes", "views"
+  
+  rewardAmount  Float    @default(0)
+  instructions  String?  @db.Text // Step-by-step guide
+  
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  
+  creatorAchievements CreatorAchievement[]
+}
+
+model CreatorAchievement {
+  id            String      @id @default(uuid())
+  creatorId     String
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  creator       AffiliateProfile @relation(fields: [creatorId], references: [id])
+  
+  status        String      @default("APPROVED") // PENDING, APPROVED, REJECTED
+  evidenceUrl   String?     // URL or Photo for proof
+  submittedAt   DateTime?
+  
+  awardedAt     DateTime    @default(now())
+  isPaid        Boolean     @default(false) // If reward money has been added to balance
+  
+  @@unique([creatorId, achievementId])
+}
+
+model CreatorReview {
+  id        String       @id @default(uuid())
+  visitId   String       @unique
+  creatorId String
+  rating    Int          // 1-5
+  comment   String?      @db.Text
+  createdAt DateTime     @default(now())
+
+  visit     PlaceVisit       @relation(fields: [visitId], references: [id])
+  creator   AffiliateProfile @relation(fields: [creatorId], references: [id])
+}
+
+
+model AdminChat {
+  id        String   @id @default(uuid())
+  creatorId String
+  adminId   String?
+  status    String   @default("OPEN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  messages  AdminChatMessage[]
+  creator   AffiliateProfile @relation(fields: [creatorId], references: [id])
+}
+
+model AdminChatMessage {
+  id        String   @id @default(uuid())
+  chatId    String
+  senderId  String   // userId of sender (could be admin or creator)
+  content   String   @db.Text
+  isRead    Boolean  @default(false)
+  attachmentUrl  String?
+  attachmentType String? // 'image', 'document'
+  createdAt DateTime @default(now())
+  chat      AdminChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+}
+
+model TeamInvitation {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      UserRole
+  token     String   @unique
+  status    String   @default("PENDING") // PENDING, ACCEPTED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
