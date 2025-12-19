@@ -76,3 +76,47 @@ export async function verifyAchievement(verificationId: string, approved: boolea
     revalidatePath('/staff/achievements')
     return { success: true }
 }
+
+export async function upsertAchievement(data: {
+    id?: string
+    title: string
+    description: string
+    icon: string
+    category: string
+    targetCount: number
+    rewardType: string
+    rewardAmount: number
+}) {
+    const { userId } = await auth()
+    if (!userId) throw new Error('Unauthorized')
+
+    if (data.id) {
+        await prisma.achievement.update({
+            where: { id: data.id },
+            data: {
+                title: data.title,
+                description: data.description,
+                icon: data.icon,
+                category: data.category,
+                targetCount: data.targetCount,
+                rewardType: data.rewardType,
+                rewardAmount: data.rewardAmount
+            }
+        })
+    } else {
+        await prisma.achievement.create({
+            data: {
+                title: data.title,
+                description: data.description,
+                icon: data.icon,
+                category: data.category,
+                targetCount: data.targetCount,
+                rewardType: data.rewardType,
+                rewardAmount: data.rewardAmount
+            }
+        })
+    }
+
+    revalidatePath('/staff/achievements')
+    return { success: true }
+}
