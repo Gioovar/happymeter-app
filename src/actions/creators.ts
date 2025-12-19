@@ -28,5 +28,22 @@ export async function updateCreatorProfile(data: {
 
     revalidatePath('/creators/profile')
     return { success: true }
+}
 
+export async function getMyPayouts() {
+    const { userId } = await auth()
+    if (!userId) return []
+
+    const affiliate = await prisma.affiliateProfile.findUnique({
+        where: { userId },
+        include: {
+            commissions: {
+                orderBy: { createdAt: 'desc' }
+            }
+        }
+    })
+
+    if (!affiliate) return []
+
+    return affiliate.commissions
 }
