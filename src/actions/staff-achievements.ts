@@ -79,7 +79,7 @@ export async function verifyAchievement(verificationId: string, approved: boolea
 
 export async function upsertAchievement(data: {
     id?: string
-    title: string
+    name: string
     description: string
     icon: string
     category: string // Maps to 'type' in schema
@@ -98,7 +98,7 @@ export async function upsertAchievement(data: {
         await prisma.achievement.update({
             where: { id: data.id },
             data: {
-                name: data.title,
+                name: data.name,
                 description: data.description,
                 icon: data.icon,
                 type: type,
@@ -109,7 +109,7 @@ export async function upsertAchievement(data: {
     } else {
         await prisma.achievement.create({
             data: {
-                name: data.title,
+                name: data.name,
                 description: data.description,
                 icon: data.icon,
                 type: type,
@@ -122,4 +122,5 @@ export async function upsertAchievement(data: {
     revalidatePath('/staff/achievements')
     return { success: true }
 }
+
 
