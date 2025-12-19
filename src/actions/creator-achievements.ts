@@ -1,11 +1,13 @@
 'use server'
 
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 
 export async function getMyAchievements() {
     const { userId } = await auth()
-    if (!userId) throw new Error('Unauthorized')
+    const user = await currentUser()
+
+    if (!userId || !user) throw new Error('Unauthorized')
 
     // Get Creator Profile + Stats
     const creator = await prisma.affiliateProfile.findUnique({
@@ -67,8 +69,8 @@ export async function getMyAchievements() {
     return {
         achievements: progress,
         profile: {
-            firstName: creator.firstName || 'Creador',
-            lastName: creator.lastName || '',
+            firstName: user.firstName || 'Creador',
+            lastName: user.lastName || '',
             rating: creator.avgRating || 5.0, // Default to 5 if new
             level: totalUnlocked + 1 // Simple level logic: 1 + unlocked count
         }
