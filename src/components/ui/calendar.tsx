@@ -65,10 +65,6 @@ function Calendar({
             <DayPicker
                 showOutsideDays={showOutsideDays}
                 className={cn("p-4", className)}
-                components={{
-                    IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
-                    IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
-                }}
                 {...props}
             />
         </>
