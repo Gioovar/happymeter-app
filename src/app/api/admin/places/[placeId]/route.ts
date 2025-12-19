@@ -1,17 +1,19 @@
+
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(
     req: Request,
-    { params }: { params: { placeId: string } }
+    { params }: { params: Promise<{ placeId: string }> }
 ) {
+    const { placeId } = await params
     try {
         const { userId } = await auth()
         if (!userId) return new NextResponse('Unauthorized', { status: 401 })
 
         const place = await prisma.place.findUnique({
-            where: { id: params.placeId },
+            where: { id: placeId },
             include: {
                 visits: {
                     include: {
@@ -39,15 +41,16 @@ export async function GET(
 
 export async function PATCH(
     req: Request,
-    { params }: { params: { placeId: string } }
+    { params }: { params: Promise<{ placeId: string }> }
 ) {
+    const { placeId } = await params
     try {
         const { userId } = await auth()
         if (!userId) return new NextResponse('Unauthorized', { status: 401 })
 
         const body = await req.json()
         const place = await prisma.place.update({
-            where: { id: params.placeId },
+            where: { id: placeId },
             data: { ...body }
         })
 
@@ -60,14 +63,15 @@ export async function PATCH(
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { placeId: string } }
+    { params }: { params: Promise<{ placeId: string }> }
 ) {
+    const { placeId } = await params
     try {
         const { userId } = await auth()
         if (!userId) return new NextResponse('Unauthorized', { status: 401 })
 
         await prisma.place.delete({
-            where: { id: params.placeId }
+            where: { id: placeId }
         })
 
         return new NextResponse(null, { status: 204 })
