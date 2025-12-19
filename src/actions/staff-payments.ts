@@ -3,11 +3,8 @@
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import Stripe from 'stripe'
+import { stripe } from '@/lib/stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-01-27.acacia',
-})
 
 // Fetch detailed creator data
 export async function getCreatorDetails(creatorId: string) {
