@@ -304,3 +304,14 @@ export async function updateSystemSettings(data: { maintenanceMode: boolean; all
 
     return { success: true }
 }
+
+export async function updateCreatorCommission(id: string, rate: number) {
+    await checkAdmin()
+
+    await prisma.affiliateProfile.update({
+        where: { id },
+        data: { commissionRate: rate }
+    })
+
+    return { success: true }
+}
