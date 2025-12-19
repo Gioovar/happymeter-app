@@ -12,10 +12,9 @@ const isPublicRoute = createRouteMatcher([
     '/report(.*)'
 ])
 
-export default clerkMiddleware((auth, request) => {
-    if (!isPublicRoute(request)) {
-        auth().protect()
-    }
+// Basic Middleware for Clerk Handshake only
+export default clerkMiddleware((auth, req) => {
+    // We rely on Layouts for protection to avoid Edge Runtime crashes
 })
 
 export const config = {
