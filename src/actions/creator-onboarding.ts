@@ -41,7 +41,8 @@ export async function submitCreatorOnboarding(raw: OnboardingData) {
     } catch (e) {
         if (e instanceof z.ZodError) {
             const fieldErrors = e.flatten().fieldErrors
-            const firstError = Object.values(fieldErrors)[0]?.[0] || 'Error de validación'
+            const errorValues = Object.values(fieldErrors) as string[][]
+            const firstError = errorValues[0]?.[0] || 'Error de validación'
             console.error('Validation Error:', fieldErrors)
             throw new Error(firstError)
         }
