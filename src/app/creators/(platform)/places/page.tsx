@@ -15,7 +15,7 @@ export default function CreatorPlacesPage() {
     const [search, setSearch] = useState('')
 
     // Content Modal State
-    const [viewingContent, setViewingContent] = useState<{ title: string, content?: string, gallery?: string[], links?: string[] } | null>(null)
+    const [viewingContent, setViewingContent] = useState<{ title: string, content?: string, gallery?: string[], links?: string[], type?: string } | null>(null)
 
     useEffect(() => {
         loadPlaces()
