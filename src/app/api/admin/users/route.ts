@@ -21,7 +21,8 @@ export async function GET() {
         }
 
         // 1. Fetch users from Clerk
-        const clerkUsers = await clerkClient.users.getUserList({
+        const client = await clerkClient()
+        const clerkUsers = await client.users.getUserList({
             limit: 100,
             orderBy: '-created_at'
         })
@@ -76,10 +77,11 @@ export async function PATCH(req: Request) {
 
         if (!userId) return new NextResponse("User ID required", { status: 400 })
 
+        const client = await clerkClient()
         if (banned) {
-            await clerkClient.users.banUser(userId)
+            await client.users.banUser(userId)
         } else {
-            await clerkClient.users.unbanUser(userId)
+            await client.users.unbanUser(userId)
         }
 
         // Audit Log
@@ -113,7 +115,8 @@ export async function DELETE(req: Request) {
         if (!userId) return new NextResponse("ID required", { status: 400 })
 
         // 1. Delete from Clerk
-        await clerkClient.users.deleteUser(userId)
+        const client = await clerkClient()
+        await client.users.deleteUser(userId)
 
         // 2. Delete local data (Cascading deletes handles surveys/responses if set up, but good to be explicit or rely on webhooks in prod)
         // For now, we rely on manual cleanup or cascade if we had a User model. 
