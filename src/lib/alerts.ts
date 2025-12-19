@@ -284,3 +284,30 @@ export async function sendAchievementEvidenceAlert(creatorName: string, achievem
         return false
     }
 }
+
+export async function sendCreatorApprovedAlert(userId: string) {
+    try {
+        console.log('--- PROCESSING CREATOR APPROVED ALERT ---')
+
+        const title = '🎉 ¡Perfil Aprobado!'
+        const message = 'Tu cuenta de creador ha sido aprobada. Ya puedes comenzar a compartir tu código y solicitar visitas.'
+
+        // 1. Notify Creator
+        await prisma.notification.create({
+            data: {
+                userId: userId,
+                type: 'INFO',
+                title: title,
+                message: message
+            }
+        })
+
+        // 2. Mock WhatsApp
+        console.log(`[WHATSAPP MOCK] Notificando aprobación a ${userId}...`)
+
+        return true
+    } catch (error) {
+        console.error('Failed to send creator approval alert', error)
+        return false
+    }
+}
