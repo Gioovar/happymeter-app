@@ -88,7 +88,7 @@ export async function PATCH(req: Request) {
             data: {
                 adminId: admin?.id || 'unknown',
                 action: banned ? 'BAN_USER' : 'UNBAN_USER',
-                targetId: userId,
+                entityId: userId,
                 details: {}
             }
         })
@@ -129,7 +129,7 @@ export async function DELETE(req: Request) {
             data: {
                 adminId: admin?.id || 'unknown',
                 action: 'DELETE_USER',
-                targetId: userId,
+                entityId: userId,
                 details: {}
             }
         })

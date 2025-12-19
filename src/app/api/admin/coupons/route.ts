@@ -69,7 +69,7 @@ export async function POST(req: Request) {
             data: {
                 adminId: user?.id || 'unknown',
                 action: 'CREATE_COUPON',
-                targetId: coupon.id,
+                entityId: coupon.id,
                 details: { code: coupon.code, type: coupon.type, value: coupon.value }
             }
         })
@@ -104,7 +104,7 @@ export async function DELETE(req: Request) {
             data: {
                 adminId: user?.id || 'unknown',
                 action: 'DELETE_COUPON',
-                targetId: id,
+                entityId: id,
                 details: {}
             }
         })
