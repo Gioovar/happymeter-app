@@ -82,19 +82,14 @@ export async function upsertAchievement(data: {
     name: string
     description: string
     icon: string
-    category: string // Maps to 'type' in schema
-    targetCount: number // Maps to 'threshold' in schema
-    rewardType: string // Not in schema, ignoring or assuming logic handled elsewhere (maybe implicitly money)
+    type: string
+    threshold: number
     rewardAmount: number
     level: number
     metricKey?: string
 }) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
-
-    // Valid types from schema context: VISITS_COUNT, EARNINGS_THRESHOLD, MANUAL, METRIC_THRESHOLD
-    // We assume 'category' from frontend aligns with these or we default to MANUAL
-    const type = data.category || 'MANUAL'
 
     if (data.id) {
         await prisma.achievement.update({
@@ -103,8 +98,8 @@ export async function upsertAchievement(data: {
                 name: data.name,
                 description: data.description,
                 icon: data.icon,
-                type: type,
-                threshold: data.targetCount,
+                type: data.type,
+                threshold: data.threshold,
                 rewardAmount: data.rewardAmount,
                 level: data.level,
                 metricKey: data.metricKey
@@ -116,8 +111,8 @@ export async function upsertAchievement(data: {
                 name: data.name,
                 description: data.description,
                 icon: data.icon,
-                type: type,
-                threshold: data.targetCount,
+                type: data.type,
+                threshold: data.threshold,
                 rewardAmount: data.rewardAmount,
                 level: data.level,
                 metricKey: data.metricKey
@@ -128,6 +123,7 @@ export async function upsertAchievement(data: {
     revalidatePath('/staff/achievements')
     return { success: true }
 }
+
 
 
 
