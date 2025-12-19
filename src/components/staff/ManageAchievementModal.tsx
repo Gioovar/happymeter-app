@@ -69,7 +69,7 @@ export default function ManageAchievementModal({ isOpen, onClose, achievementToE
                 rewardAmount: Number(rewardAmount)
             })
 
-            if (!result.success) throw new Error(result.error)
+            if (!result.success) throw new Error('Error al guardar el logro')
 
             toast.success('Logro guardado correctamente')
             onSuccess()
