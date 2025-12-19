@@ -5,7 +5,12 @@ export const metadata = {
     title: 'Completa tu Perfil | HappyMeter Creators'
 }
 
-export default function CreatorOnboardingPage() {
+import { auth } from '@clerk/nextjs/server'
+
+export default async function CreatorOnboardingPage() {
+    const { userId, redirectToSignIn } = await auth()
+    if (!userId) return redirectToSignIn()
+
     return (
         <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
 

@@ -13,12 +13,16 @@ const isPublicRoute = createRouteMatcher([
   '/report(.*)' // Public shared reports
 ])
 
-export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect()
-  }
+// export default clerkMiddleware(async (auth, request) => {
+//   if (!isPublicRoute(request)) {
+//     await auth.protect()
+//   }
+//   return NextResponse.next()
+// })
+
+export default function middleware(request: any) {
   return NextResponse.next()
-})
+}
 
 export const config = {
   matcher: [

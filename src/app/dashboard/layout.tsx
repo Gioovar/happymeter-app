@@ -9,7 +9,9 @@ export default async function DashboardLayout({
 }: {
     children: React.ReactNode
 }) {
-    const { userId } = await auth()
+    const { userId, redirectToSignIn } = await auth()
+
+    if (!userId) return redirectToSignIn()
 
     let realRole = 'USER'
     let affiliateProfile = null
