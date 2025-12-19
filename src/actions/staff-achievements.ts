@@ -86,6 +86,8 @@ export async function upsertAchievement(data: {
     targetCount: number // Maps to 'threshold' in schema
     rewardType: string // Not in schema, ignoring or assuming logic handled elsewhere (maybe implicitly money)
     rewardAmount: number
+    level: number
+    metricKey?: string
 }) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
@@ -103,7 +105,9 @@ export async function upsertAchievement(data: {
                 icon: data.icon,
                 type: type,
                 threshold: data.targetCount,
-                rewardAmount: data.rewardAmount
+                rewardAmount: data.rewardAmount,
+                level: data.level,
+                metricKey: data.metricKey
             }
         })
     } else {
@@ -114,7 +118,9 @@ export async function upsertAchievement(data: {
                 icon: data.icon,
                 type: type,
                 threshold: data.targetCount,
-                rewardAmount: data.rewardAmount
+                rewardAmount: data.rewardAmount,
+                level: data.level,
+                metricKey: data.metricKey
             }
         })
     }
@@ -122,5 +128,6 @@ export async function upsertAchievement(data: {
     revalidatePath('/staff/achievements')
     return { success: true }
 }
+
 
 
