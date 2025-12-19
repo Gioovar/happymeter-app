@@ -41,7 +41,7 @@ export const NewResponseEmail = ({
     return (
         <Html>
             <Head />
-            <Preview>Nueva respuesta de cliente: {npsScore}/10 - {surveyName}</Preview>
+            <Preview>Nueva respuesta de cliente: {String(npsScore)}/10 - {surveyName}</Preview>
             <Tailwind>
                 <Body className="bg-slate-50 my-auto mx-auto font-sans">
                     <Container className="mx-auto p-0 max-w-[500px] w-full pt-8">
