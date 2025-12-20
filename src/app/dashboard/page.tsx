@@ -160,7 +160,7 @@ export default function DashboardPage() {
 
     // Memoized merge of surveys and ratings
     const displayedSurveys = surveys.map(s => {
-        const stat = statsData.surveysWithStats.find((stat: any) => stat.id === s.id)
+        const stat = statsData.surveysWithStats?.find((stat: any) => stat.id === s.id)
         return {
             ...s,
             rating: stat ? parseFloat(stat.rating) : s.rating // Use analytic rating if available

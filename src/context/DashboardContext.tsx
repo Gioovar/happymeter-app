@@ -86,8 +86,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
         try {
             const [surveysRes, analyticsRes] = await Promise.all([
-                fetch('/api/surveys'),
-                fetch('/api/analytics')
+                fetch('/api/surveys', { cache: 'no-store' }),
+                fetch('/api/analytics', { cache: 'no-store' })
             ])
 
             if (surveysRes.ok) {

@@ -259,32 +259,80 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
                 </div>
 
                 {/* Source Chart - New Section */}
-                <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 flex flex-col">
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                        <ArrowUpRight className="w-5 h-5 text-violet-400" />
-                        Fuentes de Tráfico
+                {/* Source Chart - Modern & Dynamic Redesign */}
+                <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] p-6 rounded-3xl border border-white/5 relative overflow-hidden group">
+                    {/* Background Glow Effect */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-violet-600/10 blur-[80px] pointer-events-none rounded-full group-hover:bg-violet-600/20 transition duration-700" />
+
+                    <h3 className="font-bold text-xl mb-6 flex items-center gap-3 relative z-10">
+                        <div className="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400">
+                            <ArrowUpRight className="w-5 h-5" />
+                        </div>
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                            Fuentes de Tráfico
+                        </span>
                     </h3>
-                    <div className="flex-1 w-full min-h-[200px]">
+
+                    <div className="w-full h-[250px] relative z-10">
                         {data.sourceChartData && data.sourceChartData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={data.sourceChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
+                                <BarChart
+                                    data={data.sourceChartData}
+                                    layout="vertical"
+                                    margin={{ top: 0, right: 30, left: 20, bottom: 0 }}
+                                    barSize={24}
+                                >
+                                    <defs>
+                                        <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                                            <stop offset="0%" stopColor="#8b5cf6" />
+                                            <stop offset="100%" stopColor="#d946ef" />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.03)" />
                                     <XAxis type="number" hide />
-                                    <YAxis type="category" dataKey="name" width={80} stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} />
-                                    <Tooltip
-                                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                                        itemStyle={{ color: '#fff' }}
+                                    <YAxis
+                                        type="category"
+                                        dataKey="name"
+                                        width={100}
+                                        stroke="#9ca3af"
+                                        fontSize={12}
+                                        fontWeight={500}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tick={{ fill: '#d1d5db' }}
                                     />
-                                    <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]}>
-                                        {data.sourceChartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={['#8b5cf6', '#a78bfa', '#c4b5fd'][index % 3] || '#8b5cf6'} />
-                                        ))}
+                                    <Tooltip
+                                        cursor={{ fill: 'rgba(139, 92, 246, 0.05)', radius: 8 }}
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <div className="bg-[#1a1a1a]/90 backdrop-blur-xl border border-white/10 p-3 rounded-xl shadow-2xl">
+                                                        <p className="text-gray-400 text-xs mb-1">Visitantes</p>
+                                                        <p className="text-white font-bold text-lg flex items-center gap-2">
+                                                            {payload[0].value}
+                                                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 font-medium">Top</span>
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Bar
+                                        dataKey="value"
+                                        fill="url(#barGradient)"
+                                        radius={[0, 100, 100, 0]}
+                                        animationDuration={1500}
+                                    >
+                                        {/* Optional: Add labels to the end of bars if needed, but clean is better */}
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 text-sm">
+                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3">
+                                    <Activity className="w-5 h-5 text-gray-600" />
+                                </div>
                                 <p>No hay datos de fuentes aún.</p>
                             </div>
                         )}
@@ -294,16 +342,12 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
             </div>
 
             {/* Staff Ranking - Section */}
-            {
-                data.hasOwnProperty('staffRanking') && (data as any).staffRanking?.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="col-span-1">
-                            <StaffLeaderboard staffRanking={(data as any).staffRanking} />
-                        </div>
-                        {/* Placeholder for more widgets if needed, or expand others */}
-                    </div>
-                )
-            }
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="col-span-1">
+                    <StaffLeaderboard staffRanking={(data as any).staffRanking || []} />
+                </div>
+                {/* Placeholder for more widgets if needed, or expand others */}
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Recent Feedback Table - Takes 2 cols */}

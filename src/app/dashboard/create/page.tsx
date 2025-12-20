@@ -7,6 +7,7 @@ import { Sparkles, Plus, Trash2, ArrowLeft, Image as ImageIcon, Upload, GripVert
 import Link from 'next/link'
 import Image from 'next/image'
 import { compressImage } from '@/lib/image-compression'
+import PhoneInput from '@/components/PhoneInput'
 import { getUserProfile, updatePhoneNumber, sendTestWhatsApp } from '@/actions/settings'
 
 

@@ -121,15 +121,15 @@ export async function sendTestWhatsApp(phone: string) {
     if (!phone || phone.length < 10) throw new Error('Inválido')
 
     try {
-        await sendWhatsAppTemplate(phone, 'new_survey_alert', 'es_MX', [
+        const res: any = await sendWhatsAppTemplate(phone, 'new_survey_alertt', 'es_MX', [
             { type: 'text', text: "Verificación HappyMeter" },
             { type: 'text', text: "5" },
             { type: 'text', text: "¡Tu número funciona! Estás listo para recibir alertas." }
         ])
 
-        return { success: true }
-    } catch (error) {
+        return { success: true, debugPhone: res?.debugPhone }
+    } catch (error: any) {
         console.error('Test WhatsApp Error:', error)
-        return { success: false, error: 'Falló el envío' }
+        return { success: false, error: error.message || 'Falló el envío' }
     }
 }

@@ -66,7 +66,7 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
         if (phones.size > 0) {
             console.log(`Sending WhatsApp to: ${Array.from(phones).join(', ')}`)
             for (const phone of Array.from(phones)) {
-                await sendWhatsAppTemplate(phone, 'new_survey_alert', 'es_MX', [
+                await sendWhatsAppTemplate(phone, 'new_survey_alertt', 'es_MX', [
                     { type: 'text', text: customerName },
                     { type: 'text', text: rating.toString() },
                     { type: 'text', text: (issueText + (recovery && recovery.enabled ? `\n\n🚑 OFERTA: ${recovery.code} - ${recovery.offer}` : "")).substring(0, 60) }
@@ -100,17 +100,38 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
 // Helper for Meta WhatsApp API
 export async function sendWhatsAppTemplate(to: string, templateName: string, languageCode: string = 'es_MX', components: any[] = []) {
     try {
-        const token = process.env.WHATSAPP_ACCESS_TOKEN
+        const token = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_API_TOKEN
         const phoneId = process.env.WHATSAPP_PHONE_ID
 
         if (!token || !phoneId) {
             console.warn('WhatsApp credentials missing in .env')
-            return
+            throw new Error('Faltan credenciales de WhatsApp (Token o PhoneID)')
         }
+
+        // Format Phone Number
+        let formattedPhone = to.replace(/\D/g, '') // Remove non-digits
+        if (formattedPhone.length === 10) {
+            formattedPhone = '521' + formattedPhone
+        } else if (formattedPhone.length === 12 && formattedPhone.startsWith('52')) {
+            // Add '1' after 52 if it's missing (521... is 13 digits, 52... is 12)
+            formattedPhone = '521' + formattedPhone.substring(2)
+        } else if (formattedPhone.length > 10 && !formattedPhone.startsWith('52')) {
+            // Assume if > 10 and not 52, it might be another country, but user requested default to MX logic. 
+            // If they explicitly type +1..., we should probably respect it? 
+            // For now, let's leave as is if it's not 10 digits, assuming user might have typed 52 already.
+            // But if it starts with 044 or 045 (old MX format), strip it? 
+            // Let's stick to the core request: auto-add 52 if missing.
+        }
+
+        // Ensure no + sign in the final API call payload for 'to', Meta expects just digits usually, 
+        // but 'messaging_product' line handles standard formats.
+        // Actually Meta API expects <CountryCode><Number>.
+
+        console.log(`[WhatsApp] Sending to ${formattedPhone} (Original: ${to})`)
 
         const body = {
             messaging_product: "whatsapp",
-            to: to,
+            to: formattedPhone,
             type: "template",
             template: {
                 name: templateName,
@@ -135,12 +156,15 @@ export async function sendWhatsAppTemplate(to: string, templateName: string, lan
 
         const data = await res.json()
         if (!res.ok) {
-            console.error('WhatsApp API Error:', data)
+            console.error('WhatsApp API Error:', JSON.stringify(data, null, 2))
+            throw new Error(data.error?.message || 'Error en API de WhatsApp')
         } else {
             console.log('WhatsApp Sent:', data)
+            return { ...data, debugPhone: formattedPhone }
         }
-    } catch (e) {
+    } catch (e: any) {
         console.error('WhatsApp Send Failed:', e)
+        throw new Error(e.message || 'Error de conexión con WhatsApp')
     }
 }
 
@@ -172,10 +196,38 @@ export async function sendStaffAlert(response: Response, survey: Survey, answers
             }
         })
 
-        // 3. Simulate WhatsApp Alert
-        // In a real implementation, we would fetch the user's phone number here
-        console.log(`[WHATSAPP MOCK] Enviaando alerta a dueño del negocio...`)
-        console.log(`[WHATSAPP COMPLETED] Mensaje enviado: ${message}`)
+        // 3. Send Real WhatsApp Alert
+        // Fetch User Settings for Global Alerts
+        const userSettings = await prisma.userSettings.findUnique({
+            where: { userId: survey.userId }
+        })
+
+        const config = survey.alertConfig as any
+        const phones = new Set<string>()
+
+        // Add phones from survey config
+        if (config && config.phones) {
+            config.phones.forEach((p: string) => phones.add(p))
+        }
+
+        // Add Global Phone if WhatsApp is enabled in preferences
+        const globalWhatsapp = userSettings?.notificationPreferences ? (userSettings.notificationPreferences as any).whatsapp : false
+        if (globalWhatsapp && userSettings?.phone) {
+            phones.add(userSettings.phone)
+        }
+
+        if (phones.size > 0) {
+            console.log(`[STAFF ALERT] Sending WhatsApp to: ${Array.from(phones).join(', ')}`)
+            for (const phone of Array.from(phones)) {
+                // Reuse existing template: {{1}}=Name, {{2}}=Rating, {{3}}=Msg
+                // We adapt it: Name="Buzón Staff", Rating="REPORTE", Msg=Description
+                await sendWhatsAppTemplate(phone, 'new_survey_alertt', 'es_MX', [
+                    { type: 'text', text: "Buzón Staff" },
+                    { type: 'text', text: "REPORTE" },
+                    { type: 'text', text: issueDescription.substring(0, 60) }
+                ])
+            }
+        }
 
         return true
 

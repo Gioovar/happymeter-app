@@ -1,17 +1,24 @@
 
-import { prisma } from '../src/lib/prisma'
+import { prisma } from '../src/lib/prisma.ts'
 
 async function main() {
     const lastResponse = await prisma.response.findFirst({
         orderBy: { createdAt: 'desc' },
-        include: { answers: true }
+        include: {
+            answers: {
+                include: {
+                    question: true
+                }
+            }
+        }
     })
 
     console.log('Last Response ID:', lastResponse?.id)
     console.log('Created At:', lastResponse?.createdAt)
-    console.log('Customer:', lastResponse?.customerName)
-    console.log('Photo Field Length:', lastResponse?.photo ? lastResponse.photo.length : 'NULL')
-    console.log('Photo Field Start:', lastResponse?.photo ? lastResponse.photo.substring(0, 50) : 'N/A')
+    console.log('Answers:')
+    lastResponse?.answers.forEach(a => {
+        console.log(`- Q: "${a.question.text}" (Type: ${a.question.type}) -> A: "${a.value}"`)
+    })
 }
 
 main()

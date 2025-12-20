@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { LayoutDashboard, PlusCircle, HelpCircle, Settings, LogOut, Home, Sparkles, PieChart, Megaphone, Menu, X, FileText, Gamepad2, MessageSquare, Trophy, Shield, Store, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
@@ -65,6 +65,7 @@ const menuItems = [
 
 export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: boolean, userRole?: string }) {
     const pathname = usePathname()
+    const searchParams = useSearchParams()
     const [isMobileOpen, setIsMobileOpen] = useState(false)
 
     const SidebarContent = () => (
@@ -94,7 +95,29 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
                 {menuItems.map((item) => {
                     const Icon = item.icon
-                    const isActive = pathname === item.href
+                    // Logic to check if active considering query params
+                    const isActive = (() => {
+                        const [itemPath, itemQuery] = item.href.split('?')
+
+                        // 1. Path must match
+                        if (pathname !== itemPath) return false
+
+                        // 2. If item has query params, they must match current params
+                        if (itemQuery) {
+                            const params = new URLSearchParams(itemQuery)
+                            for (const [key, value] of Array.from(params.entries())) {
+                                if (searchParams.get(key) !== value) return false
+                            }
+                            return true
+                        }
+
+                        // 3. If item has NO query params (e.g. /create), but current URL DOES (e.g. /create?mode=anonymous),
+                        // we must ensure we don't accidentally highlight the generic one.
+                        // Specific check for 'mode':
+                        if (itemPath === '/dashboard/create' && searchParams.get('mode') === 'anonymous') return false
+
+                        return true
+                    })()
 
                     return (
                         <Link

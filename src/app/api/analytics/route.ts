@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
     console.time('Analytics Total')
     try {
@@ -52,16 +54,15 @@ export async function GET(request: Request) {
         if (startDateParam && endDateParam) {
             // Already added to whereClause above, so just rely on whereClause
         } else {
-            // Default: Last 30 days
-            const thirtyDaysAgo = new Date()
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-            dateFilterForBulk = { createdAt: { gte: thirtyDaysAgo } }
+            // Default: Show ALL time to avoid empty state for old data
+            // We do NOT add a date filter here.
+            dateFilterForBulk = {}
         }
 
         const bulkStatsResponses = await prisma.response.findMany({
             where: {
                 ...whereClause, // count filters
-                ...dateFilterForBulk // ensure default is applied if no specific dates
+                ...dateFilterForBulk
             },
             // ... select ...
             select: {
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
                 answers: {
                     where: {
                         question: {
-                            type: { in: ['RATING', 'EMOJI', 'TEXT'] }
+                            type: { in: ['RATING', 'EMOJI', 'TEXT', 'YES_NO'] }
                         }
                     },
                     select: {
@@ -295,7 +296,7 @@ export async function GET(request: Request) {
 
             // 1. Try to find explicit question answer
             if (staffAnswer && staffAnswer.value && staffAnswer.value.length > 2) {
-                foundStaffName = staffAnswer.value
+                foundStaffName = staffAnswer.value.replace(/^(Sí|Si|Yes)\s*-\s*/i, '').trim()
             }
 
             // Regex logic removed in favor of AI Batch Processing (see below)
@@ -331,9 +332,9 @@ export async function GET(request: Request) {
                     if (val === 5) promoters++
                     else if (val <= 3) detractors++
 
-                    if (val >= 4) sentimentCounts.positive++
-                    else if (val === 3) sentimentCounts.neutral++
-                    else sentimentCounts.negative++
+                    if (val >= 4) sentimentStats.positive++
+                    else if (val === 3) sentimentStats.neutral++
+                    else sentimentStats.negative++
 
                     if (val <= 3) {
                         textAnswers.forEach(ans => {
@@ -377,7 +378,7 @@ export async function GET(request: Request) {
         // Limit to last 15 comments to preserve performance/quota on this GET endpoint
         const recentComments = textCommentsForAI.slice(0, 15)
 
-        if (recentComments.length > 0) {
+        if (recentComments.length > 0 && false) { // AI TEMPORARILY DISABLED TO PREVENT TIMEOUT
             try {
                 // Dynamic import to avoid issues if file doesn't exist yet in compilation
                 const { default: openai } = await import('@/lib/openai')
@@ -422,6 +423,7 @@ export async function GET(request: Request) {
                 console.error("AI Staff Extraction Failed:", err)
             }
         }
+
         // --- AI ENHANCEMENT END ---
 
         const staffRanking = Object.entries(staffStats)
@@ -579,6 +581,11 @@ export async function GET(request: Request) {
             { name: 'Negativo', value: detractors }
         ]
 
+        const surveysWithStats = Object.keys(surveyRatings).map(id => ({
+            id,
+            rating: surveyRatings[id].count > 0 ? (surveyRatings[id].sum / surveyRatings[id].count).toFixed(1) : "0.0"
+        }))
+
         return NextResponse.json({
             surveysList: allSurveys,
             totalResponses,
@@ -593,7 +600,8 @@ export async function GET(request: Request) {
             bestFeedback,
             worstFeedback,
             kpiChanges,
-            staffRanking
+            staffRanking,
+            surveysWithStats
         })
 
     } catch (error) {

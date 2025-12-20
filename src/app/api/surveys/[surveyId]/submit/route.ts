@@ -40,10 +40,10 @@ export async function POST(
         // Async Alert Trigger (Don't await to keep response fast)
         // Check if it's a Staff Report (Anonymous Box)
         if (response.survey.title.includes('Buzón')) {
-            sendStaffAlert(response, response.survey, response.answers)
+            await sendStaffAlert(response, response.survey, response.answers)
         } else {
             // Standard Customer Alert
-            sendCrisisAlert(response, response.survey, response.answers)
+            await sendCrisisAlert(response, response.survey, response.answers)
         }
 
         checkMilestones(response.survey.userId)

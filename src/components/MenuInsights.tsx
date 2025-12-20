@@ -75,9 +75,18 @@ export default function MenuInsights() {
                 </h3>
                 <button
                     onClick={runAnalysis}
-                    className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1"
+                    disabled={loading}
+                    className={`text-xs flex items-center gap-1 transition-colors ${loading ? 'text-gray-500 cursor-wait' : 'text-orange-400 hover:text-orange-300'}`}
                 >
-                    <Sparkles className="w-3 h-3" /> Actualizar
+                    {loading ? (
+                        <>
+                            <Sparkles className="w-3 h-3 animate-spin" /> Analizando...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="w-3 h-3" /> Actualizar
+                        </>
+                    )}
                 </button>
             </div>
 

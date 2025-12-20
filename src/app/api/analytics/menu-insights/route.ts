@@ -23,26 +23,35 @@ export async function POST(req: Request) {
                 createdAt: { gte: thirtyDaysAgo },
                 answers: {
                     some: {
-                        question: { type: 'TEXT' },
+                        question: { type: { in: ['TEXT', 'LONG_TEXT'] } },
                         value: { not: '' }
                     }
                 }
             },
             select: {
                 answers: {
-                    where: { question: { type: 'TEXT' } },
-                    select: { value: true }
+                    where: { value: { not: '' } }, // Fetch ALL answers
+                    select: { value: true, question: { select: { type: true, text: true } } }
                 }
             },
-            take: 100 // Analyze last 100 text responses for speed/cost
+            take: 100
         })
 
         const texts = recentResponses
-            .flatMap(r => r.answers.map(a => a.value))
-            .filter(t => t.length > 3) // Filter out very short meaningless answers
-            .join("\n")
+            .flatMap(r => r.answers.map(a => {
+                // Determine if we should include this answer
+                if (a.value.length < 3 || !isNaN(Number(a.value))) return null
 
-        if (!texts || texts.length < 20) {
+                // If the question explicitly asks about food/drink, it's high value.
+                // We'll pass the context to AI.
+                return `Pregunta: "${a.question.text}" \nRespuesta: "${a.value}"`
+            }))
+            .filter(t => t !== null)
+            .join("\n---\n")
+
+        console.log('[MENU_AI_DEBUG] Analyzing texts:', texts)
+
+        if (!texts || texts.length < 5) {
             return NextResponse.json({
                 starDish: null,
                 criticalDish: null,
@@ -58,7 +67,7 @@ export async function POST(req: Request) {
 
         Tu Misión:
         1. Identifica el "Platillo Estrella" (El más elogiado).
-        2. Identifica el "Platillo Crítico" (El más criticado).
+        2. Identifica el "Platillo Crítico" (El más criticado). Sé sensible a críticas sutiles.
         3. Lista los 3 platillos más amados (incluyendo el estrella).
         4. Lista los 3 platillos más odiados (incluyendo el crítico).
 

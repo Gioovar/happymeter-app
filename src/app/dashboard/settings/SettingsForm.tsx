@@ -4,9 +4,11 @@ import { updateSettings } from '@/actions/settings'
 import { Loader2, Save, Store, Phone, Instagram, Facebook } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import PhoneInput from '@/components/PhoneInput'
 
 export function SettingsForm({ userSettings }: { userSettings: any }) {
     const [loading, setLoading] = useState(false)
+    const [phone, setPhone] = useState(userSettings.phone || '')
 
     const handleSubmit = async (formData: FormData) => {
         setLoading(true)
@@ -69,12 +71,11 @@ export function SettingsForm({ userSettings }: { userSettings: any }) {
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-300">WhatsApp / Teléfono</label>
-                        <input
-                            type="tel"
-                            name="phone"
-                            defaultValue={userSettings.phone || ''}
-                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500 transition placeholder:text-gray-600"
+                        <PhoneInput
+                            value={phone}
+                            onChange={(val) => setPhone(val)}
                         />
+                        <input type="hidden" name="phone" value={phone} />
                     </div>
                 </div>
             </div>
@@ -116,7 +117,7 @@ export function SettingsForm({ userSettings }: { userSettings: any }) {
                 </h3>
 
                 <div className="bg-green-500/5 border border-green-500/10 rounded-xl p-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-4">
                         <div>
                             <h4 className="text-white font-bold flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -134,10 +135,33 @@ export function SettingsForm({ userSettings }: { userSettings: any }) {
                                 readOnly
                                 className="sr-only peer"
                             />
-                            {/* Hidden input to ensure 'on' is sent since checkbox is readOnly/disabled often don't send */}
                             <input type="hidden" name="whatsappEnabled" value="on" />
                             <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                         </label>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                const toastId = toast.loading('Enviando mensaje de prueba...')
+                                try {
+                                    const { sendTestWhatsApp } = await import('@/actions/settings')
+                                    const res: any = await sendTestWhatsApp(phone)
+                                    if (res.success) {
+                                        toast.success(`Enviado a: ${res.debugPhone}`, { id: toastId })
+                                    } else {
+                                        toast.error('Error al enviar: ' + res.error, { id: toastId })
+                                    }
+                                } catch (e) {
+                                    toast.error('Error de conexión', { id: toastId })
+                                }
+                            }}
+                            disabled={!phone || phone.length < 10}
+                            className="text-xs bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 px-3 py-1.5 rounded-lg flex items-center gap-1 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Phone className="w-3 h-3" /> Enviar mensaje de prueba
+                        </button>
                     </div>
                 </div>
             </div>

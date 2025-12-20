@@ -4,7 +4,50 @@ import { NewResponseEmail } from '@/emails/NewResponseEmail'
 
 // Default sender
 const SENDER = 'HappyMeter <onboarding@resend.dev>'
+
 // In Production, this should be 'HappyMeter <alerts@tudominio.com>'
+
+export async function sendDiplomaEmail(
+    to: string,
+    winnerName: string,
+    monthStr: string,
+    pdfBuffer: Buffer
+) {
+    if (!to) return
+
+    try {
+        await resend.emails.send({
+            from: SENDER,
+            to: [to],
+            // bcc: ['admin@happymeter.app'], // Optional monitoring
+            subject: `🏆 Diploma del Mes: ${winnerName}`,
+            text: `¡Felicidades! Adjunto encontrarás el diploma de ${winnerName} por ser el empleado del mes de ${monthStr}.`,
+            attachments: [
+                {
+                    filename: `Diploma_${winnerName.replace(/\s+/g, '_')}_${monthStr}.pdf`,
+                    content: pdfBuffer,
+                },
+            ],
+            // Use a simple React template or just text if template doesn't exist
+            // For now, I'll assume we can create a simple DiplomaEmail or just fall back to text if I don't want to create a new file
+            // Let's create a simple HTML body here if I don't import DiplomaEmail
+            html: `
+                <h1>🎉 ¡Reconocimiento Listo!</h1>
+                <p>El sistema ha detectado a <strong>${winnerName}</strong> como el empleado con mejor desempeño del mes de <strong>${monthStr}</strong>.</p>
+                <p>En el archivo adjunto encontrarás su diploma listo para imprimir.</p>
+                <p>¡Sigue impulsando la excelencia!</p>
+                <br>
+                <p>El equipo de HappyMeter</p>
+            `
+        })
+        console.log(`📧 Diploma sent to ${to}`)
+    } catch (error) {
+        console.error('Failed to send diploma email', error)
+    }
+}
+
+// Default sender
+
 
 export async function sendWelcomeEmail(to: string, firstName: string) {
     if (!to) return
