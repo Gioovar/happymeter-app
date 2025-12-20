@@ -21,6 +21,7 @@ model Survey {
   hexColor      String?    @default("#8b5cf6")
   socialConfig  Json?      // Stores { enabled: boolean, instagram?: string, facebook?: string }
   alertConfig   Json?      // Stores { enabled: boolean, emails: string[], phones: string[], threshold: number }
+  recoveryConfig Json?     // Stores { enabled: boolean, offer: string, code: string, activeDays: number }
   questions     Question[]
   responses     Response[]
 
@@ -49,6 +50,7 @@ model Response {
   customerEmail String?
   customerPhone String?
   customerBirthday DateTime?
+  customerSource String?
   photo         String?   // URL or Base64 of the uploaded evidence
   answers       Answer[]
   survey        Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
@@ -94,6 +96,7 @@ model UserSettings {
 
   affiliateProfile    AffiliateProfile?
   role                UserRole  @default(USER)
+  pushSubscriptions   PushSubscription[]
 }
 
 enum UserRole {
@@ -412,4 +415,17 @@ model TeamInvitation {
   status    String   @default("PENDING") // PENDING, ACCEPTED
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String
+  keys      Json     // { p256dh: string, auth: string }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([userId, endpoint])
+  @@index([userId])
 }

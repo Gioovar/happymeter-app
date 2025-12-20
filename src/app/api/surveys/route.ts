@@ -22,6 +22,7 @@ export async function GET() {
             select: {
                 id: true,
                 title: true,
+                bannerUrl: true,
                 createdAt: true,
                 _count: {
                     select: { responses: true }

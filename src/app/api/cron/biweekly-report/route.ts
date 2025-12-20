@@ -1,16 +1,24 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { subDays } from 'date-fns'
+import { subDays, startOfDay, endOfDay } from 'date-fns'
 
 export async function GET(req: Request) {
     try {
+        const today = new Date()
+        const dayOfMonth = today.getDate()
+
+        // 0. Schedule Check: Only run on the 3rd and 18th of the month
+        if (dayOfMonth !== 3 && dayOfMonth !== 18) {
+            console.log(`[CRON] Skipping Bi-Weekly Report: Today is day ${dayOfMonth}, waiting for 3rd or 18th.`)
+            return NextResponse.json({ skipped: true, reason: `Not schedule day (Today: ${dayOfMonth}). Expecting 3 or 18.` })
+        }
+
         console.log('[CRON] Starting Bi-Weekly Report Generation...')
 
         const fifteenDaysAgo = subDays(new Date(), 15)
 
         // 1. Get surveys with activity in the last 15 days
-        // Since there is no User model relation, we fetch surveys directly
         const surveysWithActivity = await prisma.survey.findMany({
             where: {
                 responses: {
@@ -87,6 +95,24 @@ export async function GET(req: Request) {
         for (const userId of userIds) {
             const stats = userStats[userId]
             if (stats.totalResponses > 0) {
+                // Idempotency Check: Prevent duplicate reports on the same day
+                const alreadySent = await prisma.notification.findFirst({
+                    where: {
+                        userId: userId,
+                        type: 'REPORT',
+                        title: '📈 Resumen Quincenal',
+                        createdAt: {
+                            gte: startOfDay(today),
+                            lte: endOfDay(today)
+                        }
+                    }
+                })
+
+                if (alreadySent) {
+                    console.log(`[CRON] Report already sent for ${userId} today. Skipping.`)
+                    continue
+                }
+
                 const npsScore = stats.totalNpsResponses > 0
                     ? Math.round(((stats.promoters - stats.detractors) / stats.totalNpsResponses) * 100)
                     : 0

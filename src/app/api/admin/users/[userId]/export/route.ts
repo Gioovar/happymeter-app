@@ -14,13 +14,14 @@ async function isAdmin() {
     return true
 }
 
-export async function GET(req: Request, { params }: { params: { userId: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ userId: string }> }) {
     try {
-        if (!await isAdmin()) {
-            return new NextResponse("Unauthorized", { status: 403 })
+        const user = await currentUser()
+        if (!user || user.publicMetadata.role !== 'SUPER_ADMIN') {
+            return new NextResponse('Unauthorized', { status: 401 })
         }
 
-        const { userId } = params
+        const { userId } = await params
         const { searchParams } = new URL(req.url)
         const format = searchParams.get('format') // 'meta' or 'whatsapp'
 

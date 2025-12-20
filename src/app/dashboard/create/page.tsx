@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { UserButton } from '@clerk/nextjs'
 import { Sparkles, Plus, Trash2, ArrowLeft, Image as ImageIcon, Upload, GripVertical, Check, Shield, FileText } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { compressImage } from '@/lib/image-compression'
+import { getUserProfile, updatePhoneNumber, sendTestWhatsApp } from '@/actions/settings'
 
 
 type QuestionType = 'EMOJI' | 'TEXT' | 'RATING' | 'SELECT' | 'YES_NO' | 'IMAGE' | 'DATE'
@@ -45,7 +47,8 @@ export default function CreateSurveyPage() {
     // Initialize state based on mode
     const isAnonymousMode = mode === 'anonymous'
 
-    const [activeTemplate, setActiveTemplate] = useState<'standard' | 'anonymous'>(isAnonymousMode ? 'anonymous' : 'standard')
+    // Simplified state - always standard
+    const [activeTemplate, setActiveTemplate] = useState<'standard'>('standard')
 
     const [title, setTitle] = useState(isAnonymousMode ? 'Buzón de Sugerencias Anónimo' : 'Encuesta de Satisfacción')
     const [description, setDescription] = useState(isAnonymousMode ? 'Tu reporte es 100% confidencial y seguro.' : 'Queremos conocer tu opinión')
@@ -55,21 +58,30 @@ export default function CreateSurveyPage() {
     const [bannerPreview, setBannerPreview] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
+    // Phone Prompt Logic
+    const [needsPhone, setNeedsPhone] = useState(false)
+    const [showPhoneModal, setShowPhoneModal] = useState(false)
+    const [phoneInput, setPhoneInput] = useState('')
+    const [isSavingPhone, setIsSavingPhone] = useState(false)
+    const [isVerifyStep, setIsVerifyStep] = useState(false)
+
+    useEffect(() => {
+        try {
+            getUserProfile().then(data => {
+                // If checking fails (e.g. unauth), ignore
+                // FORCE TEST MODE: Always show modal
+                setNeedsPhone(true)
+                // if (data && !data.phone && data.surveyCount === 0) {
+                //    setNeedsPhone(true)
+                // }
+            }).catch(err => console.error(err))
+        } catch (e) { console.error(e) }
+    }, [])
+
     const [questions, setQuestions] = useState<Question[]>(isAnonymousMode ? TEMPLATE_ANONYMOUS : TEMPLATE_STANDARD)
 
-    const applyTemplate = (type: 'standard' | 'anonymous') => {
-        setActiveTemplate(type)
-        if (type === 'standard') {
-            setTitle('Encuesta de Satisfacción')
-            setDescription('Queremos conocer tu opinión')
-            setQuestions(TEMPLATE_STANDARD)
-        } else {
-            setTitle('Buzón de Sugerencias Anónimo')
-            setDescription('Tu reporte es 100% confidencial y seguro.')
-            setQuestions(TEMPLATE_ANONYMOUS)
-            setHexColor('#64748b') // Slate color for serious tone
-        }
-    }
+    // Template selection logic removed as we only support Standard here now
+
 
     const [socialConfig, setSocialConfig] = useState({
         enabled: false,
@@ -78,6 +90,49 @@ export default function CreateSurveyPage() {
     })
 
 
+
+    const handleSendTest = async () => {
+        // Basic validation
+        if (phoneInput.length < 10) {
+            alert('Por favor ingresa un número válido (10+ dígitos)')
+            return
+        }
+        setIsSavingPhone(true)
+        try {
+            const res = await sendTestWhatsApp(phoneInput)
+            // Even if it fails, maybe allow to proceed? No, better to block if we want true verification.
+            // But since this is a "Test" message using a template, it should be robust.
+            if (res.success) {
+                setIsVerifyStep(true)
+            } else {
+                alert('No pudimos enviar el mensaje. Verifica el número e intenta de nuevo.')
+            }
+        } catch (e) {
+            console.error(e)
+            alert('Error de conexión')
+        } finally {
+            setIsSavingPhone(false)
+        }
+    }
+
+    const handleConfirmSuccess = async () => {
+        setIsSavingPhone(true)
+        try {
+            const res = await updatePhoneNumber(phoneInput)
+            if (res.success) {
+                setNeedsPhone(false)
+                setShowPhoneModal(false)
+                alert('¡Verificado y guardado! Ahora puedes publicar tu encuesta.')
+            } else {
+                alert('Error al guardar el número')
+            }
+        } catch (e) {
+            console.error(e)
+            alert('Error de conexión')
+        } finally {
+            setIsSavingPhone(false)
+        }
+    }
 
     const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -107,17 +162,28 @@ export default function CreateSurveyPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        if (needsPhone) {
+            setShowPhoneModal(true)
+            return
+        }
+
         setIsSubmitting(true)
 
         try {
             let bannerUrl = null
             if (banner) {
-                // Convert to Base64
-                bannerUrl = await new Promise((resolve) => {
-                    const reader = new FileReader()
-                    reader.onloadend = () => resolve(reader.result)
-                    reader.readAsDataURL(banner)
-                })
+                try {
+                    bannerUrl = await compressImage(banner)
+                } catch (error) {
+                    console.error('Compression failed, using original', error)
+                    // Fallback
+                    bannerUrl = await new Promise((resolve) => {
+                        const reader = new FileReader()
+                        reader.onloadend = () => resolve(reader.result)
+                        reader.readAsDataURL(banner)
+                    })
+                }
             }
 
             const res = await fetch('/api/surveys', {
@@ -188,62 +254,8 @@ export default function CreateSurveyPage() {
             <main className="max-w-3xl mx-auto px-6 py-10 space-y-8">
                 <form onSubmit={handleSubmit} className="space-y-8">
 
-                    {/* Template Selector - Only show if NOT in anonymous mode */}
-                    {!isAnonymousMode && (
-                        <section className="space-y-4">
-                            <h2 className="text-lg font-bold text-gray-200">Elige una Plantilla</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* ... existing buttons ... */}
-                                <button
-                                    type="button"
-                                    onClick={() => applyTemplate('standard')}
-                                    className={`p-6 rounded-2xl border text-left transition-all duration-200 flex items-start gap-4 group ${activeTemplate === 'standard'
-                                        ? 'bg-violet-600/10 border-violet-500 ring-1 ring-violet-500'
-                                        : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20'
-                                        }`}
-                                >
-                                    <div className={`p-3 rounded-xl ${activeTemplate === 'standard' ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'bg-white/10 text-gray-400 group-hover:text-white'}`}>
-                                        <FileText className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <h3 className={`font-bold mb-1 ${activeTemplate === 'standard' ? 'text-white' : 'text-gray-300'}`}>Estándar de Satisfacción</h3>
-                                        <p className="text-sm text-gray-500 leading-relaxed">
-                                            Mide el NPS, calidad de alimentos, servicio y ambiente. Ideal para restaurantes y comercios.
-                                        </p>
-                                    </div>
-                                    {activeTemplate === 'standard' && (
-                                        <div className="absolute top-4 right-4 text-violet-500">
-                                            <Check className="w-5 h-5" />
-                                        </div>
-                                    )}
-                                </button>
+                    {/* Template Selector REMOVED as per user request */}
 
-                                <button
-                                    type="button"
-                                    onClick={() => applyTemplate('anonymous')}
-                                    className={`relative p-6 rounded-2xl border text-left transition-all duration-200 flex items-start gap-4 group ${activeTemplate === 'anonymous'
-                                        ? 'bg-slate-500/10 border-slate-400 ring-1 ring-slate-400'
-                                        : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20'
-                                        }`}
-                                >
-                                    <div className={`p-3 rounded-xl ${activeTemplate === 'anonymous' ? 'bg-slate-500 text-white shadow-lg shadow-slate-500/20' : 'bg-white/10 text-gray-400 group-hover:text-white'}`}>
-                                        <Shield className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <h3 className={`font-bold mb-1 ${activeTemplate === 'anonymous' ? 'text-white' : 'text-gray-300'}`}>Buzón Anónimo</h3>
-                                        <p className="text-sm text-gray-500 leading-relaxed">
-                                            Canal seguro para reportes de staff, sugerencias o incidentes. Sin datos de contacto.
-                                        </p>
-                                    </div>
-                                    {activeTemplate === 'anonymous' && (
-                                        <div className="absolute top-4 right-4 text-slate-400">
-                                            <Check className="w-5 h-5" />
-                                        </div>
-                                    )}
-                                </button>
-                            </div>
-                        </section>
-                    )}
 
                     {/* Banner Upload Section */}
                     <section className="space-y-4">
@@ -344,27 +356,25 @@ export default function CreateSurveyPage() {
                                 />
                             </div>
 
-                            {activeTemplate === 'standard' && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        URL de Google Maps (Opcional)
-                                        <span className="block text-xs text-gray-500 font-normal mt-1">
-                                            Si el cliente califica bien, le pediremos una reseña en Google.
-                                        </span>
-                                    </label>
-                                    <input
-                                        type="url"
-                                        value={googleMapsUrl}
-                                        onChange={(e) => setGoogleMapsUrl(e.target.value)}
-                                        placeholder="https://g.page/r/..."
-                                        className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition text-white placeholder-gray-600"
-                                    />
-                                </div>
-                            )}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    URL de Google Maps (Opcional)
+                                    <span className="block text-xs text-gray-500 font-normal mt-1">
+                                        Si el cliente califica bien, le pediremos una reseña en Google.
+                                    </span>
+                                </label>
+                                <input
+                                    type="url"
+                                    value={googleMapsUrl}
+                                    onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                                    placeholder="https://g.page/r/..."
+                                    className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition text-white placeholder-gray-600"
+                                />
+                            </div>
                         </div>
 
                         {/* Social Media Recommendations */}
-                        {activeTemplate === 'standard' && (
+                        {
                             <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-5">
                                 <div className="flex items-center justify-between">
                                     <label className="block text-sm font-medium text-gray-300">
@@ -425,7 +435,7 @@ export default function CreateSurveyPage() {
                                     </div>
                                 )}
                             </div>
-                        )}
+                        }
                     </section>
 
 
@@ -597,6 +607,92 @@ export default function CreateSurveyPage() {
                     </div >
                 </form >
             </main >
+
+            {/* Phone Prompt Modal */}
+            {showPhoneModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-[#111] border border-violet-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 to-fuchsia-600"></div>
+
+                        <div className="mb-6 text-center">
+                            <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-2">¡Un paso más! 🚀</h3>
+                            <p className="text-gray-300">
+                                Para asegurarnos de que recibas tus alertas críticas (como reseñas negativas y recomendaciones de IA), necesitamos tu WhatsApp.
+                            </p>
+                            <p className="text-xs text-violet-400 mt-2 font-medium bg-violet-500/10 py-1 px-3 rounded-full inline-block">
+                                Sólo te lo pediremos esta única vez.
+                            </p>
+                        </div>
+
+                        {!isVerifyStep ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">
+                                        Número de WhatsApp
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={phoneInput}
+                                        onChange={(e) => setPhoneInput(e.target.value)}
+                                        placeholder="Ej: 52 55 1234 5678"
+                                        className="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 transition text-white text-lg placeholder-gray-600 text-center tracking-widest"
+                                        autoFocus
+                                    />
+                                    <p className="text-xs text-gray-500 mt-2 text-center">Incluye el código de país (Ej: 52 para México)</p>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={handleSendTest}
+                                    disabled={isSavingPhone || phoneInput.length < 10}
+                                    className="w-full py-3.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {isSavingPhone ? (
+                                        <>Enviando...</>
+                                    ) : (
+                                        <>Enviar Mensaje de Prueba y Confirmar</>
+                                    )}
+                                </button>
+
+                                <button
+                                    onClick={() => setShowPhoneModal(false)}
+                                    className="w-full py-2 text-sm text-gray-500 hover:text-white transition"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+                                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-center">
+                                    <p className="text-green-400 font-medium text-lg">¿Recibiste el mensaje?</p>
+                                    <p className="text-gray-400 text-sm mt-1">Revisa tu WhatsApp ({phoneInput})</p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsVerifyStep(false)}
+                                        className="py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium transition"
+                                    >
+                                        No, corregir
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleConfirmSuccess}
+                                        className="py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold transition shadow-lg shadow-violet-600/20"
+                                    >
+                                        Sí, continuar
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
         </div >
     )
 }

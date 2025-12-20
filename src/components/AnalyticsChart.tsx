@@ -11,22 +11,12 @@ interface AnalyticsChartProps {
 
 export default function AnalyticsChart({ data = [] }: AnalyticsChartProps) {
     return (
-        <div className="w-full h-full bg-white/5 border border-white/5 rounded-2xl p-6 flex flex-col">
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-violet-500/20">
-                        <TrendingUp className="w-5 h-5 text-violet-400" />
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-lg">Tendencia de Respuestas</h3>
-                        <p className="text-xs text-gray-400">Últimos 30 días</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="h-[250px] w-full">
+        <div className="w-full h-full flex flex-col">
+            {/* Redundant header removed to fix mobile layout double-padding issue */}
+            {/* Redundant header removed to fix mobile layout double-padding issue */}
+            <div className="w-full h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={data}>
+                    <AreaChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorResponses" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
@@ -44,6 +34,7 @@ export default function AnalyticsChart({ data = [] }: AnalyticsChartProps) {
                             fontSize={12}
                             tickLine={false}
                             axisLine={false}
+                            tickMargin={10}
                         />
                         {/* Left Axis: Responses */}
                         <YAxis

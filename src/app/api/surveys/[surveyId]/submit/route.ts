@@ -25,6 +25,7 @@ export async function POST(
                 customerEmail: customer?.email || null,
                 customerPhone: customer?.phone || null, // Capture phone
                 customerBirthday: customer?.birthday || null, // Capture birthday
+                customerSource: customer?.source || null, // Capture source
                 photo: body.photo || null, // Save uploaded photo
                 answers: {
                     create: answers.map((ans: any) => ({

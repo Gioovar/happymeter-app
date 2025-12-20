@@ -138,38 +138,40 @@ export default function ResponsesClientPage({ initialResponses }: { initialRespo
                     {/* Filters Toolbar */}
                     <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-[#111] p-2 rounded-2xl border border-white/5">
                         {/* Sentiment Tabs */}
-                        <div className="flex bg-black/40 p-1 rounded-xl">
-                            <button
-                                onClick={() => setFilterType('ALL')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filterType === 'ALL' ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                Todas
-                            </button>
-                            <button
-                                onClick={() => setFilterType('GOOD')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filterType === 'GOOD' ? 'bg-emerald-500 text-white shadow-lg' : 'text-gray-400 hover:text-emerald-400'}`}
-                            >
-                                😊 Buenas
-                            </button>
-                            <button
-                                onClick={() => setFilterType('NORMAL')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filterType === 'NORMAL' ? 'bg-amber-500 text-white shadow-lg' : 'text-gray-400 hover:text-amber-400'}`}
-                            >
-                                😐 Normales
-                            </button>
-                            <button
-                                onClick={() => setFilterType('BAD')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filterType === 'BAD' ? 'bg-red-500 text-white shadow-lg' : 'text-gray-400 hover:text-red-400'}`}
-                            >
-                                😡 Negativas
-                            </button>
-                            <div className="w-px h-6 bg-white/10 mx-2 self-center" />
-                            <button
-                                onClick={() => setFilterType('STAFF')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filterType === 'STAFF' ? 'bg-indigo-500 text-white shadow-lg' : 'text-gray-400 hover:text-indigo-400'}`}
-                            >
-                                🛡️ Staff
-                            </button>
+                        <div className="w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                            <div className="flex bg-black/40 p-1 rounded-xl min-w-max">
+                                <button
+                                    onClick={() => setFilterType('ALL')}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${filterType === 'ALL' ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    Todas
+                                </button>
+                                <button
+                                    onClick={() => setFilterType('GOOD')}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${filterType === 'GOOD' ? 'bg-emerald-500 text-white shadow-lg' : 'text-gray-400 hover:text-emerald-400'}`}
+                                >
+                                    😊 Buenas
+                                </button>
+                                <button
+                                    onClick={() => setFilterType('NORMAL')}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${filterType === 'NORMAL' ? 'bg-amber-500 text-white shadow-lg' : 'text-gray-400 hover:text-amber-400'}`}
+                                >
+                                    😐 Normales
+                                </button>
+                                <button
+                                    onClick={() => setFilterType('BAD')}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${filterType === 'BAD' ? 'bg-red-500 text-white shadow-lg' : 'text-gray-400 hover:text-red-400'}`}
+                                >
+                                    😡 Negativas
+                                </button>
+                                <div className="w-px h-6 bg-white/10 mx-2 self-center flex-shrink-0" />
+                                <button
+                                    onClick={() => setFilterType('STAFF')}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${filterType === 'STAFF' ? 'bg-indigo-500 text-white shadow-lg' : 'text-gray-400 hover:text-indigo-400'}`}
+                                >
+                                    🛡️ Staff
+                                </button>
+                            </div>
                         </div>
 
                         {/* Date Picker */}

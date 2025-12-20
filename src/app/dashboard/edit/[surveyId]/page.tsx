@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserButton } from '@clerk/nextjs'
 import { Sparkles, Plus, Trash2, ArrowLeft, Image as ImageIcon, Upload, GripVertical, Check } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { compressImage } from '@/lib/image-compression'
 import AlertSettings from '@/components/AlertSettings'
+import RecoverySettings from '@/components/RecoverySettings'
 
 type QuestionType = 'EMOJI' | 'TEXT' | 'RATING' | 'SELECT' | 'YES_NO'
 
@@ -18,10 +20,10 @@ interface Question {
     required: boolean
 }
 
-export default function EditSurveyPage({ params }: { params: Promise<{ surveyId: string }> }) {
-    const { surveyId } = use(params)
+export default function EditSurveyPage({ params }: { params: { surveyId: string } }) {
+    const { surveyId } = params
     const router = useRouter()
-    const [activeTab, setActiveTab] = useState<'edit' | 'alerts'>('edit')
+    const [activeTab, setActiveTab] = useState<'edit' | 'alerts' | 'recovery'>('edit')
 
     // Original State
     const [title, setTitle] = useState('')
@@ -38,6 +40,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ surveyId:
         instagram: '',
         facebook: ''
     })
+    const [recoveryConfig, setRecoveryConfig] = useState<any>(null)
 
     const [questions, setQuestions] = useState<Question[]>([])
 
@@ -55,6 +58,9 @@ export default function EditSurveyPage({ params }: { params: Promise<{ surveyId:
                     setBannerPreview(data.bannerUrl)
                     if (data.socialConfig) {
                         setSocialConfig(data.socialConfig)
+                    }
+                    if (data.recoveryConfig) {
+                        setRecoveryConfig(data.recoveryConfig)
                     }
 
                     // Map questions
@@ -114,12 +120,17 @@ export default function EditSurveyPage({ params }: { params: Promise<{ surveyId:
         try {
             let bannerUrl = bannerPreview // Keep existing URL if no new file
             if (banner) {
-                // Convert to Base64
-                bannerUrl = await new Promise((resolve) => {
-                    const reader = new FileReader()
-                    reader.onloadend = () => resolve(reader.result as string)
-                    reader.readAsDataURL(banner)
-                })
+                try {
+                    bannerUrl = await compressImage(banner)
+                } catch (error) {
+                    console.error('Compression failed, using original', error)
+                    // Fallback
+                    bannerUrl = await new Promise((resolve) => {
+                        const reader = new FileReader()
+                        reader.onloadend = () => resolve(reader.result as string)
+                        reader.readAsDataURL(banner)
+                    })
+                }
             }
 
             const res = await fetch(`/api/surveys/${surveyId}`, {
@@ -134,7 +145,8 @@ export default function EditSurveyPage({ params }: { params: Promise<{ surveyId:
                     googleMapsUrl,
                     hexColor,
                     questions,
-                    socialConfig: socialConfig.enabled ? socialConfig : null
+                    socialConfig: socialConfig.enabled ? socialConfig : null,
+                    recoveryConfig
                 })
             })
 
@@ -193,6 +205,12 @@ export default function EditSurveyPage({ params }: { params: Promise<{ surveyId:
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'edit' ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                     >
                         Editor
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('recovery')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'recovery' ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                    >
+                        Recuperación Inteligente 🚑
                     </button>
                     <button
                         onClick={() => setActiveTab('alerts')}
@@ -555,6 +573,19 @@ export default function EditSurveyPage({ params }: { params: Promise<{ surveyId:
                             </button>
                         </div >
                     </form>
+                ) : activeTab === 'recovery' ? (
+                    <RecoverySettings
+                        initialConfig={recoveryConfig}
+                        onSave={async (config) => {
+                            setRecoveryConfig(config)
+                            await fetch(`/api/surveys/${surveyId}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ recoveryConfig: config })
+                            })
+                            alert('Configuración guardada')
+                        }}
+                    />
                 ) : (
                     <AlertSettings surveyId={surveyId} />
                 )}

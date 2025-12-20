@@ -12,9 +12,16 @@ interface Issue {
     recommendation: string
 }
 
+interface MarketingRecommendation {
+    title: string
+    strategy: string
+    platform: string
+}
+
 export default function AITopIssues() {
     const [isLoading, setIsLoading] = useState(false)
     const [issues, setIssues] = useState<Issue[] | null>(null)
+    const [marketingRec, setMarketingRec] = useState<MarketingRecommendation | null>(null)
     const [hasAnalyzed, setHasAnalyzed] = useState(false)
 
     const handleAnalyze = async () => {
@@ -24,6 +31,7 @@ export default function AITopIssues() {
             if (res.ok) {
                 const data = await res.json()
                 setIssues(data.issues)
+                setMarketingRec(data.marketing_recommendation)
             }
         } catch (error) {
             console.error(error)
@@ -75,6 +83,25 @@ export default function AITopIssues() {
 
     return (
         <div className="space-y-3">
+            {/* Marketing Recommendation Card */}
+            {marketingRec && (
+                <div className="bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl p-4 shadow-lg border border-white/10 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition">
+                        <Zap className="w-16 h-16" />
+                    </div>
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-2">
+                            <BrainCircuit className="w-4 h-4 text-violet-200" />
+                            <h4 className="font-bold text-xs uppercase tracking-wider text-violet-100">{marketingRec.title}</h4>
+                        </div>
+                        <p className="font-bold text-lg mb-1">{marketingRec.platform}</p>
+                        <p className="text-sm text-violet-100/90 leading-relaxed">
+                            "{marketingRec.strategy}"
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {issues?.map((issue, idx) => (
                 <div key={idx} className="bg-white/5 rounded-lg p-4 border-l-4 border-white/10 hover:bg-white/10 transition"
                     style={{
@@ -84,7 +111,7 @@ export default function AITopIssues() {
                     <div className="flex justify-between items-start mb-1">
                         <h4 className="font-bold text-white text-sm">{issue.title}</h4>
                         <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${issue.severity === 'HIGH' ? 'bg-red-500/20 text-red-400' :
-                                issue.severity === 'MEDIUM' ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'
+                            issue.severity === 'MEDIUM' ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'
                             }`}>
                             {issue.severity === 'HIGH' ? 'ALTA' : issue.severity === 'MEDIUM' ? 'MEDIA' : 'BAJA'}
                         </span>

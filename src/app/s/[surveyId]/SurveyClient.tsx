@@ -1,14 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSearchParams } from 'next/navigation'
 import { Check, ChevronLeft, Upload, X, Instagram, Facebook, Sparkles } from 'lucide-react'
 import Image from 'next/image'
+import { compressImage } from '@/lib/image-compression'
 
 
 export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, isOwner: boolean }) {
-
-    const [step, setStep] = useState(1)
+    const searchParams = useSearchParams()
+    const urlSource = searchParams.get('source')
+    const formRef = useRef<HTMLFormElement>(null)
     const [loading, setLoading] = useState(true)
     const [survey, setSurvey] = useState<any>(null)
     const [formData, setFormData] = useState<Record<string, any>>({
@@ -16,11 +19,13 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
         age: '',
         email: '',
         phone: '',
-        source: '',
-        sourceOther: ''
+        source: urlSource || '',
+        sourceOther: '',
+        birthday: '' // Restored birthday field
     })
     const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isExpanded, setIsExpanded] = useState(false)
 
     useEffect(() => {
         if (surveyId === 'demo') {
@@ -69,32 +74,39 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
         setFormData({ ...formData, [field]: value })
     }
 
-    const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
-            const reader = new FileReader()
-            reader.onloadend = () => setUploadedPhoto(reader.result as string)
-            reader.readAsDataURL(file)
+            try {
+                const compressed = await compressImage(file)
+                setUploadedPhoto(compressed)
+            } catch (error) {
+                console.error('Error compressing image:', error)
+                // Fallback to original if compression fails
+                const reader = new FileReader()
+                reader.onloadend = () => setUploadedPhoto(reader.result as string)
+                reader.readAsDataURL(file)
+            }
         }
     }
 
-    const handleNext = (e: React.FormEvent) => {
-        e.preventDefault()
-        setStep(2)
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    const [isSuccess, setIsSuccess] = useState(false)
 
-    const handleBack = () => {
-        setStep(1)
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    /* ... */
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
         e.preventDefault()
+
+        // Manual validation since we are using type="button" to prevent Enter submit
+        if (formRef.current && !formRef.current.checkValidity()) {
+            formRef.current.reportValidity()
+            return
+        }
+
         if (isSubmitting) return
 
         if (surveyId === 'demo') {
-            setStep(3)
+            setIsSuccess(true)
             return
         }
 
@@ -114,9 +126,11 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
             const customer = {
                 name: formData.name,
                 email: formData.email,
-                phone: formData.phone ? `52${formData.phone}` : '',
-                age: formData.age,
-                birthday: formData.customerBirthday ? new Date(formData.customerBirthday) : null // Backend expects Date object or ISO string
+                phone: formData.phone,
+                // If it's a staff survey, we don't send age/birthday to keep it simple/anon if desired, 
+                // but actually we just send what we have. If fields are hidden, they are empty.
+                birthday: formData.birthday ? new Date(formData.birthday).toISOString() : null,
+                source: formData.source === 'Otro' ? formData.sourceOther : formData.source
             }
 
             const res = await fetch(`/api/surveys/${surveyId}/submit`, {
@@ -125,7 +139,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
             })
 
             if (res.ok) {
-                setStep(3)
+                setIsSuccess(true)
             } else {
                 alert('Hubo un error al enviar la encuesta. Por favor intenta de nuevo.')
                 setIsSubmitting(false)
@@ -179,25 +193,11 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
     const emojiQuestion = survey.questions.find((q: any) => q.type === 'EMOJI')
     const otherQuestions = survey.questions.filter((q: any) => q.type !== 'EMOJI')
 
-    const getBannerColor = () => {
-        const rating = formData[emojiQuestion?.id]
-        if (rating === '1' || rating === '2') return '#ef4444'
-        if (rating === '3') return '#f59e0b'
-        return '#22c55e'
-    }
+    // Determine if we should hide contact fields based on survey content
+    const titleLower = survey.title.toLowerCase()
+    const shouldHideContactFields = titleLower.includes('buzón') || titleLower.includes('staff') || titleLower.includes('anónim') || titleLower.includes('anonim')
 
-    const getBannerTitle = () => {
-        const rating = formData[emojiQuestion?.id]
-        if (rating === '1') return 'Experiencia mala'
-        if (rating === '2') return 'Experiencia regular'
-        if (rating === '3') return 'Experiencia regular'
-        if (rating === '4') return 'Experiencia buena'
-        return 'Experiencia excelente'
-    }
-
-
-
-    if (step === 3) {
+    if (isSuccess) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4 py-12" style={{ backgroundColor: theme.background, color: theme.text }}>
                 <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center space-y-6 max-w-md w-full">
@@ -285,7 +285,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
 
                     <button
                         onClick={() => {
-                            setStep(1)
+                            setIsSuccess(false)
                             const initialData: any = { name: '', age: '', email: '', phone: '', source: '', sourceOther: '' }
                             survey.questions.forEach((q: any) => { initialData[q.id] = q.type === 'EMOJI' ? '3' : '' })
                             setFormData(initialData)
@@ -325,141 +325,178 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                 </div>
 
                 <AnimatePresence mode="wait">
-                    {step === 1 ? (
+                    {!isSuccess && (
                         <motion.form
-                            key="step1"
-                            initial={{ opacity: 0, x: -20 }}
+                            ref={formRef}
+                            key="single-step"
+                            initial={{ opacity: 0, x: 0 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            onSubmit={handleNext}
+                            onSubmit={(e) => e.preventDefault()}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
                                     e.preventDefault()
                                 }
                             }}
-                            className="space-y-5"
+                            className="space-y-6"
                         >
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Nombre <span className="text-red-400">*</span></label>
-                                <input type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} required placeholder="Tu nombre" />
-                            </div>
+                            <AnimatePresence mode="wait">
+                                {!isExpanded ? (
+                                    <motion.div
+                                        key="step1"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="space-y-6"
+                                    >
+                                        {/* Contact Info Section - Hidden for Staff/Anonymous Surveys */}
+                                        {!shouldHideContactFields && (
+                                            <div className="space-y-4 pb-4 border-b border-white/10">
+                                                <h3 className="text-lg font-bold">Cuéntanos un poco de ti</h3>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Edad <span className="text-red-400">*</span></label>
-                                    <input type="number" value={formData.age} onChange={(e) => handleInputChange('age', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} required placeholder="Ingresa tu edad" min="1" max="120" />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Correo electrónico <span className="text-red-400">*</span></label>
-                                    <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} required placeholder="tucorreo@email.com" />
-                                </div>
-                            </div>
+                                                {/* Name */}
+                                                <div className="space-y-2">
+                                                    <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Nombre *</label>
+                                                    <input type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} placeholder="Tu nombre" />
+                                                </div>
 
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>¿Cómo te enteraste de nosotros? <span className="text-red-400">*</span></label>
-                                <div className="relative">
-                                    <select value={formData.source} onChange={(e) => handleInputChange('source', e.target.value)} className="w-full rounded-xl px-4 py-3.5 appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} required>
-                                        <option value="">Selecciona una opción</option>
-                                        <option value="Facebook">Facebook</option>
-                                        <option value="Instagram">Instagram</option>
-                                        <option value="Google">Google</option>
-                                        <option value="Recomendación">Recomendación</option>
-                                        <option value="Otra">Otra</option>
-                                    </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: theme.textSecondary }}>▼</div>
-                                </div>
-                                <AnimatePresence>
-                                    {formData.source === 'Otra' && (
-                                        <motion.input initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} type="text" value={formData.sourceOther} onChange={(e) => handleInputChange('sourceOther', e.target.value)} placeholder="¿Cuál?" className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} required />
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                                                {/* Email */}
+                                                <div className="space-y-2">
+                                                    <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Correo Electrónico *</label>
+                                                    <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} placeholder="ejemplo@correo.com" />
+                                                </div>
 
-                            {emojiQuestion && <QuestionField question={emojiQuestion} value={formData[emojiQuestion.id]} onChange={(value: any) => handleInputChange(emojiQuestion.id, value)} theme={theme} formData={formData} />}
+                                                {/* Birthday */}
+                                                <div className="space-y-2">
+                                                    <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Cumpleaños (Opcional)</label>
+                                                    <input type="date" value={formData.birthday} onChange={(e) => handleInputChange('birthday', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} />
+                                                </div>
 
-                            <button type="submit" className="w-full font-bold py-4 rounded-xl transition mt-8 shadow-lg hover:opacity-90" style={{ backgroundColor: theme.accent, color: '#000000' }}>Continuar</button>
-                        </motion.form>
-                    ) : (
-                        <motion.form
-                            key="step2"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            onSubmit={handleSubmit}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
-                                    e.preventDefault()
-                                }
-                            }}
-                            className="space-y-5"
-                        >
-                            {otherQuestions.map((q: any) => <QuestionField key={q.id} question={q} value={formData[q.id]} onChange={(value: any) => handleInputChange(q.id, value)} theme={theme} formData={formData} />)}
+                                                {/* Source */}
+                                                <div className="space-y-2">
+                                                    <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>¿Cómo te enteraste de nosotros? *</label>
+                                                    <select value={formData.source} onChange={(e) => handleInputChange('source', e.target.value)} className="w-full rounded-xl px-4 py-3.5 appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }}>
+                                                        <option value="">Selecciona una opción</option>
+                                                        <option value="Instagram">Instagram</option>
+                                                        <option value="Facebook">Facebook</option>
+                                                        <option value="Google">Google / Maps</option>
+                                                        <option value="Recomendación">Recomendación de amigo</option>
+                                                        <option value="Pasaba por aquí">Pasaba por aquí</option>
+                                                        <option value="Otro">Otro</option>
+                                                    </select>
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: theme.textSecondary }}>▼</div>
+                                                </div>
+                                                {formData.source === 'Otro' && (
+                                                    <input type="text" value={formData.sourceOther} onChange={(e) => handleInputChange('sourceOther', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5 mt-2" style={{ backgroundColor: theme.inputBg, color: theme.text }} placeholder="¿Dónde nos viste?" />
+                                                )}
+                                            </div>
+                                        )}
 
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Sube una foto (opcional)</label>
-                                {uploadedPhoto ? (
-                                    <div className="relative">
-                                        <div className="relative w-full h-48 rounded-xl overflow-hidden">
-                                            <Image src={uploadedPhoto} alt="Uploaded" fill className="object-cover" />
-                                        </div>
-                                        <button type="button" onClick={() => setUploadedPhoto(null)} className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 rounded-full transition">
-                                            <X className="w-4 h-4 text-white" />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <label className="w-full h-32 rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center cursor-pointer hover:border-violet-500/50 transition" style={{ backgroundColor: theme.inputBg }}>
-                                        <Upload className="w-8 h-8 mb-2" style={{ color: theme.textSecondary }} />
-                                        <span className="text-sm" style={{ color: theme.textSecondary }}>Haz clic para subir una foto</span>
-                                        <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                                    </label>
-                                )}
-                            </div>
+                                        {/* Name Field (for hidden contact fields mode) */}
+                                        {shouldHideContactFields && (
+                                            <div className="space-y-2 pb-2 border-b border-white/10">
+                                                <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Nombre (Opcional)</label>
+                                                <input type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} placeholder="Tu nombre" />
+                                            </div>
+                                        )}
 
-                            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: getBannerColor() }}>
-                                <div className="p-6 space-y-4">
-                                    <div className="space-y-1">
-                                        <h3 className="text-xl font-bold text-white">{getBannerTitle()}</h3>
-                                        <p className="text-white/90 text-sm">Déjanos tu WhatsApp para enviarte tu regalo (no enviamos spam).</p>
-                                    </div>
-                                    <div className="relative">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none select-none text-gray-500 font-medium z-10">
-                                            <span>🇲🇽</span>
-                                            <span>+52</span>
-                                            <div className="h-4 w-px bg-gray-300"></div>
-                                        </div>
-                                        <input
-                                            type="tel"
-                                            value={formData.phone}
-                                            onChange={(e) => {
-                                                const val = e.target.value.replace(/\D/g, '').slice(0, 10)
-                                                handleInputChange('phone', val)
+                                        {/* Emoji Q (Hero) */}
+                                        {emojiQuestion && <QuestionField question={emojiQuestion} value={formData[emojiQuestion.id]} onChange={(value: any) => handleInputChange(emojiQuestion.id, value)} theme={theme} formData={formData} />}
+
+                                        {/* Continue Button */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!shouldHideContactFields) {
+                                                    if (!formData.name?.trim()) { alert('Por favor ingresa tu nombre.'); return }
+                                                    if (!formData.email?.trim()) { alert('Por favor ingresa tu correo electrónico.'); return }
+                                                    if (!formData.source) { alert('Por favor cuéntanos cómo te enteraste de nosotros.'); return }
+                                                    if (formData.source === 'Otro' && !formData.sourceOther?.trim()) { alert('Por favor especifica dónde nos viste.'); return }
+                                                }
+                                                setIsExpanded(true)
+                                                window.scrollTo({ top: 0, behavior: 'smooth' })
                                             }}
-                                            className="w-full rounded-xl pl-24 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-white transition border-0 text-gray-800 font-medium placeholder:text-gray-400"
-                                            style={{ backgroundColor: '#ffffff' }}
-                                            placeholder="55 1234 5678"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                                            className="w-full font-bold py-4 rounded-xl transition shadow-lg hover:opacity-90 flex items-center justify-center gap-2 mt-8"
+                                            style={{ backgroundColor: theme.accent, color: '#000000' }}
+                                        >
+                                            Continuar
+                                        </button>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="step2"
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="space-y-6"
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsExpanded(false)}
+                                            className="flex items-center gap-1 text-sm mb-4 hover:underline"
+                                            style={{ color: theme.textSecondary }}
+                                        >
+                                            <ChevronLeft className="w-4 h-4" /> Volver
+                                        </button>
 
-                            <div className="flex gap-3 pt-4">
-                                <button type="button" onClick={handleBack} disabled={isSubmitting} className="px-6 py-4 rounded-xl font-medium transition border flex items-center gap-2 disabled:opacity-50" style={{ borderColor: 'rgba(255,255,255,0.1)', color: theme.text, backgroundColor: 'transparent' }}>
-                                    <ChevronLeft className="w-4 h-4" /> Atrás
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="flex-1 font-bold py-4 rounded-xl transition shadow-lg hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    style={{ backgroundColor: theme.accent, color: '#000000' }}
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                                            Enviando...
-                                        </>
-                                    ) : 'Enviar Encuesta'}
-                                </button>
-                            </div>
+                                        {/* Other Questions */}
+                                        {otherQuestions.map((q: any) => <QuestionField key={q.id} question={q} value={formData[q.id]} onChange={(value: any) => handleInputChange(q.id, value)} theme={theme} formData={formData} />)}
+
+                                        {/* Photo */}
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Sube una foto (opcional)</label>
+                                            {uploadedPhoto ? (
+                                                <div className="relative">
+                                                    <div className="relative w-full h-48 rounded-xl overflow-hidden">
+                                                        <Image src={uploadedPhoto} alt="Uploaded" fill className="object-cover" />
+                                                    </div>
+                                                    <button type="button" onClick={() => setUploadedPhoto(null)} className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 rounded-full transition">
+                                                        <X className="w-4 h-4 text-white" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <label className="w-full h-32 rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center cursor-pointer hover:border-violet-500/50 transition" style={{ backgroundColor: theme.inputBg }}>
+                                                    <Upload className="w-8 h-8 mb-2" style={{ color: theme.textSecondary }} />
+                                                    <span className="text-sm" style={{ color: theme.textSecondary }}>Haz clic para subir una foto</span>
+                                                    <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                                                </label>
+                                            )}
+                                        </div>
+
+                                        {/* WhatsApp Reward */}
+                                        {!shouldHideContactFields && (
+                                            <div className="bg-gradient-to-r from-green-600 to-green-500 rounded-2xl p-6 shadow-lg space-y-4 border border-green-400/20">
+                                                <div className="space-y-1">
+                                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                                        <Sparkles className="w-5 h-5 text-yellow-300" />
+                                                        Experiencia buena o excelente
+                                                    </h3>
+                                                    <p className="text-sm text-green-50/90">Déjanos tu WhatsApp para enviarte tu regalo (no enviamos spam).</p>
+                                                </div>
+                                                <input type="tel" value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-white/50 transition border-none text-gray-900 placeholder:text-gray-500 bg-white" placeholder="Tu WhatsApp" />
+                                            </div>
+                                        )}
+
+                                        {/* Submit */}
+                                        <button
+                                            type="button"
+                                            onClick={handleSubmit}
+                                            disabled={isSubmitting}
+                                            className="w-full font-bold py-4 rounded-xl transition shadow-lg hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
+                                            style={{ backgroundColor: '#fbbf24', color: '#000000' }}
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                                    Enviando...
+                                                </>
+                                            ) : 'Continuar para recibir tu regalo'}
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </motion.form>
                     )}
                 </AnimatePresence>

@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { resend } from '../src/lib/resend';
-import { NewResponseEmail } from '../src/emails/NewResponseEmail';
+import { resend } from '../../src/lib/resend';
+import { NewResponseEmail } from '../../src/emails/NewResponseEmail';
 
 async function sendTestEmail() {
     const targetEmail = process.argv[2];

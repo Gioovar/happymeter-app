@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { resend } from '../src/lib/resend';
-import { WelcomeEmail } from '../src/emails/WelcomeEmail';
+import { resend } from '../../src/lib/resend';
+import { WelcomeEmail } from '../../src/emails/WelcomeEmail';
 
 async function sendTestEmail() {
     const testEmail = 'gioovar@gmail.com'; // Defaulting to a likely developer email or placeholder

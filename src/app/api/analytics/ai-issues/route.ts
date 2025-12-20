@@ -37,6 +37,25 @@ export async function POST(req: Request) {
             }
         })
 
+        // Fetch Source Stats (Last 100 to get a good sample)
+        const sourceSamples = await prisma.response.findMany({
+            where: { survey: { userId }, customerSource: { not: null } },
+            take: 100,
+            select: { customerSource: true }
+        })
+
+        const sourceCounts: Record<string, number> = {}
+        sourceSamples.forEach(s => {
+            if (s.customerSource) {
+                const k = s.customerSource.trim()
+                sourceCounts[k] = (sourceCounts[k] || 0) + 1
+            }
+        })
+        const topSources = Object.entries(sourceCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([k, v]) => `${k} (${v})`)
+            .join(', ') || "No hay datos suficientes de fuentes."
+
         if (recentNegative.length === 0) {
             return NextResponse.json({ issues: [] })
         }
@@ -84,12 +103,20 @@ export async function POST(req: Request) {
               "summary": "Explicación de 1 oración del problema",
               "recommendation": "Consejo accionable corto (max 10 palabras) basado en el Caso de Éxito."
             }
-          ]
+          ],
+          "marketing_recommendation": {
+             "title": "Oportunidad de Marketing",
+             "strategy": "Consejo específico basado en el Top Source (max 15 palabras). Ej: 'Invierte más en Reels ya que Instagram es tu mayor fuente'.",
+             "platform": "Nombre de la plataforma top (ej. Instagram)"
+          }
         }
 
         IMPORTANTE: Todo el texto debe estar en ESPAÑOL.
         
-        LISTA DE FEEDBACK:
+        TOP FUENTES DE TRÁFICO (Donde nos conocen):
+        ${topSources}
+        
+        LISTA DE FEEDBACK (Quejas/Opiniones):
         ${feedbackText}
         `
 

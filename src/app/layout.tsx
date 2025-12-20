@@ -11,6 +11,17 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "HappyMeter | Medición de Satisfacción con IA",
   description: "La plataforma definitiva para gestionar encuestas de satisfacción, lealtad de clientes y métricas de felicidad en tiempo real.",
+  manifest: "/manifest.json",
+  themeColor: "#8b5cf6",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "HappyMeter",
+  },
+  icons: {
+    icon: "/happymeter_logo.png", // Fallback to existing logo
+    apple: "/happymeter_logo.png",
+  }
 };
 
 export default function RootLayout({

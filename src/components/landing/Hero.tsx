@@ -51,17 +51,17 @@ export default function Hero() {
                     </Link>
                 </div>
 
-                {/* Social Proof / Trust Badges */}
+                {/* Social Proof / Trust Badges - HIDDEN until logos are provided
                 <div className="flex flex-col items-center gap-4 text-sm text-gray-500">
                     <p>Más de 1,000 negocios confían en nosotros</p>
                     <div className="flex items-center gap-6 opacity-50 grayscale hover:grayscale-0 transition duration-500">
-                        {/* Placeholder Logos */}
                         <span className="font-bold text-xl">ACME Corp</span>
                         <span className="font-bold text-xl">Stark Ind</span>
                         <span className="font-bold text-xl">Wayne Ent</span>
                         <span className="font-bold text-xl">Cyberdyne</span>
                     </div>
                 </div>
+                */}
 
                 {/* Dashboard Preview (Floating) */}
                 <div className="mt-20 relative mx-auto max-w-6xl perspective-1000">

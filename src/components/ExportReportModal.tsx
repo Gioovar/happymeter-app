@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Download, Calendar } from 'lucide-react'
+import { X, Download, Calendar, FileText } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { generateExecutiveReportPDF } from '@/lib/pdf-generator'
 
 interface ExportReportModalProps {
     isOpen: boolean
@@ -14,11 +15,12 @@ export default function ExportReportModal({ isOpen, onClose, surveys }: ExportRe
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
     const [selectedSurvey, setSelectedSurvey] = useState('all')
-    const [isExporting, setIsExporting] = useState(false)
+    const [isExportingCSV, setIsExportingCSV] = useState(false)
+    const [isExportingPDF, setIsExportingPDF] = useState(false)
 
-    const handleExport = async (e: React.FormEvent) => {
+    const handleExportCSV = async (e: React.FormEvent) => {
         e.preventDefault()
-        setIsExporting(true)
+        setIsExportingCSV(true)
 
         try {
             const params = new URLSearchParams({
@@ -42,9 +44,26 @@ export default function ExportReportModal({ isOpen, onClose, surveys }: ExportRe
             onClose()
         } catch (error) {
             console.error('Export error:', error)
-            alert('Error al descargar el reporte')
+            alert('Error al descargar el CSV')
         } finally {
-            setIsExporting(false)
+            setIsExportingCSV(false)
+        }
+    }
+
+    const handleExportPDF = async () => {
+        setIsExportingPDF(true)
+        try {
+            await generateExecutiveReportPDF(
+                startDate || new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString(),
+                endDate || new Date().toISOString(),
+                selectedSurvey
+            )
+            onClose()
+        } catch (error) {
+            console.error('PDF Export error:', error)
+            alert('Error al generar el PDF. Intenta de nuevo.')
+        } finally {
+            setIsExportingPDF(false)
         }
     }
 
@@ -70,7 +89,7 @@ export default function ExportReportModal({ isOpen, onClose, surveys }: ExportRe
                         </button>
                     </div>
 
-                    <form onSubmit={handleExport} className="p-6 space-y-6">
+                    <div className="p-6 space-y-6">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-300">Seleccionar Encuesta</label>
                             <select
@@ -94,7 +113,6 @@ export default function ExportReportModal({ isOpen, onClose, surveys }: ExportRe
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500 transition [color-scheme:dark]"
-                                        required
                                     />
                                 </div>
                             </div>
@@ -106,23 +124,42 @@ export default function ExportReportModal({ isOpen, onClose, surveys }: ExportRe
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500 transition [color-scheme:dark]"
-                                        required
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="pt-2">
+                        <div className="pt-2 space-y-3">
+                            {/* PDF Button (Primary) */}
                             <button
-                                type="submit"
-                                disabled={isExporting}
-                                className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-2"
+                                onClick={handleExportPDF}
+                                disabled={isExportingPDF || isExportingCSV}
+                                className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20"
                             >
-                                {isExporting ? 'Generando...' : 'Descargar CSV'}
-                                {!isExporting && <Download className="w-5 h-5" />}
+                                {isExportingPDF ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <span>Generando IA...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <FileText className="w-5 h-5" />
+                                        <span>Descargar Reporte PDF con IA</span>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* CSV Button (Secondary) */}
+                            <button
+                                onClick={handleExportCSV}
+                                disabled={isExportingPDF || isExportingCSV}
+                                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-gray-300 font-medium py-3 rounded-xl transition flex items-center justify-center gap-2"
+                            >
+                                {isExportingCSV ? 'Descargando...' : 'Descargar solo datos (CSV)'}
+                                {!isExportingCSV && <Download className="w-4 h-4" />}
                             </button>
                         </div>
-                    </form>
+                    </div>
                 </motion.div>
             </div>
         </AnimatePresence>

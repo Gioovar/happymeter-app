@@ -5,49 +5,41 @@ import { prisma } from '@/lib/prisma'
 
 export async function sendCrisisAlert(response: Response, survey: Survey, answers: any[]) {
     try {
-        // Parse config
         const config = survey.alertConfig as any
-        /* 
-           If user hasn't configured alerts explicitly, strictly speaking we might skip.
-           BUT for the "Notification Dashboard" feature, we probably want to create the internal notification 
-           regardless of whether they set up WhatsApp/Email. 
-           Let's assume "Critical Reviews" (1-2 stars) always generate a dashboard alert 
-           if enabled in config OR by default logic if we want.
-           For now, let's respect the `config.enabled` or enforce it for low ratings.
-           Let's safeguard: if no config, check rating <= 2 manually.
-        */
-
         let shouldAlert = false
-        let threshold = 2 // Default threshold
+        let threshold = (config && config.threshold) || 2
 
-        if (config && config.enabled) {
-            threshold = config.threshold || 2
-        }
-
-        // Check threshold
         const ratingAnswer = answers.find(a => a.question.type === 'RATING' || a.question.type === 'EMOJI')
         if (!ratingAnswer) return
 
         const rating = parseInt(ratingAnswer.value)
         if (isNaN(rating)) return
 
-        // Trigger if rating is low enough (config driven or default bad < 3)
         if (rating <= threshold) {
             shouldAlert = true
         }
 
         if (!shouldAlert) return
 
-        // Prepare Alert Payload
+        // Fetch User Settings for Global Alerts
+        const userSettings = await prisma.userSettings.findUnique({
+            where: { userId: survey.userId }
+        })
+
         const issueText = answers.find(a => a.value.length > 5 && a.question.type === 'TEXT')?.value || "Sin comentarios"
         const customerName = response.customerName || "Anónimo"
         const tableName = answers.find(a => a.question.text.toLowerCase().includes('mesa'))?.value || "N/A"
 
-        const message = `Cliente: ${customerName}\nMesa: ${tableName}\nCalificación: ${rating} ⭐\n"${issueText}"`
+        let message = `Cliente: ${customerName}\nMesa: ${tableName}\nCalificación: ${rating} ⭐\n"${issueText}"`
+
+        // Smart Recovery Configuration
+        const recovery = (survey as any).recoveryConfig
+        if (recovery && recovery.enabled) {
+            message += `\n\n🚑 RECUPERACIÓN INTELIGENTE:\nEnvía esto al cliente:\n"Hola ${customerName}, sentimos tu mala experiencia. Muestra este código *${recovery.code}* en tu próxima visita para *${recovery.offer}*."`
+        }
 
         console.log('--- CREATING CRISIS ALERT ---')
 
-        // 1. Create Dashboard Notification
         await prisma.notification.create({
             data: {
                 userId: survey.userId,
@@ -58,25 +50,42 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
             }
         })
 
-        // 2. External Alerts (WhatsApp/Email) - Only if configured
-        if (config && config.enabled) {
-            // WhatsApp (Placeholder for now until templates active)
-            if (config.phones && config.phones.length > 0) {
-                console.log(`Sending WhatsApp to: ${config.phones.join(', ')}`)
-            }
+        // Collect Phones
+        const phones = new Set<string>()
+        if (config && config.phones) {
+            config.phones.forEach((p: string) => phones.add(p))
+        }
 
-            // Email (REAL)
-            if (config.emails && config.emails.length > 0) {
-                console.log(`Sending Email to: ${config.emails.join(', ')}`)
-                for (const email of config.emails) {
-                    sendResponseAlert(
-                        email,
-                        survey.title,
-                        rating,
-                        response.id,
-                        issueText
-                    ).catch(console.error)
-                }
+        // Add Global Phone if WhatsApp enabled
+        const globalWhatsapp = userSettings?.notificationPreferences ? (userSettings.notificationPreferences as any).whatsapp : false
+        if (globalWhatsapp && userSettings?.phone) {
+            phones.add(userSettings.phone)
+        }
+
+        // Send WhatsApp
+        if (phones.size > 0) {
+            console.log(`Sending WhatsApp to: ${Array.from(phones).join(', ')}`)
+            for (const phone of Array.from(phones)) {
+                await sendWhatsAppTemplate(phone, 'new_survey_alert', 'es_MX', [
+                    { type: 'text', text: customerName },
+                    { type: 'text', text: rating.toString() },
+                    { type: 'text', text: (issueText + (recovery && recovery.enabled ? `\n\n🚑 OFERTA: ${recovery.code} - ${recovery.offer}` : "")).substring(0, 60) }
+                ])
+            }
+        }
+
+        // Send Emails (keep existing logic restricted to config.emails? Or add global email?)
+        // User only asked about WhatsApp. Keeping email logic as is for now.
+        if (config && config.enabled && config.emails && config.emails.length > 0) {
+            console.log(`Sending Email to: ${config.emails.join(', ')}`)
+            for (const email of config.emails) {
+                sendResponseAlert(
+                    email,
+                    survey.title,
+                    rating,
+                    response.id,
+                    issueText
+                ).catch(console.error)
             }
         }
 
@@ -85,6 +94,53 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
     } catch (error) {
         console.error('Failed to send crisis alert', error)
         return false
+    }
+}
+
+// Helper for Meta WhatsApp API
+export async function sendWhatsAppTemplate(to: string, templateName: string, languageCode: string = 'es_MX', components: any[] = []) {
+    try {
+        const token = process.env.WHATSAPP_ACCESS_TOKEN
+        const phoneId = process.env.WHATSAPP_PHONE_ID
+
+        if (!token || !phoneId) {
+            console.warn('WhatsApp credentials missing in .env')
+            return
+        }
+
+        const body = {
+            messaging_product: "whatsapp",
+            to: to,
+            type: "template",
+            template: {
+                name: templateName,
+                language: { code: languageCode },
+                components: [
+                    {
+                        type: "body",
+                        parameters: components
+                    }
+                ]
+            }
+        }
+
+        const res = await fetch(`https://graph.facebook.com/v17.0/${phoneId}/messages`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+            console.error('WhatsApp API Error:', data)
+        } else {
+            console.log('WhatsApp Sent:', data)
+        }
+    } catch (e) {
+        console.error('WhatsApp Send Failed:', e)
     }
 }
 
