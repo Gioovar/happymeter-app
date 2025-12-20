@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 interface AnalyticsChartsProps {
     data: {
-        last7Days: { date: string; users: number; responses: number }[]
+        growth: { date: string; users: number; responses: number }[]
         tokens: { name: string; value: number }[]
     }
 }
@@ -13,10 +13,10 @@ export default function AnalyticsCharts({ data }: AnalyticsChartsProps) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-[#111] border border-white/10 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-white mb-6">Crecimiento (Últimos 7 días)</h3>
+                <h3 className="text-lg font-bold text-white mb-6">Crecimiento (Últimos 30 días)</h3>
                 <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={data.last7Days}>
+                        <LineChart data={data.growth}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                             <XAxis
                                 dataKey="date"

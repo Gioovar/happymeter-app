@@ -27,6 +27,7 @@ interface AIProcessManualProps {
 export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys }: AIProcessManualProps) {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
+    const [strategiesLoading, setStrategiesLoading] = useState(false)
     const [manualData, setManualData] = useState<any>(null)
     const [showReport, setShowReport] = useState(false)
     const [showDateModal, setShowDateModal] = useState(false) // New Modal State
@@ -59,38 +60,35 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
 
 
-                // Pass industry to get tailored strategies
-                let analytics;
+                // 1. Fast Load (Skip AI)
+                let fastAnalytics;
                 if (publicToken) {
-                    analytics = await getPublicSurveyAnalytics(surveyId, publicToken, { from, to }, industry)
+                    fastAnalytics = await getPublicSurveyAnalytics(surveyId, publicToken, { from, to }, industry, true)
                 } else {
-                    analytics = await getSurveyAnalytics(surveyId, { from, to }, industry)
+                    fastAnalytics = await getSurveyAnalytics(surveyId, { from, to }, industry, true)
                 }
 
                 setManualData({
-                    ...analytics, // matches new interface with generatedStrategies
-                    // Use generated strategies from backend, fallback to empty if something fails
-                    detailedStrategies: analytics.generatedStrategies || [],
-
-                    // Keeping static recommendations/extra data structure to prevent UI crashes if these components expect them
-                    recommendations: [
+                    ...fastAnalytics,
+                    detailedStrategies: [], // Start empty
+                    recommendations: [ /* ... same static data ... */
                         {
                             title: "Atención al Cliente",
-                            desc: analytics.metrics.avgRating < 4 ? "El puntaje sugiere oportunidades en trato directo." : "Mantener el estándar de excelencia.",
-                            action: analytics.metrics.avgRating < 4 ? "Revisar tiempos de respuesta." : "Incentivar al personal.",
+                            desc: fastAnalytics.metrics.avgRating < 4 ? "El puntaje sugiere oportunidades en trato directo." : "Mantener el estándar de excelencia.",
+                            action: fastAnalytics.metrics.avgRating < 4 ? "Revisar tiempos de respuesta." : "Incentivar al personal.",
                             impact: "Alto",
                             icon: Users
                         },
                         {
                             title: "Fidelización",
-                            desc: `NPS de ${analytics.metrics.npsScore} indica ${analytics.metrics.npsScore > 50 ? "alta lealtad." : "riesgo de fuga."}`,
+                            desc: `NPS de ${fastAnalytics.metrics.npsScore} indica ${fastAnalytics.metrics.npsScore > 50 ? "alta lealtad." : "riesgo de fuga."}`,
                             action: "Implementar programa de recompensas.",
                             impact: "Medio",
                             icon: TrendingUp
                         }
                     ],
-                    starBreakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }, // Placeholder for now
-                    topWaiter: { name: "Equipo", mentions: 0 }, // Placeholder
+                    starBreakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+                    topWaiter: { name: "Equipo", mentions: 0 },
                     discoveryData: [
                         { name: 'Redes Sociales', value: 45 },
                         { name: 'Google Maps', value: 30 },
@@ -102,10 +100,34 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                         { url: "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=300&h=200", comment: "Volveré pronto.", rating: 4 }
                     ]
                 })
+
+                setLoading(false) // Show UI immediately
+
+                // 2. Async Strategy Load (Full AI)
+                setStrategiesLoading(true)
+                try {
+                    let fullAnalytics;
+                    if (publicToken) {
+                        fullAnalytics = await getPublicSurveyAnalytics(surveyId, publicToken, { from, to }, industry, false)
+                    } else {
+                        fullAnalytics = await getSurveyAnalytics(surveyId, { from, to }, industry, false)
+                    }
+
+                    if (fullAnalytics && fullAnalytics.generatedStrategies) {
+                        setManualData((prev: any) => ({
+                            ...prev,
+                            detailedStrategies: fullAnalytics.generatedStrategies
+                        }))
+                    }
+                } catch (aiError) {
+                    console.error("AI Strategy Load Failed", aiError)
+                } finally {
+                    setStrategiesLoading(false)
+                }
+
             } catch (error) {
                 console.error("Error fetching analytics:", error)
                 toast.error("No se pudieron cargar los datos reales")
-            } finally {
                 setLoading(false)
             }
         }
@@ -467,7 +489,15 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
                             {/* --- Page 2-4: Strategies (Dark Mode) --- */}
                             <div className="space-y-24">
-                                {(manualData.detailedStrategies || []).map((strategy: any, i: number) => (
+                                {/* Show Loader if Strategies Loading */}
+                                {strategiesLoading && (
+                                    <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                                        <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
+                                        <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras GPT-4o procesa el feedback.</p>
+                                    </div>
+                                )}
+
+                                {!strategiesLoading && (manualData.detailedStrategies || []).map((strategy: any, i: number) => (
                                     <div key={i} className="border-t border-white/10 pt-16">
                                         <div className="mb-8">
                                             <span className="text-violet-400 font-bold uppercase tracking-widest text-xs mb-2 block">Estrategia #{i + 1}</span>
@@ -660,14 +690,26 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                             </div>
                         </div>
 
+                        {/* Show Loader if Strategies Loading */}
+                        {strategiesLoading && (
+                            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                                <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
+                                <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras GPT-4o procesa el feedback.</p>
+                            </div>
+                        )}
+
                         {/* PAGES 2+: Detailed Strategies (One per page) */}
-                        {(manualData.detailedStrategies || []).map((strategy: any, i: number) => (
-                            <div key={i} className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                    {/* Header Small */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px', marginBottom: '40px' }}>
-                                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>ESTRATEGIA DETALLADA #{i + 1}</span>
-                                        <span style={{ fontSize: '12px', color: '#cbd5e1' }}>HappyMeter Intelligence</span>
+                        {!strategiesLoading && (manualData.detailedStrategies || []).map((strategy: any, i: number) => (
+                            <div key={i} className="bg-[#15171e]/50 border border-white/5 rounded-[32px] p-8 md:p-12 relative overflow-hidden">
+                                {/* Decorator */}
+                                <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-hb from-violet-600/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+                                <div className="relative z-10">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 font-bold border border-violet-500/20">
+                                            {i + 1}
+                                        </div>
+                                        <span className="text-violet-400 font-bold tracking-widest text-xs uppercase">Estrategia Recomendada</span>
                                     </div>
 
                                     {/* Title Section */}
@@ -830,30 +872,43 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                     <h3 className="text-base font-bold text-white mb-4">Análisis de Sentimiento</h3>
 
                                     <div className="space-y-4">
-                                        {manualData.sentimentData.map((item: any, i: number) => (
-                                            <div key={i} className="relative group">
-                                                <div className="flex justify-between text-xs font-medium mb-1.5">
-                                                    <span className="text-gray-300">{item.name}</span>
-                                                    <span className="text-white font-bold">{item.value}%</span>
+                                        {manualData.sentimentData.map((item: any, i: number) => {
+                                            const styles = {
+                                                'Positivo': { color: 'from-emerald-400 to-teal-500', bg: 'bg-emerald-500/20', glow: 'shadow-[0_0_15px_rgba(52,211,153,0.5)]' },
+                                                'Neutral': { color: 'from-amber-400 to-orange-500', bg: 'bg-amber-500/20', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.5)]' },
+                                                'Negativo': { color: 'from-rose-500 to-red-600', bg: 'bg-rose-500/20', glow: 'shadow-[0_0_15px_rgba(244,63,94,0.5)]' }
+                                            }[item.name] || { color: 'from-gray-400 to-gray-500', bg: 'bg-gray-500/20', glow: '' }
+
+                                            // Fallback to item props if mapping fails but usually name matches
+                                            const bg = styles.bg || item.bg
+                                            const grad = styles.color || item.color
+                                            const glow = styles.glow || item.glow
+
+                                            return (
+                                                <div key={i} className="relative group">
+                                                    <div className="flex justify-between text-xs font-medium mb-1.5">
+                                                        <span className="text-gray-300">{item.name}</span>
+                                                        <span className="text-white font-bold">{item.value}%</span>
+                                                    </div>
+                                                    {/* Background Bar */}
+                                                    <div className={`h-2.5 w-full rounded-full ${bg}`}>
+                                                        {/* Foreground Glowing Bar */}
+                                                        <motion.div
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: `${item.value}%` }}
+                                                            transition={{ duration: 1, delay: 0.5 + (i * 0.1) }}
+                                                            className={`h-full rounded-full bg-gradient-to-r ${grad} ${glow} shadow-md relative`}
+                                                        >
+                                                            <div className="absolute top-0 right-0 bottom-0 w-1 bg-white/50 blur-[1px] rounded-full" />
+                                                        </motion.div>
+                                                    </div>
                                                 </div>
-                                                {/* Background Bar */}
-                                                <div className={`h-2.5 w-full rounded-full ${item.bg}`}>
-                                                    {/* Foreground Glowing Bar */}
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${item.value}%` }}
-                                                        transition={{ duration: 1, delay: 0.5 + (i * 0.1) }}
-                                                        className={`h-full rounded-full bg-gradient-to-r ${item.color} ${item.glow} shadow-md relative`}
-                                                    >
-                                                        <div className="absolute top-0 right-0 bottom-0 w-1 bg-white/50 blur-[1px] rounded-full" />
-                                                    </motion.div>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
                                     </div>
 
                                     <div className="mt-6 p-3 bg-white/5 rounded-xl border border-white/5 text-center">
-                                        <p className="text-xl font-bold text-white mb-0.5">85%</p>
+                                        <p className="text-xl font-bold text-white mb-0.5">{Math.round((manualData.sentimentData.find((s: any) => s.name === 'Positivo')?.value || 0) + (manualData.sentimentData.find((s: any) => s.name === 'Neutral')?.value || 0) / 2)}%</p>
                                         <p className="text-[10px] text-gray-400 uppercase tracking-widest">Satisfacción General</p>
                                     </div>
                                 </motion.div>
@@ -896,193 +951,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
 
             {/* --- PRINT ONLY REPORT (HIDDEN ON SCREEN) ---  DEPRECATED/REMOVED */}
-            < div className="hidden print:block bg-white text-black p-8 min-h-screen print-only-section" >
-                {manualData && (
-                    <div className="max-w-4xl mx-auto">
-
-                        {/* Header */}
-                        <div className="flex justify-between items-center border-b-2 border-slate-900 pb-6 mb-8">
-                            <div>
-                                <h1 className="text-3xl font-bold text-slate-900">HappyMeter Report</h1>
-                                <p className="text-slate-500 mt-1">{surveyTitle}</p>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-sm font-bold text-slate-900">Periodo de Análisis</div>
-                                {dateRange?.from && (
-                                    <div className="text-slate-600">
-                                        {format(dateRange.from, "d MMM", { locale: es })} - {dateRange?.to ? format(dateRange.to, "d MMM yyyy", { locale: es }) : "..."}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Executive Summary Grid */}
-                        <div className="grid grid-cols-3 gap-6 mb-10">
-                            <div className="bg-slate-50 p-6 rounded-2xl">
-                                <p className="text-sm text-slate-500 font-medium uppercase mb-1">Feedback Total</p>
-                                <p className="text-4xl font-bold text-slate-900">{manualData.metrics.totalFeedback}</p>
-                                <p className="text-sm text-green-600 font-medium mt-1">▲ 12% vs mes anterior</p>
-                            </div>
-                            <div className="bg-slate-50 p-6 rounded-2xl">
-                                <p className="text-sm text-slate-500 font-medium uppercase mb-1">NPS Score</p>
-                                <p className="text-4xl font-bold text-violet-600">+{manualData.metrics.npsScore}</p>
-                                <p className="text-sm text-slate-600 mt-1">Nivel Excelente</p>
-                            </div>
-                            <div className="bg-slate-50 p-6 rounded-2xl border-l-4 border-violet-500">
-                                <p className="text-xs text-slate-500 uppercase font-bold mb-2">Mesero Estrella 🌟</p>
-                                <p className="text-xl font-bold text-slate-900">{manualData.topWaiter?.name || "Juan Pérez"}</p>
-                                <p className="text-sm text-slate-600">{manualData.topWaiter?.mentions || 24} menciones positivas</p>
-                            </div>
-                        </div>
-
-                        {/* Star Breakdown & Discovery */}
-                        <div className="grid grid-cols-2 gap-10 mb-10 page-break-inside-avoid">
-                            <div>
-                                <h3 className="text-lg font-bold text-slate-900 mb-4 border-l-4 border-violet-500 pl-3">Satisfacción (Estrellas)</h3>
-                                <div className="space-y-3">
-                                    {[5, 4, 3, 2, 1].map((stars, i) => (
-                                        <div key={stars} className="flex items-center gap-3">
-                                            <div className="w-8 text-sm font-bold text-slate-700 flex">{stars} <Star className="w-3 h-3 ml-0.5 fill-slate-700" /></div>
-                                            <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-slate-800 rounded-full"
-                                                    style={{ width: `${manualData.starBreakdown?.[stars] || (stars === 5 ? 60 : stars === 4 ? 20 : 5)}%` }}
-                                                />
-                                            </div>
-                                            <div className="w-8 text-xs text-slate-500 text-right">{manualData.starBreakdown?.[stars] || (stars === 5 ? 60 : stars === 4 ? 20 : 5)}%</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 className="text-lg font-bold text-slate-900 mb-4 border-l-4 border-violet-500 pl-3">Medios de Difusión</h3>
-                                <div className="space-y-4">
-                                    {(manualData.discoveryData || [
-                                        { name: "Instagram", value: 45 },
-                                        { name: "Google Maps", value: 30 },
-                                        { name: "Recomendación", value: 25 }
-                                    ]).map((item: any, i: number) => (
-                                        <div key={i}>
-                                            <div className="flex justify-between text-sm mb-1">
-                                                <span className="font-medium text-slate-700">{item.name}</span>
-                                                <span className="font-bold text-slate-900">{item.value}%</span>
-                                            </div>
-                                            <div className="h-2 w-full bg-slate-100 rounded-full">
-                                                <div className="h-full bg-violet-500 rounded-full" style={{ width: `${item.value}%` }} />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Action Plan */}
-                        <div className="mb-10 page-break-inside-avoid">
-                            <h3 className="text-xl font-bold text-slate-900 mb-6 border-b border-slate-200 pb-2">Plan de Acción Recomendado</h3>
-                            <div className="grid grid-cols-3 gap-6">
-                                {manualData.recommendations.map((rec: any, i: number) => (
-                                    <div key={i} className="border border-slate-200 p-5 rounded-xl bg-white shadow-sm">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="p-2 bg-slate-100 rounded-lg text-slate-900">
-                                                <rec.icon className="w-5 h-5" />
-                                            </div>
-                                            <h4 className="font-bold text-slate-800 text-sm leading-tight">{rec.title}</h4>
-                                        </div>
-                                        <p className="text-xs text-slate-500 mb-3">{rec.desc}</p>
-                                        <div className="text-sm font-medium text-violet-700 bg-violet-50 p-3 rounded-lg">
-                                            👉 {rec.action}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Customer Photos */}
-                        <div className="page-break-inside-avoid mb-10">
-                            <h3 className="text-xl font-bold text-slate-900 mb-6 border-b border-slate-200 pb-2">La Voz del Cliente (Evidencia)</h3>
-                            <div className="grid grid-cols-3 gap-4">
-                                {(manualData.customerPhotos || [
-                                    { url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=300&h=200", comment: "¡Excelente ambiente!", rating: 5 },
-                                    { url: "https://images.unsplash.com/photo-1514362545857-3bc16549766b?auto=format&fit=crop&q=80&w=300&h=200", comment: "El postre estaba delicioso.", rating: 5 },
-                                    { url: "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=300&h=200", comment: "Un poco lento el servicio hoy.", rating: 3 }
-                                ]).map((photo: any, i: number) => (
-                                    <div key={i} className="group">
-                                        <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden mb-2 border border-slate-200 relative flex items-center justify-center">
-                                            {/* Safe placeholder for PDF to avoid CORS/Taint issues */}
-                                            <div className="text-slate-300 text-xs">Foto Cliente</div>
-                                            <div className="absolute bottom-2 right-2 bg-white/90 px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 shadow-sm">
-                                                {photo.rating} <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-slate-600 italic">"{photo.comment}"</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* --- DETAILED STRATEGY PAGES (New Pages) --- */}
-                        {(manualData.detailedStrategies || []).map((strategy: any, i: number) => (
-                            <div key={i} className="break-before-page min-h-screen py-10 flex flex-col justify-center">
-                                {/* Header */}
-                                <div className="mb-8 border-b-2 border-slate-900 pb-4">
-                                    <span className="text-violet-600 font-bold uppercase tracking-widest text-xs mb-2 block">Estrategia Detallada #{i + 1}</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 leading-tight">{strategy.title}</h2>
-                                    {/* Removed strategy.objective as it's no longer in interface, using problemDetected instead or just title */}
-                                </div>
-
-                                {/* Case Study Box */}
-                                {/* Problem & Best Practice Box */}
-                                <div className="bg-slate-50 border-l-4 border-violet-600 p-8 rounded-r-2xl mb-10">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="p-2 bg-red-100 rounded-lg text-red-600">
-                                            <TrendingUp className="w-6 h-6 rotate-180" />
-                                        </div>
-                                        <h3 className="text-xl font-bold text-slate-900">Problema Detectado</h3>
-                                    </div>
-                                    <p className="text-slate-700 text-lg leading-relaxed mb-6">
-                                        "{strategy.problemDetected}"
-                                    </p>
-
-                                    <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-start gap-3">
-                                        <div className="mt-1 text-emerald-600">
-                                            <CheckCircle2 className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <span className="text-xs font-bold uppercase text-emerald-600 block mb-1">Mejor Práctica (Solución)</span>
-                                            <span className="text-base font-medium text-slate-900">{strategy.bestPractice}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Step by Step Implementation */}
-                                <div>
-                                    <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-sm">🛠</div>
-                                        Plan de Implementación Paso a Paso
-                                    </h3>
-                                    <div className="space-y-6">
-                                        {strategy.steps.map((step: any, idx: number) => (
-                                            <div key={idx} className="flex gap-6">
-                                                <div className="flex-shrink-0 w-12 h-12 rounded-full border-2 border-slate-200 flex items-center justify-center font-bold text-slate-400 text-lg">
-                                                    {idx + 1}
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-lg font-bold text-slate-900 mb-1">{step.title}</h4>
-                                                    <p className="text-slate-600 leading-relaxed">{step.desc}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-
-                    </div>
-                )
-                }
-            </div >
-
+            {/* This section was removed in concept but kept in code structure to prevent errors if invoked, though effectively empty now or minimal legacy support */}
 
         </div >
     )

@@ -31,22 +31,32 @@ interface AnalyticsData {
     generatedStrategies: Strategy[]
 }
 
-export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: Date; to: Date }, industry: string = 'restaurant'): Promise<AnalyticsData> {
+export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: Date; to: Date }, industry: string = 'restaurant', skipAI: boolean = false): Promise<AnalyticsData> {
     try {
         const { userId } = await auth()
         if (!userId) throw new Error('Unauthorized')
 
+        // 2. Determine Data Window (Moved up for DB Optimization)
+        const toDate = dateRange?.to || new Date()
+        const endDate = endOfDay(toDate)
+        const startDate = dateRange?.from || subDays(startOfDay(toDate), 30)
 
+        // 1. Fetch Data (Optimized with Date Filter)
         let allResponses: any[] = []
         let allQuestions: any[] = []
 
-        // 1. Fetch Data (Specific or All)
         if (surveyId === 'all') {
             const surveys = await prisma.survey.findMany({
                 where: { userId },
                 include: {
                     questions: true,
                     responses: {
+                        where: {
+                            createdAt: {
+                                gte: startDate,
+                                lte: endDate
+                            }
+                        },
                         include: { answers: true },
                         orderBy: { createdAt: 'asc' }
                     }
@@ -64,6 +74,12 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
                 include: {
                     questions: true,
                     responses: {
+                        where: {
+                            createdAt: {
+                                gte: startDate,
+                                lte: endDate
+                            }
+                        },
                         include: { answers: true },
                         orderBy: { createdAt: 'asc' }
                     }
@@ -75,18 +91,8 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
             allQuestions = survey.questions
         }
 
-
-        // 2. Determine Data Window
-        const toDate = dateRange?.to || new Date()
-        const endDate = endOfDay(toDate)
-        const startDate = dateRange?.from || subDays(startOfDay(toDate), 30)
-
-
-        // Filter responses by date
-        const relevantResponses = allResponses.filter(r => {
-            const d = new Date(r.createdAt)
-            return d >= startDate && d <= endDate
-        })
+        // Relevant responses are now already filtered by DB
+        const relevantResponses = allResponses
 
 
         // 3. Calculate Metrics & Weaknesses
@@ -177,9 +183,9 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
         // 5. Generate Strategies
         let generatedStrategies: Strategy[] = []
 
-        // Call AI if we have ANY context (Metrics OR Text)
+        // Call AI if we have ANY context (Metrics OR Text) AND skipAI is false
         // Using GPT-4o for stability as requested
-        if (process.env.OPENAI_API_KEY && fullContext.length > 10) {
+        if (!skipAI && process.env.OPENAI_API_KEY && fullContext.length > 10) {
             try {
                 // console.log("[Analytics] Calling OpenAI with Hybrid Context...")
                 generatedStrategies = await generateStrategiesWithAI(industry, fullContext)
@@ -398,7 +404,7 @@ export async function getReportShareLink(surveyId: string) {
     }
 }
 
-export async function getPublicSurveyAnalytics(surveyId: string, token: string, dateRange?: { from: Date; to: Date }, industry: string = 'restaurant'): Promise<AnalyticsData> {
+export async function getPublicSurveyAnalytics(surveyId: string, token: string, dateRange?: { from: Date; to: Date }, industry: string = 'restaurant', skipAI: boolean = false): Promise<AnalyticsData> {
     const isValid = await verifyToken(surveyId, token)
     if (!isValid) throw new Error("Invalid or expired link")
 
@@ -407,11 +413,24 @@ export async function getPublicSurveyAnalytics(surveyId: string, token: string, 
         let allResponses: any[] = []
         let allQuestions: any[] = []
 
+        // --- REUSE CORE CALCULATION LOGIC ---
+        // (Copied from above for public view stability)
+
+        const toDate = dateRange?.to || new Date()
+        const endDate = endOfDay(toDate)
+        const startDate = dateRange?.from || subDays(startOfDay(toDate), 30)
+
         const survey = await prisma.survey.findUnique({
             where: { id: surveyId },
             include: {
                 questions: true,
                 responses: {
+                    where: {
+                        createdAt: {
+                            gte: startDate,
+                            lte: endDate
+                        }
+                    },
                     include: { answers: true },
                     orderBy: { createdAt: 'asc' }
                 }
@@ -422,17 +441,7 @@ export async function getPublicSurveyAnalytics(surveyId: string, token: string, 
         allResponses = survey.responses
         allQuestions = survey.questions
 
-        // --- REUSE CORE CALCULATION LOGIC ---
-        // (Copied from above for public view stability)
-
-        const toDate = dateRange?.to || new Date()
-        const endDate = endOfDay(toDate)
-        const startDate = dateRange?.from || subDays(startOfDay(toDate), 30)
-
-        const relevantResponses = allResponses.filter(r => {
-            const d = new Date(r.createdAt)
-            return d >= startDate && d <= endDate
-        })
+        const relevantResponses = allResponses
 
         const totalFeedback = relevantResponses.length
         let scores: number[] = []

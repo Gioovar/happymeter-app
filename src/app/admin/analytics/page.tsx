@@ -2,35 +2,15 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import AnalyticsCharts from '@/components/admin/AnalyticsCharts'
-import { Loader2, Brain, Zap, Server } from 'lucide-react'
+import { Loader2, Brain, Zap, Server, Activity } from 'lucide-react'
 import { subDays, format } from 'date-fns'
+import { getGlobalAnalytics } from '@/actions/admin'
 
 export const dynamic = 'force-dynamic'
 
-async function getAnalyticsData() {
-    // Mocking historical data because we don't have a daily timeseries table yet
-    // In a real app, we would query a 'DailyStats' table or aggregate by createdAt
-
-    const last7Days = Array.from({ length: 7 }).map((_, i) => {
-        const date = subDays(new Date(), 6 - i)
-        return {
-            date: format(date, 'MMM dd'),
-            users: Math.floor(Math.random() * 50) + 10 * i, // Simulated cumulative growth
-            responses: Math.floor(Math.random() * 200) + 50 * i
-        }
-    })
-
-    const tokens = [
-        { name: 'GPT-4o', value: 45000 },
-        { name: 'GPT-3.5', value: 120000 },
-        { name: 'Embedding', value: 85000 },
-    ]
-
-    return { last7Days, tokens }
-}
-
 export default async function AdminAnalyticsPage() {
-    const data = await getAnalyticsData()
+    const analytics = await getGlobalAnalytics()
+    const totalTokens = analytics.tokens.reduce((a, b) => a + b.value, 0)
 
     return (
         <div className="space-y-6">
@@ -47,7 +27,7 @@ export default async function AdminAnalyticsPage() {
                     </div>
                     <div>
                         <p className="text-gray-400 text-sm">Total AI Tokens</p>
-                        <p className="text-2xl font-bold text-white">250K</p>
+                        <p className="text-2xl font-bold text-white">{(totalTokens / 1000).toFixed(1)}K</p>
                     </div>
                 </div>
                 <div className="bg-[#111] border border-white/10 p-6 rounded-2xl flex items-center gap-4">
@@ -55,17 +35,17 @@ export default async function AdminAnalyticsPage() {
                         <Zap className="w-8 h-8 text-amber-500" />
                     </div>
                     <div>
-                        <p className="text-gray-400 text-sm">Latencia Media</p>
-                        <p className="text-2xl font-bold text-white">240ms</p>
+                        <p className="text-gray-400 text-sm">Encuestas Activas</p>
+                        <p className="text-2xl font-bold text-white">{analytics.metrics.activeSurveys}</p>
                     </div>
                 </div>
                 <div className="bg-[#111] border border-white/10 p-6 rounded-2xl flex items-center gap-4">
                     <div className="p-3 bg-red-500/10 rounded-xl">
-                        <Server className="w-8 h-8 text-red-500" />
+                        <Activity className="w-8 h-8 text-red-500" />
                     </div>
                     <div>
-                        <p className="text-gray-400 text-sm">Error Rate</p>
-                        <p className="text-2xl font-bold text-white">0.2%</p>
+                        <p className="text-gray-400 text-sm">Respuestas Totales</p>
+                        <p className="text-2xl font-bold text-white">{analytics.metrics.totalResponses}</p>
                     </div>
                 </div>
             </div>
@@ -75,7 +55,7 @@ export default async function AdminAnalyticsPage() {
                     <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
                 </div>
             }>
-                <AnalyticsCharts data={data} />
+                <AnalyticsCharts data={{ growth: analytics.last30Days, tokens: analytics.tokens }} />
             </Suspense>
         </div>
     )

@@ -2,12 +2,89 @@
 
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { subDays, startOfDay, endOfDay, format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 // TODO: stricter role check
 async function checkAdmin() {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
+    if (!userId) throw new Error('Unauthorized')
     return userId
+}
+
+export async function getGlobalAnalytics() {
+    await checkAdmin()
+
+    // 1. Total Counts
+    const totalUsers = await prisma.userSettings.count()
+    const totalResponses = await prisma.response.count()
+    const activeSurveys = await prisma.survey.count()
+
+    // 2. Growth (Last 30 Days)
+    const today = new Date()
+    const thirtyDaysAgo = subDays(today, 30)
+
+    // Fetch only dates for aggregation to save bandwidth
+    const newUsers = await prisma.userSettings.findMany({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+        select: { createdAt: true }
+    })
+
+    const newResponses = await prisma.response.findMany({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+        select: { createdAt: true }
+    })
+
+    // Aggregate by day
+    const chartMap = new Map<string, { users: number, responses: number }>()
+
+    // Initialize map with 0s for all days
+    for (let i = 29; i >= 0; i--) {
+        const date = subDays(today, i)
+        const key = format(date, 'MMM dd', { locale: es })
+        chartMap.set(key, { users: 0, responses: 0 })
+    }
+
+    // Fill with data
+    newUsers.forEach(u => {
+        const key = format(new Date(u.createdAt), 'MMM dd', { locale: es })
+        if (chartMap.has(key)) {
+            const entry = chartMap.get(key)!
+            entry.users++
+        }
+    })
+
+    newResponses.forEach(r => {
+        const key = format(new Date(r.createdAt), 'MMM dd', { locale: es })
+        if (chartMap.has(key)) {
+            const entry = chartMap.get(key)!
+            entry.responses++
+        }
+    })
+
+    const last30Days = Array.from(chartMap.entries()).map(([date, data]) => ({
+        date,
+        users: data.users,
+        responses: data.responses
+    }))
+
+    // 3. Token Estimate (Mock for now, but scalable)
+    const tokens = [
+        { name: 'GPT-4o', value: Math.floor(Math.random() * 50000) + 20000 },
+        { name: 'GPT-3.5', value: Math.floor(Math.random() * 100000) + 50000 },
+        { name: 'Embedding', value: Math.floor(Math.random() * 80000) + 40000 },
+    ]
+
+    return {
+        metrics: {
+            totalUsers,
+            totalResponses,
+            activeSurveys
+        },
+        last30Days,
+        tokens
+    }
 }
 
 export async function getTenants(query?: string) {
