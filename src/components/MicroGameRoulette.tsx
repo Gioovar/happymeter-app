@@ -73,7 +73,7 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes, gameOwnerId }:
 
     return (
         <div className="flex flex-col items-center justify-center w-full max-w-[320px] mx-auto">
-            {!hasSpun ? (
+            {true ? (
                 // Hide default header since we moved it to page.tsx for global control
                 null
             ) : (
@@ -196,9 +196,9 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes, gameOwnerId }:
 
             <button
                 onClick={handleSpin}
-                disabled={spinning || hasSpun}
-                className={`w-full py-4 rounded-2xl font-black text-lg uppercase tracking-widest transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-fuchsia-900/40 relative overflow-hidden group ${spinning || hasSpun
-                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed hidden'
+                disabled={spinning}
+                className={`w-full py-4 rounded-2xl font-black text-lg uppercase tracking-widest transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-fuchsia-900/40 relative overflow-hidden group ${spinning
+                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white'
                     }`}
             >
