@@ -493,7 +493,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                 {strategiesLoading && (
                                     <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
                                         <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
-                                        <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras GPT-4o procesa el feedback.</p>
+                                        <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras HappyMeter AI 2.0 Gemini procesa el feedback.</p>
                                     </div>
                                 )}
 
@@ -694,7 +694,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                         {strategiesLoading && (
                             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
                                 <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
-                                <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras GPT-4o procesa el feedback.</p>
+                                <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras HappyMeter AI 2.0 Gemini procesa el feedback.</p>
                             </div>
                         )}
 

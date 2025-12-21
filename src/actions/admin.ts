@@ -71,8 +71,8 @@ export async function getGlobalAnalytics() {
 
     // 3. Token Estimate (Mock for now, but scalable)
     const tokens = [
-        { name: 'GPT-4o', value: Math.floor(Math.random() * 50000) + 20000 },
-        { name: 'GPT-3.5', value: Math.floor(Math.random() * 100000) + 50000 },
+        { name: 'Gemini 1.5 Pro', value: Math.floor(Math.random() * 50000) + 20000 },
+        { name: 'Gemini 1.5 Flash', value: Math.floor(Math.random() * 100000) + 50000 },
         { name: 'Embedding', value: Math.floor(Math.random() * 80000) + 40000 },
     ]
 
