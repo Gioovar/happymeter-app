@@ -74,21 +74,21 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     recommendations: [ /* ... same static data ... */
                         {
                             title: "Atención al Cliente",
-                            desc: fastAnalytics.metrics.avgRating < 4 ? "El puntaje sugiere oportunidades en trato directo." : "Mantener el estándar de excelencia.",
-                            action: fastAnalytics.metrics.avgRating < 4 ? "Revisar tiempos de respuesta." : "Incentivar al personal.",
+                            desc: (fastAnalytics?.metrics?.avgRating || 0) < 4 ? "El puntaje sugiere oportunidades en trato directo." : "Mantener el estándar de excelencia.",
+                            action: (fastAnalytics?.metrics?.avgRating || 0) < 4 ? "Revisar tiempos de respuesta." : "Incentivar al personal.",
                             impact: "Alto",
                             icon: Users
                         },
                         {
                             title: "Fidelización",
-                            desc: `NPS de ${fastAnalytics.metrics.npsScore} indica ${fastAnalytics.metrics.npsScore > 50 ? "alta lealtad." : "riesgo de fuga."}`,
+                            desc: `NPS de ${fastAnalytics?.metrics?.npsScore || 0} indica ${(fastAnalytics?.metrics?.npsScore || 0) > 50 ? "alta lealtad." : "riesgo de fuga."}`,
                             action: "Implementar programa de recompensas.",
                             impact: "Medio",
                             icon: TrendingUp
                         }
                     ],
                     starBreakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
-                    topWaiter: (fastAnalytics.staffRanking && fastAnalytics.staffRanking.length > 0)
+                    topWaiter: (fastAnalytics?.staffRanking && fastAnalytics.staffRanking.length > 0)
                         ? { name: fastAnalytics.staffRanking[0].name, mentions: fastAnalytics.staffRanking[0].count }
                         : { name: "Equipo", mentions: 0 },
                     discoveryData: [
