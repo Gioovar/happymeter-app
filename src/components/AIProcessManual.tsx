@@ -971,9 +971,8 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                             </div>
 
                         </div>
-                        </div>
                     )}
-        </div>
+            </div>
         </AnimatePresence >
 
 
