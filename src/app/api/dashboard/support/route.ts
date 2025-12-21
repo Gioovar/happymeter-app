@@ -86,9 +86,12 @@ export async function POST(req: Request) {
         const { messages } = await req.json()
         const { userId } = await auth()
 
-        if (!userId && !process.env.GEMINI_API_KEY) {
-            // Mock response if no auth/key for dev
-            return NextResponse.json({ role: 'assistant', content: "Modo demo: Hola, soy el soporte de prueba." })
+        if (!process.env.GEMINI_API_KEY) {
+            console.warn('[SUPPORT_CHAT] Missing GEMINI_API_KEY. Returning demo response.')
+            return NextResponse.json({
+                role: 'assistant',
+                content: "Modo demo: Hola, soy tu asistente. Parece que la llave de IA (GEMINI_API_KEY) no está configurada en este entorno, así que no puedo generar respuestas inteligentes reales por ahora. Por favor configúrala en Vercel."
+            })
         }
 
         const model = getGeminiModel('gemini-1.5-flash', {
