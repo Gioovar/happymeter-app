@@ -82,38 +82,46 @@ FORMATO:
 Usa Markdown para listas o negritas.`
 
 export async function POST(req: Request) {
-    try {
-        const { messages } = await req.json()
-        const { userId } = await auth()
+  try {
+    const { messages } = await req.json()
+    const { userId } = await auth()
 
-        if (!process.env.GEMINI_API_KEY) {
-            console.warn('[SUPPORT_CHAT] Missing GEMINI_API_KEY. Returning demo response.')
-            return NextResponse.json({
-                role: 'assistant',
-                content: "Modo demo: Hola, soy tu asistente. Parece que la llave de IA (GEMINI_API_KEY) no está configurada en este entorno, así que no puedo generar respuestas inteligentes reales por ahora. Por favor configúrala en Vercel."
-            })
-        }
-
-        const model = getGeminiModel('gemini-1.5-flash', {
-            systemInstruction: SYSTEM_PROMPT
-        })
-
-        // Map messages to Gemini Format
-        const geminiHistory = messages.map((m: any) => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }]
-        }))
-
-        const result = await model.generateContent({
-            contents: geminiHistory
-        })
-
-        const responseText = result.response.text()
-
-        return NextResponse.json({ role: 'assistant', content: responseText })
-
-    } catch (error) {
-        console.error('[SUPPORT_CHAT_ERROR]', error)
-        return new NextResponse(JSON.stringify({ error: "Failed to process support request" }), { status: 500 })
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn('[SUPPORT_CHAT] Missing GEMINI_API_KEY. Returning demo response.')
+      return NextResponse.json({
+        role: 'assistant',
+        content: "Modo demo: Hola, soy tu asistente. Parece que la llave de IA (GEMINI_API_KEY) no está configurada en este entorno, así que no puedo generar respuestas inteligentes reales por ahora. Por favor configúrala en Vercel."
+      })
     }
+
+    const model = getGeminiModel('gemini-1.5-flash', {
+      systemInstruction: SYSTEM_PROMPT
+    })
+
+    // Map messages to Gemini Format
+    // Map messages to Gemini Format
+    let geminiHistory = messages.map((m: any) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }))
+
+    // Gemini restriction: First message must be 'user'. 
+    // We drop leading 'model' messages (like the welcome greeting).
+    const firstUserIndex = geminiHistory.findIndex((m: any) => m.role === 'user')
+    if (firstUserIndex !== -1) {
+      geminiHistory = geminiHistory.slice(firstUserIndex)
+    }
+
+    const result = await model.generateContent({
+      contents: geminiHistory
+    })
+
+    const responseText = result.response.text()
+
+    return NextResponse.json({ role: 'assistant', content: responseText })
+
+  } catch (error) {
+    console.error('[SUPPORT_CHAT_ERROR]', error)
+    return new NextResponse(JSON.stringify({ error: "Failed to process support request" }), { status: 500 })
+  }
 }
