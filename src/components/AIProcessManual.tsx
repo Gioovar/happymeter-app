@@ -874,9 +874,9 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                     <div className="space-y-4">
                                         {manualData.sentimentData.map((item: any, i: number) => {
                                             const styles: Record<string, { color: string, bg: string, glow: string }> = {
-                                                'Positivo': { color: 'from-green-500 to-green-600', bg: 'bg-green-500/20', glow: 'shadow-[0_0_15px_rgba(34,197,94,0.5)]' },
-                                                'Neutral': { color: 'from-yellow-400 to-orange-500', bg: 'bg-yellow-500/20', glow: 'shadow-[0_0_15px_rgba(234,179,8,0.5)]' },
-                                                'Negativo': { color: 'from-red-500 to-red-600', bg: 'bg-red-500/20', glow: 'shadow-[0_0_15px_rgba(239,68,68,0.5)]' }
+                                                'Positivo': { color: 'from-green-400 to-green-500', bg: 'bg-green-500/20', glow: 'shadow-[0_0_15px_rgba(74,222,128,0.5)]' },
+                                                'Neutral': { color: 'from-amber-400 to-orange-500', bg: 'bg-amber-500/20', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.5)]' },
+                                                'Negativo': { color: 'from-red-400 to-red-500', bg: 'bg-red-500/20', glow: 'shadow-[0_0_15px_rgba(248,113,113,0.5)]' }
                                             }
                                             const style = styles[item.name] || { color: 'from-gray-400 to-gray-500', bg: 'bg-gray-500/20', glow: '' }
 
