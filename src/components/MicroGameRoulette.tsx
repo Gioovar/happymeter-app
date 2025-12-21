@@ -182,7 +182,7 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRou
                                 />
                                 {/* Label with Glow */}
                                 <div
-                                    className="absolute top-12 left-1/2 -translate-x-1/2 text-white font-black text-xs md:text-sm uppercase whitespace-nowrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
+                                    className="absolute top-12 left-1/2 -translate-x-1/2 text-white font-black text-[10px] sm:text-xs md:text-sm uppercase whitespace-nowrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
                                     style={{
                                         // Text is usually legible running outwards or inwards. 
                                         // Standard roulette text runs from rim towards center or tangent?
