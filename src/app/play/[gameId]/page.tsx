@@ -39,32 +39,31 @@ export default function PublicGamePage({ params }: PageProps) {
     useEffect(() => {
         if (!uid) return
 
-        if (['roulette', 'bottle', 'truth'].includes(gameId)) {
-            setLoadingConfig(true)
-            fetch(`/api/games/config?userId=${uid}`)
-                .then(res => res.json())
-                .then(data => {
-                    // Roulette
-                    if (data.roulette) setOutcomes(data.roulette)
+        // Always fetch config to get branding (venue name, banner)
+        setLoadingConfig(true)
+        fetch(`/api/games/config?userId=${uid}`)
+            .then(res => res.json())
+            .then(data => {
+                // Roulette
+                if (data.roulette) setOutcomes(data.roulette)
 
-                    // Bottle
-                    if (data.bottle) setBottleConfig(prev => ({ ...prev, actions: data.bottle }))
-                    if (data.bottleLogo) setBottleConfig(prev => ({ ...prev, logo: data.bottleLogo }))
+                // Bottle
+                if (data.bottle) setBottleConfig(prev => ({ ...prev, actions: data.bottle }))
+                if (data.bottleLogo) setBottleConfig(prev => ({ ...prev, logo: data.bottleLogo }))
 
-                    // Truth
-                    if (data.truths) setTruthConfig(prev => ({ ...prev, truths: data.truths }))
-                    if (data.dares) setTruthConfig(prev => ({ ...prev, dares: data.dares }))
-                    if (data.extreme) setTruthConfig(prev => ({ ...prev, extreme: data.extreme }))
+                // Truth
+                if (data.truths) setTruthConfig(prev => ({ ...prev, truths: data.truths }))
+                if (data.dares) setTruthConfig(prev => ({ ...prev, dares: data.dares }))
+                if (data.extreme) setTruthConfig(prev => ({ ...prev, extreme: data.extreme }))
 
-                    // Global branding
-                    setPageConfig({
-                        bannerUrl: data.bannerUrl,
-                        gameTitle: data.gameTitle
-                    })
+                // Global branding
+                setPageConfig({
+                    bannerUrl: data.bannerUrl,
+                    gameTitle: data.gameTitle
                 })
-                .catch(err => console.error(err))
-                .finally(() => setLoadingConfig(false))
-        }
+            })
+            .catch(err => console.error(err))
+            .finally(() => setLoadingConfig(false))
     }, [gameId, uid])
 
     // Verify valid games
@@ -197,8 +196,8 @@ export default function PublicGamePage({ params }: PageProps) {
             {/* Game Container */}
             <div className="flex-1 flex items-center justify-center p-4 min-h-0">
                 {gameId === 'pacman' && <PacManRestaurant />}
-                {gameId === 'snake' && <SnakeCoop />}
-                {gameId === 'zoltan' && <ZoltanOracle />}
+                {gameId === 'snake' && <SnakeCoop venueName={pageConfig.gameTitle} />}
+                {gameId === 'zoltan' && <ZoltanOracle venueName={pageConfig.gameTitle} />}
                 {gameId === 'hand-reader' && <MysticHandReader />}
                 {gameId === 'couple-dice' && <CoupleDice />}
             </div>
