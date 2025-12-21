@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, Copy, Plus, Trash2, Save, Loader2, Phone, Mail, AlertTriangle } from 'lucide-react'
+import { Bell, Copy, Plus, Trash2, Save, Loader2, Phone, Mail, AlertTriangle, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface AlertConfig {
@@ -87,10 +87,29 @@ export default function AlertSettings({ surveyId }: { surveyId: string }) {
         setConfig(prev => ({ ...prev, phones: prev.phones.filter(p => p !== phone) }))
     }
 
+    const handleTest = async (phone: string) => {
+        const toastId = toast.loading("Enviando prueba...")
+        try {
+            const res = await fetch(`/api/surveys/${surveyId}/alerts/test`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            })
+            if (res.ok) {
+                toast.success("Mensaje enviado. Revisa tu WhatsApp.", { id: toastId })
+            } else {
+                toast.error("Error al enviar. Revisa tus credenciales.", { id: toastId })
+            }
+        } catch (error) {
+            toast.error("Error de conexión", { id: toastId })
+        }
+    }
+
     if (isLoading) return <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-violet-500" /></div>
 
     return (
         <div className="bg-[#111] border border-white/5 rounded-2xl p-6 max-w-2xl mx-auto">
+            {/* ... header ... */}
             <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-red-500/10 rounded-xl">
                     <Bell className="w-6 h-6 text-red-400" />
@@ -141,9 +160,18 @@ export default function AlertSettings({ surveyId }: { surveyId: string }) {
                                         <Phone className="w-4 h-4 text-green-400" />
                                         <span className="text-gray-200">{phone}</span>
                                     </div>
-                                    <button onClick={() => removePhone(phone)} className="text-gray-500 hover:text-red-400 transition">
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={() => handleTest(phone)}
+                                            className="text-gray-500 hover:text-green-400 p-2 rounded-lg hover:bg-white/5 transition"
+                                            title="Probar WhatsApp"
+                                        >
+                                            <Send className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button onClick={() => removePhone(phone)} className="text-gray-500 hover:text-red-400 p-2 rounded-lg hover:bg-white/5 transition">
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                             {config.phones.length === 0 && <p className="text-xs text-gray-500 italic">No hay números configurados.</p>}
