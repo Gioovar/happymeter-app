@@ -589,415 +589,415 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                         </button>
                                     </div>
 
-                                </div>
-                        </>
+
+                                </>
                             )}
-                    </div>
+                        </div>
                     </motion.div >
-            )
+                )
                 }
-        </AnimatePresence >
+            </AnimatePresence >
 
-            {/* --- PLANTILLA PDF AHORRO DE TINTA (Contenedor Oculto) --- */ }
-    < div style={{ position: 'fixed', top: 0, left: 0, zIndex: -50, opacity: 0, pointerEvents: 'none' }}>
-        {manualData && (
-            <>
-                {/* PÁGINA 1: Resumen Ejecutivo */}
-                <div className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
-                        {/* Encabezado */}
-                        <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                                    <Sparkles size={24} color="#7c3aed" />
-                                    <span style={{ fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
-                                </div>
-                                <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, lineHeight: 1.1 }}>Reporte Ejecutivo</h1>
-                                <p style={{ fontSize: '18px', color: '#64748b', margin: '5px 0 0 0' }}>{surveyTitle}</p>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <p style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#94a3b8' }}>Fecha de Emisión</p>
-                                <p style={{ fontSize: '14px', fontWeight: '500' }}>{format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}</p>
-                            </div>
-                        </div>
-
-                        {/* Métricas */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
-                            <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Total Feedback</p>
-                                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a' }}>{manualData.metrics.totalFeedback}</p>
-                            </div>
-                            <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>NPS Score</p>
-                                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#7c3aed' }}>+{manualData.metrics.npsScore}</p>
-                            </div>
-                            <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Calificación</p>
-                                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{manualData.metrics.avgRating}</p>
-                            </div>
-                            <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Mesero Top</p>
-                                <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{manualData.topWaiter?.name}</p>
-                                <p style={{ fontSize: '12px', color: '#64748b' }}>{manualData.topWaiter?.mentions} menciones</p>
-                            </div>
-                        </div>
-
-                        {/* Gráficos */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
-                            <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', height: '240px' }}>
-                                <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Tendencia</h3>
-                                <div style={{ height: '160px', width: '100%' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={manualData.chartData}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                                            <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                                            <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                                            <Area type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={2} fill="none" />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                            <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
-                                <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Sentimiento</h3>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                    {manualData.sentimentData.map((item: any, i: number) => (
-                                        <div key={i}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '12px' }}>
-                                                <span style={{ fontWeight: '500' }}>{item.name}</span>
-                                                <span style={{ fontWeight: 'bold' }}>{item.value}%</span>
-                                            </div>
-                                            <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px' }}>
-                                                <div style={{
-                                                    width: `${item.value}%`,
-                                                    height: '100%',
-                                                    borderRadius: '4px',
-                                                    backgroundColor: item.name === 'Positivo' ? '#10b981' : item.name === 'Negativo' ? '#f43f5e' : '#3b82f6'
-                                                }} />
-                                            </div>
+            {/* --- PLANTILLA PDF AHORRO DE TINTA (Contenedor Oculto) --- */}
+            < div style={{ position: 'fixed', top: 0, left: 0, zIndex: -50, opacity: 0, pointerEvents: 'none' }}>
+                {manualData && (
+                    <>
+                        {/* PÁGINA 1: Resumen Ejecutivo */}
+                        <div className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
+                                {/* Encabezado */}
+                                <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                                            <Sparkles size={24} color="#7c3aed" />
+                                            <span style={{ fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
                                         </div>
-                                    ))}
+                                        <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, lineHeight: 1.1 }}>Reporte Ejecutivo</h1>
+                                        <p style={{ fontSize: '18px', color: '#64748b', margin: '5px 0 0 0' }}>{surveyTitle}</p>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#94a3b8' }}>Fecha de Emisión</p>
+                                        <p style={{ fontSize: '14px', fontWeight: '500' }}>{format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        {/* Lista Resumen de Estrategias */}
-                        <div style={{ marginTop: '10px' }}>
-                            <h3 style={{ fontSize: '18px', fontWeight: 'bold', borderLeft: '4px solid #7c3aed', paddingLeft: '15px', marginBottom: '20px', color: '#0f172a' }}>Resumen de Estrategias</h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                {(manualData.detailedStrategies || []).slice(0, 5).map((strategy: any, i: number) => (
-                                    <div key={i} style={{ display: 'flex', gap: '15px', paddingBottom: '15px', borderBottom: '1px solid #f1f5f9' }}>
-                                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#f1f5f9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
-                                            {i + 1}
-                                        </div>
-                                        <div>
-                                            <h4 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#0f172a' }}>{strategy.title}</h4>
-                                            <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>{strategy.objective}</p>
+                                {/* Métricas */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
+                                    <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                        <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Total Feedback</p>
+                                        <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a' }}>{manualData.metrics.totalFeedback}</p>
+                                    </div>
+                                    <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                        <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>NPS Score</p>
+                                        <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#7c3aed' }}>+{manualData.metrics.npsScore}</p>
+                                    </div>
+                                    <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                        <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Calificación</p>
+                                        <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{manualData.metrics.avgRating}</p>
+                                    </div>
+                                    <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                        <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Mesero Top</p>
+                                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{manualData.topWaiter?.name}</p>
+                                        <p style={{ fontSize: '12px', color: '#64748b' }}>{manualData.topWaiter?.mentions} menciones</p>
+                                    </div>
+                                </div>
+
+                                {/* Gráficos */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+                                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', height: '240px' }}>
+                                        <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Tendencia</h3>
+                                        <div style={{ height: '160px', width: '100%' }}>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart data={manualData.chartData}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                                                    <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                                    <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                                    <Area type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={2} fill="none" />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
                                         </div>
                                     </div>
-                                ))}
+                                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
+                                        <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Sentimiento</h3>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                            {manualData.sentimentData.map((item: any, i: number) => (
+                                                <div key={i}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '12px' }}>
+                                                        <span style={{ fontWeight: '500' }}>{item.name}</span>
+                                                        <span style={{ fontWeight: 'bold' }}>{item.value}%</span>
+                                                    </div>
+                                                    <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px' }}>
+                                                        <div style={{
+                                                            width: `${item.value}%`,
+                                                            height: '100%',
+                                                            borderRadius: '4px',
+                                                            backgroundColor: item.name === 'Positivo' ? '#10b981' : item.name === 'Negativo' ? '#f43f5e' : '#3b82f6'
+                                                        }} />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Lista Resumen de Estrategias */}
+                                <div style={{ marginTop: '10px' }}>
+                                    <h3 style={{ fontSize: '18px', fontWeight: 'bold', borderLeft: '4px solid #7c3aed', paddingLeft: '15px', marginBottom: '20px', color: '#0f172a' }}>Resumen de Estrategias</h3>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                        {(manualData.detailedStrategies || []).slice(0, 5).map((strategy: any, i: number) => (
+                                            <div key={i} style={{ display: 'flex', gap: '15px', paddingBottom: '15px', borderBottom: '1px solid #f1f5f9' }}>
+                                                <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#f1f5f9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
+                                                    {i + 1}
+                                                </div>
+                                                <div>
+                                                    <h4 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#0f172a' }}>{strategy.title}</h4>
+                                                    <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>{strategy.objective}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: '10px', color: '#94a3b8' }}>
+                                    Página 1 - Resumen Ejecutivo
+                                </div>
                             </div>
                         </div>
 
-                        <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: '10px', color: '#94a3b8' }}>
-                            Página 1 - Resumen Ejecutivo
-                        </div>
-                    </div>
-                </div>
+                        {/* Mostrar Cargador si Estrategias Cargando */}
+                        {strategiesLoading && (
+                            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                                <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
+                                <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras HappyMeter AI 2.0 Gemini procesa el feedback.</p>
+                            </div>
+                        )}
 
-                {/* Mostrar Cargador si Estrategias Cargando */}
-                {strategiesLoading && (
-                    <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                        <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
-                        <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras HappyMeter AI 2.0 Gemini procesa el feedback.</p>
-                    </div>
+
+                        {/* PÁGINAS 2+: Estrategias Detalladas (Una por página) */}
+                        {!strategiesLoading && (manualData.detailedStrategies || []).map((strategy: any, i: number) => (
+                            <div key={i} className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px', pageBreakBefore: 'always' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
+
+                                    {/* Encabezado Pequeño */}
+                                    <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <Sparkles size={16} color="#7c3aed" />
+                                            <span style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
+                                        </div>
+                                        <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                                            Estrategia #{i + 1}
+                                        </div>
+                                    </div>
+
+                                    {/* Título */}
+                                    <div>
+                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#7c3aed', display: 'block', marginBottom: '10px' }}>Estrategia Recomendada</span>
+                                        <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a', margin: 0, lineHeight: 1.2 }}>{strategy.title}</h2>
+                                    </div>
+
+                                    {/* Caja Problema / Solución */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                                        {/* Problema */}
+                                        <div style={{ backgroundColor: '#fef2f2', padding: '20px', borderRadius: '12px 12px 0 0', border: '1px solid #fee2e2', borderBottom: 'none' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                <TrendingUp size={16} color="#ef4444" style={{ transform: 'rotate(180deg)' }} />
+                                                <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#ef4444' }}>Problema Detectado</span>
+                                            </div>
+                                            <p style={{ fontSize: '15px', color: '#7f1d1d', fontStyle: 'italic', margin: 0 }}>
+                                                "{strategy.problemDetected}"
+                                            </p>
+                                        </div>
+                                        {/* Solución */}
+                                        <div style={{ backgroundColor: '#f0fdf4', padding: '20px', borderRadius: '0 0 12px 12px', border: '1px solid #dcfce7' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                <CheckCircle2 size={16} color="#16a34a" />
+                                                <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#16a34a' }}>Mejor Práctica</span>
+                                            </div>
+                                            <p style={{ fontSize: '15px', fontWeight: '500', color: '#14532d', margin: 0 }}>
+                                                {strategy.bestPractice}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Pasos */}
+                                    <div>
+                                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', marginBottom: '20px', borderBottom: '2px solid #0f172a', paddingBottom: '10px', display: 'inline-block' }}>Plan de Implementación</h3>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                            {strategy.steps.map((step: any, idx: number) => (
+                                                <div key={idx} style={{ display: 'flex', gap: '15px' }}>
+                                                    <div style={{
+                                                        width: '24px', height: '24px', backgroundColor: '#0f172a', color: 'white', borderRadius: '50%',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px', flexShrink: 0, marginTop: '2px'
+                                                    }}>
+                                                        {idx + 1}
+                                                    </div>
+                                                    <div>
+                                                        <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 4px 0' }}>{step.title}</h4>
+                                                        <p style={{ fontSize: '13px', color: '#334155', lineHeight: 1.5, margin: 0 }}>{step.desc}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: '10px', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+                                        Página {i + 2} - HappyMeter Intelligence
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </>
                 )}
 
 
-                {/* PÁGINAS 2+: Estrategias Detalladas (Una por página) */}
-                {!strategiesLoading && (manualData.detailedStrategies || []).map((strategy: any, i: number) => (
-                    <div key={i} className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px', pageBreakBefore: 'always' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
-
-                            {/* Encabezado Pequeño */}
-                            <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <Sparkles size={16} color="#7c3aed" />
-                                    <span style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
-                                </div>
-                                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                                    Estrategia #{i + 1}
-                                </div>
+                {/* CONTENIDO PRINCIPAL DEL TABLERO (Se ocultará al imprimir) */}
+                < div className="dashboard-content" >
+                    {
+                        loading ? (
+                            <div className="h-[60vh] flex flex-col items-center justify-center space-y-8 relative z-10" >
+                                <HappyLoader size="lg" text="Procesando Datos..." />
                             </div>
-
-                            {/* Título */}
-                            <div>
-                                <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#7c3aed', display: 'block', marginBottom: '10px' }}>Estrategia Recomendada</span>
-                                <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a', margin: 0, lineHeight: 1.2 }}>{strategy.title}</h2>
+                        ) : !manualData ? (
+                            <div className="h-[40vh] flex items-center justify-center text-gray-500">
+                                No hay datos disponibles para este periodo.
                             </div>
+                        ) : (
+                            <div className="max-w-7xl mx-auto space-y-8 relative z-10">
 
-                            {/* Caja Problema / Solución */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                                {/* Problema */}
-                                <div style={{ backgroundColor: '#fef2f2', padding: '20px', borderRadius: '12px 12px 0 0', border: '1px solid #fee2e2', borderBottom: 'none' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                        <TrendingUp size={16} color="#ef4444" style={{ transform: 'rotate(180deg)' }} />
-                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#ef4444' }}>Problema Detectado</span>
-                                    </div>
-                                    <p style={{ fontSize: '15px', color: '#7f1d1d', fontStyle: 'italic', margin: 0 }}>
-                                        "{strategy.problemDetected}"
-                                    </p>
-                                </div>
-                                {/* Solución */}
-                                <div style={{ backgroundColor: '#f0fdf4', padding: '20px', borderRadius: '0 0 12px 12px', border: '1px solid #dcfce7' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                        <CheckCircle2 size={16} color="#16a34a" />
-                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#16a34a' }}>Mejor Práctica</span>
-                                    </div>
-                                    <p style={{ fontSize: '15px', fontWeight: '500', color: '#14532d', margin: 0 }}>
-                                        {strategy.bestPractice}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Pasos */}
-                            <div>
-                                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', marginBottom: '20px', borderBottom: '2px solid #0f172a', paddingBottom: '10px', display: 'inline-block' }}>Plan de Implementación</h3>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                    {strategy.steps.map((step: any, idx: number) => (
-                                        <div key={idx} style={{ display: 'flex', gap: '15px' }}>
-                                            <div style={{
-                                                width: '24px', height: '24px', backgroundColor: '#0f172a', color: 'white', borderRadius: '50%',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px', flexShrink: 0, marginTop: '2px'
-                                            }}>
-                                                {idx + 1}
-                                            </div>
-                                            <div>
-                                                <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 4px 0' }}>{step.title}</h4>
-                                                <p style={{ fontSize: '13px', color: '#334155', lineHeight: 1.5, margin: 0 }}>{step.desc}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: '10px', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
-                                Página {i + 2} - HappyMeter Intelligence
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </>
-        )}
-
-
-        {/* CONTENIDO PRINCIPAL DEL TABLERO (Se ocultará al imprimir) */}
-        < div className="dashboard-content" >
-            {
-                loading ? (
-                    <div className="h-[60vh] flex flex-col items-center justify-center space-y-8 relative z-10" >
-                        <HappyLoader size="lg" text="Procesando Datos..." />
-                    </div>
-                ) : !manualData ? (
-                    <div className="h-[40vh] flex items-center justify-center text-gray-500">
-                        No hay datos disponibles para este periodo.
-                    </div>
-                ) : (
-                    <div className="max-w-7xl mx-auto space-y-8 relative z-10">
-
-                        {/* Fila de Estadísticas Superiores - estilo como referencia */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {[
-                                {
-                                    label: "Total Respuestas",
-                                    value: manualData.metrics.totalFeedback,
-                                    trend: "+12.5%",
-                                    footer: "Total Respuestas",
-                                    gradient: "from-blue-500 to-cyan-400",
-                                    glow: "shadow-[0_0_20px_rgba(56,189,248,0.3)]",
-                                    icon: Users,
-                                    progress: 65
-                                },
-                                {
-                                    label: "Satisfacción Global",
-                                    value: manualData.metrics.avgRating,
-                                    trend: "+0.4",
-                                    footer: "Satisfacción Global",
-                                    gradient: "from-orange-500 to-amber-400",
-                                    glow: "shadow-[0_0_20px_rgba(251,191,36,0.3)]",
-                                    icon: Star,
-                                    progress: (manualData.metrics.avgRating / 5) * 100
-                                },
-                                {
-                                    label: "NPS Score",
-                                    value: manualData.metrics.npsScore,
-                                    trend: "High",
-                                    footer: "Probabilidad De Recomendación (NPS)",
-                                    gradient: "from-violet-500 to-fuchsia-400",
-                                    glow: "shadow-[0_0_20px_rgba(168,85,247,0.3)]",
-                                    icon: Activity,
-                                    progress: manualData.metrics.npsScore // Assuming NPS 0-100
-                                }
-                            ].map((stat, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.1 }}
-                                    className="bg-[#15171e]/80 backdrop-blur-md border border-white/5 p-6 rounded-[24px] relative overflow-hidden group"
-                                >
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                                            <stat.icon className="w-6 h-6 text-white" />
-                                        </div>
-                                        <span className={`text-xs font-bold px-2 py-1 rounded-full border border-white/10 bg-white/5 ${i === 0 ? 'text-emerald-400' : i === 1 ? 'text-emerald-400' : 'text-gray-400'}`}>
-                                            {stat.trend} ↗
-                                        </span>
-                                    </div>
-
-                                    <div className="mb-6">
-                                        <h3 className="text-4xl font-bold text-white mb-1">{stat.value}</h3>
-                                        <p className="text-sm text-gray-500 font-medium">{stat.footer}</p>
-                                    </div>
-
-                                    {/* Progress Bar */}
-                                    <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                                        <div className={`h-full rounded-full bg-gradient-to-r ${stat.gradient} ${stat.glow} w-[${stat.progress}%]`} style={{ width: `${stat.progress}%` }} />
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-
-                        {/* Main Charts Area - Compacted */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-                            {/* Area Chart - Feedback Trend */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="lg:col-span-2 bg-[#15171e]/80 backdrop-blur-md border border-white/5 p-5 rounded-[24px] min-h-[280px]"
-                            >
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-base font-bold text-white">Tendencia de Feedback</h3>
-                                    <select className="bg-black/20 border border-white/10 text-[10px] text-gray-400 rounded-lg px-2 py-1 outline-none">
-                                        <option>Mensual</option>
-                                        <option>Semanal</option>
-                                    </select>
-                                </div>
-                                <div className="h-[200px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={manualData?.chartData || []}>
-                                            <defs>
-                                                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
-                                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                            <XAxis dataKey="name" stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} />
-                                            <YAxis stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', fontSize: '12px' }}
-                                                itemStyle={{ color: '#fff' }}
-                                            />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="value"
-                                                stroke="#8b5cf6"
-                                                strokeWidth={3}
-                                                fillOpacity={1}
-                                                fill="url(#colorValue)"
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </motion.div>
-
-                            {/* Sentiment Analysis - Styled like reference */}
-                            <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="bg-[#15171e]/80 backdrop-blur-md border border-white/5 p-5 rounded-[24px] flex flex-col justify-center min-h-[280px]"
-                            >
-                                <h3 className="text-base font-bold text-white mb-4">Análisis de Sentimiento</h3>
-
-                                <div className="space-y-6">
-                                    {manualData.sentimentData.map((item: any, i: number) => {
-                                        const styles: Record<string, { color: string, glow: string }> = {
-                                            'Positivo': { color: 'from-blue-500 to-cyan-400', glow: 'shadow-[0_0_15px_rgba(56,189,248,0.5)]' },
-                                            'Neutral': { color: 'from-orange-500 to-amber-400', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.5)]' },
-                                            'Negativo': { color: 'from-violet-500 to-fuchsia-400', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.5)]' }
+                                {/* Fila de Estadísticas Superiores - estilo como referencia */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {[
+                                        {
+                                            label: "Total Respuestas",
+                                            value: manualData.metrics.totalFeedback,
+                                            trend: "+12.5%",
+                                            footer: "Total Respuestas",
+                                            gradient: "from-blue-500 to-cyan-400",
+                                            glow: "shadow-[0_0_20px_rgba(56,189,248,0.3)]",
+                                            icon: Users,
+                                            progress: 65
+                                        },
+                                        {
+                                            label: "Satisfacción Global",
+                                            value: manualData.metrics.avgRating,
+                                            trend: "+0.4",
+                                            footer: "Satisfacción Global",
+                                            gradient: "from-orange-500 to-amber-400",
+                                            glow: "shadow-[0_0_20px_rgba(251,191,36,0.3)]",
+                                            icon: Star,
+                                            progress: (manualData.metrics.avgRating / 5) * 100
+                                        },
+                                        {
+                                            label: "NPS Score",
+                                            value: manualData.metrics.npsScore,
+                                            trend: "High",
+                                            footer: "Probabilidad De Recomendación (NPS)",
+                                            gradient: "from-violet-500 to-fuchsia-400",
+                                            glow: "shadow-[0_0_20px_rgba(168,85,247,0.3)]",
+                                            icon: Activity,
+                                            progress: manualData.metrics.npsScore // Assuming NPS 0-100
                                         }
-                                        const style = styles[item.name] || { color: 'from-gray-400 to-gray-500', glow: '' }
-
-                                        return (
-                                            <div key={i} className="relative group">
-                                                <div className="flex justify-between text-xs font-bold mb-2">
-                                                    <span className="text-gray-300">{item.name}</span>
-                                                    <span className="text-white">{item.value}%</span>
+                                    ].map((stat, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.1 }}
+                                            className="bg-[#15171e]/80 backdrop-blur-md border border-white/5 p-6 rounded-[24px] relative overflow-hidden group"
+                                        >
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                                                    <stat.icon className="w-6 h-6 text-white" />
                                                 </div>
-                                                {/* Background Bar */}
-                                                <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                                                    {/* Foreground Glowing Bar */}
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${item.value}%` }}
-                                                        transition={{ duration: 1, delay: 0.5 + (i * 0.1) }}
-                                                        className={`h-full rounded-full bg-gradient-to-r ${style.color} ${style.glow} shadow-lg relative`}
-                                                    />
-                                                </div>
+                                                <span className={`text-xs font-bold px-2 py-1 rounded-full border border-white/10 bg-white/5 ${i === 0 ? 'text-emerald-400' : i === 1 ? 'text-emerald-400' : 'text-gray-400'}`}>
+                                                    {stat.trend} ↗
+                                                </span>
                                             </div>
-                                        )
-                                    })}
+
+                                            <div className="mb-6">
+                                                <h3 className="text-4xl font-bold text-white mb-1">{stat.value}</h3>
+                                                <p className="text-sm text-gray-500 font-medium">{stat.footer}</p>
+                                            </div>
+
+                                            {/* Progress Bar */}
+                                            <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+                                                <div className={`h-full rounded-full bg-gradient-to-r ${stat.gradient} ${stat.glow} w-[${stat.progress}%]`} style={{ width: `${stat.progress}%` }} />
+                                            </div>
+                                        </motion.div>
+                                    ))}
                                 </div>
 
-                                <div className="mt-6 p-3 bg-white/5 rounded-xl border border-white/5 text-center">
-                                    <p className="text-xl font-bold text-white mb-0.5">{Math.round((manualData.sentimentData.find((s: any) => s.name === 'Positivo')?.value || 0) + (manualData.sentimentData.find((s: any) => s.name === 'Neutral')?.value || 0) / 2)}%</p>
-                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest">Satisfacción General</p>
+                                {/* Main Charts Area - Compacted */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+                                    {/* Area Chart - Feedback Trend */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.2 }}
+                                        className="lg:col-span-2 bg-[#15171e]/80 backdrop-blur-md border border-white/5 p-5 rounded-[24px] min-h-[280px]"
+                                    >
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-base font-bold text-white">Tendencia de Feedback</h3>
+                                            <select className="bg-black/20 border border-white/10 text-[10px] text-gray-400 rounded-lg px-2 py-1 outline-none">
+                                                <option>Mensual</option>
+                                                <option>Semanal</option>
+                                            </select>
+                                        </div>
+                                        <div className="h-[200px] w-full">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart data={manualData?.chartData || []}>
+                                                    <defs>
+                                                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                                                    <XAxis dataKey="name" stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} />
+                                                    <YAxis stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} />
+                                                    <Tooltip
+                                                        contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', fontSize: '12px' }}
+                                                        itemStyle={{ color: '#fff' }}
+                                                    />
+                                                    <Area
+                                                        type="monotone"
+                                                        dataKey="value"
+                                                        stroke="#8b5cf6"
+                                                        strokeWidth={3}
+                                                        fillOpacity={1}
+                                                        fill="url(#colorValue)"
+                                                    />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Sentiment Analysis - Styled like reference */}
+                                    <motion.div
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.3 }}
+                                        className="bg-[#15171e]/80 backdrop-blur-md border border-white/5 p-5 rounded-[24px] flex flex-col justify-center min-h-[280px]"
+                                    >
+                                        <h3 className="text-base font-bold text-white mb-4">Análisis de Sentimiento</h3>
+
+                                        <div className="space-y-6">
+                                            {manualData.sentimentData.map((item: any, i: number) => {
+                                                const styles: Record<string, { color: string, glow: string }> = {
+                                                    'Positivo': { color: 'from-blue-500 to-cyan-400', glow: 'shadow-[0_0_15px_rgba(56,189,248,0.5)]' },
+                                                    'Neutral': { color: 'from-orange-500 to-amber-400', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.5)]' },
+                                                    'Negativo': { color: 'from-violet-500 to-fuchsia-400', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.5)]' }
+                                                }
+                                                const style = styles[item.name] || { color: 'from-gray-400 to-gray-500', glow: '' }
+
+                                                return (
+                                                    <div key={i} className="relative group">
+                                                        <div className="flex justify-between text-xs font-bold mb-2">
+                                                            <span className="text-gray-300">{item.name}</span>
+                                                            <span className="text-white">{item.value}%</span>
+                                                        </div>
+                                                        {/* Background Bar */}
+                                                        <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+                                                            {/* Foreground Glowing Bar */}
+                                                            <motion.div
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${item.value}%` }}
+                                                                transition={{ duration: 1, delay: 0.5 + (i * 0.1) }}
+                                                                className={`h-full rounded-full bg-gradient-to-r ${style.color} ${style.glow} shadow-lg relative`}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+
+                                        <div className="mt-6 p-3 bg-white/5 rounded-xl border border-white/5 text-center">
+                                            <p className="text-xl font-bold text-white mb-0.5">{Math.round((manualData.sentimentData.find((s: any) => s.name === 'Positivo')?.value || 0) + (manualData.sentimentData.find((s: any) => s.name === 'Neutral')?.value || 0) / 2)}%</p>
+                                            <p className="text-[10px] text-gray-400 uppercase tracking-widest">Satisfacción General</p>
+                                        </div>
+                                    </motion.div>
                                 </div>
-                            </motion.div>
-                        </div>
 
-                        {/* AI Chat Manual Section - CTA */}
-                        <div className="bg-gradient-to-r from-violet-900/50 to-fuchsia-900/50 border border-white/10 p-6 md:p-8 rounded-[24px] md:rounded-[32px] flex flex-col md:flex-row items-center justify-between relative overflow-hidden group gap-6 md:gap-0 text-center md:text-left">
-                            <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(to_right,transparent,black,transparent)]" />
+                                {/* AI Chat Manual Section - CTA */}
+                                <div className="bg-gradient-to-r from-violet-900/50 to-fuchsia-900/50 border border-white/10 p-6 md:p-8 rounded-[24px] md:rounded-[32px] flex flex-col md:flex-row items-center justify-between relative overflow-hidden group gap-6 md:gap-0 text-center md:text-left">
+                                    <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(to_right,transparent,black,transparent)]" />
 
-                            <div className="relative z-10 max-w-2xl px-2">
-                                <h2 className="text-xl md:text-2xl font-bold text-white mb-2 flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3 justify-center md:justify-start">
-                                    <Sparkles className="w-6 h-6 text-fuchsia-400 animate-pulse hidden md:block" />
-                                    ¿Necesitas un Plan de Acción Detallado?
-                                </h2>
-                                <p className="text-gray-300 text-base md:text-lg">
-                                    Tu asistente <span className="text-violet-400 font-bold">HappyMeter Analyst</span> ya analizó estos datos. Habla con él para obtener un manual paso a paso personalizado.
-                                </p>
+                                    <div className="relative z-10 max-w-2xl px-2">
+                                        <h2 className="text-xl md:text-2xl font-bold text-white mb-2 flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3 justify-center md:justify-start">
+                                            <Sparkles className="w-6 h-6 text-fuchsia-400 animate-pulse hidden md:block" />
+                                            ¿Necesitas un Plan de Acción Detallado?
+                                        </h2>
+                                        <p className="text-gray-300 text-base md:text-lg">
+                                            Tu asistente <span className="text-violet-400 font-bold">HappyMeter Analyst</span> ya analizó estos datos. Habla con él para obtener un manual paso a paso personalizado.
+                                        </p>
+                                    </div>
+
+                                    <div className="relative z-10 flex items-center w-full md:w-auto justify-center">
+                                        <a
+                                            href="/dashboard/chat"
+                                            className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-white text-black font-bold rounded-full hover:scale-105 transition transform shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] w-full md:w-auto text-sm md:text-base"
+                                        >
+                                            <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
+                                            Iniciar Conversación IA
+                                        </a>
+                                    </div>
+
+                                    {/* Decorator */}
+                                    <div className="absolute -right-20 -bottom-20 opacity-20 group-hover:opacity-30 transition duration-500">
+                                        <Sparkles className="w-64 h-64 text-fuchsia-500 blur-3xl" />
+                                    </div>
+                                </div>
+
                             </div>
-
-                            <div className="relative z-10 flex items-center w-full md:w-auto justify-center">
-                                <a
-                                    href="/dashboard/chat"
-                                    className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-white text-black font-bold rounded-full hover:scale-105 transition transform shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] w-full md:w-auto text-sm md:text-base"
-                                >
-                                    <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
-                                    Iniciar Conversación IA
-                                </a>
-                            </div>
-
-                            {/* Decorator */}
-                            <div className="absolute -right-20 -bottom-20 opacity-20 group-hover:opacity-30 transition duration-500">
-                                <Sparkles className="w-64 h-64 text-fuchsia-500 blur-3xl" />
-                            </div>
-                        </div>
-
-                    </div>
-                )}
-        </div>
-    </div>
+                        )}
+                </div>
+            </div>
 
 
 
-    {/* --- PRINT ONLY REPORT (HIDDEN ON SCREEN) ---  DEPRECATED/REMOVED */ }
-    {/* This section was removed in concept but kept in code structure to prevent errors if invoked, though effectively empty now or minimal legacy support */ }
+            {/* --- PRINT ONLY REPORT (HIDDEN ON SCREEN) ---  DEPRECATED/REMOVED */}
+            {/* This section was removed in concept but kept in code structure to prevent errors if invoked, though effectively empty now or minimal legacy support */}
 
         </div >
     )
