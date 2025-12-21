@@ -29,7 +29,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
     const [loading, setLoading] = useState(true)
     const [strategiesLoading, setStrategiesLoading] = useState(false)
     const [manualData, setManualData] = useState<any>(null)
-    const [showReport, setShowReport] = useState(false) // Start open by default
+    const [showReport, setShowReport] = useState(true) // Start open by default
     const [showDateModal, setShowDateModal] = useState(false) // Nuevo Estado Modal
     const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>({
         from: subDays(new Date(), 7), // Por defecto últimos 7 días
@@ -373,7 +373,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
             {/* --- MODAL DE REPORTE (Vista Web Modo Oscuro) --- */}
             <AnimatePresence>
-                {showReport && manualData && (
+                {showReport && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
