@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Eye, Flame, Shuffle, ArrowRight, Skull, Gamepad2 } from 'lucide-react'
+import { Eye, Flame, Shuffle, ArrowRight, Skull, Gamepad2, Plus, Users, X } from 'lucide-react'
 
 // Content Pools
 const DEFAULT_TRUTHS = [
@@ -43,6 +43,12 @@ interface TruthOrDareProps {
 }
 
 export default function TruthOrDare({ customTruths, customDares, customExtremeDares, extremeInterval = 8 }: TruthOrDareProps) {
+    // Game State
+    const [players, setPlayers] = useState<string[]>([])
+    const [newPlayer, setNewPlayer] = useState('')
+    const [gameStarted, setGameStarted] = useState(false)
+    const [activePlayerIndex, setActivePlayerIndex] = useState(0)
+
     const [turnCount, setTurnCount] = useState(0)
     const [result, setResult] = useState<{ type: string, text: string, isExtreme?: boolean } | null>(null)
     const [history, setHistory] = useState<string[]>([])
@@ -52,6 +58,24 @@ export default function TruthOrDare({ customTruths, customDares, customExtremeDa
     const activeTruths = (customTruths && customTruths.length > 0) ? customTruths : DEFAULT_TRUTHS
     const activeDares = (customDares && customDares.length > 0) ? customDares : DEFAULT_DARES
     const activeExtreme = (customExtremeDares && customExtremeDares.length > 0) ? customExtremeDares : DEFAULT_EXTREME
+
+    // Player Management
+    const addPlayer = () => {
+        if (newPlayer.trim() && !players.includes(newPlayer.trim())) {
+            setPlayers([...players, newPlayer.trim()])
+            setNewPlayer('')
+        }
+    }
+
+    const removePlayer = (player: string) => {
+        setPlayers(players.filter(p => p !== player))
+    }
+
+    const startGame = () => {
+        if (players.length >= 2) {
+            setGameStarted(true)
+        }
+    }
 
     // Helper to avoid immediate repetition (simple version)
     const getUniqueRandom = (pool: string[]) => {
@@ -71,7 +95,6 @@ export default function TruthOrDare({ customTruths, customDares, customExtremeDa
         setTurnCount(nextTurn)
 
         // Extreme Rule: Every N turns
-        // Ensure interval is valid (>0) and we have extreme dares available
         if (extremeInterval > 0 && nextTurn % extremeInterval === 0 && activeExtreme.length > 0) {
             const extremeContent = getUniqueRandom(activeExtreme)
             setResult({ type: 'extreme', text: extremeContent, isExtreme: true })
@@ -97,20 +120,93 @@ export default function TruthOrDare({ customTruths, customDares, customExtremeDa
         setIsFlipped(true)
     }
 
-    const resetCard = () => {
+    const nextPlayer = () => {
         setIsFlipped(false)
         setResult(null)
+        setActivePlayerIndex((prev) => (prev + 1) % players.length)
     }
+
+    // 1. Player Registration Screen
+    if (!gameStarted) {
+        return (
+            <div className="flex flex-col items-center justify-center w-full h-full min-h-[450px] px-4">
+                <div className="w-full max-w-sm space-y-6">
+                    <div className="text-center space-y-2">
+                        <Users className="w-12 h-12 text-blue-400 mx-auto" />
+                        <h3 className="text-xl font-bold text-white">Jugadores</h3>
+                        <p className="text-sm text-gray-400">¿Quiénes van a jugar?</p>
+                    </div>
+
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={newPlayer}
+                            onChange={(e) => setNewPlayer(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && addPlayer()}
+                            placeholder="Nombre..."
+                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition"
+                        />
+                        <button
+                            onClick={addPlayer}
+                            disabled={!newPlayer.trim()}
+                            className="p-3 bg-blue-600 rounded-xl text-white disabled:opacity-50 hover:bg-blue-500 transition"
+                        >
+                            <Plus className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    <div className="max-h-48 overflow-y-auto space-y-2 custom-scrollbar">
+                        <AnimatePresence>
+                            {players.map((player) => (
+                                <motion.div
+                                    key={player}
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5"
+                                >
+                                    <span className="font-medium text-white">{player}</span>
+                                    <button
+                                        onClick={() => removePlayer(player)}
+                                        className="text-gray-500 hover:text-red-400 transition"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                        {players.length === 0 && (
+                            <p className="text-center text-xs text-gray-600 py-4 italic">Agrega al menos 2 jugadores</p>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={startGame}
+                        disabled={players.length < 2}
+                        className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 font-bold text-white shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] transition-transform"
+                    >
+                        COMENZAR JUEGO
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    // 2. Main Game Screen
+    const currentPlayerName = players[activePlayerIndex]
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full min-h-[450px] px-4 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
 
-            {/* Turn Counter */}
-            <div className="mb-6 z-10">
-                <span className="px-4 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-gray-300 uppercase tracking-widest backdrop-blur-md">
-                    Turno #{turnCount}
+            {/* Turn Header */}
+            <div className="mb-6 z-10 flex flex-col items-center gap-2">
+                <span className="px-4 py-1 rounded-full bg-white/10 border border-white/20 text-[10px] font-bold text-gray-400 uppercase tracking-widest backdrop-blur-md">
+                    Turno #{turnCount + 1}
                 </span>
+                <h2 className="text-2xl font-black text-white drop-shadow-md animate-in slide-in-from-top-2">
+                    {currentPlayerName}
+                </h2>
             </div>
 
             <AnimatePresence mode="wait">
@@ -127,9 +223,9 @@ export default function TruthOrDare({ customTruths, customDares, customExtremeDa
                             <Gamepad2 className="w-10 h-10 text-white" />
                         </div>
 
-                        <h2 className="text-2xl font-bold text-white mb-2">¿Tu Elección?</h2>
+                        <h2 className="text-xl font-bold text-white mb-2">¿Qué eliges {currentPlayerName}?</h2>
                         <p className="text-gray-400 text-sm mb-8 px-4">
-                            El destino favorece a los valientes. Elige con sabiduría.
+                            El destino favorece a los valientes.
                         </p>
 
                         <div className="grid grid-cols-2 gap-4 w-full mb-4">
@@ -192,15 +288,19 @@ export default function TruthOrDare({ customTruths, customDares, customExtremeDa
                                     {result?.isExtreme ? '🔥 EXTREMO 🔥' : result?.type === 'truth' ? 'VERDAD' : 'RETO'}
                                 </span>
 
-                                <h3 className="text-2xl md:text-3xl font-black text-white leading-tight mb-12 drop-shadow-md">
+                                <h3 className="text-2xl md:text-3xl font-black text-white leading-tight mb-4 drop-shadow-md">
                                     "{result?.text}"
                                 </h3>
 
+                                <div className="text-white/50 text-sm mb-12 font-medium bg-black/20 px-4 py-1 rounded-full">
+                                    Para: {currentPlayerName}
+                                </div>
+
                                 <button
-                                    onClick={resetCard}
+                                    onClick={nextPlayer}
                                     className="group flex items-center gap-2 px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                                 >
-                                    Siguiente
+                                    Siguiente Turno
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </button>
                             </div>
