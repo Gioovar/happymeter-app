@@ -1,5 +1,8 @@
 
 import { NextResponse } from 'next/server'
+
+export const dynamic = 'force-dynamic'
+
 import { currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, subMonths, format } from 'date-fns'
