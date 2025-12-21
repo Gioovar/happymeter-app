@@ -141,7 +141,7 @@ export default function PublicGamePage({ params }: PageProps) {
                         )}
                         {gameId === 'bottle' && (
                             <SpicyBottle
-                                customActions={bottleConfig.actions}
+                                customActions={bottleConfig.actions.length > 0 ? bottleConfig.actions : undefined}
                                 customBottleUrl={bottleConfig.logo}
                             />
                         )}
