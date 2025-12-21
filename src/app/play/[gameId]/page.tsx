@@ -80,10 +80,9 @@ export default function PublicGamePage({ params }: PageProps) {
                 <div className="absolute -top-40 -left-40 w-96 h-96 bg-violet-600/20 blur-[100px] rounded-full" />
 
                 {/* Header / Banner Area */}
-                <div className="w-full relative z-10 p-4 pb-0 flex flex-col items-center">
+                <div className="w-full relative z-10 p-4 pb-0 flex flex-col items-center animate-in fade-in slide-in-from-top-4 duration-700">
                     {pageConfig.bannerUrl ? (
-                        <div className="w-full max-w-md h-32 relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 mb-6">
-                            {/* Use classic img for dynamic external URLs to avoid domain config issues with Next/Image */}
+                        <div className="w-full max-w-md h-32 relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 mb-8 transform hover:scale-[1.02] transition-transform duration-500">
                             <img
                                 src={pageConfig.bannerUrl}
                                 alt="Brand Banner"
@@ -91,16 +90,27 @@ export default function PublicGamePage({ params }: PageProps) {
                             />
                         </div>
                     ) : (
-                        // Default Placeholder if no banner
-                        <div className="w-full max-w-md h-24 relative rounded-2xl overflow-hidden flex items-center justify-center mb-6 bg-gradient-to-r from-violet-800 to-fuchsia-800">
+                        <div className="w-full max-w-md h-24 relative rounded-2xl overflow-hidden flex items-center justify-center mb-8 bg-gradient-to-r from-violet-800 to-fuchsia-800 shadow-lg shadow-violet-900/50">
                             <h1 className="text-xl font-bold text-white tracking-widest uppercase">{pageConfig.gameTitle || 'Ruleta Picante'}</h1>
                         </div>
                     )}
+
+                    <div className="text-center space-y-2 mb-8 max-w-xs mx-auto">
+                        <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 drop-shadow-sm">
+                            {pageConfig.gameTitle || 'Ruleta Picante de Shots'}
+                        </h1>
+                        <p className="text-sm text-gray-400 font-medium leading-relaxed">
+                            Gira la ruleta y enfrenta el destino. ¿Beberás, invitarás o te salvarás?
+                        </p>
+                    </div>
                 </div>
 
-                <div className="relative z-10 w-full max-w-md px-4 flex-1 flex flex-col justify-center min-h-[500px]">
+                <div className="relative z-10 w-full max-w-md px-4 flex-1 flex flex-col justify-center min-h-[400px]">
                     {loadingConfig ? (
-                        <div className="text-center text-white animate-pulse">Cargando premios...</div>
+                        <div className="flex flex-col items-center justify-center space-y-4">
+                            <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                            <div className="text-white font-medium animate-pulse">Cargando premios...</div>
+                        </div>
                     ) : (
                         <MicroGameRoulette
                             outcomes={outcomes}
