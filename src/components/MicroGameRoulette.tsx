@@ -83,7 +83,6 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRou
     }
 
     return (
-    return (
         <div className="flex flex-col items-center justify-center w-full max-w-[320px] mx-auto">
             {!hasSpun ? (
                 // Hide default header since we moved it to page.tsx for global control
