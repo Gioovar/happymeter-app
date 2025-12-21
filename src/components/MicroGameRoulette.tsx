@@ -10,6 +10,7 @@ import { RouletteOutcome } from '@/types/game-roulette'
 interface MicroGameRouletteProps {
     onPrizeWon: (prize: string) => void
     outcomes?: RouletteOutcome[]
+    gameOwnerId?: string
 }
 
 const DEFAULT_PRIZES = [
@@ -21,7 +22,7 @@ const DEFAULT_PRIZES = [
     { label: '5% Desc.', color: '#3b82f6' }, // Blue
 ]
 
-export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRouletteProps) {
+export default function MicroGameRoulette({ onPrizeWon, outcomes, gameOwnerId }: MicroGameRouletteProps) {
     const prizesToUse = outcomes && outcomes.length > 0 ? outcomes : DEFAULT_PRIZES
     const [spinning, setSpinning] = useState(false)
     const [hasSpun, setHasSpun] = useState(false)
