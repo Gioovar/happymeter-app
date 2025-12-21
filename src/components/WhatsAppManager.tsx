@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Users, MessageCircle, UserPlus, ExternalLink, Info } from 'lucide-react'
+import { Download, MessageCircle, UserPlus, Info, CheckCircle, Smartphone, Users } from 'lucide-react'
 import Link from 'next/link'
 import { getCampaignCounts } from '@/actions/campaigns'
 
@@ -13,18 +13,6 @@ interface WhatsAppManagerProps {
 export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selectedSurveyId }: WhatsAppManagerProps) {
     const [segment, setSegment] = useState<'all' | 'vip' | 'promo' | 'angry' | 'neutral'>('vip')
     const [isExporting, setIsExporting] = useState(false)
-
-    const handleExport = () => {
-        setIsExporting(true)
-        const surveyParam = selectedSurveyId || 'all'
-        window.location.href = `/api/campaigns/export/vcf?surveyId=${surveyParam}&segment=${segment}`
-
-        // Restablecer estado después de un breve retraso ya que no podemos rastrear fácilmente la finalización de la descarga
-        setTimeout(() => {
-            setIsExporting(false)
-        }, 2000)
-    }
-
     const [counts, setCounts] = useState({ vip: 0, neutral: 0, angry: 0, promo: 0 })
     const [loadingCounts, setLoadingCounts] = useState(false)
 
@@ -33,7 +21,6 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
             setLoadingCounts(true)
             try {
                 const data = await getCampaignCounts(selectedSurveyId || 'all')
-                // Ensure data is not null/undefined
                 setCounts(data || { vip: 0, neutral: 0, angry: 0, promo: 0 })
             } catch (error) {
                 console.error("Failed to load counts", error)
@@ -45,166 +32,145 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
         fetchCounts()
     }, [selectedSurveyId])
 
+    const handleExport = () => {
+        setIsExporting(true)
+        const surveyParam = selectedSurveyId || 'all'
+        window.location.href = `/api/campaigns/export/vcf?surveyId=${surveyParam}&segment=${segment}`
+
+        setTimeout(() => {
+            setIsExporting(false)
+        }, 2000)
+    }
+
+    const segments = [
+        {
+            id: 'vip',
+            label: 'Clientes VIP',
+            desc: 'Para grupos exclusivos y preventas.',
+            count: counts.vip,
+            color: 'green',
+            icon: Users
+        },
+        {
+            id: 'promo',
+            label: 'Lista de Difusión',
+            desc: 'Para enviar ofertas semanales masivas.',
+            count: counts.promo,
+            color: 'blue',
+            icon: MessageCircle
+        },
+        {
+            id: 'neutral',
+            label: 'Seguimiento (Neutrales)',
+            desc: 'Encuestas para mejorar satisfacción.',
+            count: counts.neutral,
+            color: 'yellow',
+            icon: Users
+        },
+        {
+            id: 'angry',
+            label: 'Soporte (Insatisfechos)',
+            desc: 'Atención 1 a 1 para resolver quejas.',
+            count: counts.angry,
+            color: 'red',
+            icon: MessageCircle
+        }
+    ]
+
     return (
-        <div className="relative mt-8 rounded-2xl border border-white/10 bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10">
-            {/* Decoración de Fondo - Recortada */}
-            <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <MessageCircle className="w-32 h-32 text-[#25D366]" />
-                </div>
-            </div>
+        <div className="relative group rounded-3xl border border-white/5 bg-[#121212]/50 backdrop-blur-xl overflow-hidden hover:border-green-500/20 transition duration-500">
+            {/* Header Accent */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-600 opacity-80" />
 
-            <div className="relative z-10 p-8">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center text-white shadow-lg shadow-green-500/20">
-                        <MessageCircle className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-bold flex items-center gap-2">
-                            Comunidades de WhatsApp
-                            <div className="group relative">
-                                <Info className="w-4 h-4 text-gray-500 hover:text-white cursor-help" />
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-900 border border-white/10 text-xs text-gray-300 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none z-50">
-                                    Crea grupos o listas de difusión para mantener a tus clientes informados y fidelizados directamente en su chat.
-                                </div>
-                            </div>
-                        </h2>
-                        <p className="text-sm text-gray-400">Crea grupos exclusivos para tus clientes más leales.</p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Selección de Segmentación */}
-                    <div className="space-y-4">
-                        <h3 className="font-semibold text-gray-300">1. Define tu Grupo</h3>
-
-                        <div className="grid grid-cols-1 gap-3">
-                            <button
-                                onClick={() => setSegment('vip')}
-                                className={`flex items-center justify-between p-4 rounded-xl border transition ${segment === 'vip'
-                                    ? 'bg-green-500/20 border-green-500 text-white'
-                                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${segment === 'vip' ? 'bg-green-500' : 'bg-white/10'}`}>
-                                        <Users className="w-5 h-5" />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="font-bold flex items-center gap-2">
-                                            Clients VIP (Satisfechos)
-                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : (counts?.vip || 0)}</span>
-                                        </p>
-                                        <p className="text-xs opacity-70">Para eventos exclusivos y preventas</p>
+            <div className="p-6 md:p-8 relative z-10">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-green-500/10 rounded-2xl border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                            <MessageCircle className="w-6 h-6 text-green-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                WhatsApp Groups
+                                <div className="group/tooltip relative">
+                                    <Info className="w-4 h-4 text-gray-500 hover:text-white cursor-help" />
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 border border-white/10 text-xs text-gray-300 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition pointer-events-none z-50">
+                                        Gestiona tus comunidades. Crea grupos para clientes VIP o listas de difusión para promociones generales.
                                     </div>
                                 </div>
-                                {segment === 'vip' && <div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]" />}
-                            </button>
-
-                            <button
-                                onClick={() => setSegment('neutral')}
-                                className={`flex items-center justify-between p-4 rounded-xl border transition ${segment === 'neutral'
-                                    ? 'bg-yellow-500/20 border-yellow-500 text-white'
-                                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${segment === 'neutral' ? 'bg-yellow-500' : 'bg-white/10'}`}>
-                                        <MessageCircle className="w-5 h-5" />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="font-bold flex items-center gap-2">
-                                            Clientes Neutrales
-                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : (counts?.neutral || 0)}</span>
-                                        </p>
-                                        <p className="text-xs opacity-70">Para encuestas de seguimiento</p>
-                                    </div>
-                                </div>
-                                {segment === 'neutral' && <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_10px_#eab308]" />}
-                            </button>
-
-                            <button
-                                onClick={() => setSegment('angry')}
-                                className={`flex items-center justify-between p-4 rounded-xl border transition ${segment === 'angry'
-                                    ? 'bg-red-500/20 border-red-500 text-white'
-                                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${segment === 'angry' ? 'bg-red-500' : 'bg-white/10'}`}>
-                                        <MessageCircle className="w-5 h-5" />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="font-bold flex items-center gap-2">
-                                            Clientes Insatisfechos
-                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : (counts?.angry || 0)}</span>
-                                        </p>
-                                        <p className="text-xs opacity-70">Atención personalizada y soporte</p>
-                                    </div>
-                                </div>
-                                {segment === 'angry' && <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444]" />}
-                            </button>
-
-                            <button
-                                onClick={() => setSegment('promo')}
-                                className={`flex items-center justify-between p-4 rounded-xl border transition ${segment === 'promo'
-                                    ? 'bg-blue-500/20 border-blue-500 text-white'
-                                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${segment === 'promo' ? 'bg-blue-500' : 'bg-white/10'}`}>
-                                        <MessageCircle className="w-5 h-5" />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="font-bold flex items-center gap-2">
-                                            Lista de Difusión (Ofertas)
-                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : (counts?.promo || 0)}</span>
-                                        </p>
-                                        <p className="text-xs opacity-70">Para enviar promociones semanales</p>
-                                    </div>
-                                </div>
-                                {segment === 'promo' && <div className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6]" />}
-                            </button>
+                            </h2>
+                            <p className="text-sm text-gray-400">Fideliza clientes directamente en su chat.</p>
                         </div>
                     </div>
+                </div>
 
-                    {/* Área de Acción */}
-                    <div className="flex flex-col justify-between space-y-6">
-                        <div className="bg-black/40 rounded-xl p-6 border border-white/10">
-                            <h4 className="font-bold mb-2 text-gray-200">Acciones Rápidas</h4>
-                            <div className="space-y-3">
+                <div className="space-y-6">
+                    {/* Selector de Segmento */}
+                    <div className="space-y-3">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block ml-1">Selecciona Audiencia</label>
+                        <div className="grid grid-cols-1 gap-2">
+                            {segments.map((seg) => (
                                 <button
-                                    onClick={handleExport}
-                                    disabled={isExporting}
-                                    className="w-full py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white transition flex items-center justify-center gap-2 text-sm font-medium"
+                                    key={seg.id}
+                                    onClick={() => setSegment(seg.id as any)}
+                                    className={`relative flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-300 group/btn ${segment === seg.id
+                                            ? `bg-${seg.color}-500/10 border-${seg.color}-500/50`
+                                            : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
+                                        }`}
                                 >
-                                    {isExporting ? 'Exportando...' : <><Download className="w-4 h-4" /> Descargar Contactos (VCF)</>}
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-2 rounded-lg transition-colors ${segment === seg.id ? `bg-${seg.color}-500 text-white` : 'bg-white/5 text-gray-400'}`}>
+                                            <seg.icon className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className={`font-bold text-sm ${segment === seg.id ? 'text-white' : 'text-gray-300'}`}>{seg.label}</h3>
+                                                {segment === seg.id && <CheckCircle className={`w-4 h-4 text-${seg.color}-500`} />}
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-0.5">{seg.desc}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className={`text-lg font-bold block ${segment === seg.id ? 'text-white' : 'text-gray-500'}`}>
+                                            {loadingCounts ? '...' : seg.count.toLocaleString()}
+                                        </span>
+                                        <span className="text-[10px] text-gray-600 uppercase">Contactos</span>
+                                    </div>
                                 </button>
+                            ))}
+                        </div>
+                    </div>
 
-                                <a
-                                    href="https://chat.whatsapp.com/"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full py-3 rounded-lg bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold transition shadow-lg shadow-green-600/20 flex items-center justify-center gap-2 text-sm"
-                                >
-                                    <UserPlus className="w-4 h-4" /> Crear Grupo en WhatsApp Web
-                                </a>
-                            </div>
+                    {/* Action Area */}
+                    <div className="bg-[#0f1115] rounded-xl p-6 border border-white/5 space-y-4">
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Formato de Exportación</span>
+                            <span className="text-white font-mono bg-white/5 px-2 py-1 rounded">VCF (Móvil)</span>
                         </div>
 
-                        <div className="bg-white/5 rounded-xl p-4 border border-white/5 text-xs text-gray-400">
-                            <p className="flex items-start gap-2">
-                                <span className="text-green-400 font-bold">Tip:</span>
-                                Descarga los contactos en formato VCF para importarlos rápidamente a tu celular y añadirlos al grupo.
-                            </p>
-                        </div>
-
-                        <Link href="/dashboard/help/whatsapp" className="block">
-                            <button className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition text-sm font-medium">
-                                ¿Cómo usar WhatsApp Business? Ver guía
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button
+                                onClick={handleExport}
+                                disabled={isExporting}
+                                className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium transition flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+                            >
+                                {isExporting ? '...' : <><Download className="w-4 h-4" /> Bajar VCF</>}
                             </button>
-                        </Link>
+
+                            <a
+                                href="https://web.whatsapp.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full py-3 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold shadow-lg shadow-green-900/20 transition flex items-center justify-center gap-2 text-sm"
+                            >
+                                <UserPlus className="w-4 h-4" /> Crear Grupo
+                            </a>
+                        </div>
+
+                        <div className="bg-white/5 rounded-lg p-3 border border-white/5 text-[11px] text-gray-400 flex gap-2">
+                            <Smartphone className="w-4 h-4 text-green-400 shrink-0" />
+                            <p>Descarga el archivo VCF y ábrelo en tu celular para guardar todos los contactos automáticamente.</p>
+                        </div>
                     </div>
                 </div>
             </div>
