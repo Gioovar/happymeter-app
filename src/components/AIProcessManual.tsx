@@ -127,7 +127,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
             } catch (error) {
                 console.error("Error fetching analytics:", error)
-                toast.error("No se pudieron cargar los datos reales")
+                toast.error(`Error cargando datos: ${error instanceof Error ? error.message : "Error desconocido"}`)
                 setLoading(false)
             }
         }
