@@ -145,9 +145,9 @@ export default function PublicGamePage({ params }: PageProps) {
                             )}
                             {gameId === 'truth' && (
                                 <TruthOrDare
-                                    customTruths={truthConfig.truths}
-                                    customDares={truthConfig.dares}
-                                    customExtremeDares={truthConfig.extreme}
+                                    customTruths={truthConfig.truths.length > 0 ? truthConfig.truths : undefined}
+                                    customDares={truthConfig.dares.length > 0 ? truthConfig.dares : undefined}
+                                    customExtremeDares={truthConfig.extreme.length > 0 ? truthConfig.extreme : undefined}
                                 />
                             )}
                         </>
