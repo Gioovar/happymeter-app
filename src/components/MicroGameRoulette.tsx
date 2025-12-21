@@ -24,14 +24,14 @@ interface MicroGameRouletteProps {
 }
 
 const DEFAULT_PRIZES: RouletteOutcome[] = [
-    { id: '1', label: '10% Desc.', color: '#8b5cf6', probability: 1, rule: 'common' },
-    { id: '2', label: 'Refresco Gratis', color: '#ec4899', probability: 1, rule: 'common' },
-    { id: '3', label: 'Suerte la próxima', color: '#6b7280', probability: 1, rule: 'common' },
-    { id: '4', label: '2x1 Cerveza', color: '#eab308', probability: 1, rule: 'common' },
-    { id: '5', label: 'Postre Gratis', color: '#22c55e', probability: 1, rule: 'common' },
-    { id: '6', label: '5% Desc.', color: '#3b82f6', probability: 1, rule: 'common' },
-    { id: '7', label: 'Shot Gratis', color: '#ef4444', probability: 1, rule: 'common' },
-    { id: '8', label: 'Abrazo', color: '#f97316', probability: 1, rule: 'common' },
+    { id: '1', label: '10% Desc.', short: '10%', color: '#8b5cf6', iconType: 'star', probability: 1, rule: 'common' },
+    { id: '2', label: 'Refresco Gratis', short: 'REFRESCO', color: '#ec4899', iconType: 'water', probability: 1, rule: 'common' },
+    { id: '3', label: 'Suerte la próxima', short: 'SUERTE', color: '#6b7280', iconType: 'skull', probability: 1, rule: 'common' },
+    { id: '4', label: '2x1 Cerveza', short: '2x1', color: '#eab308', iconType: 'beer', probability: 1, rule: 'common' },
+    { id: '5', label: 'Postre Gratis', short: 'POSTRE', color: '#22c55e', iconType: 'star', probability: 1, rule: 'common' },
+    { id: '6', label: '5% Desc.', short: '5%', color: '#3b82f6', iconType: 'star', probability: 1, rule: 'common' },
+    { id: '7', label: 'Shot Gratis', short: 'SHOT', color: '#ef4444', iconType: 'beer', probability: 1, rule: 'common' },
+    { id: '8', label: 'Abrazo', short: 'ABRAZO', color: '#f97316', iconType: 'userPlus', probability: 1, rule: 'common' },
 ]
 
 export default function MicroGameRoulette({ onPrizeWon, outcomes, gameOwnerId }: MicroGameRouletteProps) {
