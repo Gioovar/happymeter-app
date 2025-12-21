@@ -599,7 +599,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
             </AnimatePresence >
 
             {/* --- PLANTILLA PDF AHORRO DE TINTA (Contenedor Oculto) --- */}
-            < div style={{ position: 'fixed', top: 0, left: 0, zIndex: -50, opacity: 0, pointerEvents: 'none' }}>
+            <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -50, opacity: 0, pointerEvents: 'none' }}>
                 {manualData && (
                     <>
                         {/* PÁGINA 1: Resumen Ejecutivo */}
@@ -792,7 +792,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
 
             {/* CONTENIDO PRINCIPAL DEL TABLERO (Se ocultará al imprimir) */}
-            < div className="dashboard-content" >
+            <div className="dashboard-content" >
                 {
                     loading ? (
                         <div className="h-[60vh] flex flex-col items-center justify-center space-y-8 relative z-10" >
