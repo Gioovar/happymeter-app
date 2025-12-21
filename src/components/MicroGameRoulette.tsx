@@ -36,40 +36,94 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes, gameOwnerId }:
     const handleSpin = async () => {
         if (spinning || hasSpun) return
 
+        console.log('[MicroGameRoulette] Starting spin...', { gameOwnerId })
         setSpinning(true)
-        setHasSpun(false) // Reset state immediately for new spin
+        setHasSpun(false)
+        setFinalPrize(null)
 
         try {
-            // Server-side spin
-            // We need the ownerId. Currently we might not have it strictly passed as prop 
-            // if we rely only on `outcomes`. 
-            // We should pass `uid` to this component or infer it?
-            // The Page passes outcomes. We need the UID.
-            // Let's fallback to client random if no UID is passed (backward compat) 
-            // BUT for this task, we assume UID is available or we add it to props.
+            // 1. Get Winner
+            let winningIdx = 0
 
-            // Wait, we need the owner ID to call the API.
-            // Let's assume the parent passes it. I will add `gameOwnerId` prop in next step or use a workaround?
-            // "PlayPage" has `uid`. I should pass it.
-            // For now, let's look for a prop. If not, I'll update the Interface.
+            if (gameOwnerId) {
+                console.log('[MicroGameRoulette] Fetching winner from API...')
+                try {
+                    const res = await fetch('/api/games/spin', {
+                        method: 'POST',
+                        body: JSON.stringify({ userId: gameOwnerId })
+                    })
 
-            // Assume we added `gameOwnerId` to props. (I will do this in the next tool call for the Interface)
-            // Or better: Use global window location? No.
-            // Let's just pass `uid` from the page.
+                    if (!res.ok) {
+                        const errText = await res.text()
+                        console.error('[MicroGameRoulette] API Error:', res.status, errText)
+                        // Fallback to random if API fails
+                        winningIdx = Math.floor(Math.random() * prizesToUse.length)
+                    } else {
+                        const data = await res.json()
+                        console.log('[MicroGameRoulette] API Success:', data)
+                        if (data.winnerIndex !== undefined) {
+                            winningIdx = data.winnerIndex
+                        } else {
+                            // Fallback
+                            winningIdx = Math.floor(Math.random() * prizesToUse.length)
+                        }
+                    }
+                } catch (apiErr) {
+                    console.error('[MicroGameRoulette] API Fetch Failed:', apiErr)
+                    winningIdx = Math.floor(Math.random() * prizesToUse.length)
+                }
+            } else {
+                console.log('[MicroGameRoulette] No Owner ID, using client random')
+                winningIdx = Math.floor(Math.random() * prizesToUse.length)
+            }
 
-            // ... Placeholder for API call ...
-            // Actually, since I can't change the interface in the SAME `replace_file_content` easily without Context,
-            // I will assume the prop `uid` is passed.
+            console.log('[MicroGameRoulette] Winner Index Determined:', winningIdx)
 
-        } catch (e) {
-            console.error(e)
+            // 2. Calculate Rotation
+            const segmentAngle = 360 / prizesToUse.length
+            const segmentCenter = (winningIdx * segmentAngle) + (segmentAngle / 2)
+
+            // Add noise
+            const noise = (Math.random() - 0.5) * (segmentAngle * 0.8)
+
+            // Calculate target mod
+            const targetMod = (360 - segmentCenter + noise) % 360
+            const currentMod = rotation % 360
+            let dist = targetMod - currentMod
+            if (dist < 0) dist += 360
+
+            // Ensure typically large rotation (5+ spins)
+            const extraSpins = 5 + Math.floor(Math.random() * 3)
+            const finalRotation = rotation + dist + (360 * extraSpins)
+
+            console.log('[MicroGameRoulette] Rotation:', { current: rotation, target: finalRotation, index: winningIdx })
+
+            setRotation(finalRotation)
+
+            // 3. Wait for animation
+            await new Promise(resolve => setTimeout(resolve, 5000))
+
+            // 4. Show Result
+            const prize = prizesToUse[winningIdx]
+            setFinalPrize(prize.label)
+            onPrizeWon(prize.label)
+            setHasSpun(true)
+            setSpinning(false)
+
+            if (prize.label !== 'Suerte la próxima') {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: [prize.color, '#ffffff']
+                })
+            }
+
+        } catch (error) {
+            console.error("[MicroGameRoulette] Critical Spin Error", error)
             setSpinning(false)
         }
     }
-
-    // WAIT: I should update the Interface FIRST or include it here.
-    // I'll rewrite the whole component start to include the prop.
-
 
     return (
         <div className="flex flex-col items-center justify-center w-full max-w-[320px] mx-auto">
