@@ -115,6 +115,7 @@ export default function PublicGamePage({ params }: PageProps) {
                         <MicroGameRoulette
                             outcomes={outcomes}
                             onPrizeWon={() => { }}
+                            gameOwnerId={uid || undefined}
                         />
                     )}
                 </div>
