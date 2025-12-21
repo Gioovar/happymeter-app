@@ -17,7 +17,7 @@ export async function POST(req: Request) {
         const now = new Date()
         const startOfWeek = new Date(now.setDate(now.getDate() - 7))
 
-        const [userSettings, insights, aggregateStats] = await Promise.all([
+        const [userSettings, insights, aggregateStats, recentResponses] = await Promise.all([
             // Fetch User Settings
             prisma.userSettings.findUnique({
                 where: { userId }
@@ -37,6 +37,23 @@ export async function POST(req: Request) {
                         select: { id: true }
                     }
                 }
+            }),
+            // Fetch Recent Qualitative Feedback (Last 20 responses)
+            prisma.response.findMany({
+                where: {
+                    survey: { userId }
+                },
+                take: 20,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    answers: {
+                        include: {
+                            question: {
+                                select: { text: true, type: true }
+                            }
+                        }
+                    }
+                }
             })
         ])
 
@@ -48,21 +65,34 @@ export async function POST(req: Request) {
         const totalResponsesThisWeek = aggregateStats.reduce((acc, s) => acc + s.responses.length, 0)
         const totalResponsesAllTime = aggregateStats.reduce((acc, s) => acc + s._count.responses, 0)
 
+        // Format Recent Feedback for AI
+        const recentFeedbackText = recentResponses.map(r => {
+            const date = new Date(r.createdAt).toLocaleDateString()
+            const answersText = r.answers.map(a => {
+                return `    * ${a.question.text}: "${a.value}"`
+            }).join('\n')
+            return `- [${date}]:\n${answersText}`
+        }).join('\n\n')
+
         // 2. Prepare System Prompt with Memory
         let SYSTEM_PROMPT = `Actúa como el 'HappyMeter Analyst', experto en ${businessName} (${industry}).
         
         MEMORIA DE LARGO PLAZO (Hechos que has aprendido sobre este negocio):
         ${insightText || "No hay insights previos."}
 
-        DATOS ACTUALES:
-        - Encuestas: ${totalSurveys}
-        - Respuestas (Total): ${totalResponsesAllTime}
-        - Respuestas (Semana): ${totalResponsesThisWeek}
+        DATOS ESTADÍSTICOS:
+        - Encuestas activas: ${totalSurveys}
+        - Respuestas (Total histórico): ${totalResponsesAllTime}
+        - Respuestas (Esta semana): ${totalResponsesThisWeek}
+        
+        FEEDBACK CUALITATIVO RECIENTE (Lo que dicen los clientes):
+        ${recentFeedbackText || "No hay respuestas recientes con texto."}
         
         TUS CAPACIDADES:
         - Recuerda el contexto de la conversación actual.
         - Usa los insights para personalizar tus respuestas.
-        - Si el usuario menciona un dato clave (ej. "Mi objetivo es X"), recuérdalo para el futuro.
+        - Analiza el sentimiento de los comentarios recientes.
+        - SIEMPRE cita frases textuales de los clientes cuando des consejos.
         
         ... (Resto de instrucciones de análisis de datos) ...
         `
