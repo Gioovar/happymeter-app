@@ -933,45 +933,52 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                         })}
                                     </div>
 
-                                    {/* AI Chat Manual Section - CTA */}
-                                    <div className="bg-gradient-to-r from-violet-900/50 to-fuchsia-900/50 border border-white/10 p-6 md:p-8 rounded-[24px] md:rounded-[32px] flex flex-col md:flex-row items-center justify-between relative overflow-hidden group gap-6 md:gap-0 text-center md:text-left">
-                                        <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(to_right,transparent,black,transparent)]" />
-
-                                        <div className="relative z-10 max-w-2xl px-2">
-                                            <h2 className="text-xl md:text-2xl font-bold text-white mb-2 flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3 justify-center md:justify-start">
-                                                <Sparkles className="w-6 h-6 text-fuchsia-400 animate-pulse hidden md:block" />
-                                                ¿Necesitas un Plan de Acción Detallado?
-                                            </h2>
-                                            <p className="text-gray-300 text-base md:text-lg">
-                                                Tu asistente <span className="text-violet-400 font-bold">HappyMeter Analyst</span> ya analizó estos datos. Habla con él para obtener un manual paso a paso personalizado.
-                                            </p>
-                                        </div>
-
-                                        <div className="relative z-10 flex items-center w-full md:w-auto justify-center">
-                                            <a
-                                                href="/dashboard/chat"
-                                                className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-white text-black font-bold rounded-full hover:scale-105 transition transform shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] w-full md:w-auto text-sm md:text-base"
-                                            >
-                                                <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
-                                                Iniciar Conversación IA
-                                            </a>
-                                        </div>
-
-                                        {/* Decorator */}
-                                        <div className="absolute -right-20 -bottom-20 opacity-20 group-hover:opacity-30 transition duration-500">
-                                            <Sparkles className="w-64 h-64 text-fuchsia-500 blur-3xl" />
-                                        </div>
+                                    <div className="mt-6 p-3 bg-white/5 rounded-xl border border-white/5 text-center">
+                                        <p className="text-xl font-bold text-white mb-0.5">{Math.round((manualData.sentimentData.find((s: any) => s.name === 'Positivo')?.value || 0) + (manualData.sentimentData.find((s: any) => s.name === 'Neutral')?.value || 0) / 2)}%</p>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-widest">Satisfacción General</p>
                                     </div>
-
+                                </motion.div>
                             </div>
+
+                            {/* AI Chat Manual Section - CTA */}
+                            <div className="bg-gradient-to-r from-violet-900/50 to-fuchsia-900/50 border border-white/10 p-6 md:p-8 rounded-[24px] md:rounded-[32px] flex flex-col md:flex-row items-center justify-between relative overflow-hidden group gap-6 md:gap-0 text-center md:text-left">
+                                <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(to_right,transparent,black,transparent)]" />
+
+                                <div className="relative z-10 max-w-2xl px-2">
+                                    <h2 className="text-xl md:text-2xl font-bold text-white mb-2 flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3 justify-center md:justify-start">
+                                        <Sparkles className="w-6 h-6 text-fuchsia-400 animate-pulse hidden md:block" />
+                                        ¿Necesitas un Plan de Acción Detallado?
+                                    </h2>
+                                    <p className="text-gray-300 text-base md:text-lg">
+                                        Tu asistente <span className="text-violet-400 font-bold">HappyMeter Analyst</span> ya analizó estos datos. Habla con él para obtener un manual paso a paso personalizado.
+                                    </p>
+                                </div>
+
+                                <div className="relative z-10 flex items-center w-full md:w-auto justify-center">
+                                    <a
+                                        href="/dashboard/chat"
+                                        className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-white text-black font-bold rounded-full hover:scale-105 transition transform shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] w-full md:w-auto text-sm md:text-base"
+                                    >
+                                        <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
+                                        Iniciar Conversación IA
+                                    </a>
+                                </div>
+
+                                {/* Decorator */}
+                                <div className="absolute -right-20 -bottom-20 opacity-20 group-hover:opacity-30 transition duration-500">
+                                    <Sparkles className="w-64 h-64 text-fuchsia-500 blur-3xl" />
+                                </div>
+                            </div>
+
+                        </div>
                         </div>
                     )}
-            </div>
-        </AnimatePresence>
+        </div>
+        </AnimatePresence >
 
 
 
-            {/* --- PRINT ONLY REPORT (HIDDEN ON SCREEN) ---  DEPRECATED/REMOVED */ }
+        {/* --- PRINT ONLY REPORT (HIDDEN ON SCREEN) ---  DEPRECATED/REMOVED */ }
     {/* This section was removed in concept but kept in code structure to prevent errors if invoked, though effectively empty now or minimal legacy support */ }
 
             </div >
