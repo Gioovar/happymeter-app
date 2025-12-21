@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         }
 
         // 3. Call AI
-        const model = getGeminiModel('gemini-1.5-flash', {
+        const model = getGeminiModel('gemini-flash-latest', {
             systemInstruction: systemPrompt
         })
 

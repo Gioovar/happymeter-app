@@ -23,7 +23,7 @@ export async function POST(req: Request) {
         const mimeType = matches[1]
         const base64Data = matches[2]
 
-        const model = getGeminiModel('gemini-1.5-flash', {
+        const model = getGeminiModel('gemini-flash-latest', {
             systemInstruction: "Eres una vieja gitana mística y sabia experta en quiromancia (lectura de manos). Tu objetivo es analizar la palma de la mano de la imagen proporcionada. Habla en español con un tono misterioso, cálido y envolvente. Analiza brevemente las líneas principales (vida, corazón, cabeza) y da una predicción positiva sobre el futuro, el amor o el éxito. Mantén la respuesta en menos de 80 palabras."
         })
 
