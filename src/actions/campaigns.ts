@@ -33,9 +33,15 @@ export async function getCampaignCounts(surveyId: string): Promise<CampaignCount
 
         const responses = await prisma.response.findMany({
             where: whereClause,
-            include: {
+            select: {
+                id: true,
                 answers: {
-                    include: { question: true }
+                    select: {
+                        value: true,
+                        question: {
+                            select: { type: true }
+                        }
+                    }
                 }
             }
         })
@@ -47,7 +53,7 @@ export async function getCampaignCounts(surveyId: string): Promise<CampaignCount
 
         responses.forEach(r => {
             // Logic must match /api/campaigns/export/vcf/route.ts
-            const ratingAnswer = r.answers.find((a) => a.question.type === 'RATING' || a.question.type === 'EMOJI')
+            const ratingAnswer = r.answers.find((a) => a.question && (a.question.type === 'RATING' || a.question.type === 'EMOJI'))
             const ratingValue = ratingAnswer ? parseInt(ratingAnswer.value) : 0
 
             if (ratingValue >= 5) vip++

@@ -2,13 +2,14 @@
 'use client'
 
 import { useAuth } from '@clerk/nextjs'
-import { redirect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import CampaignManager from '@/components/CampaignManager'
 import WhatsAppManager from '@/components/WhatsAppManager'
 
 export default function CampaignsPage() {
     const { userId, isLoaded } = useAuth()
+    const router = useRouter()
     const [surveys, setSurveys] = useState<{ id: string, title: string }[]>([])
     const [selectedSurveyId, setSelectedSurveyId] = useState('all')
 
@@ -29,7 +30,8 @@ export default function CampaignsPage() {
     }, [userId])
 
     if (isLoaded && !userId) {
-        redirect('/')
+        router.push('/')
+        return null
     }
 
     const selectedSurveyTitle = surveys.find(s => s.id === selectedSurveyId)?.title || 'Todas las Encuestas'
