@@ -119,18 +119,21 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRou
                 </div>
             )}
 
-            <div className="relative w-72 h-72 md:w-80 md:h-80 mb-8">
-                {/* Glow Behind Wheel */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-violet-600/30 to-fuchsia-600/30 blur-[40px] rounded-full scale-110 pointer-events-none animate-pulse" />
+            <div className="relative w-80 h-80 md:w-96 md:h-96 mb-10 group">
+                {/* Outer Glow Ring (Static) */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 blur-xl pointer-events-none" />
 
-                {/* Pointer - Cyan Triangle */}
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 filter drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">
-                    <div className="w-0 h-0 border-l-[20px] border-l-transparent border-t-[40px] border-t-cyan-400 border-r-[20px] border-r-transparent"></div>
+                {/* Decorative Outer Ring (Spinning slowly in opposite direction for effect could be cool, but static is safer for performance) */}
+                <div className="absolute -inset-4 rounded-full border border-white/5 border-t-white/20 shadow-[0_0_30px_rgba(139,92,246,0.3)]" />
+
+                {/* Pointer - Cyan Triangle with neon glow */}
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-30 filter drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">
+                    <div className="w-0 h-0 border-l-[18px] border-l-transparent border-t-[32px] border-t-cyan-400 border-r-[18px] border-r-transparent animate-pulse"></div>
                 </div>
 
                 {/* Wheel Container */}
                 <div
-                    className="w-full h-full rounded-full border-8 border-[#1a1a1a] shadow-2xl relative overflow-hidden box-border bg-[#1a1a1a]"
+                    className="w-full h-full rounded-full border-[10px] border-[#0F0F13] shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] relative overflow-hidden bg-[#1a1a1a]"
                     style={{
                         transform: `rotate(${rotation}deg)`,
                         transition: 'transform 5s cubic-bezier(0.15, 0, 0.15, 1)'
@@ -149,19 +152,26 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRou
                                     clipPath: 'polygon(50% 100%, 0 0, 100% 0)'
                                 }}
                             >
-                                {/* Segment Color with Gradient Look */}
+                                {/* Segment Color with 3D Gradient Overlay */}
                                 <div
-                                    className="w-full h-full absolute top-0 left-0 border-b border-black/10"
+                                    className="w-full h-full absolute top-0 left-0"
                                     style={{
                                         backgroundColor: prize.color,
-                                        backgroundImage: 'linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(0,0,0,0.1))',
+                                        // Radial gradient for 3D depth + Linear for sheen
+                                        backgroundImage: `
+                                            radial-gradient(circle at 50% 100%, rgba(0,0,0,0.6) 0%, transparent 60%),
+                                            linear-gradient(to top, rgba(0,0,0,0.4) 0%, rgba(255,255,255,0.1) 100%)
+                                        `,
                                         transform: `rotate(${90 - (angle / 2)}deg)`
                                     }}
                                 />
-                                {/* Label */}
+                                {/* Label with Glow */}
                                 <div
-                                    className="absolute top-6 left-1/2 -translate-x-1/2 text-white font-black text-xs md:text-sm uppercase whitespace-nowrap drop-shadow-md tracking-wide"
-                                    style={{ transform: 'rotate(90deg)' }}
+                                    className="absolute top-8 left-1/2 -translate-x-1/2 text-white font-black text-sm md:text-base uppercase whitespace-nowrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
+                                    style={{
+                                        transform: 'rotate(90deg)',
+                                        textShadow: '0 0 10px rgba(0,0,0,0.5)'
+                                    }}
                                 >
                                     {prize.label}
                                 </div>
@@ -170,9 +180,13 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRou
                     })}
                 </div>
 
-                {/* Center Cap (Modern) */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-[#1a1a1a] rounded-full shadow-2xl z-10 flex items-center justify-center border-4 border-[#0a0a0a]">
-                    <div className="w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,1)] animate-pulse" />
+                {/* Center Hub (Tech Style) */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-[#0F0F13] rounded-full shadow-[0_0_20px_rgba(0,0,0,1)] z-20 flex items-center justify-center border border-white/5">
+                    {/* Inner Metallic Ring */}
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 border border-gray-600 flex items-center justify-center shadow-inner">
+                        {/* Core Light */}
+                        <div className={`w-6 h-6 rounded-full transition-all duration-300 ${spinning ? 'bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,1)] scale-110' : 'bg-gray-800 shadow-none'}`} />
+                    </div>
                 </div>
             </div>
 
