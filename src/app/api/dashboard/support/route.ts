@@ -122,6 +122,7 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error('[SUPPORT_CHAT_ERROR]', error)
-    return new NextResponse(JSON.stringify({ error: "Failed to process support request" }), { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 })
   }
 }
