@@ -137,10 +137,10 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className={`absolute mt-3 w-[360px] md:w-[400px] bg-[#111] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-xl ${align === 'right' ? 'right-0' : 'left-0'}`}
+                        className={`absolute mt-3 w-[360px] md:w-[400px] bg-[#13111C] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden ${align === 'right' ? 'right-0' : 'left-0'}`}
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/5">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#13111C]">
                             <h3 className="font-bold text-white text-sm">Notificaciones</h3>
                             <div className="flex gap-2">
                                 {unreadCount > 0 && (
