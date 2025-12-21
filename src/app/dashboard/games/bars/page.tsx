@@ -249,7 +249,7 @@ export default function BarGamesPage() {
                     isOpen={isQRModalOpen}
                     onClose={() => setIsQRModalOpen(false)}
                     gameTitle={gameTitle}
-                    gameUrl={`${typeof window !== 'undefined' ? window.location.origin : 'https://happymeter.app'}/play/${selectedGame}?uid=${userId}`}
+                    gameUrl={`${typeof window !== 'undefined' ? window.location.origin : 'https://happymeter-snowy.vercel.app'}/play/${selectedGame}?uid=${userId}`}
                 />
             </div>
         )

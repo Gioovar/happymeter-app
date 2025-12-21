@@ -109,7 +109,7 @@ export default function HotelGamesPage() {
 
     const handlePublish = () => {
         const activeGame = GAMES.find(g => g.id === selectedGame)
-        setQrGameUrl(`https://happymeter.app/play/${activeGame?.id}`)
+        setQrGameUrl(`https://happymeter-snowy.vercel.app/play/${activeGame?.id}`)
         setIsQRModalOpen(true)
     }
 

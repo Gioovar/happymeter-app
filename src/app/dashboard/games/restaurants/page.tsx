@@ -46,7 +46,7 @@ export default function RestaurantGamesPage() {
     }
 
     const handlePublish = () => {
-        const url = `https://happymeter.app/play/${selectedGameId}`
+        const url = `https://happymeter-snowy.vercel.app/play/${selectedGameId}`
         setQrGameUrl(url)
         setIsQRModalOpen(true)
     }

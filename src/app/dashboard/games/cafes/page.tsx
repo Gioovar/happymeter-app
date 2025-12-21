@@ -56,7 +56,7 @@ export default function CafeGamesPage() {
     const activeGame = GAMES.find(g => g.id === selectedGame)
 
     const handlePublish = () => {
-        setQrGameUrl(`https://happymeter.app/play/${activeGame?.id}`) // Use actual ID
+        setQrGameUrl(`https://happymeter-snowy.vercel.app/play/${activeGame?.id}`) // Use actual ID
         setIsQRModalOpen(true)
     }
 
