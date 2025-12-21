@@ -97,9 +97,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                         }
                     ],
                     starBreakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
-                    topWaiter: (fastAnalytics?.staffRanking && fastAnalytics.staffRanking.length > 0)
-                        ? { name: fastAnalytics.staffRanking[0].name, mentions: fastAnalytics.staffRanking[0].count }
-                        : { name: "Equipo", mentions: 0 },
+                    topWaiter: { name: "Equipo", mentions: 0 },
                     discoveryData: [
                         { name: 'Redes Sociales', value: 45 },
                         { name: 'Google Maps', value: 30 },
