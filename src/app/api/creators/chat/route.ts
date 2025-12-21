@@ -33,10 +33,17 @@ export async function POST(req: Request) {
         })
 
         // Map messages to Gemini Format
-        const geminiHistory = messages.map((m: any) => ({
+        // Map messages to Gemini Format
+        let geminiHistory = messages.map((m: any) => ({
             role: m.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: m.content }]
         }))
+
+        // Gemini restriction: First message must be 'user'. 
+        const firstUserIndex = geminiHistory.findIndex((m: any) => m.role === 'user')
+        if (firstUserIndex !== -1) {
+            geminiHistory = geminiHistory.slice(firstUserIndex)
+        }
 
         const result = await model.generateContent({
             contents: geminiHistory
@@ -48,6 +55,7 @@ export async function POST(req: Request) {
 
     } catch (error) {
         console.error('[AI_CHAT_POST]', error)
-        return new NextResponse("Error processing request", { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 })
     }
 }

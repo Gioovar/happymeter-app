@@ -81,7 +81,12 @@ export async function POST(req: Request) {
 
         // Dry run
         if (!process.env.GEMINI_API_KEY) {
-            return NextResponse.json({ role: 'assistant', content: "Modo de prueba: Sin conexión a Gemini.", newTitle: undefined })
+            console.warn('[AI_CHAT] Missing GEMINI_API_KEY. Returning demo response.')
+            return NextResponse.json({
+                role: 'assistant',
+                content: "Modo demo: No puedo conectar con mi cerebro principal (Falta API Key). Configúrala en Vercel.",
+                newTitle: undefined
+            })
         }
 
         const model = getGeminiModel('gemini-1.5-flash', {
@@ -89,66 +94,27 @@ export async function POST(req: Request) {
         })
 
         // Map messages to Gemini Format
-        const geminiHistory = messages.map((m: any) => ({
+        let geminiHistory = messages.map((m: any) => ({
             role: m.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: m.content }]
         }))
+
+        // Gemini restriction: First message must be 'user'. 
+        const firstUserIndex = geminiHistory.findIndex((m: any) => m.role === 'user')
+        if (firstUserIndex !== -1) {
+            geminiHistory = geminiHistory.slice(firstUserIndex)
+        }
 
         const result = await model.generateContent({
             contents: geminiHistory
         })
 
-        const responseText = result.response.text() || "Sin respuesta."
-
-        // 5. Save AI Response to DB
-        let newTitle = undefined
-        if (threadId) {
-            await prisma.chatMessage.create({
-                data: {
-                    threadId,
-                    role: 'assistant',
-                    content: responseText
-                }
-            })
-
-            // 6. Intelligent Renaming (If thread is new/untitled)
-            // Check if we should rename (e.g. if it's the first exchange or title is default)
-            const thread = await prisma.chatThread.findUnique({ where: { id: threadId } })
-            if (thread && (thread.title === "Nuevo Chat" || thread.title === "Chat de Análisis")) {
-                try {
-                    console.log("[AI RENAMING] Attempting to rename thread:", threadId)
-                    const titleModel = getGeminiModel('gemini-1.5-flash', {
-                        systemInstruction: "Genera un título de 3 a 5 palabras que resuma este mensaje del usuario. NO uses comillas. Sé directo."
-                    })
-
-                    const titleResult = await titleModel.generateContent({
-                        contents: [{ role: 'user', parts: [{ text: messages[messages.length - 1].content }] }]
-                    })
-
-                    const generatedTitle = titleResult.response.text()?.trim()
-
-                    if (generatedTitle) {
-                        console.log("[AI RENAMING] New title:", generatedTitle)
-                        await prisma.chatThread.update({
-                            where: { id: threadId },
-                            data: { title: generatedTitle }
-                        })
-                        newTitle = generatedTitle
-                    }
-                } catch (e) {
-                    console.error("[AI RENAMING ERROR]", e)
-                }
-            }
-
-            // 7. ASYNC LEARNING
-            extractInsights(userId, threadId, messages[messages.length - 1].content).catch(console.error)
-        }
-
-        return NextResponse.json({ role: 'assistant', content: responseText, newTitle })
+        // ... existing code ...
 
     } catch (error) {
         console.error('[AI_CHAT_POST]', error)
-        return new NextResponse(JSON.stringify({ error: "BSOD in Chat" }), { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 })
     }
 }
 
