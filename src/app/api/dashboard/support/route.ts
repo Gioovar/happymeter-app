@@ -50,6 +50,19 @@ INFORMACIÓN DE HAPPYMETER (TU CONTEXTO):
      1. Usa el CSV descargado para crear una "Lista de Difusión" en WhatsApp Business.
      2. Importa los contactos en tu celular o herramienta de envíos masivos.
      3. Envía mensajes personalizados (ej. "Gracias por tu visita, aquí tienes un cupón").
+
+8. **Juegos Digitales (Gamificación)**:
+   - **Objetivo**: Entretener a clientes mientras esperan o aumentar el consumo.
+   - **Categorías**:
+     - **Bar/Antro**: Ruleta de Shots, Botella, Verdad o Reto.
+     - **Restaurantes**: Pac-Chef (Pacman), Viborita Coop.
+     - **Cafés**: Zoltan el Oráculo, Lectura de Mano (AI).
+     - **Hoteles**: Dados del Deseo (Parejas).
+   - **Cómo usar**:
+     1. Ve a Dashboard > Juegos.
+     2. Selecciona el juego y personalízalo (premios, logo, castigos).
+     3. Genera e imprime el QR para poner en las mesas.
+   - **AI**: Algunos juegos como Zoltan y Hand Reader usan Inteligencia Artificial real para responder.
 `
 
 const SYSTEM_PROMPT = `Eres 'Soporte HappyMeter', un asistente experto en la plataforma HappyMeter.
