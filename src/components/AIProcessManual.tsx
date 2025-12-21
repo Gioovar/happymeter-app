@@ -68,10 +68,19 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     fastAnalytics = await getSurveyAnalytics(surveyId, { from, to }, industry, true)
                 }
 
+                const defaultAnalytics = {
+                    metrics: { totalFeedback: 0, avgRating: 0, npsScore: 0, activeUsers: 0 },
+                    chartData: [],
+                    sentimentData: [],
+                    generatedStrategies: [],
+                    staffRanking: []
+                }
+
                 setManualData({
-                    ...fastAnalytics,
+                    ...defaultAnalytics,
+                    ...(fastAnalytics || {}),
                     detailedStrategies: [], // Empezar vacío
-                    recommendations: [ /* ... same static data ... */
+                    recommendations: [
                         {
                             title: "Atención al Cliente",
                             desc: (fastAnalytics?.metrics?.avgRating || 0) < 4 ? "El puntaje sugiere oportunidades en trato directo." : "Mantener el estándar de excelencia.",
