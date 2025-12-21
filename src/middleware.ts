@@ -1,6 +1,14 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+// Configure public routes
+export default clerkMiddleware((auth, req) => {
+    // Allow public access to /play/* and /s/* (surveys)
+    if (req.nextUrl.pathname.startsWith('/play') || req.nextUrl.pathname.startsWith('/s')) {
+        return // return void to allow access without auth
+    }
+    // Protect all other routes
+    // auth().protect() // This might be too strict if we just want to default to signed-in context for others
+})
 
 export const config = {
     matcher: [
