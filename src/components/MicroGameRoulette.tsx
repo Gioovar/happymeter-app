@@ -61,16 +61,20 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes, gameOwnerId }:
         setIsSpinning(true)
         setResult(null)
 
-        // 1. Determine Winner via API or Fallback
+        // 1. START IMMEDATE VISUAL FEEDBACK
+        // Spin fast and continuously to hide latency
+        controls.start({
+            rotate: rotation + 720 + Math.random() * 360,
+            transition: { duration: 100, ease: "linear", repeat: Infinity } // Long duration, linear
+        })
+
+        // 2. Determine Winner via API or Fallback
         let outcome: RouletteOutcome | null = null
 
-        // Start a "visual" accumulation of rotation immediately so user feels response
-        // We'll add a minimal spin duration to ensure visuals look good
-        const minSpinPromise = new Promise(resolve => setTimeout(resolve, 1500)) // 1.5s min spin
+        // Ensure at least 1.5s of "suspense" spin
+        const minSpinPromise = new Promise(resolve => setTimeout(resolve, 1500))
 
         try {
-            let winnerIndex = 0
-
             if (gameOwnerId) {
                 try {
                     const res = await fetch('/api/games/spin', {
@@ -92,13 +96,13 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes, gameOwnerId }:
                 }
             }
 
-            // Fallback if API failed or no ID
+            // Fallback
             if (!outcome) {
-                const fallbackIdx = Math.floor(Math.random() * pricesToUse.length)
+                const fallbackIdx = Math.floor(Math.random() * pricesSource.length)
                 outcome = pricesSource[fallbackIdx]
             }
 
-            // 2. Calculate Visual Target
+            // 3. Calculate Final Target (Physics Stop)
             // We need to verify where this outcome lives in our `visualSegments` (8 slots)
             // It might appear multiple times or once. We pick a random valid slot.
             const validIndices = visualSegments
@@ -120,24 +124,33 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes, gameOwnerId }:
             // const targetAngle = (360 - (targetIndex * segmentSize)) % 360
             const targetAngle = (360 - (targetIndex * segmentSize)) % 360
 
-            const fullSpins = 5 * 360 // 5 full turns
-            const variance = (Math.random() * 20) - 10 // randomness inside wedge
+            const fullSpins = 4 * 360 // Add a few more spins for the deceleration phase
+            const variance = (Math.random() * 20) - 10
+
+            // IMPORTANT: We need continuous rotation. 
+            // We can't interrupt abruptly. Best trick:
+            // Calculate relative distance from "current visual rotation" is hard in React/Framer logic without checking refs.
+            // Simplified: We assume we are "somewhere". We just add a huge offset to `rotation` state 
+            // and animate to it.
+            // To make it smooth, we stop the infinite linear spin and start the specific ease-out spin
+            // from the current theoretical rotation point? No, Framer handles re-targeting well usually.
 
             const nextRotation = rotation + fullSpins + (targetAngle - (rotation % 360)) + variance
             const finalRotation = nextRotation < rotation ? nextRotation + 360 : nextRotation
 
-            setRotation(finalRotation)
-
-            // Ensure min spin time has passed
+            // Wait for min suspense
             await minSpinPromise
 
-            // Animate to target
+            setRotation(finalRotation)
+
+            // Transition strictly to the final rotation
+            // Framer will interpolate from "current moving value" to "finalRotation"
             await controls.start({
                 rotate: finalRotation,
                 transition: { duration: 4, ease: [0.15, 0.25, 0.25, 1] }
             })
 
-            // 3. Show Result
+            // 4. Show Result
             if (dingAudio.current) dingAudio.current.play().catch(() => { })
             setResult(outcome)
             setIsSpinning(false)
