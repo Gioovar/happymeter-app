@@ -55,51 +55,84 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
         <div className="space-y-6">
             {/* ... stats/charts ... */}
             {/* Top KPIs */}
+            {/* Top KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-[#111111] p-6 rounded-2xl border border-white/5">
-                    <div className="flex justify-between items-start mb-4">
-                        <p className="text-gray-400 text-sm">Total de Respuestas</p>
+                <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-violet-500/20 transition-all duration-300 group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <MessageSquare className="w-16 h-16 text-violet-500 transform rotate-12" />
+                    </div>
+                    <div className="flex justify-between items-start mb-4 relative z-10">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-lg bg-violet-500/10 text-violet-400">
+                                <MessageSquare className="w-4 h-4" />
+                            </div>
+                            <p className="text-gray-400 text-sm font-medium">Total Respuestas</p>
+                        </div>
                         {renderChangeBadge(data.kpiChanges?.totalResponses)}
                     </div>
-                    <h3 className="text-3xl font-bold text-white mb-1">{data.totalResponses}</h3>
-                    <div className="h-10 w-full mt-2">
+                    <h3 className="text-3xl font-bold text-white mb-1 relative z-10">{data.totalResponses}</h3>
+                    <div className="h-10 w-full mt-2 relative z-10">
                         {/* Mini Sparkline Simulation */}
-                        <div className="w-full h-full bg-gradient-to-t from-violet-500/20 to-transparent rounded-lg" />
+                        <div className="w-full h-full bg-gradient-to-t from-violet-500/10 to-transparent rounded-lg border-b border-violet-500/20" />
                     </div>
                 </div>
 
-                <div className="bg-[#111111] p-6 rounded-2xl border border-white/5">
-                    <div className="flex justify-between items-start mb-4">
-                        <p className="text-gray-400 text-sm">Calificación Promedio</p>
+                <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-yellow-500/20 transition-all duration-300 group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <Star className="w-16 h-16 text-yellow-500 transform rotate-12" />
+                    </div>
+                    <div className="flex justify-between items-start mb-4 relative z-10">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400">
+                                <Star className="w-4 h-4" />
+                            </div>
+                            <p className="text-gray-400 text-sm font-medium">Calificación</p>
+                        </div>
                         {renderChangeBadge(data.kpiChanges?.averageSatisfaction)}
                     </div>
-                    <h3 className="text-3xl font-bold text-white mb-1">{data.averageSatisfaction}/5</h3>
-                    <div className="mt-2 w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                        <div className="h-full bg-violet-500 rounded-full" style={{ width: `${(parseFloat(data.averageSatisfaction) / 5) * 100}%` }} />
+                    <h3 className="text-3xl font-bold text-white mb-1 relative z-10">{data.averageSatisfaction}/5</h3>
+                    <div className="mt-2 w-full bg-white/5 h-1.5 rounded-full overflow-hidden relative z-10">
+                        <div className="h-full bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full" style={{ width: `${(parseFloat(data.averageSatisfaction) / 5) * 100}%` }} />
                     </div>
                 </div>
 
-                <div className="bg-[#111111] p-6 rounded-2xl border border-white/5">
-                    <div className="flex justify-between items-start mb-4">
-                        <p className="text-gray-400 text-sm">Probabilidad de Recomendación (NPS)</p>
+                <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-blue-500/20 transition-all duration-300 group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <Activity className="w-16 h-16 text-blue-500 transform rotate-12" />
+                    </div>
+                    <div className="flex justify-between items-start mb-4 relative z-10">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+                                <Activity className="w-4 h-4" />
+                            </div>
+                            <p className="text-gray-400 text-sm font-medium">NPS Score</p>
+                        </div>
                         {renderChangeBadge(data.kpiChanges?.npsScore, false)}
                     </div>
-                    <h3 className="text-3xl font-bold text-white mb-1">
+                    <h3 className="text-3xl font-bold text-white mb-1 relative z-10">
                         {data.npsScore > 0 ? '+' : ''}{data.npsScore}%
                     </h3>
-                    <div className="h-10 w-full mt-2 opacity-50">
-                        <div className="w-full h-full bg-gradient-to-t from-violet-500/20 to-transparent rounded-lg" />
+                    <div className="h-10 w-full mt-2 opacity-50 relative z-10">
+                        <div className="w-full h-full bg-gradient-to-t from-blue-500/10 to-transparent rounded-lg border-b border-blue-500/20" />
                     </div>
                 </div>
 
-                <div className="bg-[#111111] p-6 rounded-2xl border border-white/5">
-                    <div className="flex justify-between items-start mb-4">
-                        <p className="text-gray-400 text-sm">Usuarios Activos</p>
-                        <ArrowUpRight className="w-4 h-4 text-violet-400" />
+                <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-green-500/20 transition-all duration-300 group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <Users className="w-16 h-16 text-green-500 transform rotate-12" />
                     </div>
-                    <h3 className="text-3xl font-bold text-white mb-1">{data.activeUsers}</h3>
-                    <div className="h-10 w-full mt-2 opacity-50">
-                        <div className="w-full h-full bg-gradient-to-t from-violet-500/20 to-transparent rounded-lg" />
+                    <div className="flex justify-between items-start mb-4 relative z-10">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-lg bg-green-500/10 text-green-400">
+                                <Users className="w-4 h-4" />
+                            </div>
+                            <p className="text-gray-400 text-sm font-medium">Usuarios Activos</p>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-green-400" />
+                    </div>
+                    <h3 className="text-3xl font-bold text-white mb-1 relative z-10">{data.activeUsers}</h3>
+                    <div className="h-10 w-full mt-2 opacity-50 relative z-10">
+                        <div className="w-full h-full bg-gradient-to-t from-green-500/10 to-transparent rounded-lg border-b border-green-500/20" />
                     </div>
                 </div>
             </div>
@@ -419,8 +452,10 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
                     </div>
                 </div>
 
-                {/* Menu Insights Section */}
-                <MenuInsights />
+                {/* Menu Insights Section - Full Width */}
+                <div className="lg:col-span-3">
+                    <MenuInsights />
+                </div>
             </div>
 
             {/* Feedback Details Modal - Updated Design */}
