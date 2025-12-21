@@ -32,10 +32,23 @@ export async function GET() {
                     orderBy: {
                         createdAt: 'desc'
                     },
-                    include: {
+                    select: {
+                        id: true,
+                        createdAt: true,
+                        customerName: true,
+                        customerPhone: true,
+                        customerEmail: true,
+                        photo: true,
                         answers: {
-                            include: {
-                                question: true
+                            select: {
+                                value: true,
+                                question: {
+                                    select: {
+                                        id: true,
+                                        text: true,
+                                        type: true
+                                    }
+                                }
                             }
                         }
                     }
@@ -50,22 +63,22 @@ export async function GET() {
             responses: survey.responses.map((r: any) => {
                 // Logic to extract details similar to analytics
                 const nameAnswer = r.answers.find((a: any) =>
-                    a.question?.text.toLowerCase().match(/nombre|quién|quien|soy|cliente/)
+                    a.question?.text && a.question.text.toLowerCase().match(/nombre|quién|quien|soy|cliente/)
                 )
                 const phoneAnswer = r.answers.find((a: any) => {
-                    if (!a.question) return false
+                    if (!a.question || !a.question.text) return false
                     const text = a.question.text.toLowerCase()
                     return a.question.type === 'PHONE' || text.match(/tel[eé]fono|celular|whatsapp|m[oó]vil/)
                 })
                 const emailAnswer = r.answers.find((a: any) => {
-                    if (!a.question) return false
+                    if (!a.question || !a.question.text) return false
                     const text = a.question.text.toLowerCase()
                     return a.question.type === 'EMAIL' || text.match(/email|correo/)
                 })
                 const photoAnswer = r.answers.find((a: any) => {
                     if (!a.question) return false
                     // Check for IMAGE type or keywords. Also check value looks like URL.
-                    const isImageQ = a.question.type === 'IMAGE' || a.question.text.toLowerCase().match(/foto|imagen|evidencia/)
+                    const isImageQ = a.question.type === 'IMAGE' || (a.question.text && a.question.text.toLowerCase().match(/foto|imagen|evidencia/))
                     return isImageQ && a.value && (a.value.startsWith('http') || a.value.startsWith('/'))
                 })
 

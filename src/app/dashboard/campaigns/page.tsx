@@ -17,7 +17,12 @@ export default function CampaignsPage() {
             const res = await fetch('/api/surveys')
             if (res.ok) {
                 const data = await res.json()
-                setSurveys(data)
+                if (Array.isArray(data)) {
+                    setSurveys(data)
+                } else {
+                    console.error("Invalid surveys data:", data)
+                    setSurveys([])
+                }
             }
         }
         if (userId) fetchSurveys()
