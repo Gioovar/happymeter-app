@@ -41,11 +41,18 @@ export default function FullScreenChat() {
 
             if (data.error) throw new Error(data.error)
 
+            if (!res.ok) {
+                if (res.status === 429) throw new Error('Límite diario de IA alcanzado (20/20). Intenta mañana.')
+                throw new Error(`Error ${res.status}: ${res.statusText}`)
+            }
+
             setMessages(prev => [...prev, data])
         } catch (error) {
             console.error(error)
             const msg = error instanceof Error ? error.message : 'Error al conectar con el Coach'
-            toast.error(msg)
+
+            if (!msg.includes('Límite diario')) toast.error(msg)
+
             setMessages(prev => [...prev, { role: 'assistant', content: `❌ Error: ${msg}` }])
         } finally {
             setIsTyping(false)
