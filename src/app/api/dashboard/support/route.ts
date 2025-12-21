@@ -94,8 +94,8 @@ export async function POST(req: Request) {
       })
     }
 
-    // Reverting to standard 1.5-flash as 8b was 404 and flash-latest was 429
-    const model = getGeminiModel('gemini-1.5-flash', {
+    // Using gemini-flash-latest now that billing is enabled (429 should be gone)
+    const model = getGeminiModel('gemini-flash-latest', {
       systemInstruction: SYSTEM_PROMPT
     })
 
