@@ -31,7 +31,7 @@ const DEFAULT_PRIZES: RouletteOutcome[] = [
     { id: '5', label: 'Postre Gratis', short: 'POSTRE', color: '#22c55e', iconType: 'star', probability: 1, rule: 'common' },
     { id: '6', label: '5% Desc.', short: '5%', color: '#3b82f6', iconType: 'star', probability: 1, rule: 'common' },
     { id: '7', label: 'Shot Gratis', short: 'SHOT', color: '#ef4444', iconType: 'beer', probability: 1, rule: 'common' },
-    { id: '8', label: 'Abrazo', short: 'ABRAZO', color: '#f97316', iconType: 'userPlus', probability: 1, rule: 'common' },
+    { id: '8', label: 'Abrazo', short: 'ABRAZO', color: '#f97316', iconType: 'star', probability: 1, rule: 'common' },
 ]
 
 export default function MicroGameRoulette({ onPrizeWon, outcomes, gameOwnerId }: MicroGameRouletteProps) {
