@@ -141,15 +141,30 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRou
                 >
                     {/* Render Segments */}
                     {prizesToUse.map((prize, index) => {
-                        const angle = 360 / prizesToUse.length
+                        const numSegments = prizesToUse.length
+                        const angle = 360 / numSegments
                         const rotate = angle * index
+                        // Calculate clip-path to make a perfect wedge
+                        // tan(halfAngle) = (width/2) / radius
+                        // percentage = 50 +/- (50 * tan(halfAngle))
+                        // Note: works well for N >= 3. For N=2 special case handling would be needed but usually N>=4.
+                        const halfAngleRad = (angle / 2) * (Math.PI / 180)
+                        const tanVal = Math.tan(halfAngleRad)
+                        const xOffset = 50 * tanVal
+                        const xLeft = 50 - xOffset
+                        const xRight = 50 + xOffset
+
+                        // Use slightly wider clip to avoid sub-pixel gaps: +/- 1% extra
+                        // Actually, strict math is better for overlay. Let's trust render.
+                        const clipPath = `polygon(50% 100%, ${xLeft}% 0, ${xRight}% 0)`
+
                         return (
                             <div
                                 key={index}
                                 className="absolute top-0 left-1/2 w-full h-[50%] origin-bottom"
                                 style={{
                                     transform: `translateX(-50%) rotate(${rotate}deg)`,
-                                    clipPath: 'polygon(50% 100%, 0 0, 100% 0)'
+                                    clipPath: clipPath
                                 }}
                             >
                                 {/* Segment Color with 3D Gradient Overlay */}
@@ -162,14 +177,23 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRou
                                             radial-gradient(circle at 50% 100%, rgba(0,0,0,0.6) 0%, transparent 60%),
                                             linear-gradient(to top, rgba(0,0,0,0.4) 0%, rgba(255,255,255,0.1) 100%)
                                         `,
-                                        transform: `rotate(${90 - (angle / 2)}deg)`
+                                        // No rotation needed on the background itself if the container is clipped perfectly
                                     }}
                                 />
                                 {/* Label with Glow */}
                                 <div
-                                    className="absolute top-8 left-1/2 -translate-x-1/2 text-white font-black text-sm md:text-base uppercase whitespace-nowrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
+                                    className="absolute top-12 left-1/2 -translate-x-1/2 text-white font-black text-xs md:text-sm uppercase whitespace-nowrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
                                     style={{
-                                        transform: 'rotate(90deg)',
+                                        // Text is usually legible running outwards or inwards. 
+                                        // Standard roulette text runs from rim towards center or tangent?
+                                        // Let's keep vertical stack (0deg) relative to wedge center line.
+                                        // But wait, the standard usually has text reading OUT->IN.
+                                        // top-12 puts it near rim.
+                                        // No rotation: text is horizontal.
+                                        // rotate 90: text runs Top-to-Bottom (Rim-to-Hub).
+                                        // rotate -90: text runs Hub-to-Rim.
+                                        // Let's stick to Hub-to-Rim or Rim-to-Hub? User screenshot "1 SHOT" reads L-R when text is vertical.
+                                        transform: 'translateX(-0%) rotate(90deg)',
                                         textShadow: '0 0 10px rgba(0,0,0,0.5)'
                                     }}
                                 >
