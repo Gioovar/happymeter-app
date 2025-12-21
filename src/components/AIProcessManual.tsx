@@ -964,13 +964,15 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                     </div>
 
                             </div>
+                        </div>
                     )}
-                        </div >
+            </div>
+        </AnimatePresence>
 
 
 
-            {/* --- PRINT ONLY REPORT (HIDDEN ON SCREEN) ---  DEPRECATED/REMOVED */}
-                {/* This section was removed in concept but kept in code structure to prevent errors if invoked, though effectively empty now or minimal legacy support */}
+            {/* --- PRINT ONLY REPORT (HIDDEN ON SCREEN) ---  DEPRECATED/REMOVED */ }
+    {/* This section was removed in concept but kept in code structure to prevent errors if invoked, though effectively empty now or minimal legacy support */ }
 
             </div >
             )
