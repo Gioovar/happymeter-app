@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, MessageCircle, UserPlus, Info, CheckCircle, Smartphone, Users } from 'lucide-react'
+import { Download, MessageCircle, UserPlus, Info, CheckCircle, Smartphone, Users, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { getCampaignCounts } from '@/actions/campaigns'
+import CopyGeneratorModal from './CopyGeneratorModal'
 
 interface WhatsAppManagerProps {
     selectedSurveyTitle?: string
@@ -15,6 +16,7 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
     const [isExporting, setIsExporting] = useState(false)
     const [counts, setCounts] = useState({ vip: 0, neutral: 0, angry: 0, promo: 0 })
     const [loadingCounts, setLoadingCounts] = useState(false)
+    const [isGeneratorOpen, setIsGeneratorOpen] = useState(false)
 
     useEffect(() => {
         const fetchCounts = async () => {
@@ -114,8 +116,8 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
                                     key={seg.id}
                                     onClick={() => setSegment(seg.id as any)}
                                     className={`relative flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-300 group/btn ${segment === seg.id
-                                            ? `bg-${seg.color}-500/10 border-${seg.color}-500/50`
-                                            : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
+                                        ? `bg-${seg.color}-500/10 border-${seg.color}-500/50`
+                                        : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
                                         }`}
                                 >
                                     <div className="flex items-center gap-4">
@@ -142,6 +144,17 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
                     </div>
 
                     {/* Action Area */}
+
+                    {/* AI Content Generator Button */}
+                    <button
+                        onClick={() => setIsGeneratorOpen(true)}
+                        className="w-full py-3 rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-300 hover:text-white transition group/ai flex items-center justify-center gap-3 relative overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-green-500/20 blur-xl group-hover/ai:opacity-50 transition opacity-0" />
+                        <Sparkles className="w-4 h-4 text-green-400 group-hover/ai:text-white transition" />
+                        <span className="text-sm font-bold relative z-10">Generar Mensaje WhatsApp con IA</span>
+                    </button>
+
                     <div className="bg-[#0f1115] rounded-xl p-6 border border-white/5 space-y-4">
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-400">Formato de Exportación</span>
@@ -174,6 +187,14 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
                     </div>
                 </div>
             </div>
+
+            <CopyGeneratorModal
+                isOpen={isGeneratorOpen}
+                onClose={() => setIsGeneratorOpen(false)}
+                segment={segment}
+                platform="whatsapp"
+                surveyTitle={selectedSurveyTitle}
+            />
         </div>
     )
 }

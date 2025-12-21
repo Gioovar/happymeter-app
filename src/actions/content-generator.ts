@@ -1,6 +1,3 @@
-'use server'
-
-import { google } from '@google/generative-ai'
 import { getGeminiModel } from '@/lib/gemini'
 
 export async function generateCampaignCopy(
