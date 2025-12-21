@@ -351,7 +351,7 @@ export async function GET(request: Request) {
                 }
             }
             // 2. AI Extraction for Staff Names
-            // We collect potentially relevant text answers and send them to OpenAI in a batch
+            // We collect potentially relevant text answers and send them to Gemini in a batch
             // This happens AFTER the loop to batch everything
             // 2. AI Extraction for Staff Names
             // ... (AI code is lower)

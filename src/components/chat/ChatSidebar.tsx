@@ -29,7 +29,7 @@ export default function ChatSidebar({ currentThreadId, onSelectThread, refreshTr
 
     const fetchThreads = async () => {
         try {
-            const res = await fetch('/api/dashboard/chat/threads')
+            const res = await fetch('/api/dashboard/chat/threads', { cache: 'no-store' })
             if (res.ok) {
                 const data = await res.json()
                 setThreads(data)
