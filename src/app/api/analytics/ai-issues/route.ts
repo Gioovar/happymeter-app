@@ -159,7 +159,8 @@ export async function POST(req: Request) {
 
     } catch (error) {
         console.error('[AI_ISSUES_POST]', error)
-        return new NextResponse(JSON.stringify({ error: "Analysis failed" }), { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 })
     }
 }
 

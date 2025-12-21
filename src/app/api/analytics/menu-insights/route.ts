@@ -107,6 +107,7 @@ export async function POST(req: Request) {
 
     } catch (error) {
         console.error('[MENU_INSIGHTS_ERROR]', error)
-        return new NextResponse(JSON.stringify({ error: "Failed to analyze menu" }), { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 })
     }
 }
