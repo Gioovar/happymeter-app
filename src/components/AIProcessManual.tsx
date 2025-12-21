@@ -873,16 +873,17 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
                                     <div className="space-y-4">
                                         {manualData.sentimentData.map((item: any, i: number) => {
-                                            const styles = {
-                                                'Positivo': { color: 'from-emerald-400 to-teal-500', bg: 'bg-emerald-500/20', glow: 'shadow-[0_0_15px_rgba(52,211,153,0.5)]' },
-                                                'Neutral': { color: 'from-amber-400 to-orange-500', bg: 'bg-amber-500/20', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.5)]' },
-                                                'Negativo': { color: 'from-rose-500 to-red-600', bg: 'bg-rose-500/20', glow: 'shadow-[0_0_15px_rgba(244,63,94,0.5)]' }
-                                            }[item.name] || { color: 'from-gray-400 to-gray-500', bg: 'bg-gray-500/20', glow: '' }
+                                            const styles: Record<string, { color: string, bg: string, glow: string }> = {
+                                                'Positivo': { color: 'from-green-500 to-green-600', bg: 'bg-green-500/20', glow: 'shadow-[0_0_15px_rgba(34,197,94,0.5)]' },
+                                                'Neutral': { color: 'from-yellow-400 to-orange-500', bg: 'bg-yellow-500/20', glow: 'shadow-[0_0_15px_rgba(234,179,8,0.5)]' },
+                                                'Negativo': { color: 'from-red-500 to-red-600', bg: 'bg-red-500/20', glow: 'shadow-[0_0_15px_rgba(239,68,68,0.5)]' }
+                                            }
+                                            const style = styles[item.name] || { color: 'from-gray-400 to-gray-500', bg: 'bg-gray-500/20', glow: '' }
 
                                             // Fallback to item props if mapping fails but usually name matches
-                                            const bg = styles.bg || item.bg
-                                            const grad = styles.color || item.color
-                                            const glow = styles.glow || item.glow
+                                            const bg = style.bg || item.bg
+                                            const grad = style.color || item.color
+                                            const glow = style.glow || item.glow
 
                                             return (
                                                 <div key={i} className="relative group">
