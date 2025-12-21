@@ -698,71 +698,76 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                             </div>
                         )}
 
+
                         {/* PÁGINAS 2+: Estrategias Detalladas (Una por página) */}
                         {!strategiesLoading && (manualData.detailedStrategies || []).map((strategy: any, i: number) => (
-                            <div key={i} className="bg-[#15171e]/50 border border-white/5 rounded-[32px] p-8 md:p-12 relative overflow-hidden">
-                                {/* Decorador */}
-                                <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-hb from-violet-600/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+                            <div key={i} className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px', pageBreakBefore: 'always' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
 
-                                <div className="relative z-10">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-10 h-10 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 font-bold border border-violet-500/20">
-                                            {i + 1}
+                                    {/* Encabezado Pequeño */}
+                                    <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <Sparkles size={16} color="#7c3aed" />
+                                            <span style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
                                         </div>
-                                        <span className="text-violet-400 font-bold tracking-widest text-xs uppercase">Estrategia Recomendada</span>
+                                        <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                                            Estrategia #{i + 1}
+                                        </div>
                                     </div>
 
-                                    {/* Sección de Título */}
-                                    <div style={{ marginBottom: '40px' }}>
-                                        <h2 style={{ fontSize: '36px', fontWeight: 'bold', color: '#0f172a', marginBottom: '20px', lineHeight: 1.2 }}>{strategy.title}</h2>
-                                        <h2 style={{ fontSize: '36px', fontWeight: 'bold', color: '#0f172a', marginBottom: '20px', lineHeight: 1.2 }}>{strategy.title}</h2>
-                                        {/* Eliminado strategy.objective ya que no está en la interfaz, usando problemDetected o solo título */}
+                                    {/* Título */}
+                                    <div>
+                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#7c3aed', display: 'block', marginBottom: '10px' }}>Estrategia Recomendada</span>
+                                        <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a', margin: 0, lineHeight: 1.2 }}>{strategy.title}</h2>
                                     </div>
 
-                                    {/* Caso de Estudio */}
-                                    {/* Caja de Problema y Mejor Práctica */}
-                                    <div style={{ backgroundColor: '#f8fafc', borderLeft: '4px solid #7c3aed', padding: '30px', borderRadius: '0 12px 12px 0', marginBottom: '40px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                                            <span style={{ backgroundColor: '#ef4444', color: 'white', padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>PROBLEMA</span>
-                                            <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#0f172a' }}>Detección Crítica</span>
-                                        </div>
-                                        <p style={{ fontSize: '16px', color: '#334155', fontStyle: 'italic', lineHeight: 1.6, marginBottom: '20px' }}>
-                                            "{strategy.problemDetected}"
-                                        </p>
-
-                                        <div style={{ backgroundColor: '#ecfdf5', padding: '15px', borderRadius: '8px', border: '1px solid #d1fae5' }}>
-                                            <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#059669', textTransform: 'uppercase', marginBottom: '5px' }}>
-                                                Mejor Práctica (Solución)
+                                    {/* Caja Problema / Solución */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                                        {/* Problema */}
+                                        <div style={{ backgroundColor: '#fef2f2', padding: '20px', borderRadius: '12px 12px 0 0', border: '1px solid #fee2e2', borderBottom: 'none' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                <TrendingUp size={16} color="#ef4444" style={{ transform: 'rotate(180deg)' }} />
+                                                <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#ef4444' }}>Problema Detectado</span>
+                                            </div>
+                                            <p style={{ fontSize: '15px', color: '#7f1d1d', fontStyle: 'italic', margin: 0 }}>
+                                                "{strategy.problemDetected}"
                                             </p>
-                                            <p style={{ fontSize: '16px', fontWeight: 'medium', color: '#065f46', margin: 0 }}>
+                                        </div>
+                                        {/* Solución */}
+                                        <div style={{ backgroundColor: '#f0fdf4', padding: '20px', borderRadius: '0 0 12px 12px', border: '1px solid #dcfce7' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                <CheckCircle2 size={16} color="#16a34a" />
+                                                <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#16a34a' }}>Mejor Práctica</span>
+                                            </div>
+                                            <p style={{ fontSize: '15px', fontWeight: '500', color: '#14532d', margin: 0 }}>
                                                 {strategy.bestPractice}
                                             </p>
                                         </div>
                                     </div>
 
-                                    {/* Pasos de Implementación */}
+                                    {/* Pasos */}
                                     <div>
-                                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#0f172a', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <span style={{ width: '24px', height: '24px', backgroundColor: '#0f172a', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🛠</span>
-                                            Plan de Implementación
-                                        </h3>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', marginBottom: '20px', borderBottom: '2px solid #0f172a', paddingBottom: '10px', display: 'inline-block' }}>Plan de Implementación</h3>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                             {strategy.steps.map((step: any, idx: number) => (
-                                                <div key={idx} style={{ display: 'flex', gap: '20px' }}>
-                                                    <div style={{ width: '40px', height: '40px', border: '2px solid #e2e8f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#94a3b8', flexShrink: 0 }}>
+                                                <div key={idx} style={{ display: 'flex', gap: '15px' }}>
+                                                    <div style={{
+                                                        width: '24px', height: '24px', backgroundColor: '#0f172a', color: 'white', borderRadius: '50%',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px', flexShrink: 0, marginTop: '2px'
+                                                    }}>
                                                         {idx + 1}
                                                     </div>
                                                     <div>
-                                                        <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: '#0f172a', marginBottom: '5px' }}>{step.title}</h4>
-                                                        <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.5, margin: 0 }}>{step.desc}</p>
+                                                        <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 4px 0' }}>{step.title}</h4>
+                                                        <p style={{ fontSize: '13px', color: '#334155', lineHeight: 1.5, margin: 0 }}>{step.desc}</p>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: '10px', color: '#94a3b8' }}>
-                                        Página {i + 2} - Estrategia #{i + 1}
+                                    <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: '10px', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+                                        Página {i + 2} - HappyMeter Intelligence
                                     </div>
                                 </div>
                             </div>
