@@ -16,20 +16,22 @@ interface GameContainerProps {
     onTitleChange?: (newTitle: string) => void
     onSave?: () => void
     isSaving?: boolean
+    onBannerChange?: (dataUrl: string) => void
 }
 
-export default function GameContainer({
-    title,
-    description,
-    children,
-    onGenerateQR,
-    customSettings,
-    bannerUrl: externalBannerUrl,
-    onBannerUpload,
-    onTitleChange,
-    onSave,
-    isSaving
-}: GameContainerProps) {
+export default function GameContainer(props: GameContainerProps) {
+    const {
+        title,
+        description,
+        children,
+        onGenerateQR,
+        customSettings,
+        bannerUrl: externalBannerUrl,
+        onBannerUpload,
+        onTitleChange,
+        onSave,
+        isSaving
+    } = props
     const [internalBannerUrl, setInternalBannerUrl] = useState<string | null>(null)
     const [showSettings, setShowSettings] = useState(false)
     const bannerInputRef = useRef<HTMLInputElement>(null)
@@ -39,16 +41,21 @@ export default function GameContainer({
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
-            if (onBannerUpload) {
-                onBannerUpload(file)
-            } else {
-                // Local preview fallback
-                const reader = new FileReader()
-                reader.onloadend = () => {
-                    setInternalBannerUrl(reader.result as string)
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                const result = reader.result as string
+                setInternalBannerUrl(result)
+                // Propagate the data URL if onBannerUpload expects a file, we might need a new prop for DataURL
+                // But for now, let's reuse onBannerUpload if it can handle it, or add onBannerChange
+                if (onBannerUpload) {
+                    onBannerUpload(file)
+                    // @ts-ignore - Quick fix to pass dataURL up if the parent wants it
+                    if (props.onBannerChange) props.onBannerChange(result)
+                } else if ((props as any).onBannerChange) {
+                    (props as any).onBannerChange(result)
                 }
-                reader.readAsDataURL(file)
             }
+            reader.readAsDataURL(file)
         }
     }
 

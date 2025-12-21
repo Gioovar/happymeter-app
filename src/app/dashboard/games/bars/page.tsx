@@ -97,6 +97,7 @@ export default function BarGamesPage() {
     const [isPublished, setIsPublished] = useState(false)
     const [gameTitle, setGameTitle] = useState('')
     const [userId, setUserId] = useState<string | null>(null) // To build the QR
+    const [bannerUrl, setBannerUrl] = useState<string | null>(null) // New state for banner
 
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
@@ -114,6 +115,8 @@ export default function BarGamesPage() {
                     if (data.userId) setUserId(data.userId) // We need to update API to return this
 
                     if (data.roulette) setRouletteOutcomes(data.roulette)
+                    if (data.bannerUrl) setBannerUrl(data.bannerUrl) // Load banner
+                    if (data.gameTitle) setGameTitle(data.gameTitle) // Load title
                     if (data.bottle) setBottleActions(data.bottle)
                     if (data.bottleLogo) setBottleLogo(data.bottleLogo)
                     if (data.truths) setTruths(data.truths)
@@ -134,6 +137,8 @@ export default function BarGamesPage() {
         try {
             const configPayload = {
                 roulette: rouletteOutcomes,
+                bannerUrl: bannerUrl, // Save banner
+                gameTitle: gameTitle, // Save title
                 bottle: bottleActions,
                 bottleLogo: bottleLogo,
                 truths: truths,
@@ -232,6 +237,8 @@ export default function BarGamesPage() {
                     onTitleChange={setGameTitle}
                     onSave={handleSave}
                     isSaving={isSaving}
+                    bannerUrl={bannerUrl || undefined} // Pass loaded/selected banner
+                    onBannerChange={(url) => setBannerUrl(url)} // Capture change
                 >
                     {/* @ts-ignore dynamic components props */}
                     <GameComponent {...gameProps} />

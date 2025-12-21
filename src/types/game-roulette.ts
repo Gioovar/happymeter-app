@@ -1,5 +1,11 @@
 export type RouletteRule = 'common' | 'rare' | 'fixed_interval'
 
+export interface GameConfig {
+    roulette?: RouletteOutcome[]
+    bannerUrl?: string
+    gameTitle?: string
+}
+
 export interface RouletteOutcome {
     id: string
     label: string
