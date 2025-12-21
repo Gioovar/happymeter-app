@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { notFound, useSearchParams } from 'next/navigation'
 import PacManRestaurant from '@/components/games/PacManRestaurant'
 import SnakeCoop from '@/components/games/SnakeCoop'
@@ -16,11 +16,11 @@ import { RouletteOutcome } from '@/types/game-roulette'
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-    params: Promise<{ gameId: string }>
+    params: { gameId: string }
 }
 
 export default function PublicGamePage({ params }: PageProps) {
-    const { gameId } = use(params)
+    const { gameId } = params
     const searchParams = useSearchParams()
     const uid = searchParams.get('uid')
 
