@@ -76,28 +76,43 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     staffRanking: []
                 }
 
+                // Safe Extraction of Top Waiter
+                let topWaiterData = { name: "Equipo", mentions: 0 }
+                if (fastAnalytics && Array.isArray(fastAnalytics.staffRanking) && fastAnalytics.staffRanking.length > 0) {
+                    const top = fastAnalytics.staffRanking[0]
+                    if (top && top.name) {
+                        topWaiterData = { name: top.name, mentions: top.count || 0 }
+                    }
+                }
+
+                const mergedMetrics = {
+                    ...defaultAnalytics.metrics,
+                    ...(fastAnalytics?.metrics || {})
+                }
+
                 setManualData({
                     ...defaultAnalytics,
                     ...(fastAnalytics || {}),
+                    metrics: mergedMetrics, // Ensure metrics are never null
                     detailedStrategies: [], // Empezar vacío
                     recommendations: [
                         {
                             title: "Atención al Cliente",
-                            desc: (fastAnalytics?.metrics?.avgRating || 0) < 4 ? "El puntaje sugiere oportunidades en trato directo." : "Mantener el estándar de excelencia.",
-                            action: (fastAnalytics?.metrics?.avgRating || 0) < 4 ? "Revisar tiempos de respuesta." : "Incentivar al personal.",
+                            desc: (mergedMetrics.avgRating || 0) < 4 ? "El puntaje sugiere oportunidades en trato directo." : "Mantener el estándar de excelencia.",
+                            action: (mergedMetrics.avgRating || 0) < 4 ? "Revisar tiempos de respuesta." : "Incentivar al personal.",
                             impact: "Alto",
                             icon: Users
                         },
                         {
                             title: "Fidelización",
-                            desc: `NPS de ${fastAnalytics?.metrics?.npsScore || 0} indica ${(fastAnalytics?.metrics?.npsScore || 0) > 50 ? "alta lealtad." : "riesgo de fuga."}`,
+                            desc: `NPS de ${mergedMetrics.npsScore || 0} indica ${(mergedMetrics.npsScore || 0) > 50 ? "alta lealtad." : "riesgo de fuga."}`,
                             action: "Implementar programa de recompensas.",
                             impact: "Medio",
                             icon: TrendingUp
                         }
                     ],
                     starBreakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
-                    topWaiter: { name: "Equipo", mentions: 0 },
+                    topWaiter: topWaiterData,
                     discoveryData: [
                         { name: 'Redes Sociales', value: 45 },
                         { name: 'Google Maps', value: 30 },
