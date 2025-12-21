@@ -181,19 +181,10 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRou
                                     }}
                                 />
                                 {/* Label with Glow */}
+                                {/* Label with Glow */}
                                 <div
-                                    className="absolute top-12 left-1/2 -translate-x-1/2 text-white font-black text-[10px] sm:text-xs md:text-sm uppercase whitespace-nowrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
+                                    className="absolute top-5 left-1/2 -translate-x-1/2 rotate-90 origin-center text-white font-black text-[10px] sm:text-xs md:text-sm uppercase whitespace-nowrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
                                     style={{
-                                        // Text is usually legible running outwards or inwards. 
-                                        // Standard roulette text runs from rim towards center or tangent?
-                                        // Let's keep vertical stack (0deg) relative to wedge center line.
-                                        // But wait, the standard usually has text reading OUT->IN.
-                                        // top-12 puts it near rim.
-                                        // No rotation: text is horizontal.
-                                        // rotate 90: text runs Top-to-Bottom (Rim-to-Hub).
-                                        // rotate -90: text runs Hub-to-Rim.
-                                        // Let's stick to Hub-to-Rim or Rim-to-Hub? User screenshot "1 SHOT" reads L-R when text is vertical.
-                                        transform: 'translateX(-0%) rotate(90deg)',
                                         textShadow: '0 0 10px rgba(0,0,0,0.5)'
                                     }}
                                 >
