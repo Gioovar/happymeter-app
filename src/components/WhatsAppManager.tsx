@@ -19,7 +19,7 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
         const surveyParam = selectedSurveyId || 'all'
         window.location.href = `/api/campaigns/export/vcf?surveyId=${surveyParam}&segment=${segment}`
 
-        // Reset state after a short delay since we can't track download completion easily
+        // Restablecer estado después de un breve retraso ya que no podemos rastrear fácilmente la finalización de la descarga
         setTimeout(() => {
             setIsExporting(false)
         }, 2000)
@@ -33,9 +33,11 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
             setLoadingCounts(true)
             try {
                 const data = await getCampaignCounts(selectedSurveyId || 'all')
-                setCounts(data)
+                // Ensure data is not null/undefined
+                setCounts(data || { vip: 0, neutral: 0, angry: 0, promo: 0 })
             } catch (error) {
                 console.error("Failed to load counts", error)
+                setCounts({ vip: 0, neutral: 0, angry: 0, promo: 0 })
             } finally {
                 setLoadingCounts(false)
             }
@@ -45,7 +47,7 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
 
     return (
         <div className="relative mt-8 rounded-2xl border border-white/10 bg-gradient-to-br from-[#25D366]/10 to-[#128C7E]/10">
-            {/* Background Decor - Clipped */}
+            {/* Decoración de Fondo - Recortada */}
             <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                     <MessageCircle className="w-32 h-32 text-[#25D366]" />
@@ -72,7 +74,7 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Segmentation Selection */}
+                    {/* Selección de Segmentación */}
                     <div className="space-y-4">
                         <h3 className="font-semibold text-gray-300">1. Define tu Grupo</h3>
 
@@ -90,8 +92,8 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
                                     </div>
                                     <div className="text-left">
                                         <p className="font-bold flex items-center gap-2">
-                                            Clientes VIP (Satisfechos)
-                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : counts.vip}</span>
+                                            Clients VIP (Satisfechos)
+                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : (counts?.vip || 0)}</span>
                                         </p>
                                         <p className="text-xs opacity-70">Para eventos exclusivos y preventas</p>
                                     </div>
@@ -113,7 +115,7 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
                                     <div className="text-left">
                                         <p className="font-bold flex items-center gap-2">
                                             Clientes Neutrales
-                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : counts.neutral}</span>
+                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : (counts?.neutral || 0)}</span>
                                         </p>
                                         <p className="text-xs opacity-70">Para encuestas de seguimiento</p>
                                     </div>
@@ -135,7 +137,7 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
                                     <div className="text-left">
                                         <p className="font-bold flex items-center gap-2">
                                             Clientes Insatisfechos
-                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : counts.angry}</span>
+                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : (counts?.angry || 0)}</span>
                                         </p>
                                         <p className="text-xs opacity-70">Atención personalizada y soporte</p>
                                     </div>
@@ -157,7 +159,7 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
                                     <div className="text-left">
                                         <p className="font-bold flex items-center gap-2">
                                             Lista de Difusión (Ofertas)
-                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : counts.promo}</span>
+                                            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{loadingCounts ? '...' : (counts?.promo || 0)}</span>
                                         </p>
                                         <p className="text-xs opacity-70">Para enviar promociones semanales</p>
                                     </div>
@@ -167,7 +169,7 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
                         </div>
                     </div>
 
-                    {/* Action Area */}
+                    {/* Área de Acción */}
                     <div className="flex flex-col justify-between space-y-6">
                         <div className="bg-black/40 rounded-xl p-6 border border-white/10">
                             <h4 className="font-bold mb-2 text-gray-200">Acciones Rápidas</h4>
