@@ -50,6 +50,7 @@ export async function POST(req: Request) {
 
     } catch (error) {
         console.error('Hand Reader API Error:', error)
-        return NextResponse.json({ error: 'La energía es difusa... intenta otra foto.' }, { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 })
     }
 }
