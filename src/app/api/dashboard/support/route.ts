@@ -94,8 +94,8 @@ export async function POST(req: Request) {
       })
     }
 
-    // Switching to 1.5-flash-8b for higher throughput/quota potential
-    const model = getGeminiModel('gemini-1.5-flash-8b', {
+    // Reverting to standard 1.5-flash as 8b was 404 and flash-latest was 429
+    const model = getGeminiModel('gemini-1.5-flash', {
       systemInstruction: SYSTEM_PROMPT
     })
 

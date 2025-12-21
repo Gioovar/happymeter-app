@@ -28,7 +28,7 @@ export async function POST(req: Request) {
             })
         }
 
-        const model = getGeminiModel('gemini-1.5-flash-8b', {
+        const model = getGeminiModel('gemini-1.5-flash', {
             systemInstruction: SYSTEM_PROMPT
         })
 
