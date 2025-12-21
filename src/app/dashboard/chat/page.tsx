@@ -121,25 +121,33 @@ export default function DashboardChatPage() {
                 })
             })
 
-            const data = await response.json()
-            if (data.error) throw new Error(data.error)
+            let data
+            try {
+                const text = await response.text()
+                try {
+                    data = JSON.parse(text)
+                } catch {
+                    throw new Error(`Error del servidor (${response.status})`)
+                }
+            } catch (JsonError) {
+                throw new Error(`Error de conexión: ${response.statusText}`)
+            }
+
+            if (!response.ok) throw new Error(data.error || `Error ${response.status}`)
 
             setMessages(prev => [...prev, { role: 'assistant', content: data.content }])
 
             // 3. Update title if backend renamed it (AI Intelligent Renaming)
             if (data.newTitle) {
-                // Determine if we need to let sidebar know
-                // We can't easily update the sidebar list directly without a refetch,
-                // so we trigger the refresh
                 setSidebarRefreshTrigger(prev => prev + 1)
-                console.log("Auto-renamed thread to:", data.newTitle)
             }
 
         } catch (error) {
             console.error(error)
+            const errorMessage = error instanceof Error ? error.message : "Error desconocido"
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: `❌ **Error:** No pude conectar con el servidor. Intenta de nuevo.`
+                content: `❌ **Error:** ${errorMessage}`
             }])
         } finally {
             setIsLoading(false)

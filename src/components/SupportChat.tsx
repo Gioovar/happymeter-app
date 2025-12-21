@@ -42,14 +42,27 @@ export default function SupportChat() {
                 body: JSON.stringify({ messages: [...messages, { role: 'user', content: userMsg }].map(m => ({ role: m.role, content: m.content })) })
             })
 
-            if (!res.ok) throw new Error('Error en el chat')
+            let data
+            try {
+                const text = await res.text()
+                try {
+                    data = JSON.parse(text)
+                } catch {
+                    throw new Error(`Error del servidor: ${res.status} ${res.statusText}`)
+                }
+            } catch (e) {
+                throw new Error(`Error de conexión: ${e instanceof Error ? e.message : 'Desconocido'}`)
+            }
 
-            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || `Error ${res.status}: ${res.statusText}`)
+
             setMessages(prev => [...prev, { role: 'assistant', content: data.content }])
 
         } catch (error) {
-            console.error(error)
-            toast.error('Error al conectar con el asistente')
+            console.error('[SupportChat Error]', error)
+            const msg = error instanceof Error ? error.message : 'Error al conectar con el asistente'
+            toast.error(msg)
+            setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${msg}` }])
         } finally {
             setIsLoading(false)
         }

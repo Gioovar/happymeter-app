@@ -38,10 +38,15 @@ export default function FullScreenChat() {
                 body: JSON.stringify({ messages: [...messages, userMsg] })
             })
             const data = await res.json()
+
+            if (data.error) throw new Error(data.error)
+
             setMessages(prev => [...prev, data])
         } catch (error) {
             console.error(error)
-            toast.error('Error al conectar con el Coach')
+            const msg = error instanceof Error ? error.message : 'Error al conectar con el Coach'
+            toast.error(msg)
+            setMessages(prev => [...prev, { role: 'assistant', content: `❌ Error: ${msg}` }])
         } finally {
             setIsTyping(false)
         }
