@@ -382,7 +382,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
             {/* --- MODAL DE REPORTE (Vista Web Modo Oscuro) --- */}
             <AnimatePresence>
-                {showReport && manualData && (
+                {showReport && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
