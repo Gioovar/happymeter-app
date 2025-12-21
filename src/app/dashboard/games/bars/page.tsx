@@ -96,18 +96,23 @@ export default function BarGamesPage() {
 
     const [isPublished, setIsPublished] = useState(false)
     const [gameTitle, setGameTitle] = useState('')
+    const [userId, setUserId] = useState<string | null>(null) // To build the QR
 
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
 
-    // Load saved config
+    // Load saved config & user ID
     useState(() => {
         const loadConfig = async () => {
             try {
+                // Fetch user ID first (could use a dedicated endpoint or getting it from config endpoint wrapper)
+                // Let's assume /api/games/config returns userId too or we fetch it separately.
+                // Actually, let's fetch session info or just add userId to the config response for convenience.
                 const res = await fetch('/api/games/config')
                 if (res.ok) {
                     const data = await res.json()
-                    // Merge saved config into state
+                    if (data.userId) setUserId(data.userId) // We need to update API to return this
+
                     if (data.roulette) setRouletteOutcomes(data.roulette)
                     if (data.bottle) setBottleActions(data.bottle)
                     if (data.bottleLogo) setBottleLogo(data.bottleLogo)
@@ -237,7 +242,7 @@ export default function BarGamesPage() {
                     isOpen={isQRModalOpen}
                     onClose={() => setIsQRModalOpen(false)}
                     gameTitle={gameTitle}
-                    gameUrl={`https://happymeter.app/play/${selectedGame}`} // Placeholder URL
+                    gameUrl={`https://happymeter.app/play/${selectedGame}?uid=${userId}`}
                 />
             </div>
         )

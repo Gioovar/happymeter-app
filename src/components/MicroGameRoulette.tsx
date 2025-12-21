@@ -5,11 +5,14 @@ import { motion, useAnimation } from 'framer-motion'
 import { Gift, Zap } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
+import { RouletteOutcome } from '@/types/game-roulette'
+
 interface MicroGameRouletteProps {
     onPrizeWon: (prize: string) => void
+    outcomes?: RouletteOutcome[]
 }
 
-const PRIZES = [
+const DEFAULT_PRIZES = [
     { label: '10% Desc.', color: '#8b5cf6' }, // Violet
     { label: 'Refresco Gratis', color: '#ec4899' }, // Pink
     { label: 'Suerte la próxima', color: '#6b7280' }, // Gray
@@ -18,7 +21,8 @@ const PRIZES = [
     { label: '5% Desc.', color: '#3b82f6' }, // Blue
 ]
 
-export default function MicroGameRoulette({ onPrizeWon }: MicroGameRouletteProps) {
+export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRouletteProps) {
+    const prizesToUse = outcomes && outcomes.length > 0 ? outcomes : DEFAULT_PRIZES
     const [spinning, setSpinning] = useState(false)
     const [hasSpun, setHasSpun] = useState(false)
     const [finalPrize, setFinalPrize] = useState<string | null>(null)
@@ -35,10 +39,10 @@ export default function MicroGameRoulette({ onPrizeWon }: MicroGameRouletteProps
 
         // Random spin calculation
         // Ensure it spins at least 5 times (1800 deg) + random segment
-        const segmentAngle = 360 / PRIZES.length
+        const segmentAngle = 360 / prizesToUse.length
         // Pick a random winning index (usually you'd control this via backend probabilities)
         // For demo, let's avoid "Suerte la próxima" (index 2) slightly to be nice, but keep it random
-        let winningIndex = Math.floor(Math.random() * PRIZES.length)
+        let winningIndex = Math.floor(Math.random() * prizesToUse.length)
 
         // Calculate total rotation needed to land on winningIndex
         // The pointer is usually at top (0 deg). 
@@ -61,7 +65,7 @@ export default function MicroGameRoulette({ onPrizeWon }: MicroGameRouletteProps
         // We need to map finalAngle to the PRIZE list.
         // Correct math: index = floor( (360 - finalAngle) / segmentAngle ) % count
         const winningIdx = Math.floor(((360 - finalAngle) % 360) / segmentAngle)
-        const prize = PRIZES[winningIdx]
+        const prize = prizesToUse[winningIdx]
 
         setFinalPrize(prize.label)
         onPrizeWon(prize.label)
@@ -114,8 +118,8 @@ export default function MicroGameRoulette({ onPrizeWon }: MicroGameRouletteProps
                     }}
                 >
                     {/* Render Segments */}
-                    {PRIZES.map((prize, index) => {
-                        const angle = 360 / PRIZES.length
+                    {prizesToUse.map((prize, index) => {
+                        const angle = 360 / prizesToUse.length
                         const rotate = angle * index
                         return (
                             <div
@@ -156,8 +160,8 @@ export default function MicroGameRoulette({ onPrizeWon }: MicroGameRouletteProps
                 onClick={handleSpin}
                 disabled={spinning || hasSpun}
                 className={`mt-8 px-8 py-3 rounded-full font-black uppercase tracking-widest transition-all transform hover:scale-105 active:scale-95 shadow-lg ${spinning || hasSpun
-                        ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
-                        : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:shadow-violet-600/50'
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
+                    : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:shadow-violet-600/50'
                     }`}
             >
                 {spinning ? 'Girando...' : hasSpun ? '¡Premio Canjeado!' : 'GIRAR AHORA'}

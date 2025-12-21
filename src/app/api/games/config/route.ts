@@ -15,7 +15,10 @@ export async function GET() {
             select: { gameConfig: true }
         })
 
-        return NextResponse.json(userSettings?.gameConfig || {})
+        return NextResponse.json({
+            ...userSettings?.gameConfig as any,
+            userId: userId
+        })
     } catch (error) {
         console.error('[GAMES_CONFIG_GET]', error)
         return new NextResponse("Internal Error", { status: 500 })
