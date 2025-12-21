@@ -29,6 +29,7 @@ interface DetailedAnalyticsProps {
             npsScore: number
         }
         sourceChartData?: { name: string, value: number }[]
+        staffRanking?: { name: string, count: number, average: string }[]
     }
 }
 
@@ -260,6 +261,11 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
 
                 {/* Source Chart - New Section */}
                 {/* Source Chart - Modern & Dynamic Redesign */}
+            </div>
+
+            {/* New Section: Traffic Sources & Staff Ranking Side-by-Side */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Source Chart - Modern & Dynamic Redesign */}
                 <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] p-6 rounded-3xl border border-white/5 relative overflow-hidden group">
                     {/* Background Glow Effect */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-violet-600/10 blur-[80px] pointer-events-none rounded-full group-hover:bg-violet-600/20 transition duration-700" />
@@ -324,7 +330,6 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
                                         radius={[0, 100, 100, 0]}
                                         animationDuration={1500}
                                     >
-                                        {/* Optional: Add labels to the end of bars if needed, but clean is better */}
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
@@ -339,14 +344,10 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
                     </div>
                 </div>
 
-            </div>
-
-            {/* Staff Ranking - Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="col-span-1">
-                    <StaffLeaderboard staffRanking={(data as any).staffRanking || []} />
+                {/* Staff Ranking */}
+                <div>
+                    <StaffLeaderboard staffRanking={data.staffRanking || []} />
                 </div>
-                {/* Placeholder for more widgets if needed, or expand others */}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
