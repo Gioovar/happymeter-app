@@ -36,51 +36,39 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRou
         if (spinning || hasSpun) return
 
         setSpinning(true)
+        setHasSpun(false) // Reset state immediately for new spin
 
-        // Random spin calculation
-        // Ensure it spins at least 5 times (1800 deg) + random segment
-        const segmentAngle = 360 / prizesToUse.length
-        // Pick a random winning index (usually you'd control this via backend probabilities)
-        // For demo, let's avoid "Suerte la próxima" (index 2) slightly to be nice, but keep it random
-        let winningIndex = Math.floor(Math.random() * prizesToUse.length)
+        try {
+            // Server-side spin
+            // We need the ownerId. Currently we might not have it strictly passed as prop 
+            // if we rely only on `outcomes`. 
+            // We should pass `uid` to this component or infer it?
+            // The Page passes outcomes. We need the UID.
+            // Let's fallback to client random if no UID is passed (backward compat) 
+            // BUT for this task, we assume UID is available or we add it to props.
 
-        // Calculate total rotation needed to land on winningIndex
-        // The pointer is usually at top (0 deg). 
-        // If we rotate clockwise, the segment at TOP will be: 360 - (finalRotation % 360)
-        // To land on index i, we need rotation such that: (rotation % 360) brings index i to top.
-        // Actually simplest is just random massive rotation.
+            // Wait, we need the owner ID to call the API.
+            // Let's assume the parent passes it. I will add `gameOwnerId` prop in next step or use a workaround?
+            // "PlayPage" has `uid`. I should pass it.
+            // For now, let's look for a prop. If not, I'll update the Interface.
 
-        const extraSpins = 5 + Math.random() * 5 // 5 to 10 full spins
-        const totalDegrees = Math.floor(extraSpins * 360) + Math.floor(Math.random() * 360)
+            // Assume we added `gameOwnerId` to props. (I will do this in the next tool call for the Interface)
+            // Or better: Use global window location? No.
+            // Let's just pass `uid` from the page.
 
-        setRotation(totalDegrees)
+            // ... Placeholder for API call ...
+            // Actually, since I can't change the interface in the SAME `replace_file_content` easily without Context,
+            // I will assume the prop `uid` is passed.
 
-        // Wait for animation (css transition usually ~5s)
-        await new Promise(resolve => setTimeout(resolve, 5000))
-
-        // Calculate functionality
-        const finalAngle = totalDegrees % 360
-        // Pointer is at top. Wheel rotated clockwise.
-        // The segment at 0 degrees is now at 'finalAngle'.
-        // We need to map finalAngle to the PRIZE list.
-        // Correct math: index = floor( (360 - finalAngle) / segmentAngle ) % count
-        const winningIdx = Math.floor(((360 - finalAngle) % 360) / segmentAngle)
-        const prize = prizesToUse[winningIdx]
-
-        setFinalPrize(prize.label)
-        onPrizeWon(prize.label)
-        setHasSpun(true)
-        setSpinning(false)
-
-        if (prize.label !== 'Suerte la próxima') {
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: [prize.color, '#ffffff']
-            })
+        } catch (e) {
+            console.error(e)
+            setSpinning(false)
         }
     }
+
+    // WAIT: I should update the Interface FIRST or include it here.
+    // I'll rewrite the whole component start to include the prop.
+
 
     return (
         <div className="flex flex-col items-center justify-center w-full max-w-[320px] mx-auto">
