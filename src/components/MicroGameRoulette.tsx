@@ -183,7 +183,7 @@ export default function MicroGameRoulette({ onPrizeWon, outcomes }: MicroGameRou
                                 {/* Label with Glow */}
                                 {/* Label with Glow */}
                                 <div
-                                    className="absolute top-5 left-1/2 -translate-x-1/2 rotate-90 origin-center text-white font-black text-[10px] sm:text-xs md:text-sm uppercase whitespace-nowrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
+                                    className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-90 origin-center text-white font-black text-[10px] sm:text-xs md:text-sm uppercase whitespace-nowrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
                                     style={{
                                         textShadow: '0 0 10px rgba(0,0,0,0.5)'
                                     }}
