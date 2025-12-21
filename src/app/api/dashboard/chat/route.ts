@@ -158,20 +158,23 @@ export async function POST(req: Request) {
                 }
             })
 
-            // Generate Title if it's the first interaction (or title is default)
-            // We assume it's new if history is short (just user msg)
-            if (messages.length <= 2) {
-                // Generate title in background to not block response? 
-                // Actually, user wants to see it immediately likely. Let's await it or do it quickly.
-                // For better UX, we can await it since Gemini Flash is fast.
+            // Generate Title Logic (Self-Healing)
+            // fetch current thread to see if it needs a title
+            const currentThread = await prisma.chatThread.findUnique({
+                where: { id: threadId },
+                select: { title: true }
+            })
+
+            // Generate if it's new (short history) OR if it still has the default name
+            if (messages.length <= 2 || currentThread?.title === "Nuevo Chat") {
                 try {
                     const titleModel = getGeminiModel('gemini-1.5-flash', {
-                        systemInstruction: `Genera un título muy corto, conciso y descriptivo (máximo 4 palabras) para un chat que empieza con este mensaje. Ejemplo: "Estrategia de Ventas", "Análisis de Quejas". NO uses comillas ni puntos finales.`
+                        systemInstruction: `Genera un título muy corto, conciso y descriptivo (máximo 4 palabras) para un chat. Basado en este mensaje: "${lastUserMsg.content}". Ejemplo: "Estrategia de Ventas", "Análisis de Quejas". NO uses comillas ni puntos finales.`
                     })
                     const titleResult = await titleModel.generateContent(lastUserMsg.content)
                     const title = titleResult.response.text().trim()
 
-                    if (title) {
+                    if (title && title.length < 50) { // Safety check length
                         await prisma.chatThread.update({
                             where: { id: threadId },
                             data: { title }
