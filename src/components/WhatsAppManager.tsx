@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Download, Users, MessageCircle, UserPlus, ExternalLink, Info } from 'lucide-react'
 import Link from 'next/link'
+import { getCampaignCounts } from '@/actions/campaigns'
 
 interface WhatsAppManagerProps {
     selectedSurveyTitle?: string
@@ -31,7 +32,6 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
         const fetchCounts = async () => {
             setLoadingCounts(true)
             try {
-                const { getCampaignCounts } = await import('@/actions/campaigns')
                 const data = await getCampaignCounts(selectedSurveyId || 'all')
                 setCounts(data)
             } catch (error) {
