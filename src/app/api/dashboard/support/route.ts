@@ -94,7 +94,8 @@ export async function POST(req: Request) {
       })
     }
 
-    const model = getGeminiModel('gemini-flash-latest', {
+    // Switching to 1.5-flash-8b for higher throughput/quota potential
+    const model = getGeminiModel('gemini-1.5-flash-8b', {
       systemInstruction: SYSTEM_PROMPT
     })
 

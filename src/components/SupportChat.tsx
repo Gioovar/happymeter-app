@@ -54,14 +54,20 @@ export default function SupportChat() {
                 throw new Error(`Error de conexión: ${e instanceof Error ? e.message : 'Desconocido'}`)
             }
 
-            if (!res.ok) throw new Error(data.error || `Error ${res.status}: ${res.statusText}`)
+            if (!res.ok) {
+                if (res.status === 429) throw new Error('Límite diario de IA alcanzado (20/20). Intenta mañana.')
+                throw new Error(data.error || `Error ${res.status}: ${res.statusText}`)
+            }
 
             setMessages(prev => [...prev, { role: 'assistant', content: data.content }])
 
         } catch (error) {
             console.error('[SupportChat Error]', error)
             const msg = error instanceof Error ? error.message : 'Error al conectar con el asistente'
-            toast.error(msg)
+
+            // Don't toast if it's already in the chat bubble to avoid spam
+            if (!msg.includes('Límite diario')) toast.error(msg)
+
             setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${msg}` }])
         } finally {
             setIsLoading(false)

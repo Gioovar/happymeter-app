@@ -133,7 +133,10 @@ export default function DashboardChatPage() {
                 throw new Error(`Error de conexión: ${response.statusText}`)
             }
 
-            if (!response.ok) throw new Error(data.error || `Error ${response.status}`)
+            if (!response.ok) {
+                if (response.status === 429) throw new Error('Se acabó mi energía diaria (Límite de cuota Google). Vuelve mañana. 🌙')
+                throw new Error(data.error || `Error ${response.status}`)
+            }
 
             setMessages(prev => [...prev, { role: 'assistant', content: data.content }])
 
