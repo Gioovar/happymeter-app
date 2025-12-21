@@ -1,14 +1,19 @@
 'use client'
 
-import { use } from 'react'
-import { notFound } from 'next/navigation'
+import { use, useEffect, useState } from 'react'
+import { notFound, useSearchParams } from 'next/navigation'
 import PacManRestaurant from '@/components/games/PacManRestaurant'
 import SnakeCoop from '@/components/games/SnakeCoop'
 import ZoltanOracle from '@/components/games/ZoltanOracle'
 import MysticHandReader from '@/components/games/MysticHandReader'
 import CoupleDice from '@/components/games/CoupleDice'
+import MicroGameRoulette from '@/components/MicroGameRoulette'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { RouletteOutcome } from '@/types/game-roulette'
+
+// Force dynamic to allow searchParams to work correctly in all environments
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
     params: Promise<{ gameId: string }>
@@ -16,8 +21,30 @@ interface PageProps {
 
 export default function PublicGamePage({ params }: PageProps) {
     const { gameId } = use(params)
+    const searchParams = useSearchParams()
+    const uid = searchParams.get('uid')
 
-    if (gameId !== 'pacman' && gameId !== 'snake' && gameId !== 'zoltan' && gameId !== 'hand-reader' && gameId !== 'couple-dice') {
+    const [outcomes, setOutcomes] = useState<RouletteOutcome[]>([])
+    const [loadingConfig, setLoadingConfig] = useState(false)
+
+    // Load config if needed (for roulette)
+    useEffect(() => {
+        if (gameId === 'roulette' && uid) {
+            setLoadingConfig(true)
+            fetch(`/api/games/config?userId=${uid}`) // We might need to adjust endpoint to accept query param
+                .then(res => res.json())
+                .then(data => {
+                    if (data.roulette) setOutcomes(data.roulette)
+                })
+                .catch(err => console.error(err))
+                .finally(() => setLoadingConfig(false))
+        }
+    }, [gameId, uid])
+
+    // Verify valid games
+    const validGames = ['pacman', 'snake', 'zoltan', 'hand-reader', 'couple-dice', 'roulette']
+
+    if (!validGames.includes(gameId)) {
         return (
             <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 text-center">
                 <h1 className="text-2xl font-bold text-white mb-2">Juego no encontrado 😕</h1>
@@ -29,12 +56,47 @@ export default function PublicGamePage({ params }: PageProps) {
         )
     }
 
+    // Special Layout for Roulette
+    if (gameId === 'roulette') {
+        if (!uid) {
+            return (
+                <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 text-center text-white">
+                    <h1 className="text-2xl font-bold mb-2">Enlace Incompleto</h1>
+                    <p className="text-gray-400">Escanea el código QR nuevamente.</p>
+                </div>
+            )
+        }
+
+        return (
+            <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden relative">
+                {/* Background FX */}
+                <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 to-fuchsia-900/20 pointer-events-none" />
+                <div className="absolute -top-40 -left-40 w-96 h-96 bg-violet-600/20 blur-[100px] rounded-full" />
+
+                <div className="relative z-10 w-full max-w-md">
+                    {loadingConfig ? (
+                        <div className="text-center text-white">Cargando premios...</div>
+                    ) : (
+                        <MicroGameRoulette
+                            outcomes={outcomes}
+                            onPrizeWon={() => { }}
+                        />
+                    )}
+                </div>
+
+                <div className="absolute bottom-8 text-center w-full">
+                    <p className="text-xs text-white/20">Powered by HappyMeter</p>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className={`min-h-screen flex flex-col relative overflow-hidden ${gameId === 'snake' ? 'bg-[#FDF6E3]' :
-                gameId === 'zoltan' ? 'bg-[#1a0b00] text-[#d4af37]' :
-                    gameId === 'hand-reader' ? 'bg-[#1a0520] text-[#ea80fc]' :
-                        gameId === 'couple-dice' ? 'bg-[#2a0a10] text-[#ffb3c1]' : // Dark Red/Pink theme
-                            'bg-black'
+            gameId === 'zoltan' ? 'bg-[#1a0b00] text-[#d4af37]' :
+                gameId === 'hand-reader' ? 'bg-[#1a0520] text-[#ea80fc]' :
+                    gameId === 'couple-dice' ? 'bg-[#2a0a10] text-[#ffb3c1]' : // Dark Red/Pink theme
+                        'bg-black'
             }`}>
             {/* Minimal Header */}
             <div className="p-4 flex items-center justify-between z-10 shrink-0">
@@ -42,16 +104,16 @@ export default function PublicGamePage({ params }: PageProps) {
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
                 <div className={`px-4 py-1.5 rounded-full backdrop-blur-md border ${gameId === 'snake' ? 'bg-[#8B4513]/10 border-[#8B4513]/10' :
-                        gameId === 'zoltan' ? 'bg-[#d4af37]/10 border-[#d4af37]/30 text-[#d4af37]' :
-                            gameId === 'hand-reader' ? 'bg-[#4a148c]/20 border-[#ea80fc]/30 text-[#ea80fc]' :
-                                gameId === 'couple-dice' ? 'bg-[#d00000]/20 border-[#ff4d6d]/30 text-[#ff4d6d]' :
-                                    'bg-white/5 border-white/5'
+                    gameId === 'zoltan' ? 'bg-[#d4af37]/10 border-[#d4af37]/30 text-[#d4af37]' :
+                        gameId === 'hand-reader' ? 'bg-[#4a148c]/20 border-[#ea80fc]/30 text-[#ea80fc]' :
+                            gameId === 'couple-dice' ? 'bg-[#d00000]/20 border-[#ff4d6d]/30 text-[#ff4d6d]' :
+                                'bg-white/5 border-white/5'
                     }`}>
                     <span className={`text-xs font-bold uppercase tracking-widest ${gameId === 'snake' ? 'text-[#8B4513]' :
-                            gameId === 'zoltan' ? 'text-[#d4af37]' :
-                                gameId === 'hand-reader' ? 'text-[#ea80fc]' :
-                                    gameId === 'couple-dice' ? 'text-[#ff4d6d]' :
-                                        'text-gray-400'
+                        gameId === 'zoltan' ? 'text-[#d4af37]' :
+                            gameId === 'hand-reader' ? 'text-[#ea80fc]' :
+                                gameId === 'couple-dice' ? 'text-[#ff4d6d]' :
+                                    'text-gray-400'
                         }`}>
                         {gameId === 'zoltan' ? 'Mystic Corner 🔮' :
                             gameId === 'hand-reader' ? 'Quiromancia ✋' :
@@ -73,10 +135,10 @@ export default function PublicGamePage({ params }: PageProps) {
 
             {/* Footer / Branding */}
             <div className={`p-4 text-center text-[10px] shrink-0 ${gameId === 'zoltan' ? 'text-[#d4af37]/50' :
-                    gameId === 'hand-reader' ? 'text-[#ea80fc]/50' :
-                        gameId === 'snake' ? 'text-[#8B4513]/50' :
-                            gameId === 'couple-dice' ? 'text-[#ff4d6d]/50' :
-                                'text-gray-600'
+                gameId === 'hand-reader' ? 'text-[#ea80fc]/50' :
+                    gameId === 'snake' ? 'text-[#8B4513]/50' :
+                        gameId === 'couple-dice' ? 'text-[#ff4d6d]/50' :
+                            'text-gray-600'
                 }`}>
                 Powered by HappyMeter
             </div>

@@ -3,21 +3,31 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
-        const { userId } = await auth()
-        if (!userId) {
+        const { searchParams } = new URL(req.url)
+        const queryUserId = searchParams.get('userId')
+
+        let targetUserId = queryUserId
+
+        // If no query param, try auth (for dashboard usage)
+        if (!targetUserId) {
+            const { userId } = await auth()
+            targetUserId = userId
+        }
+
+        if (!targetUserId) {
             return new NextResponse("Unauthorized", { status: 401 })
         }
 
         const userSettings = await prisma.userSettings.findUnique({
-            where: { userId },
+            where: { userId: targetUserId },
             select: { gameConfig: true }
         })
 
         return NextResponse.json({
             ...userSettings?.gameConfig as any,
-            userId: userId
+            userId: targetUserId
         })
     } catch (error) {
         console.error('[GAMES_CONFIG_GET]', error)
