@@ -785,32 +785,64 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     ) : (
                         <div className="max-w-7xl mx-auto space-y-8 relative z-10">
 
-                            {/* Top Stats Row - Compacted */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {/* Top Stats Row - styled like reference */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {[
-                                    { label: "Total Feedback", value: manualData.metrics.totalFeedback, trend: "+12%", icon: MessageSquare, color: "text-violet-400" },
-                                    { label: "Calif. Promedio", value: manualData.metrics.avgRating + "/5", trend: "+5%", icon: Star, color: "text-fuchsia-400" },
-                                    { label: "NPS Score", value: "+" + manualData.metrics.npsScore, trend: "+8%", icon: Activity, color: "text-cyan-400" },
-                                    { label: "Usuarios Activos", value: manualData.metrics.activeUsers, trend: "+22%", icon: Users, color: "text-emerald-400" }
+                                    {
+                                        label: "Total Respuestas",
+                                        value: manualData.metrics.totalFeedback,
+                                        trend: "+12.5%",
+                                        footer: "Total Respuestas",
+                                        gradient: "from-blue-500 to-cyan-400",
+                                        glow: "shadow-[0_0_20px_rgba(56,189,248,0.3)]",
+                                        icon: Users,
+                                        progress: 65
+                                    },
+                                    {
+                                        label: "Satisfacción Global",
+                                        value: manualData.metrics.avgRating,
+                                        trend: "+0.4",
+                                        footer: "Satisfacción Global",
+                                        gradient: "from-orange-500 to-amber-400",
+                                        glow: "shadow-[0_0_20px_rgba(251,191,36,0.3)]",
+                                        icon: Star,
+                                        progress: (manualData.metrics.avgRating / 5) * 100
+                                    },
+                                    {
+                                        label: "NPS Score",
+                                        value: manualData.metrics.npsScore,
+                                        trend: "High",
+                                        footer: "Probabilidad De Recomendación (NPS)",
+                                        gradient: "from-violet-500 to-fuchsia-400",
+                                        glow: "shadow-[0_0_20px_rgba(168,85,247,0.3)]",
+                                        icon: Activity,
+                                        progress: manualData.metrics.npsScore // Assuming NPS 0-100
+                                    }
                                 ].map((stat, i) => (
                                     <motion.div
                                         key={i}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.1 }}
-                                        className="bg-[#15171e] border border-white/5 p-3 rounded-xl hover:bg-[#1a1d26] transition group relative overflow-hidden flex items-center justify-between min-h-[80px]"
+                                        className="bg-[#15171e]/80 backdrop-blur-md border border-white/5 p-6 rounded-[24px] relative overflow-hidden group"
                                     >
-                                        <div className="relative z-10 flex flex-col justify-center h-full">
-                                            <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wider mb-0.5">{stat.label}</p>
-                                            <div className="flex items-baseline gap-2">
-                                                <h3 className="text-xl font-bold text-white tracking-tight">{stat.value}</h3>
-                                                <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-0.5 bg-emerald-400/5 px-1.5 py-0.5 rounded-md border border-emerald-400/10">
-                                                    <TrendingUp className="w-2 h-2" /> {stat.trend}
-                                                </span>
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                                                <stat.icon className="w-6 h-6 text-white" />
                                             </div>
+                                            <span className={`text-xs font-bold px-2 py-1 rounded-full border border-white/10 bg-white/5 ${i === 0 ? 'text-emerald-400' : i === 1 ? 'text-emerald-400' : 'text-gray-400'}`}>
+                                                {stat.trend} ↗
+                                            </span>
                                         </div>
-                                        <div className="opacity-30 group-hover:opacity-50 transition-opacity">
-                                            <stat.icon className={`w-8 h-8 ${stat.color}`} />
+
+                                        <div className="mb-6">
+                                            <h3 className="text-4xl font-bold text-white mb-1">{stat.value}</h3>
+                                            <p className="text-sm text-gray-500 font-medium">{stat.footer}</p>
+                                        </div>
+
+                                        {/* Progress Bar */}
+                                        <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+                                            <div className={`h-full rounded-full bg-gradient-to-r ${stat.gradient} ${stat.glow} w-[${stat.progress}%]`} style={{ width: `${stat.progress}%` }} />
                                         </div>
                                     </motion.div>
                                 ))}
@@ -862,7 +894,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                     </div>
                                 </motion.div>
 
-                                {/* Sentiment Analysis - Compacted */}
+                                {/* Sentiment Analysis - Styled like reference */}
                                 <motion.div
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -871,89 +903,75 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                 >
                                     <h3 className="text-base font-bold text-white mb-4">Análisis de Sentimiento</h3>
 
-                                    <div className="space-y-4">
+                                    <div className="space-y-6">
                                         {manualData.sentimentData.map((item: any, i: number) => {
-                                            const styles: Record<string, { color: string, bg: string, glow: string }> = {
-                                                'Positivo': { color: 'from-green-400 to-green-500', bg: 'bg-green-500/20', glow: 'shadow-[0_0_15px_rgba(74,222,128,0.5)]' },
-                                                'Neutral': { color: 'from-amber-400 to-orange-500', bg: 'bg-amber-500/20', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.5)]' },
-                                                'Negativo': { color: 'from-red-400 to-red-500', bg: 'bg-red-500/20', glow: 'shadow-[0_0_15px_rgba(248,113,113,0.5)]' }
+                                            const styles: Record<string, { color: string, glow: string }> = {
+                                                'Positivo': { color: 'from-blue-500 to-cyan-400', glow: 'shadow-[0_0_15px_rgba(56,189,248,0.5)]' },
+                                                'Neutral': { color: 'from-orange-500 to-amber-400', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.5)]' },
+                                                'Negativo': { color: 'from-violet-500 to-fuchsia-400', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.5)]' }
                                             }
-                                            const style = styles[item.name] || { color: 'from-gray-400 to-gray-500', bg: 'bg-gray-500/20', glow: '' }
-
-                                            // Fallback to item props if mapping fails but usually name matches
-                                            const bg = style.bg || item.bg
-                                            const grad = style.color || item.color
-                                            const glow = style.glow || item.glow
+                                            const style = styles[item.name] || { color: 'from-gray-400 to-gray-500', glow: '' }
 
                                             return (
                                                 <div key={i} className="relative group">
-                                                    <div className="flex justify-between text-xs font-medium mb-1.5">
+                                                    <div className="flex justify-between text-xs font-bold mb-2">
                                                         <span className="text-gray-300">{item.name}</span>
-                                                        <span className="text-white font-bold">{item.value}%</span>
+                                                        <span className="text-white">{item.value}%</span>
                                                     </div>
                                                     {/* Background Bar */}
-                                                    <div className={`h-2.5 w-full rounded-full ${bg}`}>
+                                                    <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
                                                         {/* Foreground Glowing Bar */}
                                                         <motion.div
                                                             initial={{ width: 0 }}
                                                             animate={{ width: `${item.value}%` }}
                                                             transition={{ duration: 1, delay: 0.5 + (i * 0.1) }}
-                                                            className={`h-full rounded-full bg-gradient-to-r ${grad} ${glow} shadow-md relative`}
-                                                        >
-                                                            <div className="absolute top-0 right-0 bottom-0 w-1 bg-white/50 blur-[1px] rounded-full" />
-                                                        </motion.div>
+                                                            className={`h-full rounded-full bg-gradient-to-r ${style.color} ${style.glow} shadow-lg relative`}
+                                                        />
                                                     </div>
                                                 </div>
                                             )
                                         })}
                                     </div>
 
-                                    <div className="mt-6 p-3 bg-white/5 rounded-xl border border-white/5 text-center">
-                                        <p className="text-xl font-bold text-white mb-0.5">{Math.round((manualData.sentimentData.find((s: any) => s.name === 'Positivo')?.value || 0) + (manualData.sentimentData.find((s: any) => s.name === 'Neutral')?.value || 0) / 2)}%</p>
-                                        <p className="text-[10px] text-gray-400 uppercase tracking-widest">Satisfacción General</p>
+                                    {/* AI Chat Manual Section - CTA */}
+                                    <div className="bg-gradient-to-r from-violet-900/50 to-fuchsia-900/50 border border-white/10 p-6 md:p-8 rounded-[24px] md:rounded-[32px] flex flex-col md:flex-row items-center justify-between relative overflow-hidden group gap-6 md:gap-0 text-center md:text-left">
+                                        <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(to_right,transparent,black,transparent)]" />
+
+                                        <div className="relative z-10 max-w-2xl px-2">
+                                            <h2 className="text-xl md:text-2xl font-bold text-white mb-2 flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3 justify-center md:justify-start">
+                                                <Sparkles className="w-6 h-6 text-fuchsia-400 animate-pulse hidden md:block" />
+                                                ¿Necesitas un Plan de Acción Detallado?
+                                            </h2>
+                                            <p className="text-gray-300 text-base md:text-lg">
+                                                Tu asistente <span className="text-violet-400 font-bold">HappyMeter Analyst</span> ya analizó estos datos. Habla con él para obtener un manual paso a paso personalizado.
+                                            </p>
+                                        </div>
+
+                                        <div className="relative z-10 flex items-center w-full md:w-auto justify-center">
+                                            <a
+                                                href="/dashboard/chat"
+                                                className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-white text-black font-bold rounded-full hover:scale-105 transition transform shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] w-full md:w-auto text-sm md:text-base"
+                                            >
+                                                <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
+                                                Iniciar Conversación IA
+                                            </a>
+                                        </div>
+
+                                        {/* Decorator */}
+                                        <div className="absolute -right-20 -bottom-20 opacity-20 group-hover:opacity-30 transition duration-500">
+                                            <Sparkles className="w-64 h-64 text-fuchsia-500 blur-3xl" />
+                                        </div>
                                     </div>
-                                </motion.div>
+
                             </div>
-
-                            {/* AI Chat Manual Section - CTA */}
-                            <div className="bg-gradient-to-r from-violet-900/50 to-fuchsia-900/50 border border-white/10 p-6 md:p-8 rounded-[24px] md:rounded-[32px] flex flex-col md:flex-row items-center justify-between relative overflow-hidden group gap-6 md:gap-0 text-center md:text-left">
-                                <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(to_right,transparent,black,transparent)]" />
-
-                                <div className="relative z-10 max-w-2xl px-2">
-                                    <h2 className="text-xl md:text-2xl font-bold text-white mb-2 flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-3 justify-center md:justify-start">
-                                        <Sparkles className="w-6 h-6 text-fuchsia-400 animate-pulse hidden md:block" />
-                                        ¿Necesitas un Plan de Acción Detallado?
-                                    </h2>
-                                    <p className="text-gray-300 text-base md:text-lg">
-                                        Tu asistente <span className="text-violet-400 font-bold">HappyMeter Analyst</span> ya analizó estos datos. Habla con él para obtener un manual paso a paso personalizado.
-                                    </p>
-                                </div>
-
-                                <div className="relative z-10 flex items-center w-full md:w-auto justify-center">
-                                    <a
-                                        href="/dashboard/chat"
-                                        className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-white text-black font-bold rounded-full hover:scale-105 transition transform shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] w-full md:w-auto text-sm md:text-base"
-                                    >
-                                        <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
-                                        Iniciar Conversación IA
-                                    </a>
-                                </div>
-
-                                {/* Decorator */}
-                                <div className="absolute -right-20 -bottom-20 opacity-20 group-hover:opacity-30 transition duration-500">
-                                    <Sparkles className="w-64 h-64 text-fuchsia-500 blur-3xl" />
-                                </div>
-                            </div>
-
-                        </div>
                     )}
-            </div >
+                        </div >
 
 
 
             {/* --- PRINT ONLY REPORT (HIDDEN ON SCREEN) ---  DEPRECATED/REMOVED */}
-            {/* This section was removed in concept but kept in code structure to prevent errors if invoked, though effectively empty now or minimal legacy support */}
+                {/* This section was removed in concept but kept in code structure to prevent errors if invoked, though effectively empty now or minimal legacy support */}
 
-        </div >
-    )
+            </div >
+            )
 }
