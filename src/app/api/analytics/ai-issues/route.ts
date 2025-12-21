@@ -1,35 +1,21 @@
 
 import { NextResponse } from 'next/server'
-import OpenAI from 'openai'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'dummy_key_for_build',
-})
+import { getGeminiModel } from '@/lib/gemini'
 
 export async function POST(req: Request) {
     try {
         const { userId } = await auth()
         if (!userId) return new NextResponse("Unauthorized", { status: 401 })
 
-        // Fetch negative feedback (Rating <= 3 OR Text responses)
-        // We fetch a bit more to filter for text content
-        const recentNegative = await prisma.response.findMany({
+        // Fetch ALL recent feedback to detect both issues and strengths
+        const recentFeedback = await prisma.response.findMany({
             where: {
                 survey: { userId },
-                answers: {
-                    some: {
-                        OR: [
-                            { question: { type: 'RATING', }, value: { in: ['1', '2', '3'] } },
-                            { question: { type: 'EMOJI', }, value: { in: ['1', '2', '3'] } },
-                            // Also include text answers that might be negative even if rating is high?
-                            // Safest is to rely on low ratings for "Issues".
-                        ]
-                    }
-                }
+                answers: { some: { value: { not: "" } } } // Get responses with answers
             },
-            take: 40,
+            take: 50, // Increased sample size
             orderBy: { createdAt: 'desc' },
             include: {
                 answers: { include: { question: true } },
@@ -37,7 +23,7 @@ export async function POST(req: Request) {
             }
         })
 
-        // Fetch Source Stats (Last 100 to get a good sample)
+        // Fetch Source Stats (Restored)
         const sourceSamples = await prisma.response.findMany({
             where: { survey: { userId }, customerSource: { not: null } },
             take: 100,
@@ -56,17 +42,27 @@ export async function POST(req: Request) {
             .map(([k, v]) => `${k} (${v})`)
             .join(', ') || "No hay datos suficientes de fuentes."
 
-        if (recentNegative.length === 0) {
-            return NextResponse.json({ issues: [] })
+        if (recentFeedback.length === 0) {
+            return NextResponse.json({ issues: [], strengths: [] })
         }
 
-        // Optimize text for token limit
-        const feedbackText = recentNegative.map(r => {
-            const comments = r.answers
-                .filter(a => a.question.type === 'TEXT' && a.value.length > 3)
-                .map(a => `"${a.value}"`)
-                .join(', ')
-            return comments ? `- ${comments}` : null
+        // Optimize text for token limit - Include Question Text for Context
+        const feedbackText = recentFeedback.map(r => {
+            const formattedAnswers = r.answers
+                .filter(a => a.question.type === 'TEXT' || a.question.type === 'RATING')
+                .map(a => {
+                    const qText = a.question.text
+                    const answer = a.value
+                    // Only include meaningful text or low ratings
+                    if (a.question.type === 'TEXT' && answer.length > 2) return `P: ${qText} | R: "${answer}"`
+                    if (a.question.type === 'RATING' && ['1', '2', '3'].includes(answer)) return `CALIFICACIÓN BAJA (${answer}/5): ${qText}`
+                    if (a.question.type === 'RATING' && ['5'].includes(answer)) return `CALIFICACIÓN PERFECTA (5/5): ${qText}`
+                    return null
+                })
+                .filter(Boolean)
+                .join('; ')
+
+            return formattedAnswers ? `- ${formattedAnswers}` : null
         }).filter(Boolean).join('\n')
 
         if (!feedbackText || feedbackText.length < 10) {
@@ -87,7 +83,8 @@ export async function POST(req: Request) {
 
         TU OBJETIVO:
         1. Analiza las siguientes quejas/feedback e identifica los Top 3 Problemas.
-        2. Para cada problema, genera un "Caso de Éxito" REAL de una empresa famosa de la MISMA INDUSTRIA (${industry}).
+        2. Identifica las 2 Mayores Fortalezas (Lo que los clientes aman).
+        3. Para cada problema, genera un "Caso de Éxito" REAL de una empresa famosa de la MISMA INDUSTRIA (${industry}).
            - Si es Restaurante: Usa McDonald's, Starbucks, Chipotle, El Bulli.
            - Si es Hotel: Usa Ritz-Carlton, Hilton, Airbnb.
            - Si es Bar/Nightclub: Usa Hakkasan, Coco Bongo, Speakeasy famosos.
@@ -103,6 +100,12 @@ export async function POST(req: Request) {
               "summary": "Explicación de 1 oración del problema",
               "recommendation": "Consejo accionable corto (max 10 palabras) basado en el Caso de Éxito."
             }
+          ],
+          "strengths": [
+             { 
+               "title": "Título de Fortaleza",
+               "summary": "Breve descripción de por qué los clientes valoran esto" 
+             }
           ],
           "marketing_recommendation": {
              "title": "Oportunidad de Marketing",
@@ -121,30 +124,43 @@ export async function POST(req: Request) {
         `
 
         // Dry run if no key
-        if (!process.env.OPENAI_API_KEY) {
+        if (!process.env.GEMINI_API_KEY) {
+            console.warn('GEMINI_API_KEY missing, returning mock data')
             return NextResponse.json({
                 issues: [
                     { title: "Ejemplo: Comida Fría", severity: "HIGH", percentage: 45, summary: "Varios clientes mencionan comida fría.", recommendation: "Implementar KDS como McDonald's." },
                     { title: "Ejemplo: Ruido Alto", severity: "MEDIUM", percentage: 20, summary: "Música muy fuerte en la terraza.", recommendation: "Zonificación acústica como Hard Rock." }
-                ]
+                ],
+                strengths: [
+                    { title: "Ejemplo: Sabor Auténtico", summary: "Los clientes aman el sazón casero de los platillos." },
+                    { title: "Ejemplo: Atención Rápida", summary: "Mencionan que los meseros son muy atentos y veloces." }
+                ],
+                marketing_recommendation: {
+                    title: "Ejemplo: Oportunidad",
+                    strategy: "Promocionar platillos estrella en Instagram.",
+                    platform: "Instagram"
+                }
             })
         }
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-5.2",
-            messages: [{ role: "system", content: SYSTEM_PROMPT }],
-            temperature: 0.5,
-            response_format: { type: "json_object" }
+        const model = getGeminiModel('gemini-flash-latest', {
+            generationConfig: { responseMimeType: "application/json" }
         })
 
-        const content = completion.choices[0].message.content
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: SYSTEM_PROMPT }] }]
+        })
+
+        const content = result.response.text()
         if (!content) throw new Error("Empty AI response")
 
-        const result = JSON.parse(content)
-        return NextResponse.json(result)
+        const parsedResult = JSON.parse(content)
+        return NextResponse.json(parsedResult)
 
     } catch (error) {
         console.error('[AI_ISSUES_POST]', error)
         return new NextResponse(JSON.stringify({ error: "Analysis failed" }), { status: 500 })
     }
 }
+
+

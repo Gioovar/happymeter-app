@@ -1,11 +1,5 @@
 import { NextResponse } from 'next/server'
-import OpenAI from 'openai'
-import { prisma } from '@/lib/prisma' // Assuming this exists, mostly for logging if needed, or skip for now
-
-// Initialize OpenAI
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'dummy_key_for_build',
-})
+import { getGeminiModel } from '@/lib/gemini'
 
 export async function POST(req: Request) {
     try {
@@ -46,18 +40,20 @@ export async function POST(req: Request) {
             Respuesta del usuario: "${question}" (Esta es la aclaración).`
         }
 
+        if (!process.env.GEMINI_API_KEY) {
+            return NextResponse.json({ answer: "Los espíritus demo dicen que configures la API Key." })
+        }
+
         // 3. Call AI
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: userPrompt }
-            ],
-            temperature: 0.8,
-            max_tokens: 150,
+        const model = getGeminiModel('gemini-1.5-flash', {
+            systemInstruction: systemPrompt
         })
 
-        const answer = completion.choices[0].message.content
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: userPrompt }] }]
+        })
+
+        const answer = result.response.text()
 
         return NextResponse.json({ answer })
 

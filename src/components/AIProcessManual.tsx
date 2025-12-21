@@ -30,22 +30,22 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
     const [strategiesLoading, setStrategiesLoading] = useState(false)
     const [manualData, setManualData] = useState<any>(null)
     const [showReport, setShowReport] = useState(false)
-    const [showDateModal, setShowDateModal] = useState(false) // New Modal State
+    const [showDateModal, setShowDateModal] = useState(false) // Nuevo Estado Modal
     const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>({
-        from: subDays(new Date(), 7), // Default last 7 days
+        from: subDays(new Date(), 7), // Por defecto últimos 7 días
         to: new Date()
     })
-    const [industry, setIndustry] = useState<string>(initialIndustry || 'restaurant') // Default to restaurant if inference fails/prop missing
+    const [industry, setIndustry] = useState<string>(initialIndustry || 'restaurant') // Por defecto restaurante si falla la inferencia/falta prop
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: subDays(new Date(), 15),
         to: new Date(),
     })
     const [isSurveySelectorOpen, setIsSurveySelectorOpen] = useState(false)
 
-    // --- STRATEGY LIBRARY MOVED TO SERVER (analytics.ts) ---
-    // The detectWeaknesses algorithm now generates these dynamically.
+    // --- BIBLIOTECA DE ESTRATEGIAS MOVIDA AL SERVIDOR (analytics.ts) ---
+    // El algoritmo detectWeaknesses ahora las genera dinámicamente.
 
-    // Update industry if initialIndustry prop changes
+    // Actualizar industria si cambia prop initialIndustry
     useEffect(() => {
         if (initialIndustry) setIndustry(initialIndustry)
     }, [initialIndustry])
@@ -54,13 +54,13 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
         const fetchData = async () => {
             setLoading(true)
             try {
-                // Fetch Real DB Metrics with Date Range
+                // Obtener métricas reales de BD con rango de fechas
                 const from = dateRange?.from || subDays(new Date(), 30)
                 const to = dateRange?.to || new Date()
 
 
 
-                // 1. Fast Load (Skip AI)
+                // 1. Carga Rápida (Saltar IA)
                 let fastAnalytics;
                 if (publicToken) {
                     fastAnalytics = await getPublicSurveyAnalytics(surveyId, publicToken, { from, to }, industry, true)
@@ -70,7 +70,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
                 setManualData({
                     ...fastAnalytics,
-                    detailedStrategies: [], // Start empty
+                    detailedStrategies: [], // Empezar vacío
                     recommendations: [ /* ... same static data ... */
                         {
                             title: "Atención al Cliente",
@@ -101,9 +101,9 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     ]
                 })
 
-                setLoading(false) // Show UI immediately
+                setLoading(false) // Mostrar interfaz inmediatamente
 
-                // 2. Async Strategy Load (Full AI)
+                // 2. Carga Estrategia Asíncrona (IA Completa)
                 setStrategiesLoading(true)
                 try {
                     let fullAnalytics;
@@ -135,14 +135,14 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
         fetchData()
     }, [surveyId, surveyTitle, initialIndustry, dateRange])
 
-    // Removed unused mock data generation
+    // Generación de datos simulados no utilizada eliminada
 
 
-    // removed old share logic
+    // lógica de compartir antigua eliminada
 
 
     const downloadPDF = async () => {
-        // Select all page containers
+        // Seleccionar todos los contenedores de página
         const pages = document.querySelectorAll('.print-page')
         if (pages.length === 0) return
 
@@ -160,7 +160,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
             for (let i = 0; i < pages.length; i++) {
                 const page = pages[i] as HTMLElement
 
-                // Navigate to added pages for subsequent iterations
+                // Navegar a páginas añadidas para iteraciones posteriores
                 if (i > 0) {
                     pdf.addPage()
                 }
@@ -169,7 +169,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     scale: 2,
                     backgroundColor: '#ffffff',
                     logging: false,
-                    useCORS: true // Ensure external images (if any) load
+                    useCORS: true // Asegurar carga de imágenes externas (si las hay)
                 })
 
                 const imgData = canvas.toDataURL('image/png')
@@ -193,13 +193,13 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
     return (
         <div className="bg-[#0f1115] text-white p-4 md:p-8 min-h-screen font-sans selection:bg-violet-500/30 relative">
 
-            {/* Ambient Background Glows */}
+            {/* Brillos de Fondo Ambiental */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2" />
                 <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-fuchsia-600/10 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2" />
             </div>
 
-            {/* Header Controls */}
+            {/* Controles de Encabezado */}
             <div className="relative z-50 flex flex-col xl:flex-row items-start xl:items-center gap-8 mb-12">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
@@ -278,7 +278,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
                 <div className="flex flex-col-reverse md:flex-row items-end md:items-center gap-4 no-print">
 
-                    {/* Action Buttons */}
+                    {/* Botones de Acción */}
                     <div className="bg-[#1a1d26] p-1.5 rounded-full border border-white/10 flex items-center shadow-lg relative z-[50]">
 
                         <ShareButton
@@ -305,17 +305,17 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                         date={dateRange}
                         setDate={setDateRange}
                         onGenerate={() => {
-                            // Data fetch is triggered by useEffect when date changes
-                            setManualData(null) // Clear momentarily to show loading state if desired
+                            // La obtención de datos se activa por useEffect cuando cambia la fecha
+                            setManualData(null) // Limpiar momentáneamente para mostrar estado de carga si se desea
                             setLoading(true)
-                            // The useEffect will pick up the change or we can just leave it to the effect.
-                            // Since setDate triggers effect, this button might be redundant or used for "Refresh".
-                            // Let's just let the effect handle it.
+                            // El useEffect detectará el cambio o podemos dejarlo al efecto.
+                            // Dado que setDate activa el efecto, este botón podría ser redundante o usado para "Actualizar".
+                            // Dejemos que el efecto lo maneje.
                         }}
                     />
                 </div>
             </div>
-            {/* --- DATE SELECTION MODAL --- */}
+            {/* --- MODAL DE SELECCIÓN DE FECHA --- */}
             <AnimatePresence>
                 {showDateModal && (
                     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -353,10 +353,10 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                             <button
                                 onClick={() => {
                                     if (selectedDateRange?.from && selectedDateRange?.to) {
-                                        setDateRange(selectedDateRange) // Update global state
+                                        setDateRange(selectedDateRange) // Actualizar estado global
                                         setShowDateModal(false)
-                                        setShowReport(true) // Open report view which triggers fetch
-                                        // Force fetch is handled by useEffect on dateRange change
+                                        setShowReport(true) // Abrir vista de reporte que activa la obtención
+                                        // La obtención forzada se maneja por useEffect al cambiar dateRange
                                     }
                                 }}
                                 className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-purple-900/20 flex items-center justify-center gap-2"
@@ -371,7 +371,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
             </AnimatePresence>
 
 
-            {/* --- REPORT MODAL (Dark Mode Web View) --- */}
+            {/* --- MODAL DE REPORTE (Vista Web Modo Oscuro) --- */}
             <AnimatePresence>
                 {showReport && manualData && (
                     <motion.div
@@ -381,7 +381,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                         className="fixed inset-0 z-[9999] bg-[#0f1115] overflow-y-auto"
                     >
                         <div className="max-w-5xl mx-auto p-8 relative">
-                            {/* Close Button */}
+                            {/* Botón Cerrar */}
                             <button
                                 onClick={() => setShowReport(false)}
                                 className="fixed top-4 right-4 md:top-8 md:right-8 p-2 md:p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all backdrop-blur-md z-50 shadow-lg"
@@ -389,7 +389,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                 <X className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
 
-                            {/* --- Page 1: Executive Summary (Dark Mode) --- */}
+                            {/* --- Página 1: Resumen Ejecutivo (Modo Oscuro) --- */}
                             <div className="mb-12 md:mb-24">
                                 <div className="text-center mb-8 md:mb-16 mt-8 md:mt-0">
                                     <div className="inline-flex p-3 bg-violet-500/10 rounded-2xl mb-4 border border-violet-500/20">
@@ -399,7 +399,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                     <p className="text-sm md:text-xl text-gray-400 px-4">Análisis detallado y estrategias de optimización para <br className="hidden md:block" />{surveyTitle}</p>
                                 </div>
 
-                                {/* Metrics Grid */}
+                                {/* Cuadrícula de Métricas */}
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
                                     <div className="bg-[#1a1d26] p-6 rounded-2xl border border-white/5">
                                         <div className="flex items-center gap-2 text-gray-400 mb-2 font-medium text-sm">
@@ -438,7 +438,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                     </div>
                                 </div>
 
-                                {/* Charts */}
+                                {/* Gráficos */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-8">
                                     <div className="bg-[#1a1d26] p-6 rounded-2xl border border-white/5">
                                         <h3 className="text-lg font-bold text-white mb-6">Tendencia de Feedback</h3>
@@ -487,9 +487,9 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                 </div>
                             </div>
 
-                            {/* --- Page 2-4: Strategies (Dark Mode) --- */}
+                            {/* --- Página 2-4: Estrategias (Modo Oscuro) --- */}
                             <div className="space-y-24">
-                                {/* Show Loader if Strategies Loading */}
+                                {/* Mostrar Cargador si Estrategias Cargando */}
                                 {strategiesLoading && (
                                     <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
                                         <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
@@ -506,7 +506,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                                            {/* Action Plan Card (Problem & Best Practice) */}
+                                            {/* Tarjeta de Plan de Acción (Problema y Mejor Práctica) */}
                                             <div className="bg-gradient-to-br from-violet-900/20 to-fuchsia-900/20 border border-violet-500/20 p-8 rounded-2xl">
                                                 <div className="flex items-center gap-3 mb-6">
                                                     <div className="p-2 bg-red-500/10 rounded-lg text-red-400">
@@ -529,7 +529,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                                 </div>
                                             </div>
 
-                                            {/* Implementation Steps */}
+                                            {/* Pasos de Implementación */}
                                             <div className="space-y-4">
                                                 <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                                                     <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm">🛠</div>
@@ -554,7 +554,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                 ))}
                             </div>
 
-                            {/* CTA Bottom */}
+                            {/* CTA Inferior */}
                             <div className="mt-12 md:mt-24 text-center pb-12 flex flex-col md:flex-row justify-center gap-3 md:gap-4 px-4 md:px-0">
                                 <ShareButton
                                     surveyId={surveyId}
@@ -584,14 +584,14 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                 }
             </AnimatePresence >
 
-            {/* --- INK SAVING PDF TEMPLATE (Hidden Container) --- */}
+            {/* --- PLANTILLA PDF AHORRO DE TINTA (Contenedor Oculto) --- */}
             < div style={{ position: 'fixed', top: 0, left: 0, zIndex: -50, opacity: 0, pointerEvents: 'none' }}>
                 {manualData && (
                     <>
-                        {/* PAGE 1: Executive Summary */}
+                        {/* PÁGINA 1: Resumen Ejecutivo */}
                         <div className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
-                                {/* Header */}
+                                {/* Encabezado */}
                                 <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
                                     <div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
@@ -607,7 +607,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                     </div>
                                 </div>
 
-                                {/* Metrics */}
+                                {/* Métricas */}
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
                                     <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                                         <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Total Feedback</p>
@@ -628,7 +628,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                     </div>
                                 </div>
 
-                                {/* Charts */}
+                                {/* Gráficos */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
                                     <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', height: '240px' }}>
                                         <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Tendencia</h3>
@@ -666,7 +666,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                     </div>
                                 </div>
 
-                                {/* Strategies Summary List */}
+                                {/* Lista Resumen de Estrategias */}
                                 <div style={{ marginTop: '10px' }}>
                                     <h3 style={{ fontSize: '18px', fontWeight: 'bold', borderLeft: '4px solid #7c3aed', paddingLeft: '15px', marginBottom: '20px', color: '#0f172a' }}>Resumen de Estrategias</h3>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -690,7 +690,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                             </div>
                         </div>
 
-                        {/* Show Loader if Strategies Loading */}
+                        {/* Mostrar Cargador si Estrategias Cargando */}
                         {strategiesLoading && (
                             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
                                 <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
@@ -698,10 +698,10 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                             </div>
                         )}
 
-                        {/* PAGES 2+: Detailed Strategies (One per page) */}
+                        {/* PÁGINAS 2+: Estrategias Detalladas (Una por página) */}
                         {!strategiesLoading && (manualData.detailedStrategies || []).map((strategy: any, i: number) => (
                             <div key={i} className="bg-[#15171e]/50 border border-white/5 rounded-[32px] p-8 md:p-12 relative overflow-hidden">
-                                {/* Decorator */}
+                                {/* Decorador */}
                                 <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-hb from-violet-600/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
                                 <div className="relative z-10">
@@ -712,15 +712,15 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                         <span className="text-violet-400 font-bold tracking-widest text-xs uppercase">Estrategia Recomendada</span>
                                     </div>
 
-                                    {/* Title Section */}
+                                    {/* Sección de Título */}
                                     <div style={{ marginBottom: '40px' }}>
                                         <h2 style={{ fontSize: '36px', fontWeight: 'bold', color: '#0f172a', marginBottom: '20px', lineHeight: 1.2 }}>{strategy.title}</h2>
                                         <h2 style={{ fontSize: '36px', fontWeight: 'bold', color: '#0f172a', marginBottom: '20px', lineHeight: 1.2 }}>{strategy.title}</h2>
-                                        {/* Removed strategy.objective as it's no longer in interface, using problemDetected instead or just title */}
+                                        {/* Eliminado strategy.objective ya que no está en la interfaz, usando problemDetected o solo título */}
                                     </div>
 
-                                    {/* Case Study */}
-                                    {/* Problem & Best Practice Box */}
+                                    {/* Caso de Estudio */}
+                                    {/* Caja de Problema y Mejor Práctica */}
                                     <div style={{ backgroundColor: '#f8fafc', borderLeft: '4px solid #7c3aed', padding: '30px', borderRadius: '0 12px 12px 0', marginBottom: '40px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                                             <span style={{ backgroundColor: '#ef4444', color: 'white', padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>PROBLEMA</span>
@@ -740,7 +740,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                         </div>
                                     </div>
 
-                                    {/* Implementation Steps */}
+                                    {/* Pasos de Implementación */}
                                     <div>
                                         <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#0f172a', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <span style={{ width: '24px', height: '24px', backgroundColor: '#0f172a', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🛠</span>
@@ -771,7 +771,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                 )}
 
 
-                {/* MAIN DASHBOARD CONTENT (Will be hidden on print) */}
+                {/* CONTENIDO PRINCIPAL DEL TABLERO (Se ocultará al imprimir) */}
                 < div className="dashboard-content" >
                     {
                         loading ? (
@@ -785,7 +785,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                         ) : (
                             <div className="max-w-7xl mx-auto space-y-8 relative z-10">
 
-                                {/* Top Stats Row - styled like reference */}
+                                {/* Fila de Estadísticas Superiores - estilo como referencia */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {[
                                         {

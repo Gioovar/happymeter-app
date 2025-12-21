@@ -1,12 +1,7 @@
 
 import { NextResponse } from 'next/server'
-import OpenAI from 'openai'
 import { auth } from '@clerk/nextjs/server'
-import { prisma } from '@/lib/prisma'
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'dummy_key_for_build',
-})
+import { getGeminiModel } from '@/lib/gemini'
 
 const KNOWLEDGE_BASE = `
 INFORMACIÓN DE HAPPYMETER (TU CONTEXTO):
@@ -78,20 +73,26 @@ export async function POST(req: Request) {
         const { messages } = await req.json()
         const { userId } = await auth()
 
-        if (!userId && !process.env.OPENAI_API_KEY) {
+        if (!userId && !process.env.GEMINI_API_KEY) {
             // Mock response if no auth/key for dev
+            return NextResponse.json({ role: 'assistant', content: "Modo demo: Hola, soy el soporte de prueba." })
         }
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-5.2", // Or appropriate model
-            messages: [
-                { role: "system", content: SYSTEM_PROMPT },
-                ...messages
-            ],
-            temperature: 0.3, // Lower temp for more factual support
+        const model = getGeminiModel('gemini-1.5-flash', {
+            systemInstruction: SYSTEM_PROMPT
         })
 
-        const responseText = completion.choices[0].message.content
+        // Map messages to Gemini Format
+        const geminiHistory = messages.map((m: any) => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+        }))
+
+        const result = await model.generateContent({
+            contents: geminiHistory
+        })
+
+        const responseText = result.response.text()
 
         return NextResponse.json({ role: 'assistant', content: responseText })
 

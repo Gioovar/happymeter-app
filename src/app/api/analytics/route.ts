@@ -378,28 +378,26 @@ export async function GET(request: Request) {
         // Limit to last 15 comments to preserve performance/quota on this GET endpoint
         const recentComments = textCommentsForAI.slice(0, 15)
 
-        if (recentComments.length > 0 && false) { // AI TEMPORARILY DISABLED TO PREVENT TIMEOUT
+        if (recentComments.length > 0) { // ENABLED WITH GEMINI
             try {
                 // Dynamic import to avoid issues if file doesn't exist yet in compilation
-                const { default: openai } = await import('@/lib/openai')
+                const { getGeminiModel } = await import('@/lib/gemini')
 
-                if (process.env.OPENAI_API_KEY) {
-                    const completion = await openai.chat.completions.create({
-                        messages: [
-                            {
-                                role: "system",
-                                content: "You are an expert sentiment analyzer. Extract staff names mentioned in these reviews. Return ONLY a JSON object mapping 'name' to 'sentiment_score' (1 for positive, -1 for negative). Key is the name (Capitalized), value is the score. Ignore if no names found. Example: {'Juan': 1, 'Maria': -1}. If specific job titles are used like 'el mesero' without name, ignore."
-                            },
-                            {
-                                role: "user",
-                                content: JSON.stringify(recentComments.map(c => c.text))
-                            }
-                        ],
-                        model: "gpt-4o-mini", // Use fast model
-                        response_format: { type: "json_object" }
+                if (process.env.GEMINI_API_KEY) {
+                    const model = getGeminiModel('gemini-flash-latest', {
+                        generationConfig: { responseMimeType: "application/json" }
                     })
 
-                    const aiContent = completion.choices[0].message.content
+                    const prompt = `You are an expert sentiment analyzer. Extract staff names mentioned in these reviews. Return ONLY a JSON object mapping 'name' to 'sentiment_score' (1 for positive, -1 for negative). Key is the name (Capitalized), value is the score. Ignore if no names found. Example: {"Juan": 1, "Maria": -1}. If specific job titles are used like 'el mesero' without name, ignore.
+                    
+                    REVIEWS:
+                    ${JSON.stringify(recentComments.map(c => c.text))}`
+
+                    const result = await model.generateContent({
+                        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+                    })
+
+                    const aiContent = result.response.text()
                     if (aiContent) {
                         const aiResults = JSON.parse(aiContent)
                         console.log('[Analytics] AI Extracted Staff:', aiResults)

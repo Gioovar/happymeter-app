@@ -1,12 +1,8 @@
 
 import { NextResponse } from 'next/server'
-import OpenAI from 'openai'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'dummy_key_for_build',
-})
+import { getGeminiModel } from '@/lib/gemini'
 
 export async function POST(req: Request) {
     try {
@@ -84,7 +80,8 @@ export async function POST(req: Request) {
         `
 
         // Dry run handling
-        if (!process.env.OPENAI_API_KEY) {
+        if (!process.env.GEMINI_API_KEY) {
+            console.warn('GEMINI_API_KEY missing, returning mock data')
             return NextResponse.json({
                 starDish: { name: "Hamburguesa Trufada", sentiment: 98, mentions: 15, reason: "Jugosa y sabor único" },
                 criticalDish: { name: "Limonada", sentiment: 20, mentions: 6, reason: "Demasiado ácida" },
@@ -93,17 +90,17 @@ export async function POST(req: Request) {
             })
         }
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                { role: "system", content: SYSTEM_PROMPT },
-                { role: "user", content: `COMENTARIOS:\n${texts.substring(0, 15000)}` }
+        const model = getGeminiModel()
+        const result = await model.generateContent({
+            contents: [
+                { role: 'user', parts: [{ text: `${SYSTEM_PROMPT}\n\nCOMENTARIOS:\n${texts.substring(0, 30000)}` }] }
             ],
-            response_format: { type: "json_object" },
-            temperature: 0.3,
+            generationConfig: {
+                responseMimeType: "application/json",
+            }
         })
 
-        const content = completion.choices[0].message.content
+        const content = result.response.text()
         if (!content) throw new Error("Empty AI response")
 
         return NextResponse.json(JSON.parse(content))

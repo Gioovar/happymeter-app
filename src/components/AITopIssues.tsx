@@ -18,9 +18,15 @@ interface MarketingRecommendation {
     platform: string
 }
 
+interface Strength {
+    title: string
+    summary: string
+}
+
 export default function AITopIssues() {
     const [isLoading, setIsLoading] = useState(false)
     const [issues, setIssues] = useState<Issue[] | null>(null)
+    const [strengths, setStrengths] = useState<Strength[] | null>(null)
     const [marketingRec, setMarketingRec] = useState<MarketingRecommendation | null>(null)
     const [hasAnalyzed, setHasAnalyzed] = useState(false)
 
@@ -31,6 +37,7 @@ export default function AITopIssues() {
             if (res.ok) {
                 const data = await res.json()
                 setIssues(data.issues)
+                setStrengths(data.strengths || [])
                 setMarketingRec(data.marketing_recommendation)
             }
         } catch (error) {
@@ -83,51 +90,84 @@ export default function AITopIssues() {
 
     return (
         <div className="space-y-3">
-            {/* Marketing Recommendation Card */}
+            {/* Marketing Recommendation Card (Top Highlight) */}
             {marketingRec && (
-                <div className="bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl p-4 shadow-lg border border-white/10 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition">
-                        <Zap className="w-16 h-16" />
+                <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl p-5 relative overflow-hidden group shadow-lg mb-4">
+                    {/* Decorative bolt */}
+                    <div className="absolute top-0 right-0 p-3 opacity-20 rotate-12 group-hover:rotate-45 transition duration-500">
+                        <Zap className="w-24 h-24 text-white" />
                     </div>
+
                     <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-3">
                             <BrainCircuit className="w-4 h-4 text-violet-200" />
-                            <h4 className="font-bold text-xs uppercase tracking-wider text-violet-100">{marketingRec.title}</h4>
+                            <span className="font-bold text-xs uppercase tracking-wider text-violet-100 opacity-90">IMPULSO EN {marketingRec.platform.toUpperCase()}</span>
                         </div>
-                        <p className="font-bold text-lg mb-1">{marketingRec.platform}</p>
-                        <p className="text-sm text-violet-100/90 leading-relaxed">
+
+                        <h3 className="text-2xl font-bold text-white mb-2 leading-tight">
+                            {marketingRec.platform}
+                        </h3>
+
+                        <p className="text-base text-violet-50 font-medium leading-relaxed max-w-[90%]">
                             "{marketingRec.strategy}"
                         </p>
                     </div>
                 </div>
             )}
 
-            {issues?.map((issue, idx) => (
-                <div key={idx} className="bg-white/5 rounded-lg p-4 border-l-4 border-white/10 hover:bg-white/10 transition"
-                    style={{
-                        borderLeftColor: issue.severity === 'HIGH' ? '#ef4444' : issue.severity === 'MEDIUM' ? '#f59e0b' : '#22c55e'
-                    }}
-                >
-                    <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-bold text-white text-sm">{issue.title}</h4>
-                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${issue.severity === 'HIGH' ? 'bg-red-500/20 text-red-400' :
-                            issue.severity === 'MEDIUM' ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'
-                            }`}>
-                            {issue.severity === 'HIGH' ? 'ALTA' : issue.severity === 'MEDIUM' ? 'MEDIA' : 'BAJA'}
-                        </span>
+            {/* Issues List */}
+            <div className="space-y-3">
+                {issues?.map((issue, idx) => (
+                    <div key={idx} className="bg-[#1a1a1a] rounded-xl p-4 border-l-[6px] border-[#1a1a1a] hover:bg-[#202020] transition group"
+                        style={{
+                            borderLeftColor: issue.severity === 'HIGH' ? '#ef4444' : issue.severity === 'MEDIUM' ? '#f59e0b' : '#22c55e'
+                        }}
+                    >
+                        <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-bold text-white text-base">{issue.title}</h4>
+                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${issue.severity === 'HIGH' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                                issue.severity === 'MEDIUM' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
+                                    'bg-green-500/10 border-green-500/20 text-green-500'
+                                }`}>
+                                {issue.severity === 'HIGH' ? 'ALTA' : issue.severity === 'MEDIUM' ? 'MEDIA' : 'BAJA'}
+                            </span>
+                        </div>
+
+                        <p className="text-gray-400 text-sm mb-4 leading-snug">{issue.summary}</p>
+
+                        <div className="flex items-start gap-3 p-3 bg-black/40 rounded-lg border border-white/5">
+                            <Zap className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+                            <p className="text-gray-300 text-xs italic font-medium">"{issue.recommendation}"</p>
+                        </div>
                     </div>
+                ))}
+            </div>
 
-                    <p className="text-gray-400 text-xs mb-2 line-clamp-2">{issue.summary}</p>
-
-                    <div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
-                        <Zap className="w-3 h-3 text-yellow-400 shrink-0" />
-                        <p className="text-gray-300 text-[10px] italic">"{issue.recommendation}"</p>
+            {/* Strengths Section */}
+            {strengths && strengths.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-white/5">
+                    <h4 className="text-xs font-bold text-green-400 uppercase mb-2 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" /> Fortalezas Detectadas
+                    </h4>
+                    <div className="space-y-2">
+                        {strengths.map((strength, idx) => (
+                            <div key={idx} className="bg-green-500/5 border border-green-500/10 rounded-lg p-3">
+                                <h5 className="text-green-300 font-bold text-xs mb-1">{strength.title}</h5>
+                                <p className="text-green-400/80 text-[10px] italic">"{strength.summary}"</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
-            ))}
+            )}
+
             <div className="text-center mt-2">
-                <button onClick={handleAnalyze} className="text-xs text-violet-400 hover:text-white transition flex items-center justify-center gap-1 w-full opacity-50 hover:opacity-100">
-                    <Loader2 className="w-3 h-3" /> Re-analizar
+                <button
+                    onClick={handleAnalyze}
+                    disabled={isLoading}
+                    className="text-xs text-violet-400 hover:text-white transition flex items-center justify-center gap-1 w-full opacity-50 hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <Loader2 className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+                    {isLoading ? 'Analizando...' : 'Re-analizar'}
                 </button>
             </div>
         </div>

@@ -15,7 +15,7 @@ export default function CampaignManager({ selectedSurveyTitle = 'Todas', selecte
 
     const handleExport = () => {
         setIsExporting(true)
-        // Simulate API call / file generation
+        // Simular llamada a API / generación de archivo
         setTimeout(() => {
             setIsExporting(false)
             alert(`Archivo de audiencia para "${segment.toUpperCase()}" de "${selectedSurveyTitle}" descargado. Listo para subir a Meta Ads.`)
@@ -24,7 +24,7 @@ export default function CampaignManager({ selectedSurveyTitle = 'Todas', selecte
 
     return (
         <div className="relative rounded-2xl border border-white/10 bg-gradient-to-br from-[#1877F2]/10 to-[#E1306C]/10">
-            {/* Background Decor - Clipped */}
+            {/* Decoración de Fondo - Recortada */}
             <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                     <h1 className="text-9xl font-black tracking-tighter">∞</h1>
@@ -53,7 +53,7 @@ export default function CampaignManager({ selectedSurveyTitle = 'Todas', selecte
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Segmentation Selection */}
+                    {/* Selección de Segmentación */}
                     <div className="space-y-4">
                         <h3 className="font-semibold text-gray-300">1. Selecciona tu Audiencia Objetivo</h3>
 
@@ -136,7 +136,7 @@ export default function CampaignManager({ selectedSurveyTitle = 'Todas', selecte
                         </div>
                     </div>
 
-                    {/* Action Area */}
+                    {/* Área de Acción */}
                     <div className="flex flex-col justify-between space-y-6">
                         <div className="bg-black/40 rounded-xl p-6 border border-white/10">
                             <h4 className="font-bold mb-2 text-gray-200">Resumen de Audiencia</h4>

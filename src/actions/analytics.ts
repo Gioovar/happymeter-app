@@ -4,7 +4,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { startOfDay, subDays, format, endOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
-import openai from '@/lib/openai'
+import { getGeminiModel } from '@/lib/gemini'
 
 
 // --- STATIC STRATEGY GENERATION ---
@@ -19,6 +19,12 @@ interface Strategy {
     }[]
 }
 
+interface StaffRanking {
+    name: string
+    count: number
+    average: string
+}
+
 interface AnalyticsData {
     metrics: {
         totalFeedback: number
@@ -29,6 +35,7 @@ interface AnalyticsData {
     chartData: Array<{ name: string; value: number }>
     sentimentData: Array<{ name: string; value: number; color: string; bg: string; glow: string }>
     generatedStrategies: Strategy[]
+    staffRanking: StaffRanking[]
 }
 
 export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: Date; to: Date }, industry: string = 'restaurant', skipAI: boolean = false): Promise<AnalyticsData> {
@@ -48,7 +55,7 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
         if (surveyId === 'all') {
             const surveys = await prisma.survey.findMany({
                 where: { userId },
-                include: {
+                select: {
                     questions: true,
                     responses: {
                         where: {
@@ -57,7 +64,18 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
                                 lte: endDate
                             }
                         },
-                        include: { answers: true },
+                        select: {
+                            id: true,
+                            createdAt: true,
+                            customerEmail: true,
+                            customerPhone: true,
+                            answers: {
+                                select: {
+                                    questionId: true,
+                                    value: true
+                                }
+                            }
+                        },
                         orderBy: { createdAt: 'asc' }
                     }
                 }
@@ -71,7 +89,7 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
         } else {
             const survey = await prisma.survey.findUnique({
                 where: { id: surveyId, userId },
-                include: {
+                select: {
                     questions: true,
                     responses: {
                         where: {
@@ -80,7 +98,18 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
                                 lte: endDate
                             }
                         },
-                        include: { answers: true },
+                        select: {
+                            id: true,
+                            createdAt: true,
+                            customerEmail: true,
+                            customerPhone: true,
+                            answers: {
+                                select: {
+                                    questionId: true,
+                                    value: true
+                                }
+                            }
+                        },
                         orderBy: { createdAt: 'asc' }
                     }
                 }
@@ -184,10 +213,10 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
         let generatedStrategies: Strategy[] = []
 
         // Call AI if we have ANY context (Metrics OR Text) AND skipAI is false
-        // Using GPT-4o for stability as requested
-        if (!skipAI && process.env.OPENAI_API_KEY && fullContext.length > 10) {
+        // Using Geminii 1.5 Flash
+        if (!skipAI && process.env.GEMINI_API_KEY && fullContext.length > 10) {
             try {
-                // console.log("[Analytics] Calling OpenAI with Hybrid Context...")
+                // console.log("[Analytics] Calling Gemini with Hybrid Context...")
                 generatedStrategies = await generateStrategiesWithAI(industry, fullContext)
             } catch (aiError) {
                 console.error("[Analytics] AI Failed.", aiError)
@@ -231,11 +260,68 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
             { name: 'Negativo', value: Math.round((negative / (scores.length || 1)) * 100), color: 'from-rose-500 to-red-600', bg: 'bg-rose-500/20', glow: 'shadow-[0_0_15px_rgba(244,63,94,0.5)]' },
         ]
 
+        // 6. Staff Leaderboard Calculation
+        const staffMap = new Map<string, { count: number; totalRating: number }>()
+
+        relevantResponses.forEach(r => {
+            let staffName = ''
+            let rating = 0
+
+            r.answers.forEach((a: any) => {
+                const q = allQuestions.find((qu: any) => qu.id === a.questionId)
+                if (q) {
+                    // Check for Rating
+                    if (q.type === 'RATING' || q.type === 'EMOJI' || q.type === 'NPS') {
+                        const val = parseFloat(a.value)
+                        if (!isNaN(val)) rating = val
+                    }
+                    // Check for Staff Name (Text answer with keywords)
+                    const text = q.text.toLowerCase()
+                    const isStaffQuestion = (q.type === 'TEXT' || q.type === 'SHORT_TEXT') &&
+                        (text.match(/qui[eé]n te atendi[oó]|nombre.*(mesero|personal|staff)|atendido por/i))
+
+                    if (isStaffQuestion && a.value && a.value.length < 30) { // Limit length to avoid long comments being treated as names
+                        staffName = a.value.trim()
+                    }
+                }
+            })
+
+            // If we found both a staff name and a rating in this response
+            if (staffName && rating > 0) {
+                // Normalize name (Capitalize first letter)
+                const normalizedName = staffName.charAt(0).toUpperCase() + staffName.slice(1).toLowerCase()
+
+                const current = staffMap.get(normalizedName) || { count: 0, totalRating: 0 }
+                staffMap.set(normalizedName, {
+                    count: current.count + 1,
+                    totalRating: current.totalRating + rating
+                })
+            }
+        })
+
+        // Convert Map to Array and Sort
+        const staffRanking = Array.from(staffMap.entries()).map(([name, stats]) => ({
+            name,
+            count: stats.count,
+            average: (stats.totalRating / stats.count).toFixed(1)
+        }))
+            .sort((a, b) => parseFloat(b.average) - parseFloat(a.average)) // Sort by rating first
+            .sort((a, b) => b.count - a.count)  // Then by popularity (optional, but rating is usually key)
+            // Actually showing top rating is better, but maybe weigh by count? 
+            // Let's sort by Average Rating (desc), then Count (desc)
+            .sort((a, b) => {
+                const diff = parseFloat(b.average) - parseFloat(a.average)
+                if (Math.abs(diff) < 0.1) return b.count - a.count
+                return diff
+            })
+            .slice(0, 5)
+
         return {
             metrics: { totalFeedback, avgRating: Number(avgRating.toFixed(1)), npsScore, activeUsers: uniqueUsers },
             chartData,
             sentimentData,
-            generatedStrategies
+            generatedStrategies,
+            staffRanking
         }
 
     } catch (error) {
@@ -277,18 +363,17 @@ async function generateStrategiesWithAI(industry: string, feedbackContext: strin
           }
         ]
     `
-
-    const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-            { role: "system", content: "Eres un experto en optimización operativa. Genera JSON." },
-            { role: "user", content: prompt }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.5 // Lower temperature for more precise/standardized answers
+    // using gemini-flash-latest
+    const model = getGeminiModel('gemini-flash-latest', {
+        systemInstruction: "Eres un experto en optimización operativa. Genera JSON.",
+        generationConfig: { responseMimeType: "application/json" }
     })
 
-    const content = response.choices[0].message.content
+    const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+    })
+
+    const content = result.response.text()
     if (!content) return []
 
     // Parse JSON safely
@@ -422,7 +507,7 @@ export async function getPublicSurveyAnalytics(surveyId: string, token: string, 
 
         const survey = await prisma.survey.findUnique({
             where: { id: surveyId },
-            include: {
+            select: {
                 questions: true,
                 responses: {
                     where: {
@@ -431,7 +516,18 @@ export async function getPublicSurveyAnalytics(surveyId: string, token: string, 
                             lte: endDate
                         }
                     },
-                    include: { answers: true },
+                    select: {
+                        id: true,
+                        createdAt: true,
+                        customerEmail: true,
+                        customerPhone: true,
+                        answers: {
+                            select: {
+                                questionId: true,
+                                value: true
+                            }
+                        }
+                    },
                     orderBy: { createdAt: 'asc' }
                 }
             }
@@ -513,11 +609,65 @@ export async function getPublicSurveyAnalytics(surveyId: string, token: string, 
             { name: 'Negativo', value: Math.round((negative / (scores.length || 1)) * 100), color: 'from-rose-500 to-red-600', bg: 'bg-rose-500/20', glow: 'shadow-[0_0_15px_rgba(244,63,94,0.5)]' },
         ]
 
+        // 6. Staff Leaderboard Calculation (Public)
+        const staffMap = new Map<string, { count: number; totalRating: number }>()
+
+        relevantResponses.forEach(r => {
+            let staffName = ''
+            let rating = 0
+
+            r.answers.forEach((a: any) => {
+                const q = allQuestions.find((qu: any) => qu.id === a.questionId)
+                if (q) {
+                    // Check for Rating
+                    if (q.type === 'RATING' || q.type === 'EMOJI' || q.type === 'NPS') {
+                        const val = parseFloat(a.value)
+                        if (!isNaN(val)) rating = val
+                    }
+                    // Check for Staff Name (Text answer with keywords)
+                    const text = q.text.toLowerCase()
+                    const isStaffQuestion = (q.type === 'TEXT' || q.type === 'SHORT_TEXT') &&
+                        (text.match(/qui[eé]n te atendi[oó]|nombre.*(mesero|personal|staff)|atendido por/i))
+
+                    if (isStaffQuestion && a.value && a.value.length < 30) {
+                        staffName = a.value.trim()
+                    }
+                }
+            })
+
+            // If we found both a staff name and a rating in this response
+            if (staffName && rating > 0) {
+                // Normalize name (Capitalize first letter)
+                const normalizedName = staffName.charAt(0).toUpperCase() + staffName.slice(1).toLowerCase()
+
+                const current = staffMap.get(normalizedName) || { count: 0, totalRating: 0 }
+                staffMap.set(normalizedName, {
+                    count: current.count + 1,
+                    totalRating: current.totalRating + rating
+                })
+            }
+        })
+
+        const staffRanking = Array.from(staffMap.entries()).map(([name, stats]) => ({
+            name,
+            count: stats.count,
+            average: (stats.totalRating / stats.count).toFixed(1)
+        }))
+            .sort((a, b) => parseFloat(b.average) - parseFloat(a.average))
+            .sort((a, b) => b.count - a.count)
+            .sort((a, b) => {
+                const diff = parseFloat(b.average) - parseFloat(a.average)
+                if (Math.abs(diff) < 0.1) return b.count - a.count
+                return diff
+            })
+            .slice(0, 5)
+
         return {
             metrics: { totalFeedback, avgRating: Number(avgRating.toFixed(1)), npsScore, activeUsers: uniqueUsers },
             chartData,
             sentimentData,
-            generatedStrategies
+            generatedStrategies,
+            staffRanking
         }
 
     } catch (error) {
@@ -560,6 +710,7 @@ function getEmptyAnalytics(): AnalyticsData {
             { name: 'Neutral', value: 0, color: 'from-amber-400 to-orange-500', bg: 'bg-amber-500/20', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.5)]' },
             { name: 'Negativo', value: 0, color: 'from-rose-500 to-red-600', bg: 'bg-rose-500/20', glow: 'shadow-[0_0_15px_rgba(244,63,94,0.5)]' },
         ],
-        generatedStrategies: []
+        generatedStrategies: [],
+        staffRanking: []
     }
 }

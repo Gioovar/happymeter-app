@@ -24,7 +24,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
     const [loadingId, setLoadingId] = useState<string | null>(null)
     const bellRef = useRef<HTMLDivElement>(null)
 
-    // Close on click outside
+    // Cerrar al hacer clic fuera
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
@@ -50,13 +50,13 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
 
     useEffect(() => {
         fetchNotifications()
-        // Poll every 60s
+        // Sondeo cada 60s
         const interval = setInterval(fetchNotifications, 60000)
         return () => clearInterval(interval)
     }, [])
 
     const markAsRead = async (id?: string) => {
-        // Optimistic update
+        // Actualización optimista
         if (id) {
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
             setUnreadCount(prev => Math.max(0, prev - 1))
@@ -94,7 +94,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
             router.push(`/dashboard/analytics?${query}`)
         }
 
-        // Reset loading after delay
+        // Restablecer carga después del retraso
         setTimeout(() => setLoadingId(null), 1000)
     }
 
@@ -139,7 +139,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                         transition={{ duration: 0.2 }}
                         className={`absolute mt-3 w-[360px] md:w-[400px] bg-[#13111C] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden ${align === 'right' ? 'right-0' : 'left-0'}`}
                     >
-                        {/* Header */}
+                        {/* Encabezado */}
                         <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#13111C]">
                             <h3 className="font-bold text-white text-sm">Notificaciones</h3>
                             <div className="flex gap-2">
@@ -169,7 +169,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                             </div>
                         </div>
 
-                        {/* List */}
+                        {/* Lista */}
                         <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
                             {notifications.length === 0 ? (
                                 <div className="p-8 text-center text-gray-500 text-sm">
@@ -208,7 +208,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                                                         {notif.message}
                                                     </p>
 
-                                                    {/* Optional text link, though whole card is clickable now */}
+                                                    {/* Enlace de texto opcional, aunque ahora toda la tarjeta es clicable */}
                                                     {notif.meta?.responseId && (
                                                         <span className="block w-fit text-[10px] text-violet-500 font-bold mt-2">
                                                             {loadingId === notif.id ? 'Cargando...' : 'Ver Respuesta'}
@@ -226,7 +226,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                             )}
                         </div>
 
-                        {/* Footer */}
+                        {/* Pie de página */}
                         {/* <div className="p-3 bg-white/5 border-t border-white/5 text-center">
                             <button className="text-xs text-gray-500 hover:text-white transition">Ver historial completo</button>
                         </div> */}

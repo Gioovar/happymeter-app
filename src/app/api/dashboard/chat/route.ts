@@ -1,13 +1,8 @@
 
 import { NextResponse } from 'next/server'
-import OpenAI from 'openai'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'dummy_key_for_build',
-})
-
+import { getGeminiModel } from '@/lib/gemini'
 
 export async function POST(req: Request) {
     try {
@@ -84,16 +79,26 @@ export async function POST(req: Request) {
             })
         }
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                { role: "system", content: SYSTEM_PROMPT },
-                ...messages
-            ],
-            temperature: 0.7,
+        // Dry run
+        if (!process.env.GEMINI_API_KEY) {
+            return NextResponse.json({ role: 'assistant', content: "Modo de prueba: Sin conexión a Gemini.", newTitle: undefined })
+        }
+
+        const model = getGeminiModel('gemini-1.5-flash', {
+            systemInstruction: SYSTEM_PROMPT
         })
 
-        const responseText = completion.choices[0].message.content || "Sin respuesta."
+        // Map messages to Gemini Format
+        const geminiHistory = messages.map((m: any) => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+        }))
+
+        const result = await model.generateContent({
+            contents: geminiHistory
+        })
+
+        const responseText = result.response.text() || "Sin respuesta."
 
         // 5. Save AI Response to DB
         let newTitle = undefined
@@ -112,15 +117,15 @@ export async function POST(req: Request) {
             if (thread && (thread.title === "Nuevo Chat" || thread.title === "Chat de Análisis")) {
                 try {
                     console.log("[AI RENAMING] Attempting to rename thread:", threadId)
-                    const titleCompletion = await openai.chat.completions.create({
-                        model: "gpt-4o", // Ensuring a valid model is used
-                        messages: [
-                            { role: "system", content: "Genera un título de 3 a 5 palabras que resuma este mensaje del usuario. NO uses comillas. Sé directo." },
-                            { role: "user", content: messages[messages.length - 1].content }
-                        ],
-                        max_tokens: 20
+                    const titleModel = getGeminiModel('gemini-1.5-flash', {
+                        systemInstruction: "Genera un título de 3 a 5 palabras que resuma este mensaje del usuario. NO uses comillas. Sé directo."
                     })
-                    const generatedTitle = titleCompletion.choices[0].message.content?.trim()
+
+                    const titleResult = await titleModel.generateContent({
+                        contents: [{ role: 'user', parts: [{ text: messages[messages.length - 1].content }] }]
+                    })
+
+                    const generatedTitle = titleResult.response.text()?.trim()
 
                     if (generatedTitle) {
                         console.log("[AI RENAMING] New title:", generatedTitle)

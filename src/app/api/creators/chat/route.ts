@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server'
-import OpenAI from 'openai'
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'dummy_key_for_build',
-})
+import { getGeminiModel } from '@/lib/gemini'
 
 const SYSTEM_PROMPT = "Eres el 'HappyMeter Coach', un experto en marketing viral y creación de contenido para SaaS.\n" +
     "Tu objetivo es ayudar a los creadores de contenido a promocionar 'HappyMeter' (una plataforma de encuestas de satisfacción) para ganar comisiones.\n\n" +
@@ -25,23 +21,28 @@ export async function POST(req: Request) {
     try {
         const { messages } = await req.json()
 
-        if (!process.env.OPENAI_API_KEY) {
+        if (!process.env.GEMINI_API_KEY) {
             return NextResponse.json({
                 role: 'assistant',
-                content: "⚠️ **Configuración requerida:**\n\nPara que pueda funcionar a la perfección, necesitas configurar tu `OPENAI_API_KEY` en el archivo `.env`.\n\nPor ahora, estoy en modo simulación."
+                content: "⚠️ **Configuración requerida:**\n\nPara que pueda funcionar a la perfección, necesitas configurar tu `GEMINI_API_KEY` en el archivo `.env`.\n\nPor ahora, estoy en modo simulación."
             })
         }
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                { role: "system", content: SYSTEM_PROMPT },
-                ...messages
-            ],
-            temperature: 0.7,
+        const model = getGeminiModel('gemini-1.5-flash', {
+            systemInstruction: SYSTEM_PROMPT
         })
 
-        const responseText = completion.choices[0].message.content
+        // Map messages to Gemini Format
+        const geminiHistory = messages.map((m: any) => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+        }))
+
+        const result = await model.generateContent({
+            contents: geminiHistory
+        })
+
+        const responseText = result.response.text()
 
         return NextResponse.json({ role: 'assistant', content: responseText })
 
