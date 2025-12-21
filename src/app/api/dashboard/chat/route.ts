@@ -109,7 +109,24 @@ export async function POST(req: Request) {
             contents: geminiHistory
         })
 
-        // ... existing code ...
+        const responseText = result.response.text()
+
+        // 5. Save Assistant Response (if threadId)
+        if (threadId) {
+            const lastUserMsg = messages[messages.length - 1]
+            // Async learning (fire and forget)
+            extractInsights(userId, threadId, lastUserMsg.content).catch(console.error)
+
+            await prisma.chatMessage.create({
+                data: {
+                    threadId,
+                    role: 'assistant',
+                    content: responseText
+                }
+            })
+        }
+
+        return NextResponse.json({ role: 'assistant', content: responseText })
 
     } catch (error) {
         console.error('[AI_CHAT_POST]', error)
