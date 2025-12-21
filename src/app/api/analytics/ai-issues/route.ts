@@ -5,7 +5,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'sk-placeholder',
+    apiKey: process.env.OPENAI_API_KEY || 'dummy_key_for_build',
 })
 
 export async function POST(req: Request) {

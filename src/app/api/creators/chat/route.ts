@@ -1,9 +1,8 @@
-
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'sk-placeholder',
+    apiKey: process.env.OPENAI_API_KEY || 'dummy_key_for_build',
 })
 
 const SYSTEM_PROMPT = "Eres el 'HappyMeter Coach', un experto en marketing viral y creación de contenido para SaaS.\n" +
