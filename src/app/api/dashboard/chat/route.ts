@@ -142,7 +142,9 @@ export async function POST(req: Request) {
 
         const responseText = result.response.text()
 
-        // 5. Save Assistant Response (if threadId)
+        let newTitle = undefined
+
+        // 5. Save Assistant Response and Generate Title
         if (threadId) {
             const lastUserMsg = messages[messages.length - 1]
             // Async learning (fire and forget)
@@ -155,9 +157,34 @@ export async function POST(req: Request) {
                     content: responseText
                 }
             })
+
+            // Generate Title if it's the first interaction (or title is default)
+            // We assume it's new if history is short (just user msg)
+            if (messages.length <= 2) {
+                // Generate title in background to not block response? 
+                // Actually, user wants to see it immediately likely. Let's await it or do it quickly.
+                // For better UX, we can await it since Gemini Flash is fast.
+                try {
+                    const titleModel = getGeminiModel('gemini-1.5-flash', {
+                        systemInstruction: `Genera un título muy corto, conciso y descriptivo (máximo 4 palabras) para un chat que empieza con este mensaje. Ejemplo: "Estrategia de Ventas", "Análisis de Quejas". NO uses comillas ni puntos finales.`
+                    })
+                    const titleResult = await titleModel.generateContent(lastUserMsg.content)
+                    const title = titleResult.response.text().trim()
+
+                    if (title) {
+                        await prisma.chatThread.update({
+                            where: { id: threadId },
+                            data: { title }
+                        })
+                        newTitle = title
+                    }
+                } catch (e) {
+                    console.error('[AI_CHAT_TITLE] Failed to generate title', e)
+                }
+            }
         }
 
-        return NextResponse.json({ role: 'assistant', content: responseText })
+        return NextResponse.json({ role: 'assistant', content: responseText, newTitle })
 
     } catch (error) {
         console.error('[AI_CHAT_POST]', error)
