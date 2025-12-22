@@ -7,6 +7,7 @@ import Footer from '@/components/landing/Footer'
 import Link from 'next/link'
 import HowItWorks from '@/components/landing/HowItWorks'
 import IntroSplash from '@/components/IntroSplash'
+import Navbar from '@/components/landing/Navbar'
 
 export default function LandingPage() {
   return (
@@ -14,27 +15,8 @@ export default function LandingPage() {
       <IntroSplash />
 
       {/* Navbar */}
-      <header className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link href="/" className="hover:opacity-90 transition-opacity">
-            <BrandLogo />
-          </Link>
-
-          <div className="flex items-center gap-6">
-            <Link href="/creators" className="text-sm font-medium text-gray-400 hover:text-white transition">
-              Para Creadores
-            </Link>
-            <Link href="/sign-in" className="text-sm font-medium text-white hover:text-violet-400 transition">
-              Entrar
-            </Link>
-            <Link href="/sign-up">
-              <button className="px-5 py-2.5 rounded-full bg-white text-black text-sm font-bold hover:bg-gray-200 transition">
-                Crear Cuenta
-              </button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Navbar */}
+      <Navbar />
 
       <main>
         <Hero />
