@@ -21,7 +21,7 @@ export default function LandingPage() {
           </Link>
 
           <div className="flex items-center gap-6">
-            <Link href="/creators" className="hidden md:block text-sm font-medium text-gray-400 hover:text-white transition">
+            <Link href="/creators" className="text-sm font-medium text-gray-400 hover:text-white transition">
               Para Creadores
             </Link>
             <Link href="/sign-in" className="text-sm font-medium text-white hover:text-violet-400 transition">
