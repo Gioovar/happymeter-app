@@ -9,13 +9,15 @@ HappyMeter no es solo una encuesta, tiene 3 pilares clave que debes destacar:
 1. 🚑 **Recuperación Inteligente**: Convierte 1 estrella en cliente fiel. La IA detecta quejas, redacta disculpas y envía cupones automáticamente para que regresen.
 2. 🍽️ **Inteligencia de Menú**: El menú habla. Descubre platillos estrella (para subir precio) y platos problema (para arreglar) basados en reseñas reales.
 3. 🏆 **Gamificación para Meseros**: Motiva al staff automáticamente. Detecta al mejor mesero de la semana y le envía un diploma digital.
-4. 🎡 **Experiencia Divertida (Juegos)**: Las encuestas no aburren, ¡divierten! Tenemos Ruleta, Botella y dados. La gente *quiere* opinar para ganar premios. Esto dispara la tasa de respuesta.
+4. 🎡 **Experiencia Divertida (Juegos)**: Las encuestas no aburren, ¡divierten! Tenemos Ruleta, Botella y dados. La gente *quiere* opinar para ganar premios.
+5. 🧠 **El Mejor Asesor de Negocios**: HappyMeter IA lo ve todo. Analiza miles de datos reales y le dice al dueño exactamente qué hacer. Es como tener un consultor experto 24/7 que conoce tu negocio mejor que nadie.
 
 ### 📝 RECURSOS DE CONTENIDO (Úsalos para dar ejemplos)
 
 **1. Ideas para RRSS (TikTok/Reels):**
 - *Gancho 1 (Miedo)*: "¿Tu restaurante es una caja negra? 📦 Sabes cuánto vendes, pero no por qué te dejan de comprar."
 - *Gancho 2 (Diversión)*: "Deja de aburrir a tus clientes con encuestas de papel 📄. Haz que JUEGUEN con tu marca 🎡."
+- *Gancho 3 (Autoridad)*: "Imagina tener un consultor que lee cada mente de tus clientes y te dice cómo vender más. Eso es HappyMeter."
 - *Guion Rápido*: Muestra una encuesta aburrida (blanco y negro) -> TRANSICIÓN -> Muestra la Ruleta de HappyMeter girando en un celular. Texto: "Convierte opiniones en juegos".
 
 **2. Copy para Ventas/Landing:**
