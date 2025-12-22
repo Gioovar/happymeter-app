@@ -199,24 +199,34 @@ export default function EditSurveyPage({ params }: { params: { surveyId: string 
 
             {/* Tab Navigation */}
             <div className="max-w-3xl mx-auto px-6 mt-8 mb-4">
-                <div className="flex gap-2 p-1 bg-white/5 rounded-xl inline-flex">
+                <div className="flex flex-wrap gap-3 items-center">
                     <button
                         onClick={() => setActiveTab('edit')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'edit' ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 ${activeTab === 'edit' ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
                     >
                         Editor
                     </button>
+
                     <button
                         onClick={() => setActiveTab('recovery')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'recovery' ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 relative overflow-hidden group ${activeTab === 'recovery' ? 'ring-2 ring-white/20' : 'hover:scale-[1.02]'}`}
                     >
-                        Recuperación Inteligente 🚑
+                        <div className={`absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 transition-opacity ${activeTab === 'recovery' ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-amber-400 opacity-0 group-hover:opacity-20 animate-pulse"></div>
+                        <span className="relative z-10 text-white flex items-center gap-2">
+                            Recuperación Inteligente <span className="animate-bounce">🚑</span>
+                        </span>
                     </button>
+
                     <button
                         onClick={() => setActiveTab('alerts')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'alerts' ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 relative overflow-hidden group ${activeTab === 'alerts' ? 'ring-2 ring-white/20' : 'hover:scale-[1.02]'}`}
                     >
-                        Alertas de Crisis 🚨
+                        <div className={`absolute inset-0 bg-gradient-to-r from-red-600 to-rose-600 transition-opacity ${activeTab === 'alerts' ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-rose-500 opacity-0 group-hover:opacity-20 animate-pulse"></div>
+                        <span className="relative z-10 text-white flex items-center gap-2">
+                            Alertas de Crisis <span className="animate-pulse">🚨</span>
+                        </span>
                     </button>
                 </div>
             </div>
