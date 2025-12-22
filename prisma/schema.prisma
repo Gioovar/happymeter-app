@@ -55,8 +55,7 @@ model Response {
   answers       Answer[]
   survey        Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
 
-  @@index([surveyId])
-  @@index([createdAt])
+  @@index([surveyId, createdAt])
   @@index([customerPhone])
 }
 

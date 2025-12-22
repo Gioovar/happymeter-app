@@ -70,7 +70,8 @@ export async function getStaffChats() {
                 include: {
                     user: {
                         select: {
-                            businessName: true
+                            businessName: true,
+                            id: true // Include userId
                         }
                     }
                 }
@@ -102,9 +103,14 @@ export async function getStaffChatDetails(chatId: string) {
             messages: { orderBy: { createdAt: 'asc' } },
             creator: {
                 include: {
-                    user: { select: { businessName: true } }
+                    user: {
+                        select: {
+                            businessName: true,
+                            id: true // Include userId
+                        }
+                    }
                 }
-            }
+            },
         }
     })
 

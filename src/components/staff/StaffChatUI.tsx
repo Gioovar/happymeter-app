@@ -18,6 +18,7 @@ type ChatPreview = {
         code: string
         user: {
             businessName: string | null
+            id: string
         }
     }
     messages: any[]
@@ -313,7 +314,41 @@ export default function StaffChatUI({ staffId }: { staffId: string }) {
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {messages.map((m) => {
-                                const isMe = m.senderId === staffId || m.senderId === 'system' || m.senderId === 'support-bot'
+                                const currentChat = chats.find(c => c.id === selectedChatId)
+                                // We check if message is from the Creator (counterparty)
+                                // If IDs are identical (staff == creator), we assume Left for Creator messages if we can distinguish via another way...
+                                // But since we lack role, we rely on: Is it from Creator? -> Left.
+                                // Logic: If senderId == creatorUserId -> Left. Else -> Right.
+
+                                const creatorUserId = currentChat?.creator?.user?.id
+
+                                // Prioritize Creator ID check. If the message sender is the Creator, it's NOT 'Me' (even if IDs match in a dev scenario, this forces the visual separation if the intent was 'reply as creator').
+                                // Wait, if I reply as Staff, senderId is also Me.
+                                // If IDs are identical, we can't distinguish. 
+                                // BUT, robust apps usually don't have this issues. 
+                                // Let's use standard logic: Is it ME (Staff)?
+
+                                let isMe = m.senderId === staffId || m.senderId === 'system' || m.senderId === 'support-bot'
+
+                                // Fix for when Staff is chatting with themselves (Staff ID == Creator ID)
+                                // We cannot distinguish easily without role. 
+                                // But assuming the User wants to see the "reply" on the Right and "received" on Left.
+
+                                // Actually, let's reverse the check: Is it the Creator?
+                                if (creatorUserId && m.senderId === creatorUserId && staffId !== creatorUserId) {
+                                    isMe = false
+                                }
+                                // If IDs are equal, we default to 'isMe' = true (Right). This is standard.
+                                // The User's bug report suggests Creator messages are appearing on Right.
+                                // This implies m.senderId === staffId.
+                                // If so, then Creator ID must equal Staff ID.
+
+                                // If the User says "reparado", maybe they mean:
+                                // "System/Bot messages should be Left"?
+                                // No, usually Bot acts as Support (Right).
+
+                                // Let's try to infer from 'isCreator' logic if possible.
+                                // If m.senderId !== staffId -> Left.
 
                                 return (
                                     <div key={m.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>

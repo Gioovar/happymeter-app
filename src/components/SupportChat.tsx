@@ -124,9 +124,12 @@ export default function SupportChat() {
                 {isLoading && (
                     <div className="flex justify-start">
                         <div className="bg-white/5 p-3 rounded-2xl rounded-bl-none flex items-center gap-2">
-                            <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-75" />
-                            <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150" />
-                            <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-200" />
+                            {/* Mini branded loader */}
+                            <img
+                                src="/assets/icons/bot-avatar-purple.png"
+                                className="w-6 h-6 animate-pulse drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+                                alt="..."
+                            />
                         </div>
                     </div>
                 )}

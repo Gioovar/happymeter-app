@@ -121,8 +121,8 @@ export default function CreatorChat({ userId }: { userId?: string }) {
                     {/* Header */}
                     <div className="p-4 bg-gradient-to-r from-violet-600 to-indigo-600 flex items-center justify-between shadow-lg z-10 text-white">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
-                                <Bot className="w-5 h-5" />
+                            <div className="bg-white/20 rounded-full backdrop-blur-sm overflow-hidden w-10 h-10 flex items-center justify-center">
+                                <img src="/assets/icons/bot-avatar.png" alt="Bot" className="w-full h-full object-cover" />
                             </div>
                             <div>
                                 <h3 className="font-bold text-base">Soporte Renovado</h3>
@@ -243,7 +243,9 @@ export default function CreatorChat({ userId }: { userId?: string }) {
                 className={`group flex items-center justify-center w-14 h-14 rounded-full shadow-lg shadow-violet-500/20 transition-all duration-300 ${isOpen ? 'bg-[#222] text-white rotate-90' : 'bg-violet-600 text-white hover:scale-110'
                     }`}
             >
-                {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+                {isOpen ? <X className="w-6 h-6" /> : (
+                    <img src="/assets/icons/bot-avatar.png" alt="Chat" className="w-8 h-8 object-contain drop-shadow-md" />
+                )}
                 {!isOpen && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#0a0a0a]" />
                 )}

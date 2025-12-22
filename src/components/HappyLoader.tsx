@@ -34,11 +34,10 @@ export default function HappyLoader({ text = "Procesando Datos...", className = 
 
                 {/* Logo */}
                 <div className={`relative ${imageSizes[size]} animate-pulse`}>
-                    <Image
-                        src="/logo-loading.png"
+                    <img
+                        src="/assets/icons/bot-avatar-purple.png"
                         alt="Loading..."
-                        fill
-                        className="object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+                        className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
                     />
                 </div>
             </div>

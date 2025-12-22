@@ -67,7 +67,14 @@ export default function AdminChatWindow({ creatorId, currentUserId, initialMessa
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.length === 0 && (
-                    <p className="text-center text-gray-500 text-sm py-10">No hay mensajes aún.</p>
+                    <div className="flex flex-col items-center justify-center py-10 opacity-50 space-y-2">
+                        <img
+                            src="/assets/icons/bot-avatar-purple.png"
+                            className="w-10 h-10 grayscale opacity-50"
+                            alt="Empty"
+                        />
+                        <p className="text-sm text-gray-500">Inicia la conversación...</p>
+                    </div>
                 )}
                 {messages.map((msg) => {
                     const isMe = msg.senderId === currentUserId

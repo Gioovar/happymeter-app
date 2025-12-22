@@ -38,15 +38,13 @@ interface AnalyticsData {
     staffRanking: StaffRanking[]
 }
 
-export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: Date; to: Date }, industry: string = 'restaurant', skipAI: boolean = false): Promise<AnalyticsData> {
-    try {
-        const { userId } = await auth()
-        if (!userId) throw new Error('Unauthorized')
+import { unstable_cache } from 'next/cache'
 
-        // 2. Determine Data Window (Moved up for DB Optimization)
-        const toDate = dateRange?.to || new Date()
-        const endDate = endOfDay(toDate)
-        const startDate = dateRange?.from || subDays(startOfDay(toDate), 30)
+// --- CACHED DATA FETCHING ---
+const getCachedAnalytics = unstable_cache(
+    async (userId: string, surveyId: string, startDateStr: string, endDateStr: string, skipAI: boolean, industry: string) => {
+        const startDate = new Date(startDateStr)
+        const endDate = new Date(endDateStr)
 
         // 1. Fetch Data (Optimized with Date Filter)
         let allResponses: any[] = []
@@ -115,7 +113,7 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
                 }
             })
 
-            if (!survey) return getEmptyAnalytics()
+            if (!survey) return null
             allResponses = survey.responses
             allQuestions = survey.questions
         }
@@ -240,11 +238,13 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
 
         // 5. Chart & Sentiment (Standard)
         const chartMap = new Map<string, number>()
+        // Initialize chart map with zero values for all dates in range
         let iterDate = new Date(startDate)
         while (iterDate <= endDate) {
             chartMap.set(format(iterDate, 'dd MMM', { locale: es }), 0)
             iterDate.setDate(iterDate.getDate() + 1)
         }
+
         relevantResponses.forEach(r => {
             const key = format(new Date(r.createdAt), 'dd MMM', { locale: es })
             if (chartMap.has(key)) chartMap.set(key, (chartMap.get(key) || 0) + 1)
@@ -323,6 +323,34 @@ export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: D
             generatedStrategies,
             staffRanking
         }
+    },
+    ['survey-analytics'], // Cache key (partial, additional args added automatically)
+    {
+        revalidate: 60, // Cache for 60 seconds
+        tags: ['analytics']
+    }
+)
+
+export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: Date; to: Date }, industry: string = 'restaurant', skipAI: boolean = false): Promise<AnalyticsData> {
+    try {
+        const { userId } = await auth()
+        if (!userId) throw new Error('Unauthorized')
+
+        // 2. Determine Data Window (Moved up for DB Optimization)
+        const toDate = dateRange?.to || new Date()
+        const endDate = endOfDay(toDate)
+        const startDate = dateRange?.from || subDays(startOfDay(toDate), 30)
+
+        const result = await getCachedAnalytics(
+            userId,
+            surveyId,
+            startDate.toISOString(),
+            endDate.toISOString(),
+            skipAI,
+            industry
+        )
+
+        return result || getEmptyAnalytics()
 
     } catch (error) {
         console.error('ANALYTICS ACTION ERROR:', error)
