@@ -233,7 +233,13 @@ export default function CreateSurveyPage() {
                             {isAnonymousMode ? (
                                 <Shield className="w-5 h-5 text-slate-400" />
                             ) : (
-                                <Sparkles className="w-5 h-5 text-violet-500" />
+                                <Image
+                                    src="/happymeter_logo.png"
+                                    alt="HappyMeter Logo"
+                                    width={24}
+                                    height={24}
+                                    className="w-6 h-6 object-contain"
+                                />
                             )}
                             <span className="text-lg font-bold">
                                 {isAnonymousMode ? 'Nuevo Buzón Staff' : 'Nueva Encuesta'}
