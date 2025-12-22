@@ -51,7 +51,7 @@ export async function updateSettings(formData: FormData) {
         })
 
         revalidatePath('/dashboard/settings')
-        revalidatePath('/dashboard')
+        // revalidatePath('/dashboard') // Validation optimization: Avoid refreshing unrelated dashboard components
 
         return { success: true }
     } catch (error: any) {
