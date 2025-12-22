@@ -128,7 +128,7 @@ export async function POST(req: Request) {
 
         const body = await req.json()
         // console.log('[SURVEYS_POST] Body:', JSON.stringify(body, null, 2)) // Commented out to avoid huge logs
-        const { title, description, questions, bannerUrl, googleMapsUrl, hexColor, socialConfig } = body
+        const { title, description, questions, bannerUrl, googleMapsUrl, hexColor, socialConfig, recoveryConfig, alertConfig } = body
 
         if (!title) {
             return new NextResponse("Title is required", { status: 400 })
@@ -177,6 +177,8 @@ export async function POST(req: Request) {
                 googleMapsUrl,
                 hexColor,
                 socialConfig,
+                recoveryConfig,
+                alertConfig,
                 questions: {
                     create: questions.map((q: any, index: number) => ({
                         text: q.text,

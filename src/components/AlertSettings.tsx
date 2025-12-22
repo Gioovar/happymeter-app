@@ -12,21 +12,38 @@ interface AlertConfig {
     threshold: number
 }
 
-export default function AlertSettings({ surveyId }: { surveyId: string }) {
-    const [config, setConfig] = useState<AlertConfig>({
+export default function AlertSettings({
+    surveyId,
+    initialConfig,
+    onChange
+}: {
+    surveyId?: string
+    initialConfig?: AlertConfig
+    onChange?: (config: AlertConfig) => void
+}) {
+    const [config, setConfig] = useState<AlertConfig>(initialConfig || {
         enabled: false,
         emails: [],
         phones: [],
         threshold: 3
     })
-    const [isLoading, setIsLoading] = useState(true)
+    const [isLoading, setIsLoading] = useState(!!surveyId && !initialConfig)
     const [isSaving, setIsSaving] = useState(false)
     const [newEmail, setNewEmail] = useState('')
     const [newPhone, setNewPhone] = useState('')
 
     useEffect(() => {
-        fetchConfig()
+        if (surveyId && !initialConfig) {
+            fetchConfig()
+        }
     }, [surveyId])
+
+    // Propagate changes if onChange is provided
+    useEffect(() => {
+        if (onChange) {
+            onChange(config)
+        }
+    }, [config])
 
     const fetchConfig = async () => {
         try {
@@ -48,6 +65,13 @@ export default function AlertSettings({ surveyId }: { surveyId: string }) {
     }
 
     const handleSave = async () => {
+        if (onChange) {
+            // In controlled mode, maybe just notify? Or do nothing as effect handles it.
+            // But if user expects a "Saved" feedback even locally:
+            toast.success('Configuración lista para guardarse con la encuesta')
+            return
+        }
+
         setIsSaving(true)
         try {
             const res = await fetch(`/api/surveys/${surveyId}/alerts`, {
@@ -74,8 +98,9 @@ export default function AlertSettings({ surveyId }: { surveyId: string }) {
     }
 
     const addPhone = () => {
-        if (newPhone.length < 10) return toast.error('Teléfono inválido (mínimo 10 dígitos)')
-        setConfig(prev => ({ ...prev, phones: [...prev.phones, newPhone] }))
+        const cleaned = newPhone.replace(/\D/g, '') // Basic clean
+        if (cleaned.length < 10) return toast.error('Teléfono inválido (mínimo 10 dígitos)')
+        setConfig(prev => ({ ...prev, phones: [...prev.phones, newPhone] })) // Keep original formatting or cleaned? preserving input usually better for display
         setNewPhone('')
     }
 
@@ -88,6 +113,10 @@ export default function AlertSettings({ surveyId }: { surveyId: string }) {
     }
 
     const handleTest = async (phone: string) => {
+        if (!surveyId) {
+            toast.error("Guarda la encuesta primero para probar las alertas.")
+            return
+        }
         const toastId = toast.loading("Enviando prueba...")
         try {
             const res = await fetch(`/api/surveys/${surveyId}/alerts/test`, {
@@ -218,7 +247,7 @@ export default function AlertSettings({ surveyId }: { surveyId: string }) {
                     className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg font-bold transition disabled:opacity-50"
                 >
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Guardar Configuración
+                    {onChange ? 'Confirmar Alertas' : 'Guardar Configuración'}
                 </button>
             </div>
         </div>
