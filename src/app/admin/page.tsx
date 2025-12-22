@@ -11,18 +11,23 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 async function getAdminStats() {
-    const [
-        totalUsers,
-        totalSurveys,
-        totalResponses,
-        // TODO: Get subscription stats
-    ] = await Promise.all([
-        prisma.userSettings.count(),
-        prisma.survey.count(),
-        prisma.response.count(),
-    ])
+    try {
+        const [
+            totalUsers,
+            totalSurveys,
+            totalResponses,
+        ] = await Promise.all([
+            prisma.userSettings.count(),
+            prisma.survey.count(),
+            prisma.response.count(),
+        ])
 
-    return { totalUsers, totalSurveys, totalResponses }
+        return { totalUsers, totalSurveys, totalResponses }
+    } catch (error) {
+        console.error("Error fetching admin stats:", error)
+        // Return default values to prevent page crash
+        return { totalUsers: 0, totalSurveys: 0, totalResponses: 0 }
+    }
 }
 
 export default async function AdminDashboardPage() {
