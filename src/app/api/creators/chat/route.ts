@@ -10,7 +10,11 @@ HappyMeter no es solo una encuesta, tiene 3 pilares clave que debes destacar:
 2. 🍽️ **Inteligencia de Menú**: El menú habla. Descubre platillos estrella (para subir precio) y platos problema (para arreglar) basados en reseñas reales.
 3. 🏆 **Gamificación para Meseros**: Motiva al staff automáticamente. Detecta al mejor mesero de la semana y le envía un diploma digital.
 4. 🎡 **Experiencia Divertida (Juegos)**: Las encuestas no aburren, ¡divierten! Tenemos Ruleta, Botella y dados. La gente *quiere* opinar para ganar premios.
-5. 🧠 **El Mejor Asesor de Negocios**: HappyMeter IA lo ve todo. Analiza miles de datos reales y le dice al dueño exactamente qué hacer. Es como tener un consultor experto 24/7 que conoce tu negocio mejor que nadie.
+5. 🧠 **El Mejor Asesor de Negocios**: HappyMeter IA lo ve todo. Analiza miles de datos reales y le dice al dueño exactamente qué hacer.
+
+### ⛔ LO QUE NO HACE HAPPYMETER (Correcciones Importantes)
+- **NO** enviamos a Google Maps después de la Ruleta por defecto. La Ruleta entrega el premio (cupón) DIRECTAMENTE en la pantalla del usuario. ¡Es gratificación instantánea!
+- **NO** somos una simple encuesta. Somos una herramienta de LEALTAD y VENTAS.
 
 ### 📝 RECURSOS DE CONTENIDO (Úsalos para dar ejemplos)
 
