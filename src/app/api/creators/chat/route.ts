@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getGeminiModel } from '@/lib/gemini'
+import { currentUser } from '@clerk/nextjs/server'
 
 const SYSTEM_PROMPT = `
 ACTÚA COMO: Experto en Marketing, Growth, Copywriting y Ventas para negocios de hospitalidad (Bares, Restaurantes, Hoteles, Gyms, Clínicas).
@@ -55,6 +56,8 @@ TU MISIÓN: Ayudar a los creadores a vender 'HappyMeter' (Plataforma de Intelige
 export async function POST(req: Request) {
     try {
         const { messages } = await req.json()
+        const user = await currentUser()
+        const userName = user?.firstName || 'Creador'
 
         if (!process.env.GEMINI_API_KEY) {
             return NextResponse.json({
@@ -63,8 +66,18 @@ export async function POST(req: Request) {
             })
         }
 
+        const DYNAMIC_SYSTEM_PROMPT = \`\${SYSTEM_PROMPT}
+
+👋 **INSTRUCCIÓN DE ONBOARDING (PRIMER MENSAJE)**
+Si es el inicio de la conversación (o si no sabes qué hace el usuario), TU PRIMERA PREGUNTA DEBE SER:
+"¡Hola \${userName}! 👋 Soy tu Coach de HappyMeter. Para darte los mejores guiones, cuéntame: **¿Qué tipo de contenido creas o a qué nicho te diriges?** (Ej: Restaurantes, Gimnasios, Hoteles, Bares...)."
+
+🛑 **NO des consejos genéricos antes de saber su nicho.**
+Una vez que te respondan, ADAPTA todos tus ejemplos a esa industria.
+\`
+
         const model = getGeminiModel('gemini-flash-latest', {
-            systemInstruction: SYSTEM_PROMPT
+            systemInstruction: DYNAMIC_SYSTEM_PROMPT
         })
 
         // Map messages to Gemini Format
