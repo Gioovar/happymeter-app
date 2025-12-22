@@ -187,7 +187,13 @@ export default function EditSurveyPage({ params }: { params: { surveyId: string 
                             </button>
                         </Link>
                         <div className="flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-violet-500" />
+                            <Image
+                                src="/assets/branding/logo-white.png"
+                                alt="Icon"
+                                width={20}
+                                height={20}
+                                className="w-5 h-5 object-contain"
+                            />
                             <span className="text-lg font-bold">Editar Encuesta</span>
                         </div>
                     </div>
@@ -578,7 +584,13 @@ export default function EditSurveyPage({ params }: { params: { surveyId: string 
                                         </div>
                                     </div>
                                 )}
-                                <Sparkles className={`w-5 h-5 ${isSubmitting ? 'opacity-0' : ''}`} />
+                                <Image
+                                    src="/assets/branding/logo-white.png"
+                                    alt="Icon"
+                                    width={20}
+                                    height={20}
+                                    className={`w-5 h-5 object-contain ${isSubmitting ? 'opacity-0' : ''}`}
+                                />
                                 <span className={isSubmitting ? 'opacity-0' : ''}>Guardar Cambios</span>
                             </button>
                         </div >

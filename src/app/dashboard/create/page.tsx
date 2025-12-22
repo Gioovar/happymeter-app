@@ -637,7 +637,13 @@ export default function CreateSurveyPage() {
                                         </div>
                                     </div>
                                 )}
-                                <Sparkles className={`w-5 h-5 ${isSubmitting ? 'opacity-0' : ''}`} />
+                                <Image
+                                    src="/assets/branding/logo-white.png"
+                                    alt="Icon"
+                                    width={20}
+                                    height={20}
+                                    className={`w-5 h-5 object-contain ${isSubmitting ? 'opacity-0' : ''}`}
+                                />
                                 <span className={isSubmitting ? 'opacity-0' : ''}>Publicar Encuesta</span>
                             </button>
                         </div >
