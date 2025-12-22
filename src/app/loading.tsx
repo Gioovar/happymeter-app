@@ -9,29 +9,34 @@ export default function Loading() {
             <div className="relative flex flex-col items-center">
 
                 {/* Logo Animation */}
-                <div className="relative w-24 h-24 mb-6 animate-pulse">
-                    {/* Glow Effect */}
-                    <div className="absolute inset-0 bg-violet-600/30 blur-3xl rounded-full" />
+                <div className="relative w-32 h-32 mb-8 flex items-center justify-center">
+                    {/* Rotating Gradient Ring */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-violet-600 animate-spin-slow p-[2px]">
+                        <div className="w-full h-full bg-[#0a0a0a] rounded-full" />
+                    </div>
 
-                    {/* Melting Smiley Asset - Using basic img for immediate render manually if needed, but Image is standard */}
+                    {/* Inner Glow */}
+                    <div className="absolute inset-0 bg-green-500/10 blur-xl rounded-full" />
+
+                    {/* Logo Asset */}
                     <Image
-                        src="/assets/icons/logo-outline-purple.png"
+                        src="/assets/branding/logo-primary.png"
                         alt="HappyMeter Loading"
-                        width={96}
-                        height={96}
-                        className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_15px_rgba(139,92,246,0.5)]"
+                        width={80}
+                        height={80}
+                        className="relative z-10 w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(34,197,94,0.3)] animate-pulse"
                         priority
                     />
                 </div>
 
                 {/* Text Logo */}
                 <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-                    Happy<span className="text-violet-500">Meter</span>
+                    Happy<span className="text-green-500">Meter</span>
                 </h1>
 
                 {/* Loading Bar */}
                 <div className="mt-8 w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-violet-600 to-fuchsia-600 animate-loading-bar rounded-full" />
+                    <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 animate-loading-bar rounded-full" />
                 </div>
             </div>
 
@@ -43,6 +48,9 @@ export default function Loading() {
                 }
                 .animate-loading-bar {
                     animation: loading-bar 1.5s infinite ease-in-out;
+                }
+                .animate-spin-slow {
+                    animation: spin 3s linear infinite;
                 }
             `}</style>
         </div>
