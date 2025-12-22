@@ -71,10 +71,17 @@ export function SettingsForm({ userSettings }: { userSettings: any }) {
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-300">WhatsApp / Teléfono</label>
-                        <PhoneInput
+                        <input
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="Ingresa 10 dígitos"
+                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500 transition placeholder:text-gray-600"
+                        />
+                        {/* <PhoneInput
                             value={phone}
                             onChange={(val) => setPhone(val)}
-                        />
+                        /> */}
                         <input type="hidden" name="phone" value={phone} />
                     </div>
                 </div>
