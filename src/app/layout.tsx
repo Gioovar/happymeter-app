@@ -9,6 +9,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'),
   title: "HappyMeter | Medición de Satisfacción con IA",
   description: "La plataforma definitiva para gestionar encuestas de satisfacción, lealtad de clientes y métricas de felicidad en tiempo real.",
   manifest: "/manifest.json",
@@ -21,6 +22,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/happymeter_logo.png", // Fallback to existing logo
     apple: "/happymeter_logo.png",
+  },
+  openGraph: {
+    images: '/og-image.png', // Assuming you might have one or will want one
   }
 };
 

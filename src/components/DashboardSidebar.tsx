@@ -9,6 +9,7 @@ import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
 import NotificationsBell from '@/components/notifications/NotificationsBell'
 import CommandCenter from '@/components/CommandCenter'
+import PWAInstallButton from '@/components/PWAInstallButton'
 
 const menuItems = [
     {
@@ -149,6 +150,9 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                         <span className="text-xs font-bold leading-tight">Consultar IA</span>
                     </div>
                 </Link>
+                <div className="mt-2">
+                    <PWAInstallButton className="w-full" />
+                </div>
             </div>
 
 

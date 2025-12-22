@@ -2,8 +2,14 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
 
 // Configure public routes
 export default clerkMiddleware((auth, req) => {
-    // Allow public access to /play/* and /s/* (surveys)
-    if (req.nextUrl.pathname.startsWith('/play') || req.nextUrl.pathname.startsWith('/s')) {
+    // Allow public access to /play/*, /s/* (surveys), /install, and SEO files
+    if (
+        req.nextUrl.pathname.startsWith('/play') ||
+        req.nextUrl.pathname.startsWith('/s') ||
+        req.nextUrl.pathname.startsWith('/install') ||
+        req.nextUrl.pathname === '/robots.txt' ||
+        req.nextUrl.pathname === '/sitemap.xml'
+    ) {
         return // return void to allow access without auth
     }
     // Protect all other routes
