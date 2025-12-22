@@ -81,7 +81,7 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
                 await sendWhatsAppTemplate(phone, 'new_survey_alertt', 'es_MX', [
                     { type: 'text', text: customerName },
                     { type: 'text', text: rating.toString() },
-                    { type: 'text', text: (issueText + (appliedReward ? `\n\n🚑 OFERTA: ${appliedReward.code} - ${appliedReward.offer}` : "")).substring(0, 60) }
+                    { type: 'text', text: (issueText + (appliedReward ? ` - OFERTA: ${appliedReward.code} - ${appliedReward.offer}` : "")).substring(0, 60).replace(/\n/g, ' ') }
                 ])
             }
         }
@@ -279,7 +279,7 @@ export async function sendStaffAlert(response: Response, survey: Survey, answers
                 await sendWhatsAppTemplate(phone, 'new_survey_alertt', 'es_MX', [
                     { type: 'text', text: "Buzón Staff" },
                     { type: 'text', text: "REPORTE" },
-                    { type: 'text', text: issueDescription.substring(0, 60) }
+                    { type: 'text', text: issueDescription.substring(0, 60).replace(/\n/g, ' ') }
                 ])
             }
         }
