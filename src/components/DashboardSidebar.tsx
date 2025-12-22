@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { LayoutDashboard, PlusCircle, HelpCircle, Settings, LogOut, Home, Sparkles, PieChart, Megaphone, Menu, X, FileText, Gamepad2, MessageSquare, Trophy, Shield, Store, Calendar } from 'lucide-react'
+import { LayoutDashboard, PlusCircle, HelpCircle, Settings, LogOut, Home, PieChart, Megaphone, Menu, X, FileText, Gamepad2, MessageSquare, Trophy, Shield, Store, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
@@ -65,10 +65,62 @@ const menuItems = [
     }
 ]
 
-export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: boolean, userRole?: string }) {
+// Navigation Component that uses searchParams (Must be wrapped in Suspense)
+function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => void }) {
     const pathname = usePathname()
     const searchParams = useSearchParams()
+
+    return (
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
+            {menuItems.map((item) => {
+                const Icon = item.icon
+                // Logic to check if active considering query params
+                const isActive = (() => {
+                    const [itemPath, itemQuery] = item.href.split('?')
+
+                    // 1. Path must match
+                    if (pathname !== itemPath) return false
+
+                    // 2. If item has query params, they must match current params
+                    if (itemQuery) {
+                        const params = new URLSearchParams(itemQuery)
+                        for (const [key, value] of Array.from(params.entries())) {
+                            if (searchParams?.get(key) !== value) return false
+                        }
+                        return true
+                    }
+
+                    // 3. If item has NO query params (e.g. /create), but current URL DOES (e.g. /create?mode=anonymous),
+                    // we must ensure we don't accidentally highlight the generic one.
+                    if (itemPath === '/dashboard/create' && searchParams?.get('mode') === 'anonymous') return false
+
+                    return true
+                })()
+
+                return (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setIsMobileOpen(false)}
+                        className={cn(
+                            "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                            isActive
+                                ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20"
+                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                        )}
+                    >
+                        <Icon className="w-5 h-5" />
+                        {item.title}
+                    </Link>
+                )
+            })}
+        </nav>
+    )
+}
+
+export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: boolean, userRole?: string }) {
     const [isMobileOpen, setIsMobileOpen] = useState(false)
+    const pathname = usePathname() // Safe to use here without Suspense in Layout generally, but safer to keep high
 
     const SidebarContent = () => (
         <>
@@ -94,51 +146,10 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                 </button>
             </div>
 
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-                {menuItems.map((item) => {
-                    const Icon = item.icon
-                    // Logic to check if active considering query params
-                    const isActive = (() => {
-                        const [itemPath, itemQuery] = item.href.split('?')
+            <Suspense fallback={<div className="flex-1 p-4"><div className="w-full h-8 bg-white/5 rounded-xl animate-pulse" /></div>}>
+                <SidebarNav setIsMobileOpen={setIsMobileOpen} />
+            </Suspense>
 
-                        // 1. Path must match
-                        if (pathname !== itemPath) return false
-
-                        // 2. If item has query params, they must match current params
-                        if (itemQuery) {
-                            const params = new URLSearchParams(itemQuery)
-                            for (const [key, value] of Array.from(params.entries())) {
-                                if (searchParams.get(key) !== value) return false
-                            }
-                            return true
-                        }
-
-                        // 3. If item has NO query params (e.g. /create), but current URL DOES (e.g. /create?mode=anonymous),
-                        // we must ensure we don't accidentally highlight the generic one.
-                        // Specific check for 'mode':
-                        if (itemPath === '/dashboard/create' && searchParams.get('mode') === 'anonymous') return false
-
-                        return true
-                    })()
-
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setIsMobileOpen(false)}
-                            className={cn(
-                                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
-                                isActive
-                                    ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20"
-                                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                            )}
-                        >
-                            <Icon className="w-5 h-5" />
-                            {item.title}
-                        </Link>
-                    )
-                })}
-            </nav>
             <div className="px-4 pb-3 mt-6">
                 <Link
                     href="/dashboard/chat"
@@ -246,7 +257,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                             <Calendar className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                             <span className="text-sm font-medium">Solicitudes de Visita</span>
                         </Link>
-                    </div>
+                    </div >
                 )
             }
 
