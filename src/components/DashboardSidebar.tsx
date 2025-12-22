@@ -146,11 +146,11 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
                 >
                     <Image
-                        src="/happymeter_logo.png"
+                        src="/assets/branding/logo-white.png"
                         alt="AI Logo"
                         width={16}
                         height={16}
-                        className="w-4 h-4 object-contain brightness-0 invert group-hover:rotate-12 transition-transform"
+                        className="w-4 h-4 object-contain group-hover:rotate-12 transition-transform"
                     />
                     <div className="flex flex-col">
                         <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Asistente Virtual</span>
@@ -289,7 +289,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                         <Menu className="w-6 h-6" />
                     </button>
                     <span className="font-bold text-lg text-white tracking-tight">
-                        Happy<span className="text-violet-500">Meter</span>
+                        Happy<span className="text-green-500">Meter</span>
                     </span>
                 </div>
                 {/* Notifications on Mobile */}

@@ -234,7 +234,7 @@ export default function CreateSurveyPage() {
                                 <Shield className="w-5 h-5 text-slate-400" />
                             ) : (
                                 <Image
-                                    src="/happymeter_logo.png"
+                                    src="/assets/branding/logo-white.png"
                                     alt="HappyMeter Logo"
                                     width={24}
                                     height={24}
