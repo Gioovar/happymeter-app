@@ -66,15 +66,15 @@ export async function POST(req: Request) {
             })
         }
 
-        const DYNAMIC_SYSTEM_PROMPT = \`\${SYSTEM_PROMPT}
+        const DYNAMIC_SYSTEM_PROMPT = `${SYSTEM_PROMPT}
 
 👋 **INSTRUCCIÓN DE ONBOARDING (PRIMER MENSAJE)**
 Si es el inicio de la conversación (o si no sabes qué hace el usuario), TU PRIMERA PREGUNTA DEBE SER:
-"¡Hola \${userName}! 👋 Soy tu Coach de HappyMeter. Para darte los mejores guiones, cuéntame: **¿Qué tipo de contenido creas o a qué nicho te diriges?** (Ej: Restaurantes, Gimnasios, Hoteles, Bares...)."
+"¡Hola ${userName}! 👋 Soy tu Coach de HappyMeter. Para darte los mejores guiones, cuéntame: **¿Qué tipo de contenido creas o a qué nicho te diriges?** (Ej: Restaurantes, Gimnasios, Hoteles, Bares...)."
 
 🛑 **NO des consejos genéricos antes de saber su nicho.**
 Una vez que te respondan, ADAPTA todos tus ejemplos a esa industria.
-\`
+`
 
         const model = getGeminiModel('gemini-flash-latest', {
             systemInstruction: DYNAMIC_SYSTEM_PROMPT
