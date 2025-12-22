@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendCrisisAlert, sendStaffAlert } from '@/lib/alerts'
+import { sendCrisisAlert, sendStaffAlert, sendCustomerReward } from '@/lib/alerts'
 
 export async function POST(
     req: Request,
@@ -44,6 +44,8 @@ export async function POST(
         } else {
             // Standard Customer Alert
             await sendCrisisAlert(response, response.survey, response.answers)
+            // Send Reward to Customer
+            await sendCustomerReward(response, response.survey, response.answers)
         }
 
         checkMilestones(response.survey.userId)

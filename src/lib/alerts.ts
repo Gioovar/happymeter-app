@@ -109,6 +109,48 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
     }
 }
 
+// CUSTOMER REWARD ALERT (Sent to Customer)
+export async function sendCustomerReward(response: Response, survey: Survey, answers: any[]) {
+    try {
+        if (!response.customerPhone) return // No phone, no reward
+
+        const ratingAnswer = answers.find(a => a.question.type === 'RATING' || a.question.type === 'EMOJI')
+        if (!ratingAnswer) return
+
+        const rating = parseInt(ratingAnswer.value)
+        if (isNaN(rating)) return
+
+        // Smart Recovery Configuration (Tiered)
+        const recoveryConfig = (survey as any).recoveryConfig || {}
+        let appliedReward = null
+
+        if (rating >= 4) {
+            if (recoveryConfig.good?.enabled) appliedReward = recoveryConfig.good
+        } else if (rating === 3) {
+            if (recoveryConfig.neutral?.enabled) appliedReward = recoveryConfig.neutral
+        } else {
+            // Bad (1-2)
+            if (recoveryConfig.bad?.enabled) appliedReward = recoveryConfig.bad
+            else if (recoveryConfig.enabled) appliedReward = { offer: recoveryConfig.offer, code: recoveryConfig.code }
+        }
+
+        if (!appliedReward) return
+
+        console.log(`Sending Reward WhatsApp to Customer: ${response.customerPhone}`)
+
+        // We assume a template 'customer_reward' exists with 3 variables: Name, Offer, Code
+        // If not, this will likely fail or needs to be replaced with a generic message if possible (but API requires templates)
+        await sendWhatsAppTemplate(response.customerPhone, 'customer_reward', 'es_MX', [
+            { type: 'text', text: response.customerName || 'Cliente' },
+            { type: 'text', text: appliedReward.offer },
+            { type: 'text', text: appliedReward.code }
+        ])
+
+    } catch (error) {
+        console.error('Error sending customer reward:', error)
+    }
+}
+
 // Helper for Meta WhatsApp API
 export async function sendWhatsAppTemplate(to: string, templateName: string, languageCode: string = 'es_MX', components: any[] = []) {
     try {
