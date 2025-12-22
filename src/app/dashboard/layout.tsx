@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import DashboardSidebar from '@/components/DashboardSidebar'
@@ -37,8 +38,10 @@ export default async function DashboardLayout({
     return (
         <DashboardProvider>
             <div className="flex min-h-screen bg-[#0a0a0a]">
-                {!hasSeenTour && <FeatureTour />}
-                <DashboardSidebar isCreator={!!affiliateProfile} userRole="USER" />
+                {!hasSeenTour && <Suspense fallback={null}><FeatureTour /></Suspense>}
+                <Suspense fallback={<div className="w-64 bg-[#111] h-screen border-r border-white/10 hidden md:flex" />}>
+                    <DashboardSidebar isCreator={!!affiliateProfile} userRole="USER" />
+                </Suspense>
                 <main className="flex-1 overflow-y-auto h-screen relative">
                     {/* Top Header for Desktop */}
                     <div className="hidden md:flex justify-end items-center p-4 absolute top-0 right-0 z-30 w-full pointer-events-none">
