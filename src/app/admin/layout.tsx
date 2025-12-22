@@ -19,10 +19,18 @@ export default async function AdminLayout({
     }
 
     // Security: Only SUPER_ADMIN allowed in God Mode
-    const userSettings = await prisma.userSettings.findUnique({
-        where: { userId },
-        select: { role: true }
-    })
+    let userSettings = null
+    try {
+        userSettings = await prisma.userSettings.findUnique({
+            where: { userId },
+            select: { role: true }
+        })
+    } catch (error) {
+        console.error("Critical Admin Layout Error:", error)
+        // If DB fails, we can't verify role. Fail safe -> redirect to home
+        // We do NOT redirect here to avoid re-throwing issues in catch, 
+        // we just let userSettings be null which triggers the check below.
+    }
 
     if (userSettings?.role !== 'SUPER_ADMIN') {
         if (userSettings?.role === 'STAFF' || userSettings?.role === 'ADMIN') {

@@ -107,14 +107,18 @@ export async function GET() {
             })
         }
 
+        // Calculate net growth
+        const netGrowth = activeUsersCount - 0 // Simplify for MVP
+
         return NextResponse.json({
-            stats: {
+            metrics: {
                 totalRevenue: revenue,
-                activeUsers: activeUsersCount,
-                newUsers: newUsersCount,
-                churnRate: 0 // Placeholder
+                totalNew: newUsersCount,
+                totalChurn: 0,
+                totalSurveys: 0, // Pending implementation
+                netGrowth: netGrowth
             },
-            chart: chartData
+            chartData: chartData // Rename 'chart' to 'chartData' as expected by frontend
         })
 
     } catch (error) {
