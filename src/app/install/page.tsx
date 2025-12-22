@@ -62,6 +62,23 @@ export default function InstallPage() {
                             </li>
                         </ol>
                     </div>
+
+                    <div className="h-px bg-white/10" />
+
+                    {/* Desktop Instructions */}
+                    <div className="space-y-3">
+                        <h3 className="font-semibold flex items-center gap-2">
+                            <span className="text-xl">💻</span> Computadora (Mac / PC)
+                        </h3>
+                        <ul className="space-y-3 text-sm text-gray-300 list-disc list-outside pl-4">
+                            <li>
+                                <strong>Chrome / Edge:</strong> Busca el icono de instalación <Download className="inline w-4 h-4 mx-1" /> en el lado derecho de la barra de direcciones.
+                            </li>
+                            <li>
+                                <strong>Safari (Mac):</strong> Ve a <em>Archivo</em> {">"} <em>Agregar al Dock</em>.
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div className="text-center">
