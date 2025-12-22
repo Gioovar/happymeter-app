@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { LayoutDashboard, PlusCircle, HelpCircle, Settings, LogOut, Home, Sparkles, PieChart, Megaphone, Menu, X, FileText, Gamepad2, MessageSquare, Trophy, Shield, Store, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -144,7 +145,13 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                     onClick={() => setIsMobileOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
                 >
-                    <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                    <Image
+                        src="/happymeter_logo.png"
+                        alt="AI Logo"
+                        width={16}
+                        height={16}
+                        className="w-4 h-4 object-contain brightness-0 invert group-hover:rotate-12 transition-transform"
+                    />
                     <div className="flex flex-col">
                         <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Asistente Virtual</span>
                         <span className="text-xs font-bold leading-tight">Consultar IA</span>
