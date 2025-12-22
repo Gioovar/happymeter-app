@@ -95,16 +95,21 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
                 // Transform data (moved from Page.tsx)
                 const initialSurveys = data.map((s: any) => {
                     const recentFeedbacks = (s.responses || []).slice(0, 3).map((r: any) => {
-                        const commentAnswer = r.answers.find((a: any) => a.question?.type === 'TEXT');
-                        const ratingAnswer = r.answers.find((a: any) => a.question?.type === 'RATING' || a.question?.type === 'EMOJI');
-                        const ratingVal = ratingAnswer ? parseInt(ratingAnswer.value) : (r.rating || 5);
-                        return {
-                            rating: ratingVal,
-                            comment: commentAnswer ? commentAnswer.value : "Sin comentario",
-                            date: new Date(r.createdAt).toLocaleDateString(),
-                            fullResponse: r
+                        try {
+                            const answers = r.answers || []
+                            const commentAnswer = answers.find((a: any) => a.question?.type === 'TEXT');
+                            const ratingAnswer = answers.find((a: any) => a.question?.type === 'RATING' || a.question?.type === 'EMOJI');
+                            const ratingVal = ratingAnswer ? parseInt(ratingAnswer.value) : (r.rating || 5);
+                            return {
+                                rating: isNaN(ratingVal) ? 5 : ratingVal,
+                                comment: commentAnswer ? commentAnswer.value : "Sin comentario",
+                                date: (() => { try { return new Date(r.createdAt).toLocaleDateString() } catch { return "" } })(),
+                                fullResponse: r
+                            }
+                        } catch (e) {
+                            return null
                         }
-                    })
+                    }).filter(Boolean)
                     return {
                         id: s.id,
                         title: s.title,

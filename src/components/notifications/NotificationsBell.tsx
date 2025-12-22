@@ -201,7 +201,13 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                                                             {notif.title}
                                                         </h4>
                                                         <span className="text-[10px] text-gray-600 whitespace-nowrap">
-                                                            {format(new Date(notif.createdAt), "d MMM", { locale: es })}
+                                                            {(() => {
+                                                                try {
+                                                                    return format(new Date(notif.createdAt), "d MMM", { locale: es })
+                                                                } catch (e) {
+                                                                    return ""
+                                                                }
+                                                            })()}
                                                         </span>
                                                     </div>
                                                     <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap line-clamp-3">

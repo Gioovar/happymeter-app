@@ -32,10 +32,22 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
 
         let message = `Cliente: ${customerName}\nMesa: ${tableName}\nCalificación: ${rating} ⭐\n"${issueText}"`
 
-        // Smart Recovery Configuration
-        const recovery = (survey as any).recoveryConfig
-        if (recovery && recovery.enabled) {
-            message += `\n\n🚑 RECUPERACIÓN INTELIGENTE:\nEnvía esto al cliente:\n"Hola ${customerName}, sentimos tu mala experiencia. Muestra este código *${recovery.code}* en tu próxima visita para *${recovery.offer}*."`
+        // Smart Recovery Configuration (Tiered)
+        const recoveryConfig = (survey as any).recoveryConfig || {}
+        let appliedReward = null
+
+        if (rating >= 4) {
+            if (recoveryConfig.good?.enabled) appliedReward = recoveryConfig.good
+        } else if (rating === 3) {
+            if (recoveryConfig.neutral?.enabled) appliedReward = recoveryConfig.neutral
+        } else {
+            // Bad (1-2) - Check 'bad' tier first, fallback to old single-level config if missing
+            if (recoveryConfig.bad?.enabled) appliedReward = recoveryConfig.bad
+            else if (recoveryConfig.enabled) appliedReward = { offer: recoveryConfig.offer, code: recoveryConfig.code }
+        }
+
+        if (appliedReward) {
+            message += `\n\n🚑 RECUPERACIÓN INTELIGENTE:\nEnvía esto al cliente:\n"Hola ${customerName}, sentimos tu mala experiencia. Muestra este código *${appliedReward.code}* en tu próxima visita para *${appliedReward.offer}*."`
         }
 
         console.log('--- CREATING CRISIS ALERT ---')
@@ -69,7 +81,7 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
                 await sendWhatsAppTemplate(phone, 'new_survey_alertt', 'es_MX', [
                     { type: 'text', text: customerName },
                     { type: 'text', text: rating.toString() },
-                    { type: 'text', text: (issueText + (recovery && recovery.enabled ? `\n\n🚑 OFERTA: ${recovery.code} - ${recovery.offer}` : "")).substring(0, 60) }
+                    { type: 'text', text: (issueText + (appliedReward ? `\n\n🚑 OFERTA: ${appliedReward.code} - ${appliedReward.offer}` : "")).substring(0, 60) }
                 ])
             }
         }

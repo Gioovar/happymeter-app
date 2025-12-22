@@ -465,18 +465,82 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                             )}
                                         </div>
 
-                                        {/* WhatsApp Reward */}
+                                        {/* WhatsApp Reward / Contact */}
                                         {!shouldHideContactFields && (
-                                            <div className="bg-gradient-to-r from-green-600 to-green-500 rounded-2xl p-6 shadow-lg space-y-4 border border-green-400/20">
-                                                <div className="space-y-1">
-                                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                                        <Sparkles className="w-5 h-5 text-yellow-300" />
-                                                        Experiencia buena o excelente
-                                                    </h3>
-                                                    <p className="text-sm text-green-50/90">Déjanos tu WhatsApp para enviarte tu regalo (no enviamos spam).</p>
-                                                </div>
-                                                <input type="tel" value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-white/50 transition border-none text-gray-900 placeholder:text-gray-500 bg-white" placeholder="Tu WhatsApp" />
-                                            </div>
+                                            (() => {
+                                                // Find ANY rating question (Emoji or Stars) to determine sentiment
+                                                const ratingQuestion = survey.questions.find((q: any) => q.type === 'EMOJI' || q.type === 'RATING')
+                                                const rawVal = ratingQuestion && formData[ratingQuestion.id] ? formData[ratingQuestion.id] : '0'
+                                                const ratingVal = parseInt(rawVal) || 0
+                                                // Logic: 4-5 (Green), 3 (Orange), 1-2 (Red)
+                                                let colorClass = ''
+                                                let title = ''
+                                                let message = ''
+                                                let icon = null
+                                                let textColor = 'text-white'
+                                                let messageColor = 'text-white/90'
+
+                                                const config = survey.recoveryConfig || {}
+
+                                                if (ratingVal >= 4) {
+                                                    // GREEN (Good)
+                                                    colorClass = 'bg-gradient-to-r from-green-600 to-green-500 border-green-400/20'
+                                                    title = 'Experiencia buena o excelente'
+
+                                                    const reward = config.good
+                                                    if (reward && reward.enabled) {
+                                                        message = `¡Gracias! Te regalamos ${reward.offer} con el código ${reward.code} para tu próxima visita.`
+                                                    } else {
+                                                        message = 'Déjanos tu WhatsApp para enviarte tu regalo (no enviamos spam).'
+                                                    }
+
+                                                    icon = <Sparkles className="w-5 h-5 text-yellow-300" />
+                                                    messageColor = 'text-green-50/90'
+                                                } else if (ratingVal === 3) {
+                                                    // ORANGE (Neutral)
+                                                    colorClass = 'bg-gradient-to-r from-orange-500 to-amber-500 border-orange-400/20'
+                                                    title = '¿En qué podemos mejorar?'
+
+                                                    const reward = config.neutral
+                                                    if (reward && reward.enabled) {
+                                                        message = `Gracias por tus comentarios. Para que vuelvas, te ofrecemos ${reward.offer} con el código ${reward.code}.`
+                                                    } else {
+                                                        message = 'Tu opinión nos ayuda a crecer. Déjanos tu WhatsApp para escucharte.'
+                                                    }
+
+                                                    icon = <div className="text-2xl">🤔</div>
+                                                    messageColor = 'text-orange-50/90'
+                                                } else {
+                                                    // RED (Bad)
+                                                    colorClass = 'bg-gradient-to-r from-red-600 to-red-500 border-red-400/20'
+                                                    title = 'Lamentamos tu experiencia'
+
+                                                    const reward = config.bad || { enabled: config.enabled, offer: config.offer, code: config.code } // Fallback to old config if 'bad' key missing
+                                                    if (reward && reward.enabled) {
+                                                        message = `Sentimos lo ocurrido. Queremos remediarlo: Vuelve por ${reward.offer} mostrando el código ${reward.code}.`
+                                                    } else {
+                                                        message = 'Déjanos tu WhatsApp para contactarte personalmente y remediarlo.'
+                                                    }
+
+                                                    icon = <div className="text-2xl">🙏</div>
+                                                    messageColor = 'text-red-50/90'
+                                                }
+
+                                                return (
+                                                    <div className={`rounded-2xl p-6 shadow-lg space-y-4 border ${colorClass}`}>
+                                                        <div className="space-y-1">
+                                                            <h3 className={`text-lg font-bold ${textColor} flex items-center gap-2`}>
+                                                                {icon}
+                                                                {title}
+                                                            </h3>
+                                                            <p className={`text-sm ${messageColor}`}>
+                                                                {message}
+                                                            </p>
+                                                        </div>
+                                                        <input type="tel" value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-white/50 transition border-none text-gray-900 placeholder:text-gray-500 bg-white" placeholder="Tu WhatsApp" />
+                                                    </div>
+                                                )
+                                            })()
                                         )}
 
                                         {/* Submit */}
@@ -562,6 +626,21 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
                         )}
                     </AnimatePresence>
                 </>
+            )}
+
+            {question.type === 'RATING' && (
+                <div className="flex gap-2 justify-center py-4">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                            key={star}
+                            type="button"
+                            onClick={() => onChange(star.toString())}
+                            className={`text-4xl transition-transform hover:scale-110 ${parseInt(value || '0') >= star ? 'text-yellow-400' : 'text-gray-600'}`}
+                        >
+                            ★
+                        </button>
+                    ))}
+                </div>
             )}
 
             {question.type === 'EMOJI' && (
