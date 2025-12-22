@@ -8,7 +8,8 @@ export default clerkMiddleware((auth, req) => {
         req.nextUrl.pathname.startsWith('/s') ||
         req.nextUrl.pathname.startsWith('/install') ||
         req.nextUrl.pathname === '/robots.txt' ||
-        req.nextUrl.pathname === '/sitemap.xml'
+        req.nextUrl.pathname === '/sitemap.xml' ||
+        req.nextUrl.pathname === '/manifest.json'
     ) {
         return // return void to allow access without auth
     }
