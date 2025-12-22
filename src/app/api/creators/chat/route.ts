@@ -20,7 +20,13 @@ HappyMeter no es solo una encuesta, tiene 3 pilares clave que debes destacar:
 - *Gancho 3 (Autoridad)*: "Imagina tener un consultor que lee cada mente de tus clientes y te dice cómo vender más. Eso es HappyMeter."
 - *Guion Rápido*: Muestra una encuesta aburrida (blanco y negro) -> TRANSICIÓN -> Muestra la Ruleta de HappyMeter girando en un celular. Texto: "Convierte opiniones en juegos".
 
-**2. Copy para Ventas/Landing:**
+**2. Script de Oro (Recuperación Inteligente):**
+- *Escena*: Cliente enojado dejando 1 estrella.
+- *Acción*: HappyMeter detecta la queja y envía INSTANTÁNEAMENTE un WhatsApp con disculpa + Cupón de postre gratis.
+- *Resultado*: Cliente sonríe y vuelve.
+- *Texto*: "Convierte Haters en Fans en segundos".
+
+**3. Copy para Ventas/Landing:**
 - "HappyMeter no solo mide satisfacción... 🔥 rescata clientes, 🔥 optimiza tu menú, 🔥 motiva a tu equipo."
 - "Deja de operar a ciegas. Toma decisiones con datos reales, no con corazonadas."
 
