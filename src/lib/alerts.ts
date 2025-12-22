@@ -138,12 +138,13 @@ export async function sendCustomerReward(response: Response, survey: Survey, ans
 
         console.log(`Sending Reward WhatsApp to Customer: ${response.customerPhone}`)
 
-        // We assume a template 'customer_reward' exists with 3 variables: Name, Offer, Code
-        // If not, this will likely fail or needs to be replaced with a generic message if possible (but API requires templates)
-        await sendWhatsAppTemplate(response.customerPhone, 'customer_reward', 'es_MX', [
+        // Using 'new_survey_alertt' as requested by user.
+        // Template structure: Header (generic), Body with {{1}}, {{2}}, {{3}}
+        // We map: {{1}} = Name, {{2}} = "¡PREMIO!", {{3}} = Reward Details
+        await sendWhatsAppTemplate(response.customerPhone, 'new_survey_alertt', 'es_MX', [
             { type: 'text', text: response.customerName || 'Cliente' },
-            { type: 'text', text: appliedReward.offer },
-            { type: 'text', text: appliedReward.code }
+            { type: 'text', text: "¡PREMIO! 🎁" }, // Originally Rating, now used as Header/Subject
+            { type: 'text', text: `Gracias por tu visita. Tu regalo: ${appliedReward.offer}. Código: ${appliedReward.code}. ¡Te esperamos!` } // Originally Comment, now full proper message
         ])
 
     } catch (error) {
