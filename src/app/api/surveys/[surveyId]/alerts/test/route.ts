@@ -16,16 +16,59 @@ export async function POST(
 
         if (!phone) return new NextResponse("Phone required", { status: 400 })
 
-        // Send Test Message
-        // Template: new_survey_alertt
-        // Params: {{1}}=Name, {{2}}=Rating, {{3}}=Comment
-        await sendWhatsAppTemplate(phone, 'new_survey_alertt', 'es_MX', [
-            { type: 'text', text: "Cliente de Prueba" },
-            { type: 'text', text: "5" },
-            { type: 'text', text: "¡Hola! Esta es una prueba de conexión exitosa desde HappyMeter." }
+        // 1. Prepare variations
+        const clean = phone.replace(/\D/g, '')
+        const tenDigits = clean.slice(-10)
+
+        const formatA = '521' + tenDigits // Format 521 (Standard API)
+        const formatB = '52' + tenDigits  // Format 52 (Direct format)
+
+        // Helper to send raw
+        const sendRaw = async (toNum: string, variant: string) => {
+            const token = process.env.WHATSAPP_API_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN
+            const phoneId = process.env.WHATSAPP_PHONE_ID
+
+            const res = await fetch(`https://graph.facebook.com/v17.0/${phoneId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    messaging_product: 'whatsapp',
+                    to: toNum,
+                    type: 'template',
+                    template: {
+                        name: 'new_survey_alertt',
+                        language: { code: 'es_MX' },
+                        components: [
+                            {
+                                type: 'body', parameters: [
+                                    { type: 'text', text: `Prueba ${variant} (${toNum})` },
+                                    { type: 'text', text: "5" },
+                                    { type: 'text', text: "Si ves esto, este formato es el correcto." }
+                                ]
+                            }
+                        ]
+                    }
+                })
+            })
+            return await res.json()
+        }
+
+        // Send Both
+        const [resA, resB] = await Promise.all([
+            sendRaw(formatA, 'A (521)'),
+            sendRaw(formatB, 'B (52)')
         ])
 
-        return NextResponse.json({ success: true })
+        return NextResponse.json({
+            success: true,
+            details: {
+                formatA: { phone: formatA, r: resA },
+                formatB: { phone: formatB, r: resB }
+            }
+        })
 
     } catch (error: any) {
         console.error('[ALERT_TEST_POST]', error)

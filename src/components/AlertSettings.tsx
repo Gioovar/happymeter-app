@@ -126,7 +126,13 @@ export default function AlertSettings({
             })
             if (res.ok) {
                 const data = await res.json()
-                toast.success(`Enviado a: ${data.details?.debugPhone || phone}. ID: ${data.details?.messages?.[0]?.id}`, { id: toastId, duration: 5000 })
+                const dA = data.details?.formatA?.r
+                const dB = data.details?.formatB?.r
+
+                const statusA = dA?.messages?.[0]?.id ? "✅ (521)" : "❌"
+                const statusB = dB?.messages?.[0]?.id ? "✅ (52)" : "❌"
+
+                toast.success(`Prueba Dual: ${statusA} | ${statusB}. Revisa cuál llegó.`, { id: toastId, duration: 8000 })
             } else {
                 const data = await res.json()
                 // Show specific debug error if available
