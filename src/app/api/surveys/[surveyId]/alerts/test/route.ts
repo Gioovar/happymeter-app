@@ -28,30 +28,24 @@ export async function POST(
             const token = process.env.WHATSAPP_API_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN
             const phoneId = process.env.WHATSAPP_PHONE_ID
 
+            // Using 'hello_world' to debug connectivity vs template issues
+            const body = {
+                messaging_product: 'whatsapp',
+                to: toNum,
+                type: 'template',
+                template: {
+                    name: 'hello_world',
+                    language: { code: 'en_US' }
+                }
+            }
+
             const res = await fetch(`https://graph.facebook.com/v17.0/${phoneId}/messages`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    messaging_product: 'whatsapp',
-                    to: toNum,
-                    type: 'template',
-                    template: {
-                        name: 'new_survey_alertt',
-                        language: { code: 'es_MX' },
-                        components: [
-                            {
-                                type: 'body', parameters: [
-                                    { type: 'text', text: `Prueba ${variant} (${toNum})` },
-                                    { type: 'text', text: "5" },
-                                    { type: 'text', text: "Si ves esto, este formato es el correcto." }
-                                ]
-                            }
-                        ]
-                    }
-                })
+                body: JSON.stringify(body)
             })
             return await res.json()
         }
