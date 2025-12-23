@@ -126,22 +126,17 @@ export default function AlertSettings({
             })
             if (res.ok) {
                 const data = await res.json()
-                const dA = data.details?.formatA?.r
-                const dB = data.details?.formatB?.r
+                const msgId = data.details?.messages?.[0]?.id
+                const phoneUsed = data.details?.debugPhone
 
-                const statusA = dA?.messages?.[0]?.id ? "✅ (521)" : "❌"
-                const statusB = dB?.messages?.[0]?.id ? "✅ (52)" : "❌"
-
-                toast.success(`Prueba Dual: ${statusA} | ${statusB}. Revisa cuál llegó.`, { id: toastId, duration: 8000 })
+                if (msgId) {
+                    toast.success(`Enviado a ${phoneUsed}. ID: ${msgId}`, { id: toastId, duration: 8000 })
+                } else {
+                    toast.warning(`Aceptado por Meta pero sin ID. Revisa plantilla.`, { id: toastId, duration: 8000 })
+                }
             } else {
                 const data = await res.json()
-                // Show specific debug error if available
-                const errorMsg = data.debug
-                    ? `Error: ${data.error}. Token: ${data.debug.tokenExists ? 'OK' : 'MISSING'}`
-                    : "Error al enviar. Revisa tus credenciales."
-
-                toast.error(errorMsg, { id: toastId, duration: 5000 })
-                console.error("WhatsApp Test Failed:", data)
+                toast.error(`Error: ${data.error}`, { id: toastId, duration: 8000 })
             }
         } catch (error) {
             toast.error("Error de conexión", { id: toastId })
