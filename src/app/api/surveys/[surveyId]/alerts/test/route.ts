@@ -27,8 +27,18 @@ export async function POST(
 
         return NextResponse.json({ success: true })
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('[ALERT_TEST_POST]', error)
-        return new NextResponse("Internal Error", { status: 500 })
+
+        // Debug Information
+        const token = process.env.WHATSAPP_API_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN
+        const debugInfo = {
+            message: error.message,
+            tokenExists: !!token,
+            tokenLength: token ? token.length : 0,
+            phoneIdExists: !!process.env.WHATSAPP_PHONE_ID
+        }
+
+        return NextResponse.json({ success: false, error: error.message, debug: debugInfo }, { status: 500 })
     }
 }

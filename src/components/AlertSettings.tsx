@@ -127,7 +127,14 @@ export default function AlertSettings({
             if (res.ok) {
                 toast.success("Mensaje enviado. Revisa tu WhatsApp.", { id: toastId })
             } else {
-                toast.error("Error al enviar. Revisa tus credenciales.", { id: toastId })
+                const data = await res.json()
+                // Show specific debug error if available
+                const errorMsg = data.debug
+                    ? `Error: ${data.error}. Token: ${data.debug.tokenExists ? 'OK' : 'MISSING'}`
+                    : "Error al enviar. Revisa tus credenciales."
+
+                toast.error(errorMsg, { id: toastId, duration: 5000 })
+                console.error("WhatsApp Test Failed:", data)
             }
         } catch (error) {
             toast.error("Error de conexión", { id: toastId })
