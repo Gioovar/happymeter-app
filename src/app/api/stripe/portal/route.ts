@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         // This allows them to update pmt methods, cancel subs, view invoices
         const session = await stripe.billingPortal.sessions.create({
             customer: userSettings.stripeCustomerId,
-            return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/settings`,
+            return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'}/dashboard/settings`,
         })
 
         return NextResponse.json({ url: session.url })

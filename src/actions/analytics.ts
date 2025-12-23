@@ -509,7 +509,7 @@ export async function getReportShareLink(surveyId: string) {
         const crypto = await import('crypto')
         const token = crypto.createHmac('sha256', SECRET_KEY).update(surveyId).digest('hex')
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
         return `${baseUrl}/report/${surveyId}?token=${token}`
     } catch (error) {
         console.error("Error generating link:", error)

@@ -41,7 +41,7 @@ export async function POST(req: Request) {
         const affiliateRef = cookieStore.get('affiliate_ref')?.value || null
 
         // Get origin for return URLs
-        const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
 
         // Create Checkout Session
         const session = await stripe.checkout.sessions.create({

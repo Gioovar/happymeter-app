@@ -6,7 +6,7 @@ import { stripe } from '@/lib/stripe'
 import { headers } from 'next/headers'
 
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
 
 // 1. Create Account Link (Connect Onboarding)
 export async function createStripeConnectAccount() {

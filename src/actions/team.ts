@@ -48,7 +48,7 @@ export async function inviteTeamMember(email: string, role: UserRole) {
 
     // In a real app, we would send an email here.
     // For now, we return the link to the frontend so the admin can copy it.
-    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/sign-up?email=${email}`
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'}/sign-up?email=${email}`
 
     return { success: true, link: inviteLink }
 }
