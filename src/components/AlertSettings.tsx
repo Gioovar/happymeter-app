@@ -125,18 +125,11 @@ export default function AlertSettings({
                 body: JSON.stringify({ phone })
             })
             if (res.ok) {
-                const data = await res.json()
-                const msgId = data.details?.messages?.[0]?.id
-                const phoneUsed = data.details?.debugPhone
-
-                if (msgId) {
-                    toast.success(`Enviado a ${phoneUsed}. ID: ${msgId}`, { id: toastId, duration: 8000 })
-                } else {
-                    toast.warning(`Aceptado por Meta pero sin ID. Revisa plantilla.`, { id: toastId, duration: 8000 })
-                }
+                toast.success("✅ Mensaje de prueba enviado con éxito.", { id: toastId })
             } else {
                 const data = await res.json()
-                toast.error(`Error: ${data.error}`, { id: toastId, duration: 8000 })
+                const errorDetail = data.debug?.message || data.error || "Error desconocido"
+                toast.error(`Error al enviar: ${errorDetail}`, { id: toastId, duration: 5000 })
             }
         } catch (error) {
             toast.error("Error de conexión", { id: toastId })
