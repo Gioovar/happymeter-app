@@ -125,7 +125,8 @@ export default function AlertSettings({
                 body: JSON.stringify({ phone })
             })
             if (res.ok) {
-                toast.success("Mensaje enviado. Revisa tu WhatsApp.", { id: toastId })
+                const data = await res.json()
+                toast.success(`Enviado a: ${data.details?.debugPhone || phone}. ID: ${data.details?.messages?.[0]?.id}`, { id: toastId, duration: 5000 })
             } else {
                 const data = await res.json()
                 // Show specific debug error if available
