@@ -108,7 +108,7 @@ export default function AnalyticsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
+        <div className="w-full max-w-[1600px] mx-auto space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                 <div>
                     <h1 className="text-3xl font-bold mb-2">Analíticas Avanzadas</h1>
