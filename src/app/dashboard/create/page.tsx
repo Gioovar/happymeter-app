@@ -222,7 +222,7 @@ export default function CreateSurveyPage() {
         <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 pb-20">
             {/* Header */}
             <header className="border-b border-white/5 bg-black/20 backdrop-blur-xl sticky top-0 z-50">
-                <nav className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+                <nav className="w-full max-w-[1600px] mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link href="/dashboard">
                             <button className="p-2 rounded-lg hover:bg-white/10 transition text-gray-400 hover:text-white">
@@ -254,7 +254,7 @@ export default function CreateSurveyPage() {
 
             {/* Tab Navigation (Only for normal mode) */}
             {!isAnonymousMode && (
-                <div className="max-w-3xl mx-auto px-6 mt-8 mb-4">
+                <div className="w-full max-w-[1600px] mx-auto px-4 mt-8 mb-4">
                     <div className="flex flex-wrap gap-3 items-center">
                         <button
                             onClick={() => setActiveTab('edit')}
@@ -289,7 +289,7 @@ export default function CreateSurveyPage() {
             )}
 
             {/* Main Content */}
-            <main className="max-w-3xl mx-auto px-6 py-4 space-y-8">
+            <main className="w-full max-w-[1600px] mx-auto px-4 py-4 space-y-8">
                 {activeTab === 'edit' ? (
                     <form onSubmit={handleSubmit} className="space-y-8">
 
