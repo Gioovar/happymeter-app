@@ -169,7 +169,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
         if (pages.length === 0) return
 
         try {
-            toast.info("Generando reporte completo (esto puede tardar unos segundos)...", { duration: 3000 })
+            toast.info("Generando reporte completo...", { duration: 3000 })
 
             await new Promise(resolve => setTimeout(resolve, 500))
 
@@ -182,23 +182,47 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
             for (let i = 0; i < pages.length; i++) {
                 const page = pages[i] as HTMLElement
 
-                // Navegar a páginas añadidas para iteraciones posteriores
-                if (i > 0) {
-                    pdf.addPage()
+                // Create a clone to capture at full resolution without layout scaling interference
+                const clone = page.cloneNode(true) as HTMLElement
+
+                // Set explicit print styles on clone
+                clone.style.transform = 'none'
+                clone.style.margin = '0'
+
+                // Create an off-screen container
+                const container = document.createElement('div')
+                container.style.position = 'absolute'
+                container.style.left = '-9999px'
+                container.style.top = '0'
+                container.style.width = '210mm' // Force A4 width
+                container.appendChild(clone)
+                document.body.appendChild(container)
+
+                try {
+                    // Navegar a páginas añadidas para iteraciones posteriores
+                    if (i > 0) {
+                        pdf.addPage()
+                    }
+
+                    const canvas = await html2canvas(clone, {
+                        scale: 2,
+                        backgroundColor: '#ffffff',
+                        logging: false,
+                        useCORS: true,
+                        width: 794, // Approx 210mm in px at 96dpi (210 * 3.78)
+                        windowWidth: 1200 // Ensure valid window context
+                    })
+
+                    const imgData = canvas.toDataURL('image/png')
+                    const imgWidth = 210
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+                    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+
+                } finally {
+                    // Cleanup clone immediately
+                    document.body.removeChild(container)
                 }
-
-                const canvas = await html2canvas(page, {
-                    scale: 2,
-                    backgroundColor: '#ffffff',
-                    logging: false,
-                    useCORS: true // Asegurar carga de imágenes externas (si las hay)
-                })
-
-                const imgData = canvas.toDataURL('image/png')
-                const imgWidth = 210
-                const imgHeight = (canvas.height * imgWidth) / canvas.width
-
-                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
             }
 
             pdf.save(`HappyMeter_Reporte_Completo_${format(new Date(), 'yyyy-MM-dd')}.pdf`)
@@ -234,7 +258,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     </div>
                 </div>
 
-                <div className="mt-48 flex flex-col items-center gap-8 w-full max-w-[210mm]">
+                <div className="mt-36 md:mt-48 flex flex-col items-center gap-8 w-full max-w-[210mm] origin-top transform scale-[0.45] sm:scale-[0.6] md:scale-100 mb-20">
 
                     {loading || strategiesLoading ? (
                         <div className="flex flex-col items-center justify-center py-20">
