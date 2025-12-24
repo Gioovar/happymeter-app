@@ -135,16 +135,18 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
         }
 
         fetchData()
-        fetchData()
+
     }, [surveyId, surveyTitle, initialIndustry, dateRange])
 
 
     // Auto-Download PDF check
+    const isPublicDownloadMode = searchParams.get('action') === 'download'
+
+    // Auto-Download PDF check (Updated for Public Mode)
     useEffect(() => {
-        const action = searchParams.get('action')
         // Only trigger if action is download, data is loaded (at least the manual data), 
         // and strategies are done loading (for full PDF).
-        if (action === 'download' && !loading && !strategiesLoading && manualData) {
+        if (isPublicDownloadMode && !loading && !strategiesLoading && manualData) {
 
             // Adding a small delay to ensure DOM is fully rendered
             const timer = setTimeout(() => {
@@ -153,7 +155,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
             return () => clearTimeout(timer)
         }
-    }, [searchParams, loading, strategiesLoading, manualData])
+    }, [isPublicDownloadMode, loading, strategiesLoading, manualData])
 
     // Generación de datos simulados no utilizada eliminada
 
@@ -210,14 +212,227 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
 
 
+    if (isPublicDownloadMode) {
+        return (
+            <div className="min-h-screen bg-gray-100 p-8 flex flex-col items-center justify-center font-sans">
+                {/* Header Actions */}
+                <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 px-6 py-4 shadow-sm z-50 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <BrandLogo size="sm" withText={true} />
+                        <div className="h-6 w-px bg-gray-200 mx-2"></div>
+                        <span className="text-sm font-medium text-gray-500">Vista de Impresión</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={downloadPDF}
+                            className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                        >
+                            <Download className="w-4 h-4" />
+                            Descargar Ahora
+                        </button>
+                    </div>
+                </div>
+
+                <div className="mt-20 flex flex-col items-center gap-8 w-full max-w-[210mm]">
+
+                    {loading || strategiesLoading ? (
+                        <div className="flex flex-col items-center justify-center py-20">
+                            <HappyLoader size="lg" text="Preparando tu reporte..." />
+                        </div>
+                    ) : (
+                        manualData && (
+                            <>
+                                {/* RENDER VISIBLE PAGES for Preview/Download */}
+                                {/* Reuse the exact same structure as the hidden one but visible and styled like a real document */}
+                                <div className="print-page shadow-2xl" id="page-1" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #e2e8f0', position: 'relative' }}>
+                                    {/* Insert Page 1 Content Here (Same as hidden template) */}
+                                    {/* Encabezado */}
+                                    <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                                                <Sparkles size={24} color="#7c3aed" />
+                                                <span style={{ fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
+                                            </div>
+                                            <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, lineHeight: 1.1 }}>Reporte Ejecutivo</h1>
+                                            <p style={{ fontSize: '18px', color: '#64748b', margin: '5px 0 0 0' }}>{surveyTitle}</p>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <p style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#94a3b8' }}>Fecha de Emisión</p>
+                                            <p style={{ fontSize: '14px', fontWeight: '500' }}>{format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Métricas */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '30px' }}>
+                                        <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                            <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Total Feedback</p>
+                                            <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a' }}>{manualData.metrics.totalFeedback}</p>
+                                        </div>
+                                        <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                            <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>NPS Score</p>
+                                            <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#7c3aed' }}>+{manualData.metrics.npsScore}</p>
+                                        </div>
+                                        <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                            <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Calificación</p>
+                                            <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{manualData.metrics.avgRating}</p>
+                                        </div>
+                                        <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                            <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Mesero Top</p>
+                                            <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{manualData.topWaiter?.name}</p>
+                                            <p style={{ fontSize: '12px', color: '#64748b' }}>{manualData.topWaiter?.mentions} menciones</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Gráficos */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginTop: '30px' }}>
+                                        <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', height: '240px' }}>
+                                            <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Tendencia</h3>
+                                            <div style={{ height: '160px', width: '100%' }}>
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={manualData.chartData}>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                                                        <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                                        <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                                        <Area type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={2} fill="none" />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                        <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
+                                            <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Sentimiento</h3>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                {manualData.sentimentData.map((item: any, i: number) => (
+                                                    <div key={i}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '12px' }}>
+                                                            <span style={{ fontWeight: '500' }}>{item.name}</span>
+                                                            <span style={{ fontWeight: 'bold' }}>{item.value}%</span>
+                                                        </div>
+                                                        <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px' }}>
+                                                            <div style={{
+                                                                width: `${item.value}%`,
+                                                                height: '100%',
+                                                                borderRadius: '4px',
+                                                                backgroundColor: item.name === 'Positivo' ? '#10b981' : item.name === 'Negativo' ? '#f43f5e' : '#3b82f6'
+                                                            }} />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Lista Resumen de Estrategias */}
+                                    <div style={{ marginTop: '30px' }}>
+                                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', borderLeft: '4px solid #7c3aed', paddingLeft: '15px', marginBottom: '20px', color: '#0f172a' }}>Resumen de Estrategias</h3>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                            {(manualData.detailedStrategies || []).slice(0, 5).map((strategy: any, i: number) => (
+                                                <div key={i} style={{ display: 'flex', gap: '15px', paddingBottom: '15px', borderBottom: '1px solid #f1f5f9' }}>
+                                                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#f1f5f9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
+                                                        {i + 1}
+                                                    </div>
+                                                    <div>
+                                                        <h4 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#0f172a' }}>{strategy.title}</h4>
+                                                        <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>{strategy.objective}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ position: 'absolute', bottom: '15mm', left: 0, right: 0, textAlign: 'center', fontSize: '10px', color: '#94a3b8' }}>
+                                        Página 1 - Resumen Ejecutivo
+                                    </div>
+                                </div>
+
+                                {/* Strategy Pages */}
+                                {(manualData.detailedStrategies || []).map((strategy: any, i: number) => (
+                                    <div key={i} className="print-page shadow-2xl" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #e2e8f0', position: 'relative' }}>
+                                        {/* Insert Strategy Content Header */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
+
+                                            {/* Encabezado Pequeño */}
+                                            <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <Sparkles size={16} color="#7c3aed" />
+                                                    <span style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
+                                                </div>
+                                                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                                                    Estrategia #{i + 1}
+                                                </div>
+                                            </div>
+
+                                            {/* Título */}
+                                            <div>
+                                                <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#7c3aed', display: 'block', marginBottom: '10px' }}>Estrategia Recomendada</span>
+                                                <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a', margin: 0, lineHeight: 1.2 }}>{strategy.title}</h2>
+                                            </div>
+
+                                            {/* Caja Problema / Solución */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                                                {/* Problema */}
+                                                <div style={{ backgroundColor: '#fef2f2', padding: '20px', borderRadius: '12px 12px 0 0', border: '1px solid #fee2e2', borderBottom: 'none' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                        <TrendingUp size={16} color="#ef4444" style={{ transform: 'rotate(180deg)' }} />
+                                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#ef4444' }}>Problema Detectado</span>
+                                                    </div>
+                                                    <p style={{ fontSize: '15px', color: '#7f1d1d', fontStyle: 'italic', margin: 0 }}>
+                                                        "{strategy.problemDetected}"
+                                                    </p>
+                                                </div>
+                                                {/* Solución */}
+                                                <div style={{ backgroundColor: '#f0fdf4', padding: '20px', borderRadius: '0 0 12px 12px', border: '1px solid #dcfce7' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                        <CheckCircle2 size={16} color="#16a34a" />
+                                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#16a34a' }}>Mejor Práctica</span>
+                                                    </div>
+                                                    <p style={{ fontSize: '15px', fontWeight: '500', color: '#14532d', margin: 0 }}>
+                                                        {strategy.bestPractice}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* Pasos */}
+                                            <div>
+                                                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', marginBottom: '20px', borderBottom: '2px solid #0f172a', paddingBottom: '10px', display: 'inline-block' }}>Plan de Implementación</h3>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                    {strategy.steps.map((step: any, idx: number) => (
+                                                        <div key={idx} style={{ display: 'flex', gap: '15px' }}>
+                                                            <div style={{
+                                                                width: '24px', height: '24px', backgroundColor: '#0f172a', color: 'white', borderRadius: '50%',
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px', flexShrink: 0, marginTop: '2px'
+                                                            }}>
+                                                                {idx + 1}
+                                                            </div>
+                                                            <div>
+                                                                <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 4px 0' }}>{step.title}</h4>
+                                                                <p style={{ fontSize: '13px', color: '#334155', lineHeight: 1.5, margin: 0 }}>{step.desc}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style={{ position: 'absolute', bottom: '15mm', left: 0, right: 0, textAlign: 'center', fontSize: '10px', color: '#94a3b8' }}>
+                                            Página {i + 2} - Estrategia #{i + 1}
+                                        </div>
+                                    </div>
+                                ))}
+                            </>
+                        )
+                    )}
+                </div>
+            </div>
+        )
+    }
+
+
     return (
         <div className="bg-[#0f1115] text-white p-4 md:p-8 min-h-screen font-sans selection:bg-violet-500/30 relative">
 
-            {/* Brillos de Fondo Ambiental */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2" />
-                <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-fuchsia-600/10 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2" />
-            </div>
+
+            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-fuchsia-600/10 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2" />
+
 
             {/* Controles de Encabezado */}
             <div className="relative z-50 flex flex-col xl:flex-row items-start xl:items-center gap-8 mb-12">
@@ -618,198 +833,202 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                 }
             </AnimatePresence >
 
-            {/* --- PLANTILLA PDF AHORRO DE TINTA (Contenedor Oculto) --- */}
-            <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -50, opacity: 0, pointerEvents: 'none' }}>
-                {manualData && (
-                    <>
-                        {/* PÁGINA 1: Resumen Ejecutivo */}
-                        <div className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
-                                {/* Encabezado */}
-                                <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                                            <Sparkles size={24} color="#7c3aed" />
-                                            <span style={{ fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
-                                        </div>
-                                        <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, lineHeight: 1.1 }}>Reporte Ejecutivo</h1>
-                                        <p style={{ fontSize: '18px', color: '#64748b', margin: '5px 0 0 0' }}>{surveyTitle}</p>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <p style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#94a3b8' }}>Fecha de Emisión</p>
-                                        <p style={{ fontSize: '14px', fontWeight: '500' }}>{format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}</p>
-                                    </div>
-                                </div>
-
-                                {/* Métricas */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
-                                    <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                        <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Total Feedback</p>
-                                        <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a' }}>{manualData.metrics.totalFeedback}</p>
-                                    </div>
-                                    <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                        <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>NPS Score</p>
-                                        <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#7c3aed' }}>+{manualData.metrics.npsScore}</p>
-                                    </div>
-                                    <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                        <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Calificación</p>
-                                        <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{manualData.metrics.avgRating}</p>
-                                    </div>
-                                    <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                        <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Mesero Top</p>
-                                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{manualData.topWaiter?.name}</p>
-                                        <p style={{ fontSize: '12px', color: '#64748b' }}>{manualData.topWaiter?.mentions} menciones</p>
-                                    </div>
-                                </div>
-
-                                {/* Gráficos */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
-                                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', height: '240px' }}>
-                                        <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Tendencia</h3>
-                                        <div style={{ height: '160px', width: '100%' }}>
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <AreaChart data={manualData.chartData}>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                                                    <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                                                    <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                                                    <Area type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={2} fill="none" />
-                                                </AreaChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-                                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
-                                        <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Sentimiento</h3>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                            {manualData.sentimentData.map((item: any, i: number) => (
-                                                <div key={i}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '12px' }}>
-                                                        <span style={{ fontWeight: '500' }}>{item.name}</span>
-                                                        <span style={{ fontWeight: 'bold' }}>{item.value}%</span>
-                                                    </div>
-                                                    <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px' }}>
-                                                        <div style={{
-                                                            width: `${item.value}%`,
-                                                            height: '100%',
-                                                            borderRadius: '4px',
-                                                            backgroundColor: item.name === 'Positivo' ? '#10b981' : item.name === 'Negativo' ? '#f43f5e' : '#3b82f6'
-                                                        }} />
-                                                    </div>
+            {/* --- PLANTILLA PDF AHORRO DE TINTA (Contenedor Oculto para uso normal) --- */}
+            {/* Solo se renderiza aquí si NO estamos en modo PublicDownload, para permitir descarga desde el dashboard */}
+            {
+                !isPublicDownloadMode && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -50, opacity: 0, pointerEvents: 'none' }}>
+                        {manualData && (
+                            <>
+                                {/* PÁGINA 1: Resumen Ejecutivo */}
+                                <div className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
+                                        {/* Encabezado */}
+                                        <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                                                    <Sparkles size={24} color="#7c3aed" />
+                                                    <span style={{ fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
                                                 </div>
-                                            ))}
+                                                <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, lineHeight: 1.1 }}>Reporte Ejecutivo</h1>
+                                                <p style={{ fontSize: '18px', color: '#64748b', margin: '5px 0 0 0' }}>{surveyTitle}</p>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <p style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#94a3b8' }}>Fecha de Emisión</p>
+                                                <p style={{ fontSize: '14px', fontWeight: '500' }}>{format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                {/* Lista Resumen de Estrategias */}
-                                <div style={{ marginTop: '10px' }}>
-                                    <h3 style={{ fontSize: '18px', fontWeight: 'bold', borderLeft: '4px solid #7c3aed', paddingLeft: '15px', marginBottom: '20px', color: '#0f172a' }}>Resumen de Estrategias</h3>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                        {(manualData.detailedStrategies || []).slice(0, 5).map((strategy: any, i: number) => (
-                                            <div key={i} style={{ display: 'flex', gap: '15px', paddingBottom: '15px', borderBottom: '1px solid #f1f5f9' }}>
-                                                <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#f1f5f9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
-                                                    {i + 1}
-                                                </div>
-                                                <div>
-                                                    <h4 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#0f172a' }}>{strategy.title}</h4>
-                                                    <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>{strategy.objective}</p>
+                                        {/* Métricas */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
+                                            <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                                <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Total Feedback</p>
+                                                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a' }}>{manualData.metrics.totalFeedback}</p>
+                                            </div>
+                                            <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                                <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>NPS Score</p>
+                                                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#7c3aed' }}>+{manualData.metrics.npsScore}</p>
+                                            </div>
+                                            <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                                <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Calificación</p>
+                                                <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{manualData.metrics.avgRating}</p>
+                                            </div>
+                                            <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                                <p style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', marginBottom: '5px' }}>Mesero Top</p>
+                                                <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{manualData.topWaiter?.name}</p>
+                                                <p style={{ fontSize: '12px', color: '#64748b' }}>{manualData.topWaiter?.mentions} menciones</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Gráficos */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+                                            <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', height: '240px' }}>
+                                                <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Tendencia</h3>
+                                                <div style={{ height: '160px', width: '100%' }}>
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <AreaChart data={manualData.chartData}>
+                                                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                                                            <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                                            <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                                            <Area type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={2} fill="none" />
+                                                        </AreaChart>
+                                                    </ResponsiveContainer>
                                                 </div>
                                             </div>
-                                        ))}
+                                            <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
+                                                <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '20px', color: '#0f172a' }}>Sentimiento</h3>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                    {manualData.sentimentData.map((item: any, i: number) => (
+                                                        <div key={i}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '12px' }}>
+                                                                <span style={{ fontWeight: '500' }}>{item.name}</span>
+                                                                <span style={{ fontWeight: 'bold' }}>{item.value}%</span>
+                                                            </div>
+                                                            <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px' }}>
+                                                                <div style={{
+                                                                    width: `${item.value}%`,
+                                                                    height: '100%',
+                                                                    borderRadius: '4px',
+                                                                    backgroundColor: item.name === 'Positivo' ? '#10b981' : item.name === 'Negativo' ? '#f43f5e' : '#3b82f6'
+                                                                }} />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Lista Resumen de Estrategias */}
+                                        <div style={{ marginTop: '10px' }}>
+                                            <h3 style={{ fontSize: '18px', fontWeight: 'bold', borderLeft: '4px solid #7c3aed', paddingLeft: '15px', marginBottom: '20px', color: '#0f172a' }}>Resumen de Estrategias</h3>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                {(manualData.detailedStrategies || []).slice(0, 5).map((strategy: any, i: number) => (
+                                                    <div key={i} style={{ display: 'flex', gap: '15px', paddingBottom: '15px', borderBottom: '1px solid #f1f5f9' }}>
+                                                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#f1f5f9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
+                                                            {i + 1}
+                                                        </div>
+                                                        <div>
+                                                            <h4 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#0f172a' }}>{strategy.title}</h4>
+                                                            <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>{strategy.objective}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: '10px', color: '#94a3b8' }}>
+                                            Página 1 - Resumen Ejecutivo
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: '10px', color: '#94a3b8' }}>
-                                    Página 1 - Resumen Ejecutivo
-                                </div>
-                            </div>
-                        </div>
+                                {/* Mostrar Cargador si Estrategias Cargando */}
+                                {strategiesLoading && (
+                                    <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                                        <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
+                                        <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras HappyMeter AI 2.0 Gemini procesa el feedback.</p>
+                                    </div>
+                                )}
 
-                        {/* Mostrar Cargador si Estrategias Cargando */}
-                        {strategiesLoading && (
-                            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                                <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
-                                <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras HappyMeter AI 2.0 Gemini procesa el feedback.</p>
-                            </div>
+
+                                {/* PÁGINAS 2+: Estrategias Detalladas (Una por página) */}
+                                {!strategiesLoading && (manualData.detailedStrategies || []).map((strategy: any, i: number) => (
+                                    <div key={i} className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px', pageBreakBefore: 'always' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
+
+                                            {/* Encabezado Pequeño */}
+                                            <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <Sparkles size={16} color="#7c3aed" />
+                                                    <span style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
+                                                </div>
+                                                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                                                    Estrategia #{i + 1}
+                                                </div>
+                                            </div>
+
+                                            {/* Título */}
+                                            <div>
+                                                <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#7c3aed', display: 'block', marginBottom: '10px' }}>Estrategia Recomendada</span>
+                                                <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a', margin: 0, lineHeight: 1.2 }}>{strategy.title}</h2>
+                                            </div>
+
+                                            {/* Caja Problema / Solución */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                                                {/* Problema */}
+                                                <div style={{ backgroundColor: '#fef2f2', padding: '20px', borderRadius: '12px 12px 0 0', border: '1px solid #fee2e2', borderBottom: 'none' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                        <TrendingUp size={16} color="#ef4444" style={{ transform: 'rotate(180deg)' }} />
+                                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#ef4444' }}>Problema Detectado</span>
+                                                    </div>
+                                                    <p style={{ fontSize: '15px', color: '#7f1d1d', fontStyle: 'italic', margin: 0 }}>
+                                                        "{strategy.problemDetected}"
+                                                    </p>
+                                                </div>
+                                                {/* Solución */}
+                                                <div style={{ backgroundColor: '#f0fdf4', padding: '20px', borderRadius: '0 0 12px 12px', border: '1px solid #dcfce7' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                        <CheckCircle2 size={16} color="#16a34a" />
+                                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#16a34a' }}>Mejor Práctica</span>
+                                                    </div>
+                                                    <p style={{ fontSize: '15px', fontWeight: '500', color: '#14532d', margin: 0 }}>
+                                                        {strategy.bestPractice}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* Pasos */}
+                                            <div>
+                                                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', marginBottom: '20px', borderBottom: '2px solid #0f172a', paddingBottom: '10px', display: 'inline-block' }}>Plan de Implementación</h3>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                    {strategy.steps.map((step: any, idx: number) => (
+                                                        <div key={idx} style={{ display: 'flex', gap: '15px' }}>
+                                                            <div style={{
+                                                                width: '24px', height: '24px', backgroundColor: '#0f172a', color: 'white', borderRadius: '50%',
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px', flexShrink: 0, marginTop: '2px'
+                                                            }}>
+                                                                {idx + 1}
+                                                            </div>
+                                                            <div>
+                                                                <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 4px 0' }}>{step.title}</h4>
+                                                                <p style={{ fontSize: '13px', color: '#334155', lineHeight: 1.5, margin: 0 }}>{step.desc}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: '10px', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+                                                Página {i + 2} - HappyMeter Intelligence
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </>
                         )}
-
-
-                        {/* PÁGINAS 2+: Estrategias Detalladas (Una por página) */}
-                        {!strategiesLoading && (manualData.detailedStrategies || []).map((strategy: any, i: number) => (
-                            <div key={i} className="print-page" style={{ width: '210mm', minHeight: '297mm', background: 'white', color: '#0f172a', padding: '15mm', fontFamily: 'sans-serif', border: '1px solid #f0f0f0', marginBottom: '20px', pageBreakBefore: 'always' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', height: '100%' }}>
-
-                                    {/* Encabezado Pequeño */}
-                                    <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <Sparkles size={16} color="#7c3aed" />
-                                            <span style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
-                                        </div>
-                                        <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                                            Estrategia #{i + 1}
-                                        </div>
-                                    </div>
-
-                                    {/* Título */}
-                                    <div>
-                                        <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#7c3aed', display: 'block', marginBottom: '10px' }}>Estrategia Recomendada</span>
-                                        <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#0f172a', margin: 0, lineHeight: 1.2 }}>{strategy.title}</h2>
-                                    </div>
-
-                                    {/* Caja Problema / Solución */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                                        {/* Problema */}
-                                        <div style={{ backgroundColor: '#fef2f2', padding: '20px', borderRadius: '12px 12px 0 0', border: '1px solid #fee2e2', borderBottom: 'none' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                <TrendingUp size={16} color="#ef4444" style={{ transform: 'rotate(180deg)' }} />
-                                                <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#ef4444' }}>Problema Detectado</span>
-                                            </div>
-                                            <p style={{ fontSize: '15px', color: '#7f1d1d', fontStyle: 'italic', margin: 0 }}>
-                                                "{strategy.problemDetected}"
-                                            </p>
-                                        </div>
-                                        {/* Solución */}
-                                        <div style={{ backgroundColor: '#f0fdf4', padding: '20px', borderRadius: '0 0 12px 12px', border: '1px solid #dcfce7' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                <CheckCircle2 size={16} color="#16a34a" />
-                                                <span style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', color: '#16a34a' }}>Mejor Práctica</span>
-                                            </div>
-                                            <p style={{ fontSize: '15px', fontWeight: '500', color: '#14532d', margin: 0 }}>
-                                                {strategy.bestPractice}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Pasos */}
-                                    <div>
-                                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', marginBottom: '20px', borderBottom: '2px solid #0f172a', paddingBottom: '10px', display: 'inline-block' }}>Plan de Implementación</h3>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                            {strategy.steps.map((step: any, idx: number) => (
-                                                <div key={idx} style={{ display: 'flex', gap: '15px' }}>
-                                                    <div style={{
-                                                        width: '24px', height: '24px', backgroundColor: '#0f172a', color: 'white', borderRadius: '50%',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px', flexShrink: 0, marginTop: '2px'
-                                                    }}>
-                                                        {idx + 1}
-                                                    </div>
-                                                    <div>
-                                                        <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 4px 0' }}>{step.title}</h4>
-                                                        <p style={{ fontSize: '13px', color: '#334155', lineHeight: 1.5, margin: 0 }}>{step.desc}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: '10px', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
-                                        Página {i + 2} - HappyMeter Intelligence
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </>
-                )}
-            </div>
-
+                    </div>
+                )
+            }
 
             {/* CONTENIDO PRINCIPAL DEL TABLERO (Se ocultará al imprimir) */}
             <div className="dashboard-content" >
