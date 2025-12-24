@@ -506,11 +506,15 @@ export async function getReportShareLink(surveyId: string) {
         const { userId } = await auth()
         if (!userId) throw new Error('Unauthorized')
 
+        // If sharing "all" reports (Unified), we need to bind the link to this user
+        // We create a composite ID: "all-[userId]" so the public page knows whose data to load
+        const effectiveId = surveyId === 'all' ? `all-${userId}` : surveyId
+
         const crypto = await import('crypto')
-        const token = crypto.createHmac('sha256', SECRET_KEY).update(surveyId).digest('hex')
+        const token = crypto.createHmac('sha256', SECRET_KEY).update(effectiveId).digest('hex')
 
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
-        return `${baseUrl}/report/${surveyId}?token=${token}`
+        return `${baseUrl}/report/${effectiveId}?token=${token}`
     } catch (error) {
         console.error("Error generating link:", error)
         throw new Error("Failed to generate link")
@@ -533,37 +537,77 @@ export async function getPublicSurveyAnalytics(surveyId: string, token: string, 
         const endDate = endOfDay(toDate)
         const startDate = dateRange?.from || subDays(startOfDay(toDate), 30)
 
-        const survey = await prisma.survey.findUnique({
-            where: { id: surveyId },
-            select: {
-                questions: true,
-                responses: {
-                    where: {
-                        createdAt: {
-                            gte: startDate,
-                            lte: endDate
-                        }
-                    },
-                    select: {
-                        id: true,
-                        createdAt: true,
-                        customerEmail: true,
-                        customerPhone: true,
-                        answers: {
-                            select: {
-                                questionId: true,
-                                value: true
-                            }
-                        }
-                    },
-                    orderBy: { createdAt: 'asc' }
-                }
-            }
-        })
+        if (surveyId.startsWith('all-')) {
+            // UNIFIED REPORT MODE
+            const targetUserId = surveyId.split('all-')[1]
+            if (!targetUserId) throw new Error("Invalid unified report ID")
 
-        if (!survey) return getEmptyAnalytics()
-        allResponses = survey.responses
-        allQuestions = survey.questions
+            const surveys = await prisma.survey.findMany({
+                where: { userId: targetUserId },
+                select: {
+                    questions: true,
+                    responses: {
+                        where: {
+                            createdAt: {
+                                gte: startDate,
+                                lte: endDate
+                            }
+                        },
+                        select: {
+                            id: true,
+                            createdAt: true,
+                            customerEmail: true,
+                            customerPhone: true,
+                            answers: {
+                                select: {
+                                    questionId: true,
+                                    value: true
+                                }
+                            }
+                        },
+                        orderBy: { createdAt: 'asc' }
+                    }
+                }
+            })
+
+            // Flatten responses and questions
+            allResponses = surveys.flatMap(s => s.responses)
+            allQuestions = surveys.flatMap(s => s.questions)
+
+        } else {
+            // SINGLE SURVEY MODE
+            const survey = await prisma.survey.findUnique({
+                where: { id: surveyId },
+                select: {
+                    questions: true,
+                    responses: {
+                        where: {
+                            createdAt: {
+                                gte: startDate,
+                                lte: endDate
+                            }
+                        },
+                        select: {
+                            id: true,
+                            createdAt: true,
+                            customerEmail: true,
+                            customerPhone: true,
+                            answers: {
+                                select: {
+                                    questionId: true,
+                                    value: true
+                                }
+                            }
+                        },
+                        orderBy: { createdAt: 'asc' }
+                    }
+                }
+            })
+
+            if (!survey) return getEmptyAnalytics()
+            allResponses = survey.responses
+            allQuestions = survey.questions
+        }
 
         const relevantResponses = allResponses
 
@@ -709,6 +753,21 @@ export async function getPublicSurveyAnalytics(surveyId: string, token: string, 
 export async function getPublicSurveyMetadata(surveyId: string, token: string) {
     const isValid = await verifyToken(surveyId, token)
     if (!isValid) throw new Error("Invalid Link")
+
+    // Handle Unified Report
+    if (surveyId.startsWith('all-')) {
+        const targetUserId = surveyId.split('all-')[1]
+        // Fetch industry from UserSettings
+        const settings = await prisma.userSettings.findUnique({
+            where: { userId: targetUserId },
+            select: { industry: true }
+        })
+
+        return {
+            title: "Reporte General Unificado",
+            industry: settings?.industry || 'restaurant'
+        }
+    }
 
     const survey = await prisma.survey.findUnique({
         where: { id: surveyId },
