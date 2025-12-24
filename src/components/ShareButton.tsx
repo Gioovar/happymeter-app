@@ -74,7 +74,7 @@ export default function ShareButton({ surveyId, surveyTitle, publicToken, classN
                         initial={{ opacity: 0, scale: 0.9, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                        className={`absolute ${variant === 'header' ? 'right-0' : 'bottom-full left-1/2 -translate-x-1/2 mb-2'} mt-3 w-64 bg-[#1a1d26] rounded-2xl shadow-2xl border border-white/10 overflow-hidden flex flex-col p-2 z-[60] backdrop-blur-xl`}
+                        className={`absolute ${variant === 'header' ? 'left-0' : 'bottom-full left-1/2 -translate-x-1/2 mb-2'} mt-3 w-64 bg-[#1a1d26] rounded-2xl shadow-2xl border border-white/10 overflow-hidden flex flex-col p-2 z-[60] backdrop-blur-xl`}
                     >
                         <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-white/5 mb-1">
                             Compartir reporte
