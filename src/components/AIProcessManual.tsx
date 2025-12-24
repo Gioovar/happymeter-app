@@ -460,7 +460,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
 
             {/* Controles de Encabezado */}
-            <div className="relative z-50 flex flex-col xl:flex-row items-start xl:items-center gap-8 mb-12">
+            <div className="relative z-30 flex flex-col xl:flex-row items-start xl:items-center gap-8 mb-12">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-gradient-to-br from-violet-600 to-fuchsia-600 rounded-xl shadow-lg shadow-violet-500/20">
@@ -539,7 +539,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                 <div className="flex flex-col-reverse md:flex-row items-end md:items-center gap-4 no-print">
 
                     {/* Botones de Acción */}
-                    <div className="bg-[#1a1d26] p-1.5 rounded-full border border-white/10 flex items-center shadow-lg relative z-[50]">
+                    <div className="bg-[#1a1d26] p-1.5 rounded-full border border-white/10 flex items-center shadow-lg relative z-30">
 
                         <ShareButton
                             surveyId={surveyId}
