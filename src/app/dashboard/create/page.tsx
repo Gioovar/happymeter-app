@@ -219,7 +219,7 @@ export default function CreateSurveyPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 pb-20">
+        <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 pb-20 -mx-4 md:-mx-8">
             {/* Header */}
             <header className="border-b border-white/5 bg-black/20 backdrop-blur-xl sticky top-0 z-50">
                 <nav className="w-full max-w-[1600px] mx-auto px-4 py-4 flex items-center justify-between">
