@@ -223,12 +223,7 @@ export default function BarGamesPage() {
 
         return (
             <div className="relative fade-in">
-                <button
-                    onClick={() => setSelectedGame(null)}
-                    className="absolute top-8 left-8 z-50 p-3 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </button>
+
                 <GameContainer
                     title={gameTitle}
                     description={currentGame.description}
@@ -239,6 +234,7 @@ export default function BarGamesPage() {
                     isSaving={isSaving}
                     bannerUrl={bannerUrl || undefined} // Pass loaded/selected banner
                     onBannerChange={(url) => setBannerUrl(url)} // Capture change
+                    onBack={() => setSelectedGame(null)}
                 >
                     {/* @ts-ignore dynamic components props */}
                     <GameComponent {...gameProps} />

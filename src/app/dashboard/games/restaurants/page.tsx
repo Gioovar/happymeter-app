@@ -68,12 +68,7 @@ export default function RestaurantGamesPage() {
         return (
             <div className="relative fade-in">
                 {/* Floating Back Button */}
-                <button
-                    onClick={() => setSelectedGameId(null)}
-                    className="absolute top-4 left-4 md:top-8 md:left-8 z-50 p-3 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition border border-white/10"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </button>
+
 
                 <GameContainer
                     title={gameTitle}
@@ -82,6 +77,7 @@ export default function RestaurantGamesPage() {
                     onTitleChange={setGameTitle}
                     onSave={handleSave}
                     isSaving={isSaving}
+                    onBack={() => setSelectedGameId(null)}
                     // Optional: We could inject game-specific settings here in the future
                     customSettings={
                         <div className="bg-[#111] border border-white/10 rounded-2xl p-6">

@@ -17,6 +17,7 @@ interface GameContainerProps {
     onSave?: () => void
     isSaving?: boolean
     onBannerChange?: (dataUrl: string) => void
+    onBack?: () => void
 }
 
 export default function GameContainer(props: GameContainerProps) {
@@ -30,7 +31,8 @@ export default function GameContainer(props: GameContainerProps) {
         onBannerUpload,
         onTitleChange,
         onSave,
-        isSaving
+        isSaving,
+        onBack
     } = props
     const [internalBannerUrl, setInternalBannerUrl] = useState<string | null>(null)
     const [showSettings, setShowSettings] = useState(false)
@@ -64,7 +66,20 @@ export default function GameContainer(props: GameContainerProps) {
     }
 
     return (
-        <div className="w-full flex justify-center p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="w-full flex flex-col items-center p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+
+            {/* Back Button (Responsive Position) */}
+            {onBack && (
+                <div className="w-full max-w-7xl flex justify-start mb-4 md:mb-0">
+                    <button
+                        onClick={onBack}
+                        className="relative md:absolute md:top-8 md:left-8 z-50 p-3 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition border border-white/10"
+                    >
+                        {/* We need ArrowLeft imported or passed. It's not imported in GameContainer currently? Check imports. */}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
+                    </button>
+                </div>
+            )}
 
             {/* Hidden Input */}
             <input

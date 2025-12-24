@@ -64,12 +64,7 @@ export default function CafeGamesPage() {
         return (
             <div className="min-h-screen bg-black text-white p-6 relative">
                 {/* Floating Back Button (Standardized) */}
-                <button
-                    onClick={() => setSelectedGame(null)}
-                    className="absolute top-4 left-4 md:top-8 md:left-8 z-50 p-3 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition border border-white/10"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </button>
+
 
                 <div className="max-w-7xl mx-auto pt-12">
                     <GameContainer
@@ -77,6 +72,7 @@ export default function CafeGamesPage() {
                         onTitleChange={setTitle}
                         description={activeGame.description}
                         onGenerateQR={handlePublish}
+                        onBack={() => setSelectedGame(null)}
                     >
                         {activeGame.component}
                     </GameContainer>
