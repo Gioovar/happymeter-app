@@ -95,7 +95,10 @@ export default function ShareButton({ surveyId, surveyTitle, publicToken, classN
 
     const shareToWhatsApp = () => {
         // Append ?action=download to force PDF download on open
-        const finalLink = `${shareLink}?action=download`
+        // Check if shareLink already has query params
+        const separator = shareLink.includes('?') ? '&' : '?'
+        const finalLink = `${shareLink}${separator}action=download`
+
         const text = `¡Hola! Aquí tienes tu Reporte PDF de HappyMeter para ${surveyTitle}: ${finalLink}`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
         setShowMenu(false)
@@ -103,7 +106,9 @@ export default function ShareButton({ surveyId, surveyTitle, publicToken, classN
 
     const copyToClipboard = async () => {
         // Append ?action=download to force PDF download on open
-        const finalLink = `${shareLink}?action=download`
+        const separator = shareLink.includes('?') ? '&' : '?'
+        const finalLink = `${shareLink}${separator}action=download`
+
         await navigator.clipboard.writeText(finalLink)
         toast.success("Enlace PDF copiado")
         setShowMenu(false)
