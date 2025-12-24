@@ -296,11 +296,11 @@ export default function DashboardPage() {
                             <PushToggle />
                             <button
                                 onClick={() => router.push('/dashboard/create')}
-                                className="group relative px-5 py-2.5 rounded-xl bg-white text-black font-bold hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center gap-2 overflow-hidden"
+                                className="group relative px-3 md:px-5 py-2.5 rounded-xl bg-white text-black font-bold hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center gap-2 overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
                                 <Plus className="w-5 h-5 relative z-10" />
-                                <span className="relative z-10">Nueva Encuesta</span>
+                                <span className="relative z-10 hidden md:inline">Nueva Encuesta</span>
                             </button>
                         </div>
                     </div>
