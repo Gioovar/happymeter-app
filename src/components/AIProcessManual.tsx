@@ -234,7 +234,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     </div>
                 </div>
 
-                <div className="mt-32 flex flex-col items-center gap-8 w-full max-w-[210mm]">
+                <div className="mt-48 flex flex-col items-center gap-8 w-full max-w-[210mm]">
 
                     {loading || strategiesLoading ? (
                         <div className="flex flex-col items-center justify-center py-20">
