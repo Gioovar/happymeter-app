@@ -15,6 +15,7 @@ import jsPDF from 'jspdf'
 import { getSurveyAnalytics, getPublicSurveyAnalytics } from '@/actions/analytics'
 import ShareButton from './ShareButton'
 import HappyLoader from '@/components/HappyLoader'
+import BrandLogo from '@/components/BrandLogo'
 
 interface AIProcessManualProps {
     surveyId: string
@@ -204,7 +205,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-gradient-to-br from-violet-600 to-fuchsia-600 rounded-xl shadow-lg shadow-violet-500/20">
-                            <Sparkles className="w-6 h-6 text-white" />
+                            <BrandLogo size="sm" withText={false} />
                         </div>
                         <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
                             Centro de Inteligencia IA
