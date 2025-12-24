@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Share2, Copy } from 'lucide-react'
+import { Share2, Copy, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { getReportShareLink } from '@/actions/analytics'
@@ -17,17 +17,21 @@ interface ShareButtonProps {
 export default function ShareButton({ surveyId, surveyTitle, publicToken, className, variant = 'header' }: ShareButtonProps) {
     const [showMenu, setShowMenu] = useState(false)
     const [shareLink, setShareLink] = useState<string>("")
+    const [isLoading, setIsLoading] = useState(false)
 
     const toggleMenu = async () => {
         if (!showMenu) {
             let link = window.location.href
             if (!publicToken) {
+                setIsLoading(true)
                 try {
                     link = await getReportShareLink(surveyId)
                 } catch (e) {
                     toast.error("Error generando enlace")
+                    setIsLoading(false)
                     return
                 }
+                setIsLoading(false)
             }
             setShareLink(link)
         }
@@ -61,10 +65,15 @@ export default function ShareButton({ surveyId, surveyTitle, publicToken, classN
 
             <button
                 onClick={toggleMenu}
-                className={`${baseStyles} ${variantStyles} ${className || ''}`}
+                disabled={isLoading}
+                className={`${baseStyles} ${variantStyles} ${className || ''} ${isLoading ? 'opacity-80 cursor-wait' : ''}`}
             >
-                <Share2 className={variant === 'header' ? "w-4 h-4" : "w-5 h-5"} />
-                Compartir
+                {isLoading ? (
+                    <Loader2 className={`animate-spin ${variant === 'header' ? "w-4 h-4" : "w-5 h-5"}`} />
+                ) : (
+                    <Share2 className={variant === 'header' ? "w-4 h-4" : "w-5 h-5"} />
+                )}
+                {isLoading ? 'Generando...' : 'Compartir'}
             </button>
 
             {/* Menu Popover */}
