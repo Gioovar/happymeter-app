@@ -216,11 +216,12 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
         return (
             <div className="min-h-screen bg-gray-100 p-8 flex flex-col items-center justify-center font-sans">
                 {/* Header Actions */}
-                <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 px-6 py-4 shadow-sm z-50 flex items-center justify-between">
+                {/* Header Actions */}
+                <div className="fixed top-0 left-0 right-0 bg-[#0f1115] border-b border-white/10 px-6 py-4 shadow-xl z-50 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <BrandLogo size="sm" withText={true} />
-                        <div className="h-6 w-px bg-gray-200 mx-2"></div>
-                        <span className="text-sm font-medium text-gray-500">Vista de Impresión</span>
+                        <div className="h-6 w-px bg-white/10 mx-2"></div>
+                        <span className="text-sm font-medium text-gray-400">Vista de Impresión</span>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
@@ -233,7 +234,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     </div>
                 </div>
 
-                <div className="mt-20 flex flex-col items-center gap-8 w-full max-w-[210mm]">
+                <div className="mt-32 flex flex-col items-center gap-8 w-full max-w-[210mm]">
 
                     {loading || strategiesLoading ? (
                         <div className="flex flex-col items-center justify-center py-20">
