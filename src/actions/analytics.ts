@@ -498,6 +498,12 @@ const SECRET_KEY = process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-me
 async function verifyToken(surveyId: string, token: string) {
     const crypto = await import('crypto')
     const expected = crypto.createHmac('sha256', SECRET_KEY).update(surveyId).digest('hex')
+
+    // Debug Log (Server Side)
+    if (expected !== token) {
+        console.log(`[TokenVerify] FAILED. ID: ${surveyId} | Token: ${token} | Expected: ${expected}`)
+    }
+
     return expected === token
 }
 
@@ -514,7 +520,8 @@ export async function getReportShareLink(surveyId: string) {
         const token = crypto.createHmac('sha256', SECRET_KEY).update(effectiveId).digest('hex')
 
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
-        return `${baseUrl}/report/${effectiveId}?token=${token}`
+        // Encode ID to ensure special characters (if any in userId) don't break the URL path
+        return `${baseUrl}/report/${encodeURIComponent(effectiveId)}?token=${token}`
     } catch (error) {
         console.error("Error generating link:", error)
         throw new Error("Failed to generate link")

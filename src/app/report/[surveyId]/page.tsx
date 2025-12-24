@@ -54,7 +54,10 @@ export default async function PublicReportPage({ params, searchParams }: PagePro
             <div className="min-h-screen bg-[#0f1115] flex items-center justify-center p-4">
                 <div className="bg-[#1a1d26] p-8 rounded-2xl border border-red-500/20 max-w-md w-full text-center">
                     <h1 className="text-xl font-bold text-red-400 mb-2">Acceso Denegado</h1>
-                    <p className="text-gray-400">El token de seguridad es inválido. Por favor solicita un nuevo enlace.</p>
+                    <p className="text-gray-400">El token de seguridad es inválido.</p>
+                    <div className="mt-4 p-2 bg-black/30 rounded text-xs text-red-500/50 font-mono break-all">
+                        ID: {surveyId}
+                    </div>
                 </div>
             </div>
         )
