@@ -1,10 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Share2, Copy, Loader2 } from 'lucide-react'
+import { Share2, Copy, Loader2, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { getReportShareLink } from '@/actions/analytics'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
+import { format } from 'date-fns'
 
 interface ShareButtonProps {
     surveyId: string
@@ -36,6 +39,58 @@ export default function ShareButton({ surveyId, surveyTitle, publicToken, classN
             setShareLink(link)
         }
         setShowMenu(!showMenu)
+    }
+
+    const handleDownloadPDF = async () => {
+        // Target elements prepared for printing (hidden in view but existing in DOM)
+        // Or specific print-page elements if they exist
+        const pages = document.querySelectorAll('.print-page')
+
+        if (pages.length === 0) {
+            toast.error("No se encontró contenido para generar el PDF")
+            return
+        }
+
+        try {
+            toast.info("Generando PDF (esto puede tardar unos segundos)...")
+            setShowMenu(false)
+
+            await new Promise(resolve => setTimeout(resolve, 500))
+
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            })
+
+            for (let i = 0; i < pages.length; i++) {
+                const page = pages[i] as HTMLElement
+
+                if (i > 0) {
+                    pdf.addPage()
+                }
+
+                const canvas = await html2canvas(page, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    useCORS: true
+                })
+
+                const imgData = canvas.toDataURL('image/png')
+                const imgWidth = 210
+                const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+            }
+
+            pdf.save(`HappyMeter_Reporte_${format(new Date(), 'yyyy-MM-dd')}.pdf`)
+            toast.success("PDF descargado con éxito")
+
+        } catch (error) {
+            console.error("PDF Error:", error)
+            toast.error("Error al generar el PDF")
+        }
     }
 
     const shareToWhatsApp = () => {
@@ -88,6 +143,19 @@ export default function ShareButton({ surveyId, surveyTitle, publicToken, classN
                         <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-white/5 mb-1">
                             Compartir reporte
                         </div>
+
+                        <button
+                            onClick={handleDownloadPDF}
+                            className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 rounded-xl transition-all text-left group border border-transparent hover:border-white/5"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center group-hover:bg-red-600 transition-all shadow-lg shadow-red-500/10 group-hover:shadow-red-500/30">
+                                <Download className="w-5 h-5 text-red-400 group-hover:text-white transition-colors" />
+                            </div>
+                            <div>
+                                <div className="font-bold text-white text-sm group-hover:text-red-400 transition-colors">Descargar PDF</div>
+                                <div className="text-[11px] text-slate-400 group-hover:text-slate-300">Guardar archivo digital</div>
+                            </div>
+                        </button>
 
                         <button
                             onClick={shareToWhatsApp}
