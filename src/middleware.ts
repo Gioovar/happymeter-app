@@ -6,6 +6,7 @@ export default clerkMiddleware((auth, req) => {
     if (
         req.nextUrl.pathname.startsWith('/play') ||
         req.nextUrl.pathname.startsWith('/s') ||
+        req.nextUrl.pathname.startsWith('/report') ||
         req.nextUrl.pathname.startsWith('/install') ||
         req.nextUrl.pathname === '/robots.txt' ||
         req.nextUrl.pathname === '/sitemap.xml' ||

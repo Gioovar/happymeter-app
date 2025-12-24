@@ -15,12 +15,29 @@ export default async function PublicReportPage({ params, searchParams }: PagePro
     const token = resolvedSearchParams.token as string
 
     if (!token) {
-        return notFound()
+        return (
+            <div className="min-h-screen bg-[#0f1115] flex items-center justify-center p-4">
+                <div className="bg-[#1a1d26] p-8 rounded-2xl border border-red-500/20 max-w-md w-full text-center">
+                    <h1 className="text-xl font-bold text-red-400 mb-2">Enlace Incompleto</h1>
+                    <p className="text-gray-400">El enlace que intentas abrir no contiene el token de seguridad necesario.</p>
+                </div>
+            </div>
+        )
     }
 
     try {
         const meta = await getPublicSurveyMetadata(surveyId, token)
-        if (!meta) return notFound()
+
+        if (!meta) {
+            return (
+                <div className="min-h-screen bg-[#0f1115] flex items-center justify-center p-4">
+                    <div className="bg-[#1a1d26] p-8 rounded-2xl border border-red-500/20 max-w-md w-full text-center">
+                        <h1 className="text-xl font-bold text-red-400 mb-2">Reporte No Encontrado</h1>
+                        <p className="text-gray-400">Es posible que la encuesta haya sido eliminada o el enlace haya expirado.</p>
+                    </div>
+                </div>
+            )
+        }
 
         return (
             <div className="bg-[#0f1115] min-h-screen">
@@ -33,6 +50,13 @@ export default async function PublicReportPage({ params, searchParams }: PagePro
             </div>
         )
     } catch (error) {
-        return notFound()
+        return (
+            <div className="min-h-screen bg-[#0f1115] flex items-center justify-center p-4">
+                <div className="bg-[#1a1d26] p-8 rounded-2xl border border-red-500/20 max-w-md w-full text-center">
+                    <h1 className="text-xl font-bold text-red-400 mb-2">Acceso Denegado</h1>
+                    <p className="text-gray-400">El token de seguridad es inválido. Por favor solicita un nuevo enlace.</p>
+                </div>
+            </div>
+        )
     }
 }
