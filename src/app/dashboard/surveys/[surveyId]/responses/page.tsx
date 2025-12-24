@@ -67,13 +67,13 @@ export default function SurveyResponsesPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 font-sans">
+        <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 font-sans -mx-4 md:-mx-8">
             {/* Background */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-600/10 blur-[120px]" />
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+            <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-12">
                 {/* Header */}
                 <div className="mb-8">
                     <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition">

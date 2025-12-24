@@ -119,8 +119,8 @@ export default function ResponsesClientPage({ initialResponses }: { initialRespo
     }, [filterType, dateRange]) // Use effect-like memo or effect
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 lg:p-12 pb-24">
-            <div className="max-w-7xl mx-auto space-y-8">
+        <div className="min-h-screen bg-[#0a0a0a] text-white -mx-4 md:-mx-8">
+            <div className="w-full max-w-[1600px] mx-auto space-y-8 px-4 py-8 md:px-8">
                 {/* Header & Controls */}
                 <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                     <div>
