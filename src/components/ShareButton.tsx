@@ -94,14 +94,18 @@ export default function ShareButton({ surveyId, surveyTitle, publicToken, classN
     }
 
     const shareToWhatsApp = () => {
-        const text = `¡Hola! Aquí tienes el Reporte de HappyMeter para ${surveyTitle}: ${shareLink}`
+        // Append ?action=download to force PDF download on open
+        const finalLink = `${shareLink}?action=download`
+        const text = `¡Hola! Aquí tienes tu Reporte PDF de HappyMeter para ${surveyTitle}: ${finalLink}`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
         setShowMenu(false)
     }
 
     const copyToClipboard = async () => {
-        await navigator.clipboard.writeText(shareLink)
-        toast.success("Enlace copiado")
+        // Append ?action=download to force PDF download on open
+        const finalLink = `${shareLink}?action=download`
+        await navigator.clipboard.writeText(finalLink)
+        toast.success("Enlace PDF copiado")
         setShowMenu(false)
     }
 
@@ -143,19 +147,6 @@ export default function ShareButton({ surveyId, surveyTitle, publicToken, classN
                         <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-white/5 mb-1">
                             Compartir reporte
                         </div>
-
-                        <button
-                            onClick={handleDownloadPDF}
-                            className="flex items-center gap-3 px-3 py-3 hover:bg-white/5 rounded-xl transition-all text-left group border border-transparent hover:border-white/5"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center group-hover:bg-red-600 transition-all shadow-lg shadow-red-500/10 group-hover:shadow-red-500/30">
-                                <Download className="w-5 h-5 text-red-400 group-hover:text-white transition-colors" />
-                            </div>
-                            <div>
-                                <div className="font-bold text-white text-sm group-hover:text-red-400 transition-colors">Descargar PDF</div>
-                                <div className="text-[11px] text-slate-400 group-hover:text-slate-300">Guardar archivo digital</div>
-                            </div>
-                        </button>
 
                         <button
                             onClick={shareToWhatsApp}

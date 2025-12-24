@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Share2, Copy, Sparkles, TrendingUp, Users, Zap, CheckCircle2, ChevronRight, ChevronDown, MessageSquare, Star, Activity, ArrowRight, Download, Send, Calendar, Eye, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DateRange } from 'react-day-picker'
@@ -27,6 +27,7 @@ interface AIProcessManualProps {
 
 export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys }: AIProcessManualProps) {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [loading, setLoading] = useState(true)
     const [strategiesLoading, setStrategiesLoading] = useState(false)
     const [manualData, setManualData] = useState<any>(null)
@@ -134,7 +135,25 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
         }
 
         fetchData()
+        fetchData()
     }, [surveyId, surveyTitle, initialIndustry, dateRange])
+
+
+    // Auto-Download PDF check
+    useEffect(() => {
+        const action = searchParams.get('action')
+        // Only trigger if action is download, data is loaded (at least the manual data), 
+        // and strategies are done loading (for full PDF).
+        if (action === 'download' && !loading && !strategiesLoading && manualData) {
+
+            // Adding a small delay to ensure DOM is fully rendered
+            const timer = setTimeout(() => {
+                downloadPDF()
+            }, 1000)
+
+            return () => clearTimeout(timer)
+        }
+    }, [searchParams, loading, strategiesLoading, manualData])
 
     // Generación de datos simulados no utilizada eliminada
 
