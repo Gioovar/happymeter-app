@@ -16,6 +16,7 @@ const config: Config = {
             animation: {
                 "spin-reverse": "spin-reverse 1s linear infinite",
                 "float": "float 6s ease-in-out infinite",
+                "text-gradient": "text-gradient 3s ease infinite",
             },
             keyframes: {
                 "spin-reverse": {
@@ -25,6 +26,16 @@ const config: Config = {
                 "float": {
                     "0%, 100%": { transform: "translateY(0)" },
                     "50%": { transform: "translateY(-20px)" },
+                },
+                "text-gradient": {
+                    "0%, 100%": {
+                        "background-size": "200% 200%",
+                        "background-position": "left center"
+                    },
+                    "50%": {
+                        "background-size": "200% 200%",
+                        "background-position": "right center"
+                    },
                 },
             },
         },

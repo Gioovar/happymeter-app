@@ -31,7 +31,7 @@ export default function Loading() {
 
                 {/* Text Logo */}
                 <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-                    Happy<span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500">Meter</span>
+                    Happy<span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-text-gradient">Meter</span>
                 </h1>
 
                 {/* Loading Bar */}

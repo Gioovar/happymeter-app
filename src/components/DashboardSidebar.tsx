@@ -300,7 +300,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                         <Menu className="w-6 h-6" />
                     </button>
                     <span className="font-bold text-lg text-white tracking-tight">
-                        Happy<span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500">Meter</span>
+                        Happy<span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-text-gradient">Meter</span>
                     </span>
                 </div>
                 {/* Notifications on Mobile */}
