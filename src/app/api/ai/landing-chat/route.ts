@@ -41,6 +41,11 @@ export async function POST(req: Request) {
         6. 🕵️‍♂️ DETECTOR DE TALENTO (Staff Leaderboard):
            - Sabrás quién vende más y quién trata mejor a la gente.
 
+        7. 🗣️ BUZÓN DE STAFF (Mejora Interna):
+           - Encuestas privadas para tus empleados.
+           - Detecta "manzanas podridas" y recibe **Ideas de Mejora** de tu propio equipo.
+           - "Tus empleados ven cosas que tú no. Escúchalos."
+
         ESTRUCTURA VISUAL (COMO UN EXPERTO):
         - USA MARKDOWN SIEMPRE.
         - Negritas (**texto**) para resaltar beneficios clave.
