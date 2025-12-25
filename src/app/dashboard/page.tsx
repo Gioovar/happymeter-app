@@ -390,130 +390,133 @@ export default function DashboardPage() {
                                     <div key={survey.id} className="group relative p-6 rounded-3xl bg-[#0F0F0F] border border-white/5 hover:border-violet-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-violet-900/10 flex flex-col justify-between">
                                         <LaserBorder color="violet" />
 
-                                        {/* Header */}
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/10 to-transparent flex items-center justify-center border border-white/5 overflow-hidden relative">
-                                                    {survey.bannerUrl ? (
-                                                        <div className="relative w-full h-full">
-                                                            <Image
-                                                                src={survey.bannerUrl}
-                                                                alt={survey.title}
-                                                                fill
-                                                                className="object-cover"
-                                                            />
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-2xl">🍹</span>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-bold text-lg group-hover:text-violet-400 transition line-clamp-1">{survey.title}</h3>
-                                                    <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                                                        <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {survey.responsesCount}</span>
-                                                        <span className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3" /> {survey.rating}</span>
+                                        {/* Content Wrapper to sit above LaserBorder mask */}
+                                        <div className="relative z-10 flex flex-col justify-between h-full">
+                                            {/* Header */}
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/10 to-transparent flex items-center justify-center border border-white/5 overflow-hidden relative">
+                                                        {survey.bannerUrl ? (
+                                                            <div className="relative w-full h-full">
+                                                                <Image
+                                                                    src={survey.bannerUrl}
+                                                                    alt={survey.title}
+                                                                    fill
+                                                                    className="object-cover"
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-2xl">🍹</span>
+                                                        )}
                                                     </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-lg group-hover:text-violet-400 transition line-clamp-1">{survey.title}</h3>
+                                                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                                                            <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {survey.responsesCount}</span>
+                                                            <span className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3" /> {survey.rating}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="relative flex gap-2">
+                                                    <button
+                                                        onClick={() => openQrModal(survey.id, survey.title)}
+                                                        className="px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300 hover:bg-violet-500/20 transition flex items-center gap-1"
+                                                    >
+                                                        <QrCode className="w-3 h-3" /> Descarga tu QR
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setMenuOpenId(menuOpenId === survey.id ? null : survey.id)
+                                                        }}
+                                                        className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition"
+                                                    >
+                                                        <MoreHorizontal className="w-5 h-5" />
+                                                    </button>
+
+                                                    {menuOpenId === survey.id && (
+                                                        <div className="absolute right-0 top-full mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                                                            <Link href={`/dashboard/reports/${survey.id}`} className="block px-4 py-3 text-sm hover:bg-white/5 flex items-center gap-2">
+                                                                <FileText className="w-4 h-4" /> Reportes
+                                                            </Link>
+                                                            <Link href={`/dashboard/edit/${survey.id}`} className="block px-4 py-3 text-sm hover:bg-white/5 flex items-center gap-2">
+                                                                <Pencil className="w-4 h-4" /> Editar
+                                                            </Link>
+                                                            <button onClick={() => handleDelete(survey.id)} className="block w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/5 flex items-center gap-2">
+                                                                <Trash2 className="w-4 h-4" /> Eliminar
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            <div className="relative flex gap-2">
-                                                <button
-                                                    onClick={() => openQrModal(survey.id, survey.title)}
-                                                    className="px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300 hover:bg-violet-500/20 transition flex items-center gap-1"
-                                                >
-                                                    <QrCode className="w-3 h-3" /> Descarga tu QR
-                                                </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        setMenuOpenId(menuOpenId === survey.id ? null : survey.id)
-                                                    }}
-                                                    className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition"
-                                                >
-                                                    <MoreHorizontal className="w-5 h-5" />
-                                                </button>
+                                            {/* Divider */}
+                                            <div className="h-px w-full bg-white/5 mb-6" />
 
-                                                {menuOpenId === survey.id && (
-                                                    <div className="absolute right-0 top-full mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                                                        <Link href={`/dashboard/reports/${survey.id}`} className="block px-4 py-3 text-sm hover:bg-white/5 flex items-center gap-2">
-                                                            <FileText className="w-4 h-4" /> Reportes
-                                                        </Link>
-                                                        <Link href={`/dashboard/edit/${survey.id}`} className="block px-4 py-3 text-sm hover:bg-white/5 flex items-center gap-2">
-                                                            <Pencil className="w-4 h-4" /> Editar
-                                                        </Link>
-                                                        <button onClick={() => handleDelete(survey.id)} className="block w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/5 flex items-center gap-2">
-                                                            <Trash2 className="w-4 h-4" /> Eliminar
-                                                        </button>
+                                            {/* Recent Feedback Section */}
+                                            <div className="mb-6">
+                                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Último Feedback</p>
+
+                                                {survey.recentFeedbacks.length > 0 ? (
+                                                    <div className="space-y-3">
+                                                        {survey.recentFeedbacks.map((feedback, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    setViewResponsesId(survey.id)
+                                                                    setViewResponsesTitle(survey.title)
+                                                                    setViewResponseDetail(feedback.fullResponse)
+                                                                }}
+                                                                className="space-y-1 cursor-pointer group/feedback hover:bg-white/5 p-2 -mx-2 rounded-xl transition-all border border-transparent hover:border-white/5"
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    {renderStars(feedback.rating)}
+                                                                    <span className="text-xs text-gray-600 ml-auto group-hover/feedback:text-gray-400 transition-colors">
+                                                                        {idx === 0 ? 'hace un momento' : feedback.date}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-sm text-gray-300 line-clamp-1 italic group-hover/feedback:text-white transition-colors">
+                                                                    "{feedback.comment}"
+                                                                </p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="py-2 text-sm text-gray-600 italic">
+                                                        Esperando respuestas...
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
 
-                                        {/* Divider */}
-                                        <div className="h-px w-full bg-white/5 mb-6" />
+                                            {/* Actions Footer */}
+                                            <div className="mt-auto space-y-4">
 
-                                        {/* Recent Feedback Section */}
-                                        <div className="mb-6">
-                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Último Feedback</p>
-
-                                            {survey.recentFeedbacks.length > 0 ? (
-                                                <div className="space-y-3">
-                                                    {survey.recentFeedbacks.map((feedback, idx) => (
-                                                        <div
-                                                            key={idx}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                setViewResponsesId(survey.id)
-                                                                setViewResponsesTitle(survey.title)
-                                                                setViewResponseDetail(feedback.fullResponse)
-                                                            }}
-                                                            className="space-y-1 cursor-pointer group/feedback hover:bg-white/5 p-2 -mx-2 rounded-xl transition-all border border-transparent hover:border-white/5"
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                {renderStars(feedback.rating)}
-                                                                <span className="text-xs text-gray-600 ml-auto group-hover/feedback:text-gray-400 transition-colors">
-                                                                    {idx === 0 ? 'hace un momento' : feedback.date}
-                                                                </span>
-                                                            </div>
-                                                            <p className="text-sm text-gray-300 line-clamp-1 italic group-hover/feedback:text-white transition-colors">
-                                                                "{feedback.comment}"
-                                                            </p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className="py-2 text-sm text-gray-600 italic">
-                                                    Esperando respuestas...
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Actions Footer */}
-                                        <div className="mt-auto space-y-4">
-
-                                            <button
-                                                onClick={() => {
-                                                    setViewResponsesId(survey.id)
-                                                    setViewResponsesTitle(survey.title)
-                                                    setViewResponseDetail(null) // Ensure list view opens
-                                                }}
-                                                className="flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition font-medium"
-                                            >
-                                                <MessageSquare className="w-4 h-4" /> Ver más respuestas
-                                            </button>
-
-                                            <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                                                <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold border border-green-500/20">
-                                                    {survey.status}
-                                                </span>
-
-                                                <Link
-                                                    href={`/s/${survey.id}`} /* Assuming public link or dashboard detail */
-                                                    target="_blank"
-                                                    className="flex items-center gap-1 text-sm font-bold text-white hover:text-violet-400 transition"
+                                                <button
+                                                    onClick={() => {
+                                                        setViewResponsesId(survey.id)
+                                                        setViewResponsesTitle(survey.title)
+                                                        setViewResponseDetail(null) // Ensure list view opens
+                                                    }}
+                                                    className="flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition font-medium"
                                                 >
-                                                    Ver encuesta <ArrowRight className="w-4 h-4" />
-                                                </Link>
+                                                    <MessageSquare className="w-4 h-4" /> Ver más respuestas
+                                                </button>
+
+                                                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                                    <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold border border-green-500/20">
+                                                        {survey.status}
+                                                    </span>
+
+                                                    <Link
+                                                        href={`/s/${survey.id}`}
+                                                        target="_blank"
+                                                        className="flex items-center gap-1 text-sm font-bold text-white hover:text-violet-400 transition"
+                                                    >
+                                                        Ver encuesta <ArrowRight className="w-4 h-4" />
+                                                    </Link>
+                                                </div>
                                             </div>
                                         </div>
 
