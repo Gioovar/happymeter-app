@@ -88,7 +88,7 @@ export default function CreatorDashboard() {
             {/* Header */}
 
 
-            <main className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+            <main className="max-w-6xl mx-auto px-6 py-12 pt-24 space-y-12">
 
                 <div className="text-center space-y-4">
                     <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-white">

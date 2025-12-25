@@ -244,7 +244,7 @@ export default function CreatorChat({ userId }: { userId?: string }) {
                     }`}
             >
                 {isOpen ? <X className="w-6 h-6" /> : (
-                    <img src="/assets/icons/bot-avatar.png" alt="Chat" className="w-8 h-8 object-contain drop-shadow-md" />
+                    <MessageCircle className="w-7 h-7" />
                 )}
                 {!isOpen && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#0a0a0a]" />
