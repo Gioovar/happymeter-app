@@ -62,11 +62,42 @@ export async function GET() {
                 conversions,
                 totalCommission,
                 pendingCommission
-            }
+            },
+            chartData: processChartData(profile.referrals)
         })
 
     } catch (error) {
         console.error('[CREATOR_STATS_GET]', error)
         return new NextResponse("Internal Error", { status: 500 })
     }
+}
+
+function processChartData(referrals: any[]) {
+    // 1. Group by date
+    const grouped = referrals.reduce((acc, curr) => {
+        const date = new Date(curr.createdAt).toLocaleDateString('es-MX', {
+            month: 'short',
+            day: 'numeric'
+        }) // e.g. "24 dic"
+        acc[date] = (acc[date] || 0) + 1
+        return acc
+    }, {} as Record<string, number>)
+
+    // 2. Fill missing days (last 7 days) if empty, or just return what we have? 
+    // Let's return the last 7 days filled for a nice chart even if empty.
+    const result = []
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        const key = d.toLocaleDateString('es-MX', {
+            month: 'short',
+            day: 'numeric'
+        })
+        result.push({
+            date: key,
+            visits: grouped[key] || 0
+        })
+    }
+
+    return result
 }

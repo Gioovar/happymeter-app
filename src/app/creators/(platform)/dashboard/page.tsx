@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react'
 import { Copy, DollarSign, Users, MousePointer2, TrendingUp, Sparkles, ExternalLink, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import CreatorChat from '@/components/CreatorChat'
 
 export default function CreatorDashboard() {
@@ -131,6 +132,70 @@ export default function CreatorDashboard() {
                             <p className="text-sm font-bold text-green-300 uppercase tracking-wider mb-2">Ganancias</p>
                             <h3 className="text-4xl font-bold text-white">${data?.stats?.totalCommission?.toFixed(2) || '0.00'} MXN</h3>
                             <p className="text-sm text-gray-500 mt-2">Comisiones totales</p>
+                        </div>
+                    </div>
+
+                    {/* Growth Chart */}
+                    <div className="bg-[#111] border border-white/10 rounded-3xl p-6 md:p-8">
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5 text-violet-400" />
+                                    Tendencia de Visitas
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">Tráfico en tu enlace los últimos 7 días</p>
+                            </div>
+                            {/* Optional: Add period selector here if needed */}
+                        </div>
+
+                        <div className="h-[300px] w-full">
+                            {data?.chartData && (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={data.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                        <XAxis
+                                            dataKey="date"
+                                            stroke="#6b7280"
+                                            fontSize={12}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            dy={10}
+                                        />
+                                        <YAxis
+                                            stroke="#6b7280"
+                                            fontSize={12}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tickFormatter={(value) => `${value}`}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#111', borderColor: '#ffffff20', borderRadius: '12px' }}
+                                            itemStyle={{ color: '#fff' }}
+                                            labelStyle={{ color: '#9ca3af', marginBottom: '4px' }}
+                                            formatter={(value: number) => [`${value} visitas`, 'Tráfico']}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="visits"
+                                            stroke="#8b5cf6"
+                                            strokeWidth={3}
+                                            fillOpacity={1}
+                                            fill="url(#colorVisits)"
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            )}
+                            {!data?.chartData && (
+                                <div className="h-full flex items-center justify-center text-gray-500">
+                                    <Loader2 className="w-6 h-6 animate-spin" />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
