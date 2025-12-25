@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, DollarSign, MapPin, Settings, Home, LogOut, Menu, X } from 'lucide-react'
+import { LayoutGrid, DollarSign, MapPin, Settings, Home, LogOut, Menu, X, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
@@ -23,6 +23,11 @@ const menuItems = [
         title: 'Finanzas',
         href: '/sellers/earnings',
         icon: DollarSign,
+    },
+    {
+        title: 'AI Coach',
+        href: '/sellers/coach',
+        icon: Sparkles,
     },
     {
         title: 'Perfil',
