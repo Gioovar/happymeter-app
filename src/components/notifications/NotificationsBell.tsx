@@ -95,7 +95,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
         setIsOpen(false)
 
         if (notif.meta?.responseId) {
-            router.push(`/dashboard/responses/${notif.meta.responseId}`)
+            router.push(`/dashboard/responses/${notif.meta.responseId}?source=notification`)
         } else if (notif.type === 'ACHIEVEMENT') {
             router.push('/dashboard/achievements')
         } else if (notif.type === 'REPORT') {

@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import LaserBorder from '@/components/ui/LaserBorder'
 import ResponseClientView from '@/components/responses/ResponseClientView' // We'll create this to handle client-side interactions like image lightbox
+import BackButton from '@/components/ui/BackButton'
 
 export default async function ResponseDetailPage({ params }: { params: Promise<{ responseId: string }> }) {
     const { userId } = await auth()
@@ -41,7 +42,10 @@ export default async function ResponseDetailPage({ params }: { params: Promise<{
     // and handle the lightbox/hover states exactly like the modal.
     // However, to strictly follow the modal code structure in a page:
 
-    const displayName = response.customerName || 'Cliente Anónimo'
+    const isStaffSurvey = response.survey?.title?.toLowerCase().includes('staff')
+    const anonymousLabel = isStaffSurvey ? 'Colaborador Anónimo' : 'Cliente Anónimo'
+
+    const displayName = response.customerName || anonymousLabel
     const initial = displayName.charAt(0).toUpperCase()
     const colorIndex = displayName.length % 3
     const avatarBg = ['bg-violet-500', 'bg-fuchsia-500', 'bg-blue-500'][colorIndex]
@@ -67,12 +71,7 @@ export default async function ResponseDetailPage({ params }: { params: Promise<{
 
                 {/* Back Link styled like the modal header actions but appropriate for a page */}
                 <div className="absolute top-0 left-0 -mt-12 md:-ml-12 mb-4">
-                    <Link href="/dashboard/responses" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition group py-2">
-                        <div className="p-2 rounded-lg bg-white/5 border border-white/5 group-hover:bg-white/10 transition">
-                            <ArrowLeft className="w-4 h-4" />
-                        </div>
-                        <span className="text-sm font-medium">Volver</span>
-                    </Link>
+                    <BackButton fallbackRoute="/dashboard/responses" />
                 </div>
 
                 <div className="bg-[#0a0a0a] border border-white/10 rounded-[32px] w-full shadow-2xl overflow-hidden relative flex flex-col">
