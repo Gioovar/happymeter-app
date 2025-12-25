@@ -13,8 +13,13 @@ export default function TeamPage() {
 
     // Form
     const [email, setEmail] = useState('')
-    const [role, setRole] = useState<'ADMIN' | 'STAFF'>('STAFF')
+    const [role, setRole] = useState<'ADMIN' | 'STAFF' | 'REPRESENTATIVE'>('STAFF')
+    const [state, setState] = useState('')
     const [generatedLink, setGeneratedLink] = useState('')
+
+    const mexicanStates = [
+        "Aguascalientes", "Baja California", "Baja California Sur", "Campeche", "Chiapas", "Chihuahua", "Ciudad de México", "Coahuila", "Colima", "Durango", "Estado de México", "Guanajuato", "Guerrero", "Hidalgo", "Jalisco", "Michoacán", "Morelos", "Nayarit", "Nuevo León", "Oaxaca", "Puebla", "Querétaro", "Quintana Roo", "San Luis Potosí", "Sinaloa", "Sonora", "Tabasco", "Tamaulipas", "Tlaxcala", "Veracruz", "Yucatán", "Zacatecas"
+    ]
 
     useEffect(() => {
         loadData()
@@ -38,10 +43,15 @@ export default function TeamPage() {
 
         startTransition(async () => {
             try {
-                const res = await inviteTeamMember(email, role)
+                if (role === 'REPRESENTATIVE' && !state) {
+                    toast.error('Debes seleccionar un estado para el representante')
+                    return
+                }
+                const res = await inviteTeamMember(email, role, state)
                 toast.success('Invitación creada')
                 setGeneratedLink(res.link)
                 setEmail('')
+                setState('')
                 loadData()
             } catch (error) {
                 toast.error('Error al crear invitación')
@@ -101,13 +111,30 @@ export default function TeamPage() {
                         <label className="text-xs uppercase text-gray-500 font-bold mb-1 block">Rol</label>
                         <select
                             value={role}
-                            onChange={(e) => setRole(e.target.value as 'ADMIN' | 'STAFF')}
+                            onChange={(e) => setRole(e.target.value as any)}
                             className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 focus:border-violet-500 outline-none transition text-white appearance-none"
                         >
-                            <option value="STAFF">Staff (Soporte/Pagos)</option>
-                            <option value="ADMIN">Administrador (Total)</option>
+                            <option value="STAFF">Staff (Soporte)</option>
+                            <option value="ADMIN">Administrador</option>
+                            <option value="REPRESENTATIVE">Representante</option>
                         </select>
                     </div>
+
+                    {role === 'REPRESENTATIVE' && (
+                        <div className="w-full md:w-48 animate-in fade-in slide-in-from-left-2">
+                            <label className="text-xs uppercase text-gray-500 font-bold mb-1 block">Estado</label>
+                            <select
+                                value={state}
+                                onChange={(e) => setState(e.target.value)}
+                                className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 focus:border-violet-500 outline-none transition text-white appearance-none"
+                            >
+                                <option value="">Seleccionar...</option>
+                                {mexicanStates.map(s => (
+                                    <option key={s} value={s}>{s}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <button
                         type="submit"
                         disabled={isPending}
@@ -150,10 +177,11 @@ export default function TeamPage() {
                                             {/* We don't have email in UserSettings, showing businessName or ID */}
                                             <p className="font-medium text-white">{m.businessName}</p>
                                             <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${m.role === 'SUPER_ADMIN' ? 'bg-fuchsia-500/20 text-fuchsia-400' :
-                                                    m.role === 'ADMIN' ? 'bg-violet-500/20 text-violet-400' :
+                                                m.role === 'ADMIN' ? 'bg-violet-500/20 text-violet-400' :
+                                                    m.role === 'REPRESENTATIVE' ? 'bg-emerald-500/20 text-emerald-400' :
                                                         'bg-blue-500/20 text-blue-400'
                                                 }`}>
-                                                {m.role}
+                                                {m.role} {m.state ? `(${m.state})` : ''}
                                             </span>
                                         </div>
                                         <div className="text-xs text-gray-500">
@@ -183,7 +211,7 @@ export default function TeamPage() {
                                             <p className="font-medium text-white truncate">{inv.email}</p>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-[10px] bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded-full uppercase font-bold">
-                                                    {inv.role}
+                                                    {inv.role} {inv.state ? `(${inv.state})` : ''}
                                                 </span>
                                                 <code className="text-[10px] text-gray-600 truncate max-w-[100px]">{inv.token}</code>
                                             </div>

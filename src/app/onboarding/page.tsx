@@ -2,7 +2,7 @@
 'use client'
 
 import { completeOnboarding } from '@/actions/onboarding'
-import { Store, Phone, Instagram, Facebook, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react'
+import { Store, Phone, Instagram, Facebook, CheckCircle2, MessageSquare, Loader2, MapPin } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -87,6 +87,10 @@ export default function OnboardingPage() {
         }
     }
 
+    const mexicanStates = [
+        "Aguascalientes", "Baja California", "Baja California Sur", "Campeche", "Chiapas", "Chihuahua", "Ciudad de México", "Coahuila", "Colima", "Durango", "Estado de México", "Guanajuato", "Guerrero", "Hidalgo", "Jalisco", "Michoacán", "Morelos", "Nayarit", "Nuevo León", "Oaxaca", "Puebla", "Querétaro", "Quintana Roo", "San Luis Potosí", "Sinaloa", "Sonora", "Tabasco", "Tamaulipas", "Tlaxcala", "Veracruz", "Yucatán", "Zacatecas"
+    ]
+
     return (
         <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
             <div className="max-w-md w-full space-y-8">
@@ -133,6 +137,43 @@ export default function OnboardingPage() {
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                    <MapPin className="w-4 h-4" /> Estado <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <select
+                                        name="state"
+                                        required
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500 transition appearance-none cursor-pointer"
+                                        defaultValue=""
+                                    >
+                                        <option value="" disabled>Selecciona tu estado</option>
+                                        {mexicanStates.map(state => (
+                                            <option key={state} value={state}>{state}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                    <MapPin className="w-4 h-4" /> Ciudad <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="city"
+                                    required
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500 transition placeholder:text-gray-600"
+                                    placeholder="Ej. Guadalajara"
+                                />
                             </div>
                         </div>
 

@@ -97,7 +97,12 @@ model UserSettings {
 
   affiliateProfile    AffiliateProfile?
   role                UserRole  @default(USER)
+  representativeProfile RepresentativeProfile?
   pushSubscriptions   PushSubscription[]
+  
+  // Location for Business/Sales Attribution
+  state               String?
+  city                String?
 }
 
 enum UserRole {
@@ -105,6 +110,7 @@ enum UserRole {
   STAFF
   ADMIN
   SUPER_ADMIN
+  REPRESENTATIVE
 }
 
 // ... existing models ...
@@ -429,6 +435,7 @@ model TeamInvitation {
   email     String   @unique
   role      UserRole
   token     String   @unique
+  state     String?  // If role is REPRESENTATIVE
   status    String   @default("PENDING") // PENDING, ACCEPTED
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -445,4 +452,49 @@ model PushSubscription {
 
   @@unique([userId, endpoint])
   @@index([userId])
+}
+
+model RepresentativeProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  state           String   @unique // The state they represent (e.g., "Jalisco", "CDMX")
+  
+  commissionRate  Float    @default(15.0)
+  balance         Float    @default(0)
+  
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  commissions     RepresentativeCommission[]
+  payouts         RepresentativePayout[]
+}
+
+model RepresentativeCommission {
+  id               String              @id @default(uuid())
+  representativeId String
+  amount           Float
+  description      String
+  status           CommissionStatus    @default(PENDING) // Reusing existing enum
+  sourceSaleId     String?             // Optional link to the Sale
+  createdAt        DateTime            @default(now())
+  
+  representative   RepresentativeProfile @relation(fields: [representativeId], references: [id], onDelete: Cascade)
+  
+  @@index([representativeId])
+}
+
+model RepresentativePayout {
+  id               String              @id @default(uuid())
+  representativeId String
+  amount           Float
+  status           String              // PENDING, PAID, REJECTED
+  note             String?
+  createdAt        DateTime            @default(now())
+  processedAt      DateTime?
+  
+  representative   RepresentativeProfile @relation(fields: [representativeId], references: [id], onDelete: Cascade)
+  
+  @@index([representativeId])
 }

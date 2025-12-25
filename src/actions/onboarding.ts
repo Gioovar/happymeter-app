@@ -13,6 +13,8 @@ export async function completeOnboarding(formData: FormData) {
     const phone = formData.get('phone') as string
     const instagram = formData.get('instagram') as string
     const facebook = formData.get('facebook') as string
+    const state = formData.get('state') as string
+    const city = formData.get('city') as string
     // const website = formData.get('website') as string
 
     if (!businessName) throw new Error('Business name is required')
@@ -30,7 +32,9 @@ export async function completeOnboarding(formData: FormData) {
             industry,
             phone,
             socialLinks,
-            isOnboarded: true
+            isOnboarded: true,
+            state,
+            city
         },
         create: {
             userId,
@@ -39,7 +43,9 @@ export async function completeOnboarding(formData: FormData) {
             phone,
             socialLinks,
             isOnboarded: true,
-            plan: 'FREE'
+            plan: 'FREE',
+            state,
+            city
         }
     })
 

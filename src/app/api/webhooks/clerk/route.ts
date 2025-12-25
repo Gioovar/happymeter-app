@@ -72,14 +72,32 @@ export async function POST(req: Request) {
             }
         }
 
+        // Create UserSettings first
         await prisma.userSettings.create({
             data: {
                 userId: id,
-                role: role as any, // Cast to avoid TS enum issues if client not generated
+                role: role as any,
                 plan: 'FREE',
                 maxSurveys: 3
             }
         })
+
+        // If invited as Representative, create Profile
+        if (role === 'REPRESENTATIVE' && primaryEmail) {
+            const invitation = await prisma.teamInvitation.findUnique({
+                where: { email: primaryEmail }
+            })
+
+            if (invitation && invitation.state) {
+                await prisma.representativeProfile.create({
+                    data: {
+                        userId: id,
+                        state: invitation.state,
+                        commissionRate: 15.0
+                    }
+                })
+            }
+        }
 
         // Send Welcome Email
         if (primaryEmail) {

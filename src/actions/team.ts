@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { UserRole } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 
-export async function inviteTeamMember(email: string, role: UserRole) {
+export async function inviteTeamMember(email: string, role: UserRole, state?: string) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
@@ -36,7 +36,8 @@ export async function inviteTeamMember(email: string, role: UserRole) {
                 email,
                 role,
                 token,
-                status: 'PENDING'
+                status: 'PENDING',
+                state
             }
         })
     } catch (dbError) {

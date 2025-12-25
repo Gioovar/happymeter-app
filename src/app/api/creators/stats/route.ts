@@ -22,9 +22,11 @@ export async function GET() {
 
         // Auto-create profile if not exists (for now, open to everyone)
         if (!profile) {
-            // ... (keep existing creation logic if needed, but for brevity assume it exists or copy if safe. Actually, let's keep it minimal edit)
-            // Wait, I need to match the indentation and context.
-            // The creation logic is huge. Let's just update the include in the findUnique.
+            return NextResponse.json({
+                profile: null,
+                stats: { visitors: 0, leads: 0, conversions: 0, totalCommission: 0, pendingCommission: 0 },
+                chartData: []
+            })
         }
 
         // ...
