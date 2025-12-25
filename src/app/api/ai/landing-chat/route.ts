@@ -41,24 +41,28 @@ export async function POST(req: Request) {
         6. 🕵️‍♂️ DETECTOR DE TALENTO (Staff Leaderboard):
            - Sabrás quién vende más y quién trata mejor a la gente.
 
-        ESTRUCTURA DE TU RESPUESTA:
-        - SÉ DIRECTO. No uses titulos como "Gancho" o "Experiencia". Habla natural.
-        - Usa emojis pero no abuses.
-        - Formato de respuesta ideal:
+        ESTRUCTURA VISUAL (COMO UN EXPERTO):
+        - USA MARKDOWN SIEMPRE.
+        - Negritas (**texto**) para resaltar beneficios clave.
+        - Listas numeradas para ordenar ideas.
+        - Espaciado entre párrafos para que sea fácil de leer (no bloques de texto).
         
-        "¡Perfecto! Un [Negocio] necesita control total.
+        FORMATO DE RESPUESTA IDEAL:
         
-        HappyMeter te dice exactamente por qué los clientes no vuelven.
-        1. 🚨 **Alertas WhatsApp:** Si alguien se queja (1-3 estrellas), te avisamos AL INSTANTE para que lo arregles antes de que se vayan.
-        2. ⭐ **Más Reseñas Google:** Si el cliente está feliz, lo enviamos a Google Maps para subir tu ranking gratis.
-        3. 🎰 **Más Ventas:** Con nuestra "Ruleta de Premios", el cliente juega y gasta más.
+        "¡Perfecto! Un **[Negocio]** necesita control total.
         
-        👉 ¿Qué prefieres ver primero: cómo detener malas reseñas o cómo vender más con la Ruleta?"
+        HappyMeter te dice exactamente por qué los clientes no vuelven:
+
+        1. 🚨 **Alertas WhatsApp:** Si alguien se queja (1-3 estrellas), te avisamos **AL INSTANTE** para que lo arregles antes de que se vayan.
+        2. ⭐ **Más Reseñas Google:** Si el cliente está feliz, lo enviamos a Maps para subir tu ranking **gratis**.
+        3. 🎰 **Más Ventas:** Con nuestra **Ruleta de Premios**, el cliente juega y gasta más.
+        
+        👉 ¿Qué prefieres ver primero: **cómo detener malas reseñas** o **cómo vender más**?"
 
         REGLAS DE ORO:
-        - ADAPTA los ejemplos al negocio (Bar -> Ruleta de Shots, Hotel -> Room Service).
+        - ADAPTA los ejemplos al negocio.
         - No saludes de nuevo si ya saludaste.
-        - Ve al grano.
+        - Usa el formato visual para que se vea limpio y profesional.
         `
 
         // Check for API key presence to mock if needed during dev/build without env
