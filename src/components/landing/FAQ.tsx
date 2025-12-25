@@ -32,7 +32,7 @@ const faqs = [
     },
     {
         question: "¿Cómo funcionan los Juegos de Premios?",
-        answer: "Es psicología pura. Invertimos el proceso: no pedimos, *damos* entretenimiento. Al ofrecer una dinámica divertida durante su estancia, 'hackeamos' su atención. Su cerebro ve el QR y se prepara para Jugar y Ganar, no para llenar formularios. Así, el escaneo se vuelve irresistible y natural."
+        answer: "La gamificación es la clave. Tenemos un catálogo completo (Ruleta, Dados y más) para hacer divertida su estancia. El cliente juega al principio o intermedio de su visita para ganar un incentivo que TÚ configuras. Al 'dar' diversión primero, hackeamos su atención y multiplicamos x10 la participación."
     },
     {
         question: "¿Necesito integrarlo con mi punto de venta (POS)?",
