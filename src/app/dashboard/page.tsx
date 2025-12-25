@@ -313,7 +313,7 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {stats.map((stat, idx) => (
                             <div key={idx} className={`relative group p-6 rounded-3xl bg-[#0F0F0F] border ${stat.border} hover:border-white/20 transition-all duration-300 hover:-translate-y-1 shadow-2xl overflow-hidden`}>
-                                <LaserBorder color={stat.laserColor} />
+                                <LaserBorder color={stat.laserColor} maskClass="bg-[#0F0F0F]" />
                                 <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full bg-gradient-to-br ${stat.color} opacity-20 blur-[50px] group-hover:opacity-30 transition-opacity`} />
 
                                 <div className="relative z-10 flex flex-col justify-between h-full">
@@ -387,8 +387,8 @@ export default function DashboardPage() {
                         ) : displayedSurveys.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {displayedSurveys.map((survey) => (
-                                    <div key={survey.id} className="group relative p-6 rounded-3xl bg-[#0F0F0F] border border-white/5 hover:border-violet-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-violet-900/10 flex flex-col justify-between">
-                                        <LaserBorder color="violet" />
+                                    <div key={survey.id} className="group relative p-6 rounded-3xl bg-[#0F0F0F] border border-white/5 hover:border-violet-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-violet-900/10 flex flex-col justify-between overflow-hidden">
+                                        <LaserBorder color="violet" maskClass="bg-[#0F0F0F]" />
 
                                         {/* Content Wrapper to sit above LaserBorder mask */}
                                         <div className="relative z-10 flex flex-col justify-between h-full">
