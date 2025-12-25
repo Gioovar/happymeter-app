@@ -8,7 +8,7 @@ export default function Footer() {
             <div className="max-w-7xl mx-auto px-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
                     <div className="col-span-1 md:col-span-2">
-                        <h3 className="text-2xl font-bold text-white mb-4">Happy<span className="text-violet-500">Meter</span></h3>
+                        <h3 className="text-2xl font-bold text-white mb-4">Happy<span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500">Meter</span></h3>
                         <p className="text-gray-400 max-w-sm">
                             La plataforma de encuestas de satisfacción más fácil y potente para negocios modernos.
                         </p>

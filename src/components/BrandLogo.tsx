@@ -42,7 +42,7 @@ export default function BrandLogo({
 
             {withText && (
                 <span className={`font-bold tracking-tight text-white ${currentSize.text} ${textClassName}`}>
-                    Happy<span className="text-green-500">Meter</span>
+                    Happy<span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500">Meter</span>
                 </span>
             )}
         </div>
