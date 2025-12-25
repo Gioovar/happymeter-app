@@ -25,6 +25,26 @@ const faqs = [
     {
         question: "¿Qué pasa con mis empleados?",
         answer: "HappyMeter es tu mejor aliado de RRHH. Con el 'Staff Leaderboard', sabrás exactamente quién atiende mejor. Los clientes califican el servicio, y tú descubres quién es tu empleado estrella y quién está fallando."
+    },
+    {
+        question: "¿Hay contratos forzosos o plazos fijos?",
+        answer: "Cero ataduras. Confiamos tanto en nuestro valor que puedes cancelar cuando quieras con un solo clic. Sin llamadas incómodas ni letras chiquitas."
+    },
+    {
+        question: "¿Qué es la 'Ruleta de Premios'?",
+        answer: "Es nuestro secreto para que el 30% de tus clientes opinen (vs el 1% normal). El cliente gira una ruleta digital al final de su encuesta para ganar un incentivo que TÚ decides (ej. un postre gratis). Es divertido y adictivo."
+    },
+    {
+        question: "¿Necesito integrarlo con mi punto de venta (POS)?",
+        answer: "No. HappyMeter funciona en paralelo. No tocamos tu facturación ni tu software actual. Esto elimina riesgos técnicos y hace que la instalación sea inmediata."
+    },
+    {
+        question: "¿Funciona si tengo varias sucursales?",
+        answer: "¡Es perfecto para franquicias! Tienes un 'Panel de Dueño' donde ves el rendimiento de todas tus sucursales en una sola pantalla. Compara gerentes, zonas y detecta problemas a nivel global."
+    },
+    {
+        question: "¿Y si necesito ayuda humana?",
+        answer: "Tu IA de soporte está disponible 24/7, pero nuestro equipo de éxito del cliente (humanos reales) también está listo para ayudarte por WhatsApp si necesitas algo más específico."
     }
 ]
 
