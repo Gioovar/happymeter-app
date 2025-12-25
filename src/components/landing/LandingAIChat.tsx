@@ -75,7 +75,11 @@ export default function LandingAIChat() {
                     className="relative px-8 py-4 bg-black rounded-full leading-none flex items-center divide-x divide-gray-600"
                 >
                     <span className="flex items-center space-x-3 pr-4">
-                        <Sparkles className="w-5 h-5 text-violet-400 animate-pulse" />
+                        <img
+                            src="/assets/branding/smile-icon.png"
+                            alt="AI"
+                            className="w-6 h-6 object-contain animate-pulse brightness-0 invert"
+                        />
                         <span className="text-gray-100 font-bold text-lg group-hover:text-white transition-colors">
                             Probar Demo IA
                         </span>
