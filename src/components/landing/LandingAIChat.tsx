@@ -116,11 +116,21 @@ export default function LandingAIChat() {
                                     animate={{ opacity: 1, y: 0 }}
                                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
+                                    <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed text-left ${msg.role === 'user'
                                         ? 'bg-violet-600 text-white rounded-tr-none'
                                         : 'bg-[#1a1a1a] border border-white/5 text-gray-200 rounded-tl-none'
-                                        }`}>
-                                        {msg.content}
+                                        }`}
+                                    >
+                                        {msg.content.split('\n').map((line, i) => (
+                                            <p key={i} className={`min-h-[1em] ${i > 0 ? 'mt-2' : ''}`}>
+                                                {line.split(/(\*\*.*?\*\*)/).map((part, j) => {
+                                                    if (part.startsWith('**') && part.endsWith('**')) {
+                                                        return <strong key={j} className="text-white font-bold">{part.slice(2, -2)}</strong>
+                                                    }
+                                                    return part
+                                                })}
+                                            </p>
+                                        ))}
                                     </div>
                                 </motion.div>
                             ))}
