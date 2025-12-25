@@ -77,7 +77,21 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
 
     const handleNotificationClick = async (notif: any) => {
         setLoadingId(notif.id)
-        await markAsRead(notif.id)
+
+        // Remove locally immediately (Optimistic UI)
+        setNotifications(prev => prev.filter(n => n.id !== notif.id))
+        setUnreadCount(prev => Math.max(0, prev - 1))
+
+        // Mark as read in backend
+        try {
+            await fetch('/api/notifications', {
+                method: 'PATCH',
+                body: JSON.stringify({ notificationId: notif.id, markAll: false })
+            })
+        } catch (error) {
+            console.error('Failed to mark read', error)
+        }
+
         setIsOpen(false)
 
         if (notif.meta?.responseId) {
