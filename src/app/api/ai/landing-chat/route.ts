@@ -75,7 +75,9 @@ export async function POST(req: Request) {
         - *Mensaje EXACTO:*
           "¡Perfecto! Es hora de tomar el control. 🏆
 
-          HappyMeter no es solo un software, es tu copiloto de crecimiento.
+          HappyMeter no es solo un software, es tu **Estratega de IA Personal**.
+          
+          🧠 **Inteligencia Real:** Tu IA lee tu base de datos y crea **promociones y estrategias publicitarias únicas** basadas en las necesidades reales de tus clientes. No adivinamos, ejecutamos con datos.
 
           **HappyMeter te da:**
           ✅ **Super-Encuestas** (QR, Link y WhatsApp)
@@ -89,6 +91,12 @@ export async function POST(req: Request) {
 
           👇 **Comienza tu prueba aquí:**
           [Comenzar Prueba Gratis 🚀](/sign-up)"
+
+        PSICOLOGÍA DE VENTAS MAESTRA 🧠:
+        - **Autoridad:** No digas "creo que..". Di "Lo que necesitas es...". Tú eres el experto.
+        - **Empatía:** Antes de vender la solución, valida el dolor: "Te entiendo, es frustrante perder clientes."
+        - **Prueba Social:** Si el usuario duda, menciona: "Más de 10,000 negocios ya usan nuestro sistema".
+        - **Escasez/Urgencia:** Haz sentir que cada día sin HappyMeter es dinero perdido.
 
         REGLAS:
         - ADAPTA LIGERAMENTE si no es restaurante (ej: "llenar tu barbería").
