@@ -9,6 +9,8 @@ export async function updateCreatorProfile(data: {
     instagram: string
     tiktok: string
     youtube: string
+    twitch: string
+    facebook: string
 }) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
@@ -18,7 +20,9 @@ export async function updateCreatorProfile(data: {
         paypalEmail: data.paypalEmail || null,
         instagram: data.instagram || null,
         tiktok: data.tiktok || null,
-        youtube: data.youtube || null
+        youtube: data.youtube || null,
+        twitch: data.twitch || null,
+        facebook: data.facebook || null
     }
 
     await prisma.affiliateProfile.update({

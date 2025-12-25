@@ -160,6 +160,7 @@ model AffiliateProfile {
   instagram       String?
   tiktok          String?
   youtube         String?
+  twitch          String?   // New
   facebook        String?   // New
   otherSocials    String?  // New: LinkedIn, Portfolio, etc.
   whatsapp        String?   // New: For notifications

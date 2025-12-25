@@ -14,6 +14,8 @@ export default function ProfileForm({ profile }: { profile: AffiliateProfile }) 
     const [instagram, setInstagram] = useState(profile.instagram || '')
     const [tiktok, setTiktok] = useState(profile.tiktok || '')
     const [youtube, setYoutube] = useState(profile.youtube || '')
+    const [twitch, setTwitch] = useState(profile.twitch || '')
+    const [facebook, setFacebook] = useState(profile.facebook || '')
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -24,7 +26,9 @@ export default function ProfileForm({ profile }: { profile: AffiliateProfile }) 
                     paypalEmail,
                     instagram,
                     tiktok,
-                    youtube
+                    youtube,
+                    twitch,
+                    facebook
                 })
                 toast.success('Perfil actualizado correctamente')
             } catch (error) {
@@ -83,6 +87,26 @@ export default function ProfileForm({ profile }: { profile: AffiliateProfile }) 
                             placeholder="Canal URL"
                         />
                     </div>
+                    <div>
+                        <label className="block text-xs uppercase text-gray-500 mb-1">Twitch</label>
+                        <input
+                            type="text"
+                            value={twitch}
+                            onChange={(e) => setTwitch(e.target.value)}
+                            className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-violet-500 transition"
+                            placeholder="Canal URL"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs uppercase text-gray-500 mb-1">Facebook</label>
+                        <input
+                            type="text"
+                            value={facebook}
+                            onChange={(e) => setFacebook(e.target.value)}
+                            className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-violet-500 transition"
+                            placeholder="Perfil o Página"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -94,6 +118,6 @@ export default function ProfileForm({ profile }: { profile: AffiliateProfile }) 
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Guardar Cambios
             </button>
-        </form>
+        </form >
     )
 }
