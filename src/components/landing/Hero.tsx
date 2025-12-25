@@ -63,14 +63,19 @@ export default function Hero() {
 
                 {/* Dashboard Preview (Floating) */}
                 <div className="mt-20 relative mx-auto max-w-6xl perspective-1000">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-2xl blur-2xl opacity-20" />
-                    <div className="relative bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl transform rotate-x-12 hover:rotate-x-0 transition duration-700 ease-out">
-                        <img
-                            src="/dashboard-real.png"
-                            alt="HappyMeter Dashboard Real"
-                            className="w-full h-auto"
-                            onError={(e) => e.currentTarget.src = 'https://placehold.co/1200x800/111/444?text=Dashboard+Preview'}
-                        />
+                    {/* Glow Effect */}
+                    <div className="absolute -inset-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-3xl blur-3xl opacity-20" />
+
+                    {/* Gradient Border & 3D Container */}
+                    <div className="relative p-[1px] rounded-2xl bg-gradient-to-r from-violet-500 via-white/20 to-fuchsia-500 transform rotate-x-12 hover:rotate-x-0 transition duration-1000 ease-out shadow-2xl">
+                        <div className="relative bg-[#0a0a0a] rounded-2xl overflow-hidden">
+                            <img
+                                src="/dashboard-real.png"
+                                alt="HappyMeter Dashboard Real"
+                                className="w-full h-auto"
+                                onError={(e) => e.currentTarget.src = 'https://placehold.co/1200x800/111/444?text=Dashboard+Preview'}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
