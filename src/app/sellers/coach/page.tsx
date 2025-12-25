@@ -83,7 +83,7 @@ export default function SellerCoachPage() {
     ]
 
     return (
-        <div className="flex h-full flex-col bg-[#0f1115] relative overflow-hidden">
+        <div className="fixed inset-0 md:left-64 bg-[#0f1115] z-30 flex flex-col h-[100dvh] pt-16 md:pt-0">
             {/* Background Effects */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]" />
