@@ -5,6 +5,14 @@ export async function POST(req: Request) {
     try {
         const { messages, businessType } = await req.json()
 
+        // 1. Force Welcome Message (Static) to prevent LLM hallucinations or jumping to pitch
+        if (!messages || messages.length === 0) {
+            return NextResponse.json({
+                role: 'assistant',
+                content: "¡Hola! 👋 ¿Quieres saber por qué tus clientes no regresan? HappyMeter te lo dice.\n\nDime, ¿de qué trata tu negocio? (Ej: Restaurante, Barbería, Hotel...)"
+            })
+        }
+
         const SYSTEM_PROMPT = `
         Eres la IA de HappyMeter, experta en crecimiento de negocios físicos.
 
