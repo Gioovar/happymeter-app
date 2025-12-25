@@ -67,16 +67,28 @@ export default function LandingAIChat() {
     return (
         <>
             {/* Trigger Button */}
-            <button
-                onClick={handleOpen}
-                className="group relative px-8 py-4 rounded-full bg-white/5 text-white font-medium text-lg border border-white/10 hover:bg-white/10 transition duration-300 backdrop-blur-sm overflow-hidden"
-            >
-                <div className="absolute inset-0 bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <span className="relative flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-violet-400" />
-                    Probar Demo IA
-                </span>
-            </button>
+            {/* Trigger Button with Modern Glow Effect */}
+            <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-violet-600 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-gradient-xy"></div>
+                <button
+                    onClick={handleOpen}
+                    className="relative px-8 py-4 bg-black rounded-full leading-none flex items-center divide-x divide-gray-600"
+                >
+                    <span className="flex items-center space-x-3 pr-4">
+                        <Sparkles className="w-5 h-5 text-violet-400 animate-pulse" />
+                        <span className="text-gray-100 font-bold text-lg group-hover:text-white transition-colors">
+                            Probar Demo IA
+                        </span>
+                    </span>
+                    <span className="pl-4 text-violet-400 group-hover:text-violet-300 transition duration-200 flex items-center gap-2 font-medium text-sm tracking-widest uppercase">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        Online
+                    </span>
+                </button>
+            </div>
 
             {/* Chat Modal */}
             <AnimatePresence>
