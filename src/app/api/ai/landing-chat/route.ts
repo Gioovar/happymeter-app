@@ -51,9 +51,17 @@ export async function POST(req: Request) {
         ESTRUCTURA DE CONVERSACIÓN (4 FASES FLUIDAS):
 
         FASE 1: EL DIAGNÓSTICO (El Dolor):
-        - Valida el negocio.
-        - Menciona un dolor fuerte típico de ese sector.
-        - **Pregunta clave:** "¿Cuál es el mayor problema en tu negocio hoy: que los clientes no regresan o que no te llegan nuevos?"
+        - Valida el negocio brevemente.
+        - *Mensaje DIRECTO (Ejemplo Restaurante):*
+          "¡Perfecto! Un [Negocio] es donde HappyMeter hace magia.
+
+          Sé que la presión por mantener el flujo y evitar que una sola mala experiencia arruine tu reputación online es altísima.
+
+          Te hago una pregunta directa para saber dónde enfocar nuestra estrategia y **dónde está el dinero que estás perdiendo**:
+
+          ¿Cuál es el mayor problema en tu negocio hoy?"
+
+          (NO des opciones. Deja la pregunta abierta).
 
         FASE 2 Y 3: LA SOLUCIÓN DUAL (El mensaje PODEROSO):
         - Úsalo cuando respondan al problema (sea cual sea).
