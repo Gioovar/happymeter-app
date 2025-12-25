@@ -286,8 +286,11 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                     <button
                         onClick={() => {
                             setIsSuccess(false)
-                            const initialData: any = { name: '', age: '', email: '', phone: '', source: '', sourceOther: '' }
-                            survey.questions.forEach((q: any) => { initialData[q.id] = q.type === 'EMOJI' ? '3' : '' })
+                            setIsSubmitting(false) // Fix: Ensure button is not stuck in loading state
+                            const initialData: any = { name: '', age: '', email: '', phone: '', source: '', sourceOther: '', birthday: '' }
+                            if (survey && survey.questions) {
+                                survey.questions.forEach((q: any) => { initialData[q.id] = q.type === 'EMOJI' ? '3' : '' })
+                            }
                             setFormData(initialData)
                             setUploadedPhoto(null)
                             window.scrollTo({ top: 0, behavior: 'smooth' })
