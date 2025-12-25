@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, subMonths, endOfMonth, format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { generateDiplomaBuffer } from '@/lib/pdf-generator'
+import { generateDiplomaBuffer } from '@/lib/pdf-generator-server'
 import { sendDiplomaEmail } from '@/lib/email'
 
 // Force dynamic to ensure it runs fresh
