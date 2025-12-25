@@ -91,12 +91,12 @@ export default function LandingAIChat() {
                         <div className="p-4 border-b border-white/10 bg-gradient-to-r from-violet-900/20 to-fuchsia-900/20 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center relative">
-                                    <Bot className="w-6 h-6 text-white" />
+                                    <img src="/assets/branding/logo-primary.png" alt="HappyMeter AI" className="w-6 h-6 object-contain brightness-0 invert" />
                                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#0a0a0a] rounded-full"></span>
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-white">HappyMeter AI</h3>
-                                    <p className="text-xs text-violet-300">Especialista en Ventas</p>
+                                    <p className="text-xs text-violet-300">Asistente Virtual</p>
                                 </div>
                             </div>
                             <button
