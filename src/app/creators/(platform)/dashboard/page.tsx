@@ -6,6 +6,7 @@ import { Copy, DollarSign, Users, MousePointer2, TrendingUp, Sparkles, ExternalL
 import { toast } from 'sonner'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import CreatorChat from '@/components/CreatorChat'
+import LaserBorder from '@/components/ui/LaserBorder'
 
 export default function CreatorDashboard() {
     const [data, setData] = useState<any>(null)
@@ -100,9 +101,12 @@ export default function CreatorDashboard() {
                     </p>
                 </div>
 
+
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="p-6 rounded-3xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-violet-500/20 relative overflow-hidden group hover:scale-[1.02] transition duration-300">
+                        <LaserBorder color="violet" />
                         <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition">
                             <MousePointer2 className="w-24 h-24 text-violet-500 rotate-12" />
                         </div>
@@ -114,6 +118,7 @@ export default function CreatorDashboard() {
                     </div>
 
                     <div className="p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-white/10 relative overflow-hidden group hover:scale-[1.02] transition duration-300">
+                        <LaserBorder color="blue" />
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
                             <Users className="w-24 h-24 text-blue-500 rotate-12" />
                         </div>
@@ -125,6 +130,7 @@ export default function CreatorDashboard() {
                     </div>
 
                     <div className="p-6 rounded-3xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 relative overflow-hidden group hover:scale-[1.02] transition duration-300">
+                        <LaserBorder color="green" />
                         <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition">
                             <DollarSign className="w-24 h-24 text-green-500 rotate-12" />
                         </div>

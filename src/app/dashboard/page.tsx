@@ -37,6 +37,7 @@ import {
     Search
 } from 'lucide-react'
 import Link from 'next/link'
+import LaserBorder from '@/components/ui/LaserBorder'
 import PushToggle from '@/components/PushToggle'
 import HelpModal from '@/components/HelpModal'
 import AIReportModal from '@/components/AIReportModal'
@@ -181,7 +182,8 @@ export default function DashboardPage() {
             icon: Users,
             color: 'from-blue-500 to-cyan-500',
             bg: 'bg-blue-500/10',
-            border: 'border-blue-500/20'
+            border: 'border-blue-500/20',
+            laserColor: 'blue' as const
         },
         {
             label: 'Satisfacción Global',
@@ -191,7 +193,8 @@ export default function DashboardPage() {
             icon: Star,
             color: 'from-yellow-500 to-orange-500',
             bg: 'bg-yellow-500/10',
-            border: 'border-yellow-500/20'
+            border: 'border-yellow-500/20',
+            laserColor: 'yellow' as const
         },
         {
             label: 'Probabilidad de Recomendación (NPS)',
@@ -201,7 +204,8 @@ export default function DashboardPage() {
             icon: Activity,
             color: 'from-violet-500 to-fuchsia-500',
             bg: 'bg-violet-500/10',
-            border: 'border-violet-500/20'
+            border: 'border-violet-500/20',
+            laserColor: 'violet' as const
         },
     ]
 
@@ -309,6 +313,7 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {stats.map((stat, idx) => (
                             <div key={idx} className={`relative group p-6 rounded-3xl bg-[#0F0F0F] border ${stat.border} hover:border-white/20 transition-all duration-300 hover:-translate-y-1 shadow-2xl overflow-hidden`}>
+                                <LaserBorder color={stat.laserColor} />
                                 <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full bg-gradient-to-br ${stat.color} opacity-20 blur-[50px] group-hover:opacity-30 transition-opacity`} />
 
                                 <div className="relative z-10 flex flex-col justify-between h-full">
@@ -383,6 +388,7 @@ export default function DashboardPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {displayedSurveys.map((survey) => (
                                     <div key={survey.id} className="group relative p-6 rounded-3xl bg-[#0F0F0F] border border-white/5 hover:border-violet-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-violet-900/10 flex flex-col justify-between">
+                                        <LaserBorder color="violet" />
 
                                         {/* Header */}
                                         <div className="flex justify-between items-start mb-6">
