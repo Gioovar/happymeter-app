@@ -47,6 +47,7 @@ export default function ResponsesModal({ isOpen, onClose, surveyId, surveyTitle,
                 onClose={onClose}
                 response={selectedResponse}
                 onBack={() => setSelectedResponse(null)}
+                surveyTitle={surveyTitle}
             />
         )
     }

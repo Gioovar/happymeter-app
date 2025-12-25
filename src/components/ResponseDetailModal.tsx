@@ -10,18 +10,22 @@ interface ResponseDetailModalProps {
     onClose: () => void
     response: any
     onBack?: () => void
+    surveyTitle?: string
 }
 
-export default function ResponseDetailModal({ isOpen, onClose, response, onBack }: ResponseDetailModalProps) {
+export default function ResponseDetailModal({ isOpen, onClose, response, onBack, surveyTitle }: ResponseDetailModalProps) {
     if (!isOpen || !response) return null
 
     const rating = findRating(response.answers)
     const comment = findComment(response.answers)
 
+    const isStaffSurvey = surveyTitle?.toLowerCase().includes('staff')
+    const anonymousLabel = isStaffSurvey ? 'Colaborador Anónimo' : 'Cliente Anónimo'
+
     // Use the standardized properties from API, fallback to DB columns
     const phone = response.phone || response.customerPhone
     const email = response.email || response.customerEmail
-    const name = response.user || response.customerName || 'Cliente Anónimo'
+    const name = response.user || response.customerName || anonymousLabel
 
     const [showImage, setShowImage] = useState(false)
     const photoUrl = response.photo

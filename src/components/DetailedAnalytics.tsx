@@ -31,9 +31,10 @@ interface DetailedAnalyticsProps {
         sourceChartData?: { name: string, value: number }[]
         staffRanking?: { name: string, count: number, average: string }[]
     }
+    isStaffSurvey?: boolean
 }
 
-export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
+export default function DetailedAnalytics({ data, isStaffSurvey = false }: DetailedAnalyticsProps) {
     const COLORS = ['#22c55e', '#3b82f6', '#ec4899'] // Neon Green (Good), Metallic Blue (Neutral), Neon Pink (Bad)
     const [selectedFeedback, setSelectedFeedback] = useState<any>(null)
 
@@ -432,14 +433,20 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
                                             {item.feedback}
                                         </td>
                                         <td className="py-4">
-                                            <div className="flex gap-1">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star
-                                                        key={i}
-                                                        className={`w-3 h-3 ${i < item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-700'}`}
-                                                    />
-                                                ))}
-                                            </div>
+                                            {isStaffSurvey ? (
+                                                <span className="text-xs font-bold text-violet-400 bg-violet-400/10 px-2 py-1 rounded-full border border-violet-400/20">
+                                                    Empleado
+                                                </span>
+                                            ) : (
+                                                <div className="flex gap-1">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            className={`w-3 h-3 ${i < item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-700'}`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="py-4 text-right">
                                             <button className="p-1 hover:bg-white/10 rounded">

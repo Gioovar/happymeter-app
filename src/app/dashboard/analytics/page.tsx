@@ -116,16 +116,6 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    <button
-                        onClick={() => setIsExportModalOpen(true)}
-                        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-4 py-2 text-sm text-white transition"
-                    >
-                        <Download className="w-4 h-4" />
-                        Exportar Reporte
-                    </button>
-
-                    <div className="h-8 w-px bg-white/10 mx-2 hidden md:block"></div>
-
                     <span className="text-sm text-gray-500">Filtrar por:</span>
                     <select
                         value={selectedSurvey}
@@ -145,7 +135,10 @@ export default function AnalyticsPage() {
                     <HappyLoader size="lg" text="Actualizando Datos..." />
                 </div>
             ) : statsData.totalResponses > 0 ? (
-                <DetailedAnalytics data={statsData} />
+                <DetailedAnalytics
+                    data={statsData}
+                    isStaffSurvey={surveysList.find(s => s.id === selectedSurvey)?.title.toLowerCase().includes('staff') || false}
+                />
             ) : (
                 <div className="p-12 text-center border border-dashed border-white/10 rounded-2xl bg-white/5">
                     <p className="text-gray-400">Aún no hay suficientes datos para mostrar analíticas detalladas.</p>

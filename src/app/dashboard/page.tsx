@@ -472,7 +472,13 @@ export default function DashboardPage() {
                                                                 className="space-y-1 cursor-pointer group/feedback hover:bg-white/5 p-2 -mx-2 rounded-xl transition-all border border-transparent hover:border-white/5"
                                                             >
                                                                 <div className="flex items-center gap-2">
-                                                                    {renderStars(feedback.rating)}
+                                                                    {survey.title.toLowerCase().includes('staff') ? (
+                                                                        <span className="text-[10px] font-bold text-violet-400 bg-violet-400/10 px-1.5 py-0.5 rounded-full border border-violet-400/20">
+                                                                            Empleado
+                                                                        </span>
+                                                                    ) : (
+                                                                        renderStars(feedback.rating)
+                                                                    )}
                                                                     <span className="text-xs text-gray-600 ml-auto group-hover/feedback:text-gray-400 transition-colors">
                                                                         {idx === 0 ? 'hace un momento' : feedback.date}
                                                                     </span>
@@ -537,7 +543,7 @@ export default function DashboardPage() {
                         )}
                     </div>
                 </div>
-            </main>
+            </main >
         </div >
     )
 }
