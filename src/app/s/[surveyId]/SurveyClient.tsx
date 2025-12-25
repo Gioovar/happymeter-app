@@ -559,7 +559,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                     <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                                                     Enviando...
                                                 </>
-                                            ) : 'Continuar para recibir tu regalo'}
+                                            ) : (titleLower.includes('staff') ? 'Enviar' : 'Continuar para recibir tu regalo')}
                                         </button>
                                     </motion.div>
                                 )}
