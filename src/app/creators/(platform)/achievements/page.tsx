@@ -210,8 +210,14 @@ export default function CreatorAchievementsPage() {
                             : 'bg-black/40 border-white/5 opacity-80 hover:opacity-100 hover:border-white/10'
                             }`}
                     >
+                        {/* Laser Border Effect on Hover */}
+                        <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#8b5cf6_360deg)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                        {/* Inner bg layer to cover the spinning laser center */}
+                        <div className={`absolute inset-[1px] rounded-2xl z-0 ${item.unlocked ? 'bg-[#111]' : 'bg-[#0a0a0a]'}`} />
+
                         {/* Background Decoration */}
-                        <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl ${item.unlocked ? 'bg-violet-600/20' : 'bg-white/5'
+                        <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl z-0 ${item.unlocked ? 'bg-violet-600/20' : 'bg-white/5'
                             }`} />
 
                         <div className="relative z-10 flex flex-col h-full">

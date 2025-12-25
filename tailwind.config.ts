@@ -15,6 +15,7 @@ const config: Config = {
             },
             animation: {
                 "spin-reverse": "spin-reverse 1s linear infinite",
+                "spin-slow": "spin 4s linear infinite", // New for laser border
                 "float": "float 6s ease-in-out infinite",
                 "text-gradient": "text-gradient 3s ease infinite",
             },
