@@ -9,7 +9,7 @@ export async function POST(req: Request) {
         if (!messages || messages.length === 0) {
             return NextResponse.json({
                 role: 'assistant',
-                content: "¡Hola! 👋 ¿Quieres saber como funciona HappyMeter? Vamos hacer que tu negocio cresca en un 40% en menos de lo que te imaginas.\n\nDime, ¿de qué trata tu negocio? yo te digo si HappyMeter es para ti (Ej: Restaurante, Barbería, Hotel, etc...)"
+                content: "¡Hola! 👋 ¿Quieres descubrir cómo funciona HappyMeter?\n\nDéjame mostrarte cómo podemos ayudarte a tener clientes más felices, más reseñas ⭐⭐⭐⭐⭐ y más ventas 📈\n\nCuéntame, ¿qué tipo de negocio tienes? (Ej: Restaurante, Barbería, Hotel, Gym, Spa, etc.)\n\nYo te digo si HappyMeter es para ti 😉"
             })
         }
 
