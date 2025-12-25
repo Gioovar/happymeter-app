@@ -176,6 +176,7 @@ model AffiliateProfile {
   payouts     Payout[]
   referrals   Referral[]
   visits      PlaceVisit[]
+  clicks      LinkClick[] // New tracking
   reviews     CreatorReview[]
   achievements CreatorAchievement[]
   chats           AdminChat[]
@@ -211,6 +212,18 @@ model Payout {
   status      String
   createdAt   DateTime         @default(now())
   affiliate   AffiliateProfile @relation(fields: [affiliateId], references: [id])
+}
+
+model LinkClick {
+  id          String           @id @default(uuid())
+  affiliateId String
+  createdAt   DateTime         @default(now())
+  ipAddress   String?
+  userAgent   String?
+  affiliate   AffiliateProfile @relation(fields: [affiliateId], references: [id])
+
+  @@index([affiliateId])
+  @@index([createdAt])
 }
 
 model BrandAsset {

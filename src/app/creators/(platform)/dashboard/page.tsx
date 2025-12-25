@@ -136,8 +136,8 @@ export default function CreatorDashboard() {
                     </div>
 
                     {/* Growth Chart */}
-                    <div className="bg-[#111] border border-white/10 rounded-3xl p-6 md:p-8">
-                        <div className="flex items-center justify-between mb-8">
+                    <div className="bg-[#111] border border-white/10 rounded-3xl overflow-hidden">
+                        <div className="p-6 md:p-8 flex items-center justify-between">
                             <div>
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                     <TrendingUp className="w-5 h-5 text-violet-400" />
@@ -148,7 +148,7 @@ export default function CreatorDashboard() {
                             {/* Optional: Add period selector here if needed */}
                         </div>
 
-                        <div className="h-[300px] w-full">
+                        <div className="h-[300px] w-full pb-4">
                             {data?.chartData && (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={data.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>

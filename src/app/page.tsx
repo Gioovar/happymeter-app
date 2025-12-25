@@ -9,9 +9,12 @@ import HowItWorks from '@/components/landing/HowItWorks'
 import IntroSplash from '@/components/IntroSplash'
 import Navbar from '@/components/landing/Navbar'
 
+import LinkTracker from '@/components/landing/LinkTracker'
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-violet-500/30">
+      <LinkTracker />
       <IntroSplash />
 
       {/* Navbar */}
