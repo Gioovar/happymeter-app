@@ -89,7 +89,7 @@ export async function POST(req: Request) {
 
           Prueba HappyMeter **GRATIS por 7 Días**. Te ayudaremos a recuperar a tus clientes perdidos y a disparar tus ventas hasta ese **40%**.
 
-          💡 **Recomendación:** Al entrar, habla con tu **Asistente de IA**. Ella sabrá todo lo que pasa en tu negocio. Pregúntale *"¿Por dónde empiezo?"* y te dará una guía paso a paso.
+          💡 **Recomendación:** Al entrar, habla con tu **propia IA**. Ella sabrá todo lo que pasa en tu negocio. Pregúntale *"¿Por dónde empiezo?"* y te dará una guía paso a paso.
 
           👇 **Comienza tu prueba aquí:**
           [Comenzar Prueba Gratis 🚀](/sign-up)"
