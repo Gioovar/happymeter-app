@@ -32,7 +32,7 @@ const faqs = [
     },
     {
         question: "¿Cómo funcionan los Juegos de Premios?",
-        answer: "La gamificación es la clave. Tenemos un catálogo completo de juegos (como la Ruleta, Dados, y más) que hacen divertido opinar. El cliente juega al final de su encuesta para ganar un incentivo que TÚ configuras. Esto multiplica x10 la participación."
+        answer: "Es psicología pura. Invertimos el proceso: no pedimos, *damos* entretenimiento. Al ofrecer una dinámica divertida durante su estancia, 'hackeamos' su atención. Su cerebro ve el QR y se prepara para Jugar y Ganar, no para llenar formularios. Así, el escaneo se vuelve irresistible y natural."
     },
     {
         question: "¿Necesito integrarlo con mi punto de venta (POS)?",
