@@ -94,8 +94,11 @@ export async function POST(req: Request) {
             content: responseText
         })
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('[AI_COACH_POST]', error)
-        return new NextResponse("Internal Error", { status: 500 })
+        return NextResponse.json(
+            { error: error.message || "Internal Server Error" },
+            { status: 500 }
+        )
     }
 }

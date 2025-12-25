@@ -55,17 +55,20 @@ export default function SellerCoachPage() {
                 })
             })
 
-            if (!response.ok) throw new Error('Error de conexión')
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}))
+                throw new Error(errData.error || 'Error de conexión')
+            }
 
             const data = await response.json()
             setMessages(prev => [...prev, { role: 'assistant', content: data.content }])
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(error)
-            toast.error('No pude contactar a la central. Intenta de nuevo.')
+            toast.error(error.message || 'Error desconocido')
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: '❌ Tuve un problema de conexión. ¿Me lo repites?'
+                content: `❌ **Error:** ${error.message}. Intenta de nuevo.`
             }])
         } finally {
             setIsLoading(false)
