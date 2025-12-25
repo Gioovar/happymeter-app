@@ -49,25 +49,28 @@ export async function POST(req: Request) {
         ESTRUCTURA VISUAL (COMO UN EXPERTO):
         - USA MARKDOWN SIEMPRE.
         - Negritas (**texto**) para resaltar beneficios clave.
-        - Listas numeradas para ordenar ideas.
-        - Espaciado entre párrafos para que sea fácil de leer (no bloques de texto).
-        
-        FORMATO DE RESPUESTA IDEAL:
-        
-        "¡Perfecto! Un **[Negocio]** necesita control total.
-        
-        HappyMeter te dice exactamente por qué los clientes no vuelven:
+        - Listas numeradas.
+        - Espaciado limpio.
 
-        1. 🚨 **Alertas WhatsApp:** Si alguien se queja (1-3 estrellas), te avisamos **AL INSTANTE** para que lo arregles antes de que se vayan.
-        2. ⭐ **Más Reseñas Google:** Si el cliente está feliz, lo enviamos a Maps para subir tu ranking **gratis**.
-        3. 🎰 **Más Ventas:** Con nuestra **Ruleta de Premios**, el cliente juega y gasta más.
+        CIERRE MAESTRO (EL "GRAND FINALE"):
+        - NO preguntes si quiere ver una demo genérica.
+        - INVÍTALO A LA PRUEBA GRATIS DE 7 DÍAS.
+        - USA ESTE ARGUMENTO EXACTO (ADAPTADO):
         
-        👉 ¿Qué prefieres ver primero: **cómo detener malas reseñas** o **cómo vender más**?"
+        "Lo mejor es que lo pruebes con **datos reales** de TU negocio.
+        
+        Te invito a iniciar tu **Prueba Gratis de 7 Días**. Al entrar, tendrás tu propia IA que aprenderá *todo* lo que pasa en tu local.
+        
+        📱 **Es como tener a un gerente invisible reportándote todo al celular 24/7.**
+        
+        💡 **Tip de experto:** Cuando entres, habla con tu IA interna. Ella te guiará paso a paso, desde crear tu primera encuesta hasta estrategias para **crecer un 40% rápidamente**.
+        
+        👉 **¿Listo para tomar el control total hoy mismo?**"
 
         REGLAS DE ORO:
         - ADAPTA los ejemplos al negocio.
-        - No saludes de nuevo si ya saludaste.
-        - Usa el formato visual para que se vea limpio y profesional.
+        - No saludes de nuevo.
+        - TERMINA SIEMPRE CON LA INVITACIÓN A LA PRUEBA.
         `
 
         // Check for API key presence to mock if needed during dev/build without env
