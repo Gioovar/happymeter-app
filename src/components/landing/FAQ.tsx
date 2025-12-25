@@ -31,8 +31,8 @@ const faqs = [
         answer: "Cero ataduras. Confiamos tanto en nuestro valor que puedes cancelar cuando quieras con un solo clic. Sin llamadas incómodas ni letras chiquitas."
     },
     {
-        question: "¿Qué es la 'Ruleta de Premios'?",
-        answer: "Es nuestro secreto para que el 30% de tus clientes opinen (vs el 1% normal). El cliente gira una ruleta digital al final de su encuesta para ganar un incentivo que TÚ decides (ej. un postre gratis). Es divertido y adictivo."
+        question: "¿Cómo funcionan los Juegos de Premios?",
+        answer: "La gamificación es la clave. Tenemos un catálogo completo de juegos (como la Ruleta, Dados, y más) que hacen divertido opinar. El cliente juega al final de su encuesta para ganar un incentivo que TÚ configuras. Esto multiplica x10 la participación."
     },
     {
         question: "¿Necesito integrarlo con mi punto de venta (POS)?",
