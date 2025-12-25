@@ -58,7 +58,11 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
             {/* Top KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-violet-500/20 transition-all duration-300 group relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    {/* Laser Border Effect */}
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#8b5cf6_360deg)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
+
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
                         <MessageSquare className="w-16 h-16 text-violet-500 transform rotate-12" />
                     </div>
                     <div className="flex justify-between items-start mb-4 relative z-10">
@@ -78,7 +82,11 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
                 </div>
 
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-yellow-500/20 transition-all duration-300 group relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    {/* Laser Border Effect */}
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#eab308_360deg)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
+
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
                         <Star className="w-16 h-16 text-yellow-500 transform rotate-12" />
                     </div>
                     <div className="flex justify-between items-start mb-4 relative z-10">
@@ -97,7 +105,11 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
                 </div>
 
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-blue-500/20 transition-all duration-300 group relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    {/* Laser Border Effect */}
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#3b82f6_360deg)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
+
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
                         <Activity className="w-16 h-16 text-blue-500 transform rotate-12" />
                     </div>
                     <div className="flex justify-between items-start mb-4 relative z-10">
@@ -118,7 +130,11 @@ export default function DetailedAnalytics({ data }: DetailedAnalyticsProps) {
                 </div>
 
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-green-500/20 transition-all duration-300 group relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    {/* Laser Border Effect */}
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#22c55e_360deg)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
+
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
                         <Users className="w-16 h-16 text-green-500 transform rotate-12" />
                     </div>
                     <div className="flex justify-between items-start mb-4 relative z-10">
