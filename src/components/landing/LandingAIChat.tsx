@@ -74,7 +74,7 @@ export default function LandingAIChat() {
                 <div className="absolute inset-0 bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <span className="relative flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-violet-400" />
-                    Hablar con IA de Ventas
+                    Probar Demo IA
                 </span>
             </button>
 
@@ -117,8 +117,8 @@ export default function LandingAIChat() {
                                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
                                     <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                            ? 'bg-violet-600 text-white rounded-tr-none'
-                                            : 'bg-[#1a1a1a] border border-white/5 text-gray-200 rounded-tl-none'
+                                        ? 'bg-violet-600 text-white rounded-tr-none'
+                                        : 'bg-[#1a1a1a] border border-white/5 text-gray-200 rounded-tl-none'
                                         }`}>
                                         {msg.content}
                                     </div>

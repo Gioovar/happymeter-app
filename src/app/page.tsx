@@ -10,6 +10,9 @@ import IntroSplash from '@/components/IntroSplash'
 import Navbar from '@/components/landing/Navbar'
 
 import LinkTracker from '@/components/landing/LinkTracker'
+import SocialProof from '@/components/landing/SocialProof'
+import PainPointSection from '@/components/landing/PainPointSection'
+import PricingTeaser from '@/components/landing/PricingTeaser'
 
 export default function LandingPage() {
   return (
@@ -23,8 +26,11 @@ export default function LandingPage() {
 
       <main>
         <Hero />
+        <SocialProof />
+        <PainPointSection />
         <HowItWorks />
         <Features />
+        <PricingTeaser />
         <FAQ />
 
         {/* Power Phrase Section */}
