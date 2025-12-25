@@ -7,20 +7,24 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const faqs = [
     {
-        question: "¿Es realmente gratis?",
-        answer: "¡Sí! Tenemos un plan gratuito generoso para que empieces. Solo pagas si necesitas funciones avanzadas o más volumen."
+        question: "¿En realidad voy a tener mi propia IA?",
+        answer: "¡Sí! No es un chat genérico. HappyMeter aprende de TU base de datos, tus quejas y tus clientes reales para darte estrategias, promociones y soluciones personalizadas. Es como tener un gerente de marketing experto que conoce tu negocio mejor que nadie."
     },
     {
-        question: "¿Necesito saber programar?",
-        answer: "Para nada. HappyMeter es 'No-Code'. Creas tu encuesta en 2 minutos y listo."
+        question: "¿Cómo recupera clientes automáticamente?",
+        answer: "Detectamos calificaciones bajas (1-3 estrellas) en tiempo real y nuestro sistema puede enviar cupones de 'perdón' al instante. Convertimos una mala experiencia en una segunda oportunidad antes de que el cliente se vaya para siempre."
     },
     {
-        question: "¿Cómo funcionan los reportes de WhatsApp?",
-        answer: "Conectas tu número y nuestra IA te envía un resumen PDF cada semana con lo más importante."
+        question: "¿Es difícil de poner en marcha?",
+        answer: "Es ridículamente fácil. No instalas nada en tus POS. Te damos un QR inteligente y un link. Los pones en tus mesas, tickets o redes sociales y listo. Empiezas a recibir datos valiosos en menos de 5 minutos."
     },
     {
-        question: "¿Puedo personalizar los colores?",
-        answer: "Absolutamente. Puedes adaptar la encuesta a la identidad de tu marca (logo, colores, textos)."
+        question: "¿Realmente mejora mi posición en Google?",
+        answer: "Totalmente. Nuestro filtro inteligente dirige a los clientes felices (4-5 estrellas) directamente a Google Maps para dejar reseña, mientras que las quejas te llegan solo a ti de forma privada. Más estrellas reales = Mejor reputación online."
+    },
+    {
+        question: "¿Qué pasa con mis empleados?",
+        answer: "HappyMeter es tu mejor aliado de RRHH. Con el 'Staff Leaderboard', sabrás exactamente quién atiende mejor. Los clientes califican el servicio, y tú descubres quién es tu empleado estrella y quién está fallando."
     }
 ]
 
