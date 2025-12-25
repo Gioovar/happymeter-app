@@ -119,14 +119,26 @@ export default async function ResponseDetailPage({ params }: { params: Promise<{
                             </div>
                             <div className="p-5 space-y-3">
                                 {answers.filter(a =>
-                                    a.question?.type !== 'TEXT' &&
-                                    a.question?.type !== 'RATING' &&
-                                    a.question?.type !== 'EMOJI' &&
-                                    a.question?.type !== 'IMAGE'
+                                    // Filter out ONLY the answers we already displayed prominently
+                                    a.id !== ratingAnswer?.id &&
+                                    a.id !== commentAnswer?.id &&
+                                    // Filter out image if it matches the main photo?
+                                    // In the page we don't hold the 'photoAnswer' reference variable easily reachable here unless we find it again.
+                                    a.question?.type !== 'IMAGE' // Safest for page since we show Photo prominently anyway
                                 ).map((ans, i) => (
                                     <div key={i} className="flex justify-between items-start gap-4 text-sm group/item">
                                         <span className="text-gray-500 group-hover/item:text-gray-400 transition-colors flex-1">{ans.question?.text || 'Pregunta'}:</span>
-                                        <span className="text-white font-medium text-right">{ans.value}</span>
+                                        <div className="text-right">
+                                            {ans.question?.type === 'RATING' || ans.question?.type === 'EMOJI' ? (
+                                                <div className="flex text-yellow-500 justify-end">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star key={i} className={`w-3 h-3 ${i < parseInt(ans.value) ? 'fill-current' : 'text-gray-800'}`} />
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-white font-medium">{ans.value}</span>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
