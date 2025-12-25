@@ -66,8 +66,8 @@ export default function Hero() {
                     <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-2xl blur-2xl opacity-20" />
                     <div className="relative bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl transform rotate-x-12 hover:rotate-x-0 transition duration-700 ease-out">
                         <img
-                            src="/dashboard-preview.png"
-                            alt="HappyMeter Dashboard"
+                            src="/dashboard-real.png"
+                            alt="HappyMeter Dashboard Real"
                             className="w-full h-auto"
                             onError={(e) => e.currentTarget.src = 'https://placehold.co/1200x800/111/444?text=Dashboard+Preview'}
                         />
