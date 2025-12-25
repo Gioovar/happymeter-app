@@ -64,33 +64,37 @@ export default function FAQ() {
 
                 <div className="space-y-4">
                     {faqs.map((faq, index) => (
-                        <div
-                            key={index}
-                            onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                            className="group cursor-pointer rounded-2xl bg-[#111] border border-white/5 hover:border-violet-500/30 transition duration-300 overflow-hidden"
-                        >
-                            <div className="p-6 flex items-center justify-between">
-                                <h3 className="text-lg font-medium text-white group-hover:text-violet-300 transition">
-                                    {faq.question}
-                                </h3>
-                                <div className={`p-2 rounded-full bg-white/5 transition duration-300 ${openIndex === index ? 'rotate-180 bg-violet-500/20 text-violet-400' : 'text-gray-400'}`}>
-                                    {openIndex === index ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                        <div key={index} className="relative group perspective-1000">
+                            {/* Glow Effect - Matches Button Style */}
+                            <div className={`absolute -inset-0.5 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-violet-600 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500 ${openIndex === index ? 'opacity-70' : ''}`}></div>
+
+                            <div
+                                onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                                className="relative cursor-pointer rounded-2xl bg-[#0a0a0a] border border-white/10 group-hover:border-white/20 transition duration-300 overflow-hidden"
+                            >
+                                <div className="p-6 flex items-center justify-between">
+                                    <h3 className={`text-lg font-medium transition-colors duration-300 ${openIndex === index ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>
+                                        {faq.question}
+                                    </h3>
+                                    <div className={`p-2 rounded-full transition duration-300 ${openIndex === index ? 'bg-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.5)] text-white rotate-180' : 'bg-white/5 text-gray-400 group-hover:bg-white/10 group-hover:text-white'}`}>
+                                        {openIndex === index ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                    </div>
                                 </div>
+                                <AnimatePresence>
+                                    {openIndex === index && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                        >
+                                            <div className="px-6 pb-6 text-gray-400 leading-relaxed border-t border-white/5 pt-4 bg-white/[0.02]">
+                                                {faq.answer}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
-                            <AnimatePresence>
-                                {openIndex === index && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <div className="px-6 pb-6 text-gray-400 leading-relaxed border-t border-white/5 pt-4">
-                                            {faq.answer}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
                         </div>
                     ))}
                 </div>
