@@ -6,7 +6,8 @@ import { getGeminiModel } from '@/lib/gemini'
 
 export async function POST(req: Request) {
     try {
-        const { messages, threadId } = await req.json()
+        const body = await req.json()
+        const { messages, threadId, audio } = body
         const { userId } = await auth()
 
         if (!userId) {
@@ -94,6 +95,7 @@ export async function POST(req: Request) {
            - Ej. Usuario: "Quiero una promoción." -> Tú: "Claro, para darte la mejor opción, ¿qué día de la semana sientes que tienes menos rotación?"
         3. **BASADO EN DATOS:** Si das una recomendación, justifícala con los *Datos Estadísticos* o *Feedback Cualitativo* que tienes arriba.
         4. **FORMATO:** Usa viñetas y negritas para facilitar la lectura rápida.
+        5. **GENERACIÓN DE REPORTES:** Si el usuario solicita explícitamente generar, descargar o ver el reporte (ej. "dame el reporte del mes", "genera el PDF"), responde ÚNICAMENTE con la etiqueta: [[ACTION:GENERATE_REPORT]]. No agregues más texto si ese es el único pedido.
 
         OBJETIVO PRINCIPAL: Ayudar a ${businessName} a crecer basándote en la realidad de sus datos y giro.
         `
@@ -125,10 +127,24 @@ export async function POST(req: Request) {
         })
 
         // Map messages to Gemini Format
+        // Map messages to Gemini Format
         let geminiHistory = messages.map((m: any) => ({
             role: m.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: m.content }]
         }))
+
+        // Inject Audio into the last user message
+        if (audio && geminiHistory.length > 0) {
+            const lastMsg = geminiHistory[geminiHistory.length - 1]
+            if (lastMsg.role === 'user') {
+                lastMsg.parts.push({
+                    inlineData: {
+                        mimeType: 'audio/webm',
+                        data: audio
+                    }
+                })
+            }
+        }
 
         // Gemini restriction: First message must be 'user'. 
         const firstUserIndex = geminiHistory.findIndex((m: any) => m.role === 'user')

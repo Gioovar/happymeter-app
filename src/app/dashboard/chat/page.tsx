@@ -1,13 +1,15 @@
 
-
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Sparkles, User, Zap, Menu } from 'lucide-react'
+import { Send, Sparkles, User, Zap, Menu, Mic, Square } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import ChatSidebar from '@/components/chat/ChatSidebar'
 import { toast } from 'sonner'
+import { useAudioRecorder } from '@/hooks/useAudioRecorder'
+import { generateExecutiveReportPDF } from '@/lib/pdf-generator'
+import { startOfMonth, endOfMonth, format } from 'date-fns'
 
 interface Message {
     role: 'user' | 'assistant'
@@ -23,6 +25,9 @@ export default function DashboardChatPage() {
     const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const isCreatingThread = useRef(false)
+
+    // Voice Hook
+    const { isRecording, recordingTime, startRecording, stopRecording, cancelRecording } = useAudioRecorder()
 
     const DEFAULT_MSG: Message = {
         role: 'assistant',
@@ -80,9 +85,83 @@ export default function DashboardChatPage() {
         scrollToBottom()
     }, [messages])
 
+    // --- Audio Handler ---
+    const handleAudioFinish = async () => {
+        const audioBlob = await stopRecording()
+        if (!audioBlob) return
+
+        // Convert Blob to Base64
+        const reader = new FileReader()
+        reader.readAsDataURL(audioBlob)
+        reader.onloadend = async () => {
+            const base64Audio = reader.result?.toString().split(',')[1]
+            if (!base64Audio) return
+
+            // Visual Optimistic Update for Audio
+            const newMessages = [...messages, { role: 'user', content: '🎤 [Mensaje de Voz Enviado]' }] as Message[]
+            setMessages(newMessages)
+            setIsLoading(true)
+
+            let activeThreadId = selectedThreadId
+            try {
+                if (!activeThreadId) {
+                    const threadRes = await fetch('/api/dashboard/chat/threads', { method: 'POST' })
+                    if (!threadRes.ok) throw new Error("Could not create thread")
+                    const thread = await threadRes.json()
+                    activeThreadId = thread.id
+                    isCreatingThread.current = true
+                    setSelectedThreadId(thread.id)
+                }
+
+                // Call API with audio
+                const response = await fetch('/api/dashboard/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        threadId: activeThreadId,
+                        messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+                        audio: base64Audio // Sending audio field
+                    })
+                })
+
+                let data
+                try {
+                    const text = await response.text()
+                    try {
+                        data = JSON.parse(text)
+                    } catch {
+                        throw new Error(`Error del servidor (${response.status})`)
+                    }
+                } catch (e) {
+                    throw new Error(`Error de conexión: ${response.statusText}`)
+                }
+
+                if (!response.ok) {
+                    if (response.status === 429) throw new Error('Se acabó mi energía diaria (Límite de cuota Google). Vuelve mañana. 🌙')
+                    throw new Error(data.error || `Error ${response.status}`)
+                }
+
+                setMessages(prev => [...prev, { role: 'assistant', content: data.content }])
+
+                if (data.newTitle) {
+                    setSidebarRefreshTrigger(prev => prev + 1)
+                }
+
+            } catch (error) {
+                console.error(error)
+                const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+                setMessages(prev => [...prev, { role: 'assistant', content: `❌ **Error:** ${errorMessage}` }])
+            } finally {
+                setIsLoading(false)
+            }
+        }
+    }
+
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!input.trim() || isLoading) return
+        if (isRecording) return // Block submit while recording
 
         const userMessage = input.trim()
         setInput('')
@@ -138,7 +217,25 @@ export default function DashboardChatPage() {
                 throw new Error(data.error || `Error ${response.status}`)
             }
 
-            setMessages(prev => [...prev, { role: 'assistant', content: data.content }])
+            // Check for Actions
+            let aiContent = data.content
+            if (aiContent.includes('[[ACTION:GENERATE_REPORT]]')) {
+                aiContent = aiContent.replace('[[ACTION:GENERATE_REPORT]]', '').trim() || 'Generando tu reporte...'
+
+                // Trigger Action
+                toast.promise(async () => {
+                    const now = new Date()
+                    const start = format(startOfMonth(now), 'yyyy-MM-dd')
+                    const end = format(endOfMonth(now), 'yyyy-MM-dd')
+                    await generateExecutiveReportPDF(start, end, 'all') // 'all' surveyId default
+                }, {
+                    loading: 'Generando reporte PDF...',
+                    success: 'Reporte descargado exitosamente',
+                    error: 'Error al generar reporte'
+                })
+            }
+
+            setMessages(prev => [...prev, { role: 'assistant', content: aiContent }])
 
             // 3. Update title if backend renamed it (AI Intelligent Renaming)
             if (data.newTitle) {
@@ -302,22 +399,62 @@ export default function DashboardChatPage() {
 
                         <form onSubmit={handleSubmit} className="relative group bg-[#15171e] border border-white/10 rounded-full p-2 pl-6 focus-within:border-violet-500/50 shadow-2xl">
                             <div className="flex items-center gap-3">
-                                <Zap className="w-5 h-5 text-gray-600 group-focus-within:text-fuchsia-500 transition-colors" />
-                                <input
-                                    type="text"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Escribe tu mensaje..."
-                                    className="flex-1 bg-transparent border-none outline-none text-white h-10 text-sm"
-                                    disabled={isLoading}
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={!input.trim() || isLoading}
-                                    className="p-3 bg-violet-600 rounded-full text-white hover:bg-violet-500 disabled:opacity-50 transition"
-                                >
-                                    <Send className="w-4 h-4 ml-0.5" />
-                                </button>
+                                {isRecording ? (
+                                    <div className="flex items-center gap-3 flex-1">
+                                        <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 rounded-full border border-red-500/20">
+                                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                            <span className="text-red-400 font-mono text-xs">{Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}</span>
+                                        </div>
+                                        <span className="text-gray-400 text-sm animate-pulse">Escuchando...</span>
+
+                                        <button
+                                            type="button"
+                                            onClick={cancelRecording}
+                                            className="ml-auto p-2 hover:bg-white/10 rounded-full text-gray-400"
+                                        >
+                                            <Menu className="w-4 h-4 rotate-45" /> {/* Cancel Icon */}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleAudioFinish}
+                                            className="p-2 bg-red-500 hover:bg-red-600 rounded-full text-white shadow-lg shadow-red-500/20"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={startRecording}
+                                            className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition"
+                                            title="Grabar mensaje de voz"
+                                        >
+                                            <Mic className="w-5 h-5" />
+                                        </button>
+                                        <Zap className="w-5 h-5 text-gray-600 group-focus-within:text-fuchsia-500 transition-colors" />
+                                    </>
+                                )}
+
+                                {!isRecording && (
+                                    <>
+                                        <input
+                                            type="text"
+                                            value={input}
+                                            onChange={(e) => setInput(e.target.value)}
+                                            placeholder="Escribe tu mensaje..."
+                                            className="flex-1 bg-transparent border-none outline-none text-white h-10 text-sm"
+                                            disabled={isLoading}
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={(!input.trim() && !isRecording) || isLoading}
+                                            className="p-3 bg-violet-600 rounded-full text-white hover:bg-violet-500 disabled:opacity-50 transition"
+                                        >
+                                            <Send className="w-4 h-4 ml-0.5" />
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </form>
                     </div>
