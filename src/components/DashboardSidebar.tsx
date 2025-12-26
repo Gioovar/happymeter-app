@@ -157,7 +157,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
                 >
                     <Image
-                        src="/assets/branding/logo-white.png"
+                        src="/happy-ai-logo.png"
                         alt="AI Logo"
                         width={16}
                         height={16}
