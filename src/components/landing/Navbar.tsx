@@ -24,7 +24,7 @@ export default function Navbar() {
                         href="/creators"
                         className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
                     >
-                        Para Creadores
+                        Para Embajadores
                     </Link>
                     <div className="flex items-center gap-4">
                         <Link
@@ -62,7 +62,7 @@ export default function Navbar() {
                             onClick={() => setIsOpen(false)}
                             className="text-lg font-medium text-gray-300 hover:text-white flex items-center justify-between group"
                         >
-                            Para Creadores
+                            Para Embajadores
                             <span className="text-gray-600 group-hover:text-white transition-colors">→</span>
                         </Link>
 
