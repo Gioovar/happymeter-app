@@ -457,7 +457,11 @@ export default function DashboardChatPage() {
                                         )}>
                                             {message.role === 'user'
                                                 ? <User className="w-4 h-4 text-white" />
-                                                : <Sparkles className="w-4 h-4 text-violet-400" />
+                                                : <img
+                                                    src="/happy-ai-logo.png"
+                                                    alt="AI"
+                                                    className="w-4 h-4 object-contain brightness-0 invert"
+                                                />
                                             }
                                         </div>
 
@@ -488,7 +492,11 @@ export default function DashboardChatPage() {
                                     className="flex gap-4"
                                 >
                                     <div className="w-9 h-9 rounded-full bg-[#1a1d26] border border-white/10 flex items-center justify-center">
-                                        <Sparkles className="w-4 h-4 text-gray-500" />
+                                        <img
+                                            src="/happy-ai-logo.png"
+                                            alt="AI"
+                                            className="w-4 h-4 object-contain brightness-0 invert opacity-50"
+                                        />
                                     </div>
                                     <div className="bg-white/5 px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-1.5 shadow-lg border border-white/5">
                                         <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
