@@ -3,6 +3,7 @@ import AffiliateHero from '@/components/affiliate/AffiliateHero'
 import Footer from '@/components/landing/Footer'
 import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
+import BrandLogo from '@/components/BrandLogo'
 
 export default function AffiliatePage() {
     return (
@@ -11,9 +12,8 @@ export default function AffiliatePage() {
             {/* Navbar */}
             <header className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-xl border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
-                        <Sparkles className="w-5 h-5 text-violet-500" />
-                        Happy<span className="text-violet-500">Creators</span>
+                    <Link href="/" className="flex items-center gap-2">
+                        <BrandLogo className="scale-90" />
                     </Link>
 
                     <div className="flex items-center gap-6">
