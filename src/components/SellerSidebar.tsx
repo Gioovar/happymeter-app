@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, DollarSign, MapPin, Settings, Home, LogOut, Menu, X, Sparkles } from 'lucide-react'
+import { LayoutGrid, DollarSign, MapPin, Settings, Home, LogOut, Menu, X, Sparkles, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
@@ -18,6 +18,11 @@ const menuItems = [
         title: 'Mi Territorio',
         href: '/sellers/territory',
         icon: MapPin,
+    },
+    {
+        title: 'Gestor (CRM)',
+        href: '/sellers/crm',
+        icon: Users,
     },
     {
         title: 'Finanzas',

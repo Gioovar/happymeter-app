@@ -473,6 +473,7 @@ model RepresentativeProfile {
   commissions     RepresentativeCommission[]
   payouts         RepresentativePayout[]
   referrals       Referral[]
+  leads           SellerLead[]
 }
 
 model RepresentativeCommission {
@@ -501,4 +502,29 @@ model RepresentativePayout {
   representative   RepresentativeProfile @relation(fields: [representativeId], references: [id], onDelete: Cascade)
   
   @@index([representativeId])
+}
+
+model SellerLead {
+  id               String              @id @default(uuid())
+  representativeId String
+  
+  businessName     String
+  contactName      String?
+  phone            String?
+  email            String?
+  address          String?
+  
+  status           String              @default("NEW") // NEW, CONTACTED, VISITED, NEGOTIATING, WON, LOST
+  notes            String?             @db.Text
+  
+  scheduledVisit   DateTime?
+  lastContactedAt  DateTime?
+  
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  
+  representative   RepresentativeProfile @relation(fields: [representativeId], references: [id], onDelete: Cascade)
+  
+  @@index([representativeId])
+  @@index([status])
 }

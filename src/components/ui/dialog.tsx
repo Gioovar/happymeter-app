@@ -68,3 +68,25 @@ export const DialogTitle: React.FC<{ children: React.ReactNode, className?: stri
         {children}
     </h2>
 )
+
+export const DialogTrigger: React.FC<{ children: React.ReactNode, asChild?: boolean }> = ({ children, asChild }) => {
+    const { onOpenChange } = useContext(DialogContext)
+
+    // Minimal implementation: Clone element if asChild, else wrap in div
+    // For simplicity with Radix-like API assume it receives an onClick
+
+    if (asChild && React.isValidElement(children)) {
+        return React.cloneElement(children as React.ReactElement<any>, {
+            onClick: (e: React.MouseEvent) => {
+                children.props.onClick?.(e)
+                onOpenChange(true)
+            }
+        })
+    }
+
+    return (
+        <div onClick={() => onOpenChange(true)} className="cursor-pointer">
+            {children}
+        </div>
+    )
+}
