@@ -23,6 +23,11 @@ export async function GET(request: NextRequest) {
         redirect('/creators/dashboard')
     }
 
+    if (intent === 'seller') {
+        if (intentCookie) cookieStore.delete('signup_intent')
+        redirect('/sellers/join')
+    }
+
 
     // Check if user has completed onboarding
     let userSettings = null

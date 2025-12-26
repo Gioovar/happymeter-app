@@ -25,13 +25,51 @@ export default function AffiliateHero() {
                     Únete a HappyCreators. Recomienda la herramienta #1 de feedback y construye un ingreso pasivo real. Te damos las herramientas, tú pones la audiencia.
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link href="/sign-up?intent=creator">
-                        <button className="px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:scale-105 transition duration-300 flex items-center gap-2 shadow-xl shadow-white/10">
-                            Convertirme en Partner
-                            <ArrowRight className="w-5 h-5" />
-                        </button>
-                    </Link>
+                {/* Role Selection Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-12 mb-16">
+                    {/* Creators Card */}
+                    <div className="group relative p-8 rounded-3xl bg-[#111] border border-white/5 hover:border-violet-500/50 transition-all duration-300 hover:-translate-y-1">
+                        <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:bg-violet-500/20 transition-colors">
+                            <Sparkles className="w-6 h-6 text-violet-400" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-2">Para Creadores</h3>
+                        <p className="text-gray-400 text-sm mb-6 h-12">
+                            Ideal para influencers, bloggers y expertos en marketing digital.
+                        </p>
+                        <ul className="text-left space-y-3 mb-8 text-gray-300 text-sm">
+                            <li className="flex items-center gap-2"><span className="text-green-400">✓</span> 40% Comisiones Recurrentes</li>
+                            <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Links de Referido y Cupones</li>
+                            <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Pagos Mensuales</li>
+                        </ul>
+                        <Link href="/sign-up?intent=creator" className="block">
+                            <button className="w-full py-3 rounded-xl bg-white text-black font-bold hover:bg-gray-200 transition">
+                                Unirme como Creador
+                            </button>
+                        </Link>
+                    </div>
+
+                    {/* Ambassadors Card */}
+                    <div className="group relative p-8 rounded-3xl bg-[#111] border border-white/5 hover:border-blue-500/50 transition-all duration-300 hover:-translate-y-1">
+                        <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:bg-blue-500/20 transition-colors">
+                            <Wallet className="w-6 h-6 text-blue-400" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-2">Para Embajadores</h3>
+                        <p className="text-gray-400 text-sm mb-6 h-12">
+                            Ideal para vendedores directos, networking y venta B2B de campo.
+                        </p>
+                        <ul className="text-left space-y-3 mb-8 text-gray-300 text-sm">
+                            <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Comisiones por Venta Directa</li>
+                            <li className="flex items-center gap-2"><span className="text-green-400">✓</span> CRM y Mapa de Prospección</li>
+                            <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Exclusividad Territorial</li>
+                        </ul>
+                        <Link href="/sign-up?intent=seller" className="block">
+                            <button className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition">
+                                Unirme como Embajador
+                            </button>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Dashboard Preview Mockup */}
