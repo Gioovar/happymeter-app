@@ -459,13 +459,19 @@ model PushSubscription {
 model RepresentativeProfile {
   id              String   @id @default(uuid())
   userId          String   @unique
-  state           String   @unique // The state they represent (e.g., "Jalisco", "CDMX")
+  state           String   // Removed @unique to allow up to 50
   referralCode    String?  @unique
+  
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  phone           String?
+  socialLink      String?
+  photoUrl        String?
+  experience      String?  @db.Text
   
   commissionRate  Float    @default(15.0)
   balance         Float    @default(0)
   
-  isActive        Boolean  @default(true)
+  isActive        Boolean  @default(false) // Default false until approved
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
