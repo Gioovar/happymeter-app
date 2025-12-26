@@ -181,14 +181,19 @@ export async function POST(req: Request) {
                 select: { title: true }
             })
 
+            console.log(`[TITLE_GEN] Check for thread ${threadId}. Title: "${currentThread?.title}". MsgLen: ${messages.length}`)
+
             // Generate if it's new (short history) OR if it still has the default name
             if (currentThread?.title === "Nuevo Chat" || messages.length <= 2) {
                 try {
-                    const titleModel = getGeminiModel('gemini-1.5-flash', {
+                    console.log('[TITLE_GEN] Generating new title...')
+                    const titleModel = getGeminiModel('gemini-flash-latest', {
                         systemInstruction: `Genera un título muy corto, conciso y descriptivo (máximo 4 palabras) para un chat. Basado en este mensaje: "${lastUserMsg.content}". Ejemplo: "Estrategia de Ventas", "Análisis de Quejas". NO uses comillas ni puntos finales.`
                     })
                     const titleResult = await titleModel.generateContent(lastUserMsg.content)
                     const title = titleResult.response.text().trim()
+
+                    console.log(`[TITLE_GEN] Generated title: "${title}"`)
 
                     if (title && title.length < 50) { // Safety check length
                         await prisma.chatThread.update({
