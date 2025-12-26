@@ -139,36 +139,9 @@ export async function POST(req: Request) {
                 commissionPaid = true
             }
 
-            // B. Fallback to Territory (If no referral logic claimed it)
+            // B. Fallback Removed: Commission requires explicit Referral Link usage as per new business rule.
             if (!commissionPaid) {
-                const user = await prisma.userSettings.findUnique({ where: { userId } })
-
-                if (user?.state) {
-                    const territoryRep = await prisma.representativeProfile.findUnique({
-                        where: { state: user.state }
-                    })
-
-                    // Ensure we don't pay the same person if they bought it themselves (optional check, but good safe guard)
-                    if (territoryRep && territoryRep.userId !== userId) {
-                        const commissionRate = territoryRep.commissionRate / 100
-                        const commissionAmount = (amountTotal / 100) * commissionRate
-
-                        await prisma.representativeCommission.create({
-                            data: {
-                                representativeId: territoryRep.id,
-                                amount: commissionAmount,
-                                description: `Comisión de Territorio (${user.state}) por venta de plan ${plan}`,
-                                status: 'PENDING',
-                                sourceSaleId: session.id
-                            }
-                        })
-
-                        await prisma.representativeProfile.update({
-                            where: { id: territoryRep.id },
-                            data: { balance: { increment: commissionAmount } }
-                        })
-                    }
-                }
+                console.log(`Sale ${session.id} has no attribution. Commission retained by platform.`)
             }
 
         } catch (dbError) {
