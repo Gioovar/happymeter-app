@@ -122,6 +122,24 @@ export default function DashboardChatPage() {
         content: '¡Hola! Soy tu **HappyMeter Analyst**. 🧠\n\nEstoy conectado a las métricas de tu negocio en tiempo real. Puedo ayudarte a:\n\n• Analizar tendencias de satisfacción.\n• Identificar problemas recurrentes.\n• Redactar manuales de acción paso a paso.\n\n¿Por dónde empezamos hoy?'
     }
 
+    // Resume Last Conversation on Mount
+    useEffect(() => {
+        const resumeLastChat = async () => {
+            try {
+                const res = await fetch('/api/dashboard/chat/threads')
+                if (res.ok) {
+                    const threads = await res.json()
+                    if (threads.length > 0) {
+                        setSelectedThreadId(threads[0].id)
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to resume chat", e)
+            }
+        }
+        resumeLastChat()
+    }, [])
+
     // Load messages when thread changes
     useEffect(() => {
         // Skip fetch if we just created this thread locally (to preserve optimistic state)

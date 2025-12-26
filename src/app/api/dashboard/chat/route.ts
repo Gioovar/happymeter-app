@@ -182,7 +182,7 @@ export async function POST(req: Request) {
             })
 
             // Generate if it's new (short history) OR if it still has the default name
-            if (messages.length <= 2 || currentThread?.title === "Nuevo Chat") {
+            if (currentThread?.title === "Nuevo Chat" || messages.length <= 2) {
                 try {
                     const titleModel = getGeminiModel('gemini-1.5-flash', {
                         systemInstruction: `Genera un título muy corto, conciso y descriptivo (máximo 4 palabras) para un chat. Basado en este mensaje: "${lastUserMsg.content}". Ejemplo: "Estrategia de Ventas", "Análisis de Quejas". NO uses comillas ni puntos finales.`
