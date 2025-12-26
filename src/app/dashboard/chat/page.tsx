@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Sparkles, User, Zap, Menu, Mic, Square } from 'lucide-react'
+import { Send, Sparkles, User, Zap, Menu, Mic, Square, Play, Pause } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import ChatSidebar from '@/components/chat/ChatSidebar'
@@ -14,6 +14,94 @@ import { startOfMonth, endOfMonth, format } from 'date-fns'
 interface Message {
     role: 'user' | 'assistant'
     content: string
+    audioUrl?: string
+}
+
+
+const AudioMessageBubble = ({ src }: { src: string }) => {
+    const [isPlaying, setIsPlaying] = useState(false)
+    const audioRef = useRef<HTMLAudioElement | null>(null)
+    const [duration, setDuration] = useState(0)
+    const [currentTime, setCurrentTime] = useState(0)
+
+    useEffect(() => {
+        const audio = new Audio(src)
+        audioRef.current = audio
+
+        audio.onloadedmetadata = () => {
+            if (audio.duration === Infinity) {
+                audio.currentTime = 1e101
+                audio.ontimeupdate = () => {
+                    audio.ontimeupdate = null
+                    audio.currentTime = 0
+                    setDuration(audio.duration)
+                }
+            } else {
+                setDuration(audio.duration)
+            }
+        }
+
+        audio.onended = () => {
+            setIsPlaying(false)
+            setCurrentTime(0)
+        }
+
+        audio.ontimeupdate = () => setCurrentTime(audio.currentTime)
+
+        return () => {
+            audio.pause()
+            audio.src = ''
+        }
+    }, [src])
+
+    const togglePlay = () => {
+        if (!audioRef.current) return
+        if (isPlaying) {
+            audioRef.current.pause()
+        } else {
+            audioRef.current.play()
+        }
+        setIsPlaying(!isPlaying)
+    }
+
+    const formatTime = (time: number) => {
+        const minutes = Math.floor(time / 60)
+        const seconds = Math.floor(time % 60)
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`
+    }
+
+    return (
+        <div className="flex items-center gap-3 min-w-[200px]">
+            <button
+                onClick={togglePlay}
+                className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors flex-shrink-0"
+            >
+                {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5 fill-current" /> : <Play className="w-4 h-4 md:w-5 md:h-5 fill-current ml-1" />}
+            </button>
+
+            <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-0.5 h-6 md:h-8 opacity-80">
+                    {[...Array(20)].map((_, i) => (
+                        <div
+                            key={i}
+                            className={cn(
+                                "w-1 rounded-full transition-all duration-300",
+                                isPlaying ? "animate-pulse" : ""
+                            )}
+                            style={{
+                                height: `${Math.max(20, Math.random() * 100)}%`,
+                                backgroundColor: currentTime / duration > (i / 20) ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
+                                animationDelay: `${i * 0.05}s`
+                            }}
+                        />
+                    ))}
+                </div>
+                <div className="text-[10px] md:text-xs text-white/70 font-mono text-right">
+                    {formatTime(isPlaying ? currentTime : duration)}
+                </div>
+            </div>
+        </div>
+    )
 }
 
 export default function DashboardChatPage() {
@@ -97,8 +185,16 @@ export default function DashboardChatPage() {
             const base64Audio = reader.result?.toString().split(',')[1]
             if (!base64Audio) return
 
+            // Create Local Blob URL for Playback
+            const audioUrl = URL.createObjectURL(audioBlob)
+
             // Visual Optimistic Update for Audio
-            const newMessages = [...messages, { role: 'user', content: '🎤 [Mensaje de Voz Enviado]' }] as Message[]
+            const newMessages = [...messages, {
+                role: 'user',
+                content: '[Mensaje de Voz]',
+                audioUrl: audioUrl
+            }] as Message[]
+
             setMessages(newMessages)
             setIsLoading(true)
 
@@ -120,7 +216,7 @@ export default function DashboardChatPage() {
                     body: JSON.stringify({
                         threadId: activeThreadId,
                         messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-                        audio: base64Audio // Sending audio field
+                        audio: base64Audio
                     })
                 })
 
@@ -349,11 +445,15 @@ export default function DashboardChatPage() {
                                                 ? "bg-violet-600/20 text-white border-violet-500/20 rounded-tr-sm"
                                                 : "bg-white/5 text-gray-200 border-white/10 rounded-tl-sm"
                                         )}>
-                                            <div className="whitespace-pre-wrap leading-relaxed text-sm md:text-[14px]">
-                                                {message.content.split('**').map((part, i) =>
-                                                    i % 2 === 1 ? <strong key={i} className="text-white font-semibold">{part}</strong> : part
-                                                )}
-                                            </div>
+                                            {message.audioUrl ? (
+                                                <AudioMessageBubble src={message.audioUrl} />
+                                            ) : (
+                                                <div className="whitespace-pre-wrap leading-relaxed text-sm md:text-[14px]">
+                                                    {message.content.split('**').map((part, i) =>
+                                                        i % 2 === 1 ? <strong key={i} className="text-white font-semibold">{part}</strong> : part
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </motion.div>
                                 ))}
