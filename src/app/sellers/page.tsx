@@ -1,6 +1,7 @@
 import { getSellerDashboardData } from '@/actions/sellers'
-import { DollarSign, MapPin, TrendingUp } from 'lucide-react'
+import { DollarSign, MapPin, TrendingUp, Link2, Copy, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import ReferralLinkCard from '@/components/sellers/ReferralLinkCard'
 
 export default async function SellerDashboardPage() {
     const data = await getSellerDashboardData()
@@ -17,6 +18,8 @@ export default async function SellerDashboardPage() {
                     <span className="text-blue-400 font-medium">{profile.state}</span>
                 </p>
             </div>
+
+            <ReferralLinkCard referralCode={profile.referralCode} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="p-6 bg-[#111] border border-white/10 rounded-2xl text-white">

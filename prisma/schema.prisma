@@ -191,7 +191,8 @@ model AffiliateProfile {
 
 model Referral {
   id             String           @id @default(uuid())
-  affiliateId    String
+  affiliateId    String?
+  representativeId String?
   referredUserId String           @unique
   status         ReferralStatus   @default(LEAD)
   createdAt      DateTime         @default(now())
@@ -199,7 +200,8 @@ model Referral {
   leadEmail      String?
   leadName       String?
   socialLink     String?
-  affiliate      AffiliateProfile @relation(fields: [affiliateId], references: [id])
+  affiliate      AffiliateProfile? @relation(fields: [affiliateId], references: [id])
+  representative RepresentativeProfile? @relation(fields: [representativeId], references: [id])
 }
 
 model Commission {
@@ -458,6 +460,7 @@ model RepresentativeProfile {
   id              String   @id @default(uuid())
   userId          String   @unique
   state           String   @unique // The state they represent (e.g., "Jalisco", "CDMX")
+  referralCode    String?  @unique
   
   commissionRate  Float    @default(15.0)
   balance         Float    @default(0)
@@ -469,6 +472,7 @@ model RepresentativeProfile {
   user            UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
   commissions     RepresentativeCommission[]
   payouts         RepresentativePayout[]
+  referrals       Referral[]
 }
 
 model RepresentativeCommission {

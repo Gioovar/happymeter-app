@@ -24,6 +24,19 @@ export async function getSellerDashboardData() {
 
     if (!profile) return null
 
+    // Generate referral code if missing
+    if (!profile.referralCode) {
+        const stateCode = profile.state.substring(0, 3).toUpperCase().replace(/\s/g, 'X')
+        const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase()
+        const newCode = `REF-${stateCode}-${randomSuffix}`
+
+        await prisma.representativeProfile.update({
+            where: { id: profile.id },
+            data: { referralCode: newCode }
+        })
+        profile.referralCode = newCode
+    }
+
     // Get territory stats
     // Note: We filter by state. If state is not set on business, it won't show.
     const businessesCount = await prisma.userSettings.count({

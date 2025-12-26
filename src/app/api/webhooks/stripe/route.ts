@@ -71,46 +71,103 @@ export async function POST(req: Request) {
                 }
             })
 
-            // 3. Handle Affiliate Commission (if applicable)
-            if (affiliateRef) {
-                // Find affiliate profile by referral code
-                const affiliate = await prisma.affiliateProfile.findUnique({
-                    where: { code: affiliateRef }
+            // 3. Handle Commissions (Priority: Affiliate > Direct Rep > Territory Rep)
+
+            // A. Check for existing Referral Record
+            const referral = await prisma.referral.findUnique({
+                where: { referredUserId: userId },
+                include: { affiliate: true, representative: true }
+            })
+
+            let commissionPaid = false
+
+            if (referral?.affiliate) {
+                // --- PAY AFFILIATE (40%) ---
+                const commissionRate = 0.40
+                const commissionAmount = (amountTotal / 100) * commissionRate
+
+                await prisma.commission.create({
+                    data: {
+                        affiliateId: referral.affiliate.id,
+                        amount: commissionAmount,
+                        description: `Comisión del 40% por venta de plan ${plan} (${interval})`,
+                        status: 'PENDING'
+                    }
                 })
 
-                if (affiliate) {
-                    const commissionRate = 0.40 // 40% commission
-                    const commissionAmount = (amountTotal / 100) * commissionRate
+                await prisma.affiliateProfile.update({
+                    where: { id: referral.affiliate.id },
+                    data: { balance: { increment: commissionAmount } }
+                })
 
-                    // Create Commission Record
-                    await prisma.commission.create({
-                        data: {
-                            affiliateId: affiliate.id,
-                            amount: commissionAmount,
-                            description: `Comisión del 40% por venta de plan ${plan} (${interval})`,
-                            status: 'PENDING' // Pending until payout
-                        }
+                // Mark referral converted
+                if (referral.status !== 'CONVERTED') {
+                    await prisma.referral.update({
+                        where: { id: referral.id },
+                        data: { status: 'CONVERTED', convertedAt: new Date() }
+                    })
+                }
+                commissionPaid = true
+
+            } else if (referral?.representative) {
+                // --- PAY REPRESENTATIVE (Direct) ---
+                const rep = referral.representative
+                const commissionRate = rep.commissionRate / 100
+                const commissionAmount = (amountTotal / 100) * commissionRate
+
+                await prisma.representativeCommission.create({
+                    data: {
+                        representativeId: rep.id,
+                        amount: commissionAmount,
+                        description: `Comisión Directa (${rep.commissionRate}%) por venta de plan ${plan}`,
+                        status: 'PENDING',
+                        sourceSaleId: session.id
+                    }
+                })
+
+                await prisma.representativeProfile.update({
+                    where: { id: rep.id },
+                    data: { balance: { increment: commissionAmount } }
+                })
+
+                if (referral.status !== 'CONVERTED') {
+                    await prisma.referral.update({
+                        where: { id: referral.id },
+                        data: { status: 'CONVERTED', convertedAt: new Date() }
+                    })
+                }
+                commissionPaid = true
+            }
+
+            // B. Fallback to Territory (If no referral logic claimed it)
+            if (!commissionPaid) {
+                const user = await prisma.userSettings.findUnique({ where: { userId } })
+
+                if (user?.state) {
+                    const territoryRep = await prisma.representativeProfile.findUnique({
+                        where: { state: user.state }
                     })
 
-                    // Update Affiliate Balance
-                    await prisma.affiliateProfile.update({
-                        where: { id: affiliate.id },
-                        data: {
-                            balance: { increment: commissionAmount }
-                        }
-                    })
+                    // Ensure we don't pay the same person if they bought it themselves (optional check, but good safe guard)
+                    if (territoryRep && territoryRep.userId !== userId) {
+                        const commissionRate = territoryRep.commissionRate / 100
+                        const commissionAmount = (amountTotal / 100) * commissionRate
 
-                    // Update Referral Status if it exists
-                    await prisma.referral.updateMany({
-                        where: {
-                            affiliateId: affiliate.id,
-                            referredUserId: userId
-                        },
-                        data: {
-                            status: 'CONVERTED',
-                            convertedAt: new Date()
-                        }
-                    })
+                        await prisma.representativeCommission.create({
+                            data: {
+                                representativeId: territoryRep.id,
+                                amount: commissionAmount,
+                                description: `Comisión de Territorio (${user.state}) por venta de plan ${plan}`,
+                                status: 'PENDING',
+                                sourceSaleId: session.id
+                            }
+                        })
+
+                        await prisma.representativeProfile.update({
+                            where: { id: territoryRep.id },
+                            data: { balance: { increment: commissionAmount } }
+                        })
+                    }
                 }
             }
 

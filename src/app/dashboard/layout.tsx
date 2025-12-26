@@ -6,6 +6,8 @@ import FeatureTour from '@/components/FeatureTour'
 import { UserButton } from '@clerk/nextjs'
 import { DashboardProvider } from '@/context/DashboardContext'
 
+import { processReferralCookie } from '@/lib/referral-service'
+
 export default async function DashboardLayout({
     children,
 }: {
@@ -14,6 +16,9 @@ export default async function DashboardLayout({
     const { userId, redirectToSignIn } = await auth()
 
     if (!userId) return redirectToSignIn()
+
+    // Process Attribution
+    await processReferralCookie(userId)
 
     let realRole = 'USER'
     let affiliateProfile = null
@@ -28,7 +33,7 @@ export default async function DashboardLayout({
             affiliateProfile = profile
             if (settings) {
                 hasSeenTour = settings.hasSeenTour
-                realRole = settings.role
+                realRole = settings.role || 'USER'
             }
         }
     } catch (error) {
@@ -40,7 +45,7 @@ export default async function DashboardLayout({
             <div className="flex min-h-screen bg-[#0a0a0a]">
                 {!hasSeenTour && <Suspense fallback={null}><FeatureTour /></Suspense>}
                 <Suspense fallback={<div className="w-64 bg-[#111] h-screen border-r border-white/10 hidden md:flex" />}>
-                    <DashboardSidebar isCreator={!!affiliateProfile} userRole="USER" />
+                    <DashboardSidebar isCreator={!!affiliateProfile} userRole={realRole} />
                 </Suspense>
                 <main className="flex-1 overflow-y-auto h-screen relative">
                     {/* Top Header for Desktop */}

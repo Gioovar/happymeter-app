@@ -1,4 +1,5 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 // Configure public routes
 export default clerkMiddleware((auth, req) => {
@@ -14,6 +15,20 @@ export default clerkMiddleware((auth, req) => {
     ) {
         return // return void to allow access without auth
     }
+
+    // Capture Referral Code
+    if (req.nextUrl.searchParams.has('ref')) {
+        const refCode = req.nextUrl.searchParams.get('ref')
+        const response = NextResponse.next()
+        // Save referral code in cookie for 30 days
+        response.cookies.set('referral_code', refCode!, {
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30,
+            sameSite: 'lax'
+        })
+        return response
+    }
+
     // Protect all other routes
     // auth().protect() // This might be too strict if we just want to default to signed-in context for others
 })
