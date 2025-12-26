@@ -18,7 +18,7 @@ export default function AffiliateHero() {
                 </div>
 
                 <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400 tracking-tight mb-6 max-w-4xl mx-auto leading-tight">
-                    Gana el <span className="text-green-500">40%</span> de cada suscripción recurrente
+                    Gana hasta el <span className="text-green-500">40%</span> de cada suscripción recurrente
                 </h1>
 
                 <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
