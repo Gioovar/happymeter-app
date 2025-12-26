@@ -8,6 +8,19 @@ export async function GET(req: Request) {
         const { userId } = await auth()
         if (!userId) return new NextResponse("Unauthorized", { status: 401 })
 
+        // Auto-Cleanup: Delete threads older than 7 days
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+        await prisma.chatThread.deleteMany({
+            where: {
+                userId,
+                updatedAt: {
+                    lt: sevenDaysAgo
+                }
+            }
+        })
+
         const threads = await prisma.chatThread.findMany({
             where: { userId },
             orderBy: { updatedAt: 'desc' },
