@@ -133,8 +133,8 @@ export type PlanType = keyof typeof PLAN_LIMITS
 
 export const PRICING = {
     FREE: { monthly: 0, yearly: 0 },
-    GROWTH: { monthly: 29, yearly: 290 },
-    POWER: { monthly: 79, yearly: 790 },
+    GROWTH: { monthly: 24, yearly: 290 },
+    POWER: { monthly: 66, yearly: 790 },
     CHAIN: { monthly: 299, yearly: 2990 },
     ENTERPRISE: { monthly: null, yearly: null } // Contact Sales
 }
