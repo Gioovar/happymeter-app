@@ -23,15 +23,19 @@ export default function PricingTeaser() {
                             </div>
                             <p className="text-gray-500 text-sm mt-2">Prueba el poder de HappyMeter por 7 días.</p>
                         </div>
+                        <p className="text-violet-400 text-xs font-bold uppercase mb-4 tracking-wide">Incluye todo lo de Growth:</p>
                         <ul className="space-y-4 mb-8 flex-1">
                             <li className="flex items-center gap-3 text-gray-300 text-sm">
-                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> 1 Encuesta (7 días)
+                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Acceso Total (7 días)
                             </li>
                             <li className="flex items-center gap-3 text-gray-300 text-sm">
                                 <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Max 50 respuestas
                             </li>
                             <li className="flex items-center gap-3 text-gray-300 text-sm">
-                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Microjuego Básico
+                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Catálogo de Juegos
+                            </li>
+                            <li className="flex items-center gap-3 text-gray-300 text-sm">
+                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Alertas en Vivo
                             </li>
                         </ul>
                         <Link href="/sign-up">
@@ -72,6 +76,10 @@ export default function PricingTeaser() {
                                 <div className="p-1 rounded-full bg-violet-500/20 text-violet-400 shrink-0"><Check className="w-3 h-3" /></div>
                                 Alertas Crisis Staff
                             </li>
+                            <li className="flex items-center gap-3 text-white font-medium text-sm">
+                                <div className="p-1 rounded-full bg-violet-500/20 text-violet-400 shrink-0"><Check className="w-3 h-3" /></div>
+                                Catálogo de Juegos (Dados/Cartas)
+                            </li>
                         </ul>
                         <Link href="/sign-up?plan=growth">
                             <button className="w-full py-3.5 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-500 transition shadow-lg shadow-violet-600/20">
@@ -103,6 +111,9 @@ export default function PricingTeaser() {
                             </li>
                             <li className="flex items-center gap-3 text-gray-300 text-sm">
                                 <Check className="w-4 h-4 text-blue-500 flex-shrink-0" /> Campañas WhatsApp
+                            </li>
+                            <li className="flex items-center gap-3 text-gray-300 text-sm">
+                                <Check className="w-4 h-4 text-blue-500 flex-shrink-0" /> Juegos Premium (Ruleta/Raspa)
                             </li>
                         </ul>
                         <Link href="/sign-up?plan=power">
