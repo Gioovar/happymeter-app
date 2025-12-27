@@ -35,6 +35,8 @@ export async function GET(req: Request) {
     }
 }
 
+import { PLAN_LIMITS } from '@/lib/plans'
+
 export async function POST(req: Request) {
     try {
         const { userId } = await auth()
@@ -44,16 +46,32 @@ export async function POST(req: Request) {
 
         const body = await req.json()
 
-        // Upsert logic for userSettings if not exists, but usually it exists
-        // We will merge existing config with new config to avoid overwriting other games
-
         const currentSettings = await prisma.userSettings.findUnique({
             where: { userId },
-            select: { gameConfig: true }
+            select: { gameConfig: true, plan: true }
         })
 
         const currentConfig = (currentSettings?.gameConfig as any) || {}
         const newConfig = { ...currentConfig, ...body }
+
+        // Check Limits
+        const planCode = (currentSettings?.plan || 'FREE').toUpperCase() as keyof typeof PLAN_LIMITS
+        const currentPlan = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE
+        const maxGames = currentPlan.limits.games
+
+        // Count enabled games in newConfig
+        // Assuming config structure: { [gameKey]: { active: boolean, ... } }
+        let activeGamesCount = 0
+        Object.values(newConfig).forEach((game: any) => {
+            if (game?.active) activeGamesCount++
+        })
+
+        if (activeGamesCount > maxGames) {
+            return new NextResponse(
+                JSON.stringify({ error: `Tu plan ${currentPlan.name} solo permite ${maxGames} juegos activos. Desactiva uno para activar otro.` }),
+                { status: 403 }
+            )
+        }
 
         const updated = await prisma.userSettings.upsert({
             where: { userId },
