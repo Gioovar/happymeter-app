@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { getAllPosts } from '@/lib/blog'
 import { ArrowLeft, ArrowRight, Calendar, Clock, User } from 'lucide-react'
 import { BackgroundLights } from '@/components/ui/BackgroundLights'
@@ -45,10 +46,12 @@ export default function BlogIndex() {
                         >
                             {/* Image */}
                             <div className="aspect-video relative overflow-hidden bg-gray-900">
-                                <img
+                                <Image
                                     src={post.coverImage}
                                     alt={post.title}
-                                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                                    fill
+                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                                 <div className="absolute bottom-4 left-4 flex gap-2">

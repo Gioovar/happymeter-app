@@ -1,6 +1,7 @@
 import { getPostBySlug, getAllPosts } from '@/lib/blog'
 import { ArrowLeft, Calendar, User, Share2 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -102,11 +103,13 @@ export default async function BlogPost({ params }: { params: { slug: string } })
                         ))}
                     </div>
 
-                    <div className="aspect-video relative rounded-2xl overflow-hidden shadow-2xl shadow-violet-900/20 max-w-4xl mx-auto border border-white/10">
-                        <img
+                    <div className="aspect-video relative rounded-2xl overflow-hidden shadow-2xl shadow-violet-900/20 max-w-4xl mx-auto border border-white/10 bg-white/5">
+                        <Image
                             src={post.coverImage}
                             alt={post.title}
-                            className="object-cover w-full h-full"
+                            fill
+                            className="object-cover"
+                            priority
                         />
                     </div>
                 </header>
