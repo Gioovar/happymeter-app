@@ -1,16 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Check, Sparkles, Zap, Building2, ArrowLeft, Loader2, Globe, BarChart, ShieldCheck } from 'lucide-react'
 import { PRICING } from '@/lib/plans'
 import { toast } from 'sonner'
 
+import { useSearchParams } from 'next/navigation'
+
 export default function PricingPage() {
+    const searchParams = useSearchParams()
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
-    const [interval, setInterval] = useState<'month' | 'year'>('year') // Default to Annual
+    const [interval, setInterval] = useState<'month' | 'year'>('month') // Default to Month for better conversion
     const router = useRouter()
+
+    useEffect(() => {
+        const paramInterval = searchParams.get('interval')
+        if (paramInterval === 'year' || paramInterval === 'month') {
+            setInterval(paramInterval)
+        }
+    }, [searchParams])
 
     const handleCheckout = async (planKey: string) => {
         if (planKey === 'FREE') {
