@@ -72,7 +72,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
             </div>
 
             {/* Article Content */}
-            <article className="pt-32 pb-32">
+            <article className="pt-32 pb-32 relative z-10">
                 {/* Hero */}
                 <header className="max-w-4xl mx-auto px-6 mb-12 text-center">
                     <div className="flex items-center justify-center gap-4 text-sm text-gray-500 mb-6">

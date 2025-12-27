@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getAllPosts } from '@/lib/blog'
 import { ArrowLeft, ArrowRight, Calendar, Clock, User } from 'lucide-react'
+import { BackgroundLights } from '@/components/ui/BackgroundLights'
 
 export default function BlogIndex() {
     const posts = getAllPosts([
@@ -14,11 +15,12 @@ export default function BlogIndex() {
     ])
 
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-violet-500/30">
+        <div className="min-h-screen bg-black text-white selection:bg-violet-500/30 relative">
+            <BackgroundLights />
+
             {/* Header / Hero */}
-            <div className="relative pt-32 pb-20 px-6 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-black to-fuchsia-900/20" />
-                <div className="max-w-6xl mx-auto relative z-10 text-center">
+            <div className="relative pt-32 pb-20 px-6 overflow-hidden z-10">
+                <div className="max-w-6xl mx-auto relative text-center">
                     <Link href="/" className="inline-flex items-center text-sm text-gray-400 hover:text-white mb-6 transition">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Volver al inicio
@@ -33,7 +35,7 @@ export default function BlogIndex() {
             </div>
 
             {/* Content Grid */}
-            <div className="max-w-6xl mx-auto px-6 pb-32">
+            <div className="max-w-6xl mx-auto px-6 pb-32 relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {posts.map((post) => (
                         <Link
@@ -50,7 +52,7 @@ export default function BlogIndex() {
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                                 <div className="absolute bottom-4 left-4 flex gap-2">
-                                    {(post.tags || []).slice(0, 2).map(tag => (
+                                    {(post.tags || []).slice(0, 2).map((tag: string) => (
                                         <span key={tag} className="text-[10px] font-bold uppercase tracking-wider bg-white/10 backdrop-blur-md px-2 py-1 rounded text-white group-hover:bg-violet-500 group-hover:text-white transition-colors">
                                             {tag}
                                         </span>
