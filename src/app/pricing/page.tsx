@@ -1,19 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@clerk/nextjs'
 import { Check, Sparkles, Zap, Building2, ArrowLeft, Loader2, Globe, BarChart, ShieldCheck } from 'lucide-react'
 import { PRICING } from '@/lib/plans'
 import { toast } from 'sonner'
 
-import { useSearchParams } from 'next/navigation'
 
 export default function PricingPage() {
     const searchParams = useSearchParams()
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
     const [interval, setInterval] = useState<'month' | 'year'>('month') // Default to Month for better conversion
     const router = useRouter()
+
+    const { userId } = useAuth() // Get auth state
 
     useEffect(() => {
         const paramInterval = searchParams.get('interval')
@@ -23,6 +25,13 @@ export default function PricingPage() {
     }, [searchParams])
 
     const handleCheckout = async (planKey: string) => {
+        // 1. Auth Check: If not logged in, redirect to Sign Up
+        if (!userId) {
+            toast.error('Necesitas crear una cuenta para suscribirte.')
+            router.push('/sign-up')
+            return
+        }
+
         if (planKey === 'FREE') {
             router.push('/dashboard')
             return
@@ -48,6 +57,12 @@ export default function PricingPage() {
             })
 
             if (!res.ok) {
+                // Determine if it is a 401 to handle gracefully (though client check catches most)
+                if (res.status === 401) {
+                    toast.error('Sesión expirada. Por favor inicia sesión nuevamente.')
+                    router.push('/sign-in')
+                    return
+                }
                 const errData = await res.text()
                 throw new Error(errData || 'Error al iniciar pago')
             }
