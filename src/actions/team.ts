@@ -6,13 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { PLAN_LIMITS } from '@/lib/plans'
 
-// In a real app, use an email service like Resend/SendGrid
-// For this MVP, we will assume the link is generated and maybe returned or logged.
-async function sendInvitationEmail(email: string, token: string, inviterName: string) {
-    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/join-team?token=${token}`
-    console.log(`[MOCK EMAIL] To: ${email}, Link: ${inviteLink}, From: ${inviterName}`)
-    // TODO: Integrate Resend here
-}
+import { sendInvitationEmail } from '@/lib/email'
 
 export async function getTeamData() {
     const { userId } = await auth()
@@ -105,7 +99,17 @@ export async function inviteMember(formData: FormData) {
         }
     })
 
-    await sendInvitationEmail(email, token, 'Manager') // You'd pass the actual name
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/join-team?token=${token}`
+    const inviterName = userSettings?.businessName || 'El Administrador'
+    const teamName = userSettings?.businessName || 'HappyMeter Team'
+
+    await sendInvitationEmail(
+        email,
+        inviterName,
+        teamName,
+        role,
+        inviteLink
+    )
 
     revalidatePath('/dashboard/team')
     return { success: true }

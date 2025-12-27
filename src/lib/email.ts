@@ -1,6 +1,7 @@
 import { resend } from './resend'
 import { WelcomeEmail } from '@/emails/WelcomeEmail'
 import { NewResponseEmail } from '@/emails/NewResponseEmail'
+import { InvitationEmail } from '@/emails/InvitationEmail'
 
 // Default sender
 const SENDER = 'HappyMeter <onboarding@resend.dev>'
@@ -97,5 +98,34 @@ export async function sendResponseAlert(
         console.log(`📧 Response alert sent to ${to}`)
     } catch (error) {
         console.error('Failed to send response alert', error)
+    }
+}
+
+export async function sendInvitationEmail(
+    to: string,
+    inviterName: string,
+    teamName: string,
+    role: string,
+    inviteLink: string
+) {
+    if (!to) return
+
+    try {
+        await resend.emails.send({
+            from: SENDER,
+            to: [to],
+            subject: `💌 ${inviterName} te invitó a unirte a HappyMeter`,
+            react: InvitationEmail({
+                firstName: 'Colega', // Generic for now, as we don't have the invitee's name in `sendInvitationEmail` params typically
+                inviterName,
+                teamName,
+                role,
+                inviteLink
+            }),
+        })
+        console.log(`📧 Invitation sent to ${to}`)
+    } catch (error) {
+        console.error('Failed to send invitation email', error)
+        throw error // Rethrow so the UI knows it failed? Or suppress? Better to suppress usually but log.
     }
 }

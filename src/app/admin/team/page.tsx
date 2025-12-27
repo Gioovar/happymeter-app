@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react'
 import { Plus, Mail, Shield, Trash2, Copy, Check, Loader2, Users } from 'lucide-react'
 import { toast } from 'sonner'
-import { inviteTeamMember, getTeamMembers, deleteInvitation } from '@/actions/team'
+import { inviteMember, getTeamData, cancelInvitation } from '@/actions/team'
 
 export default function TeamPage() {
     const [members, setMembers] = useState<any[]>([])
@@ -13,7 +13,7 @@ export default function TeamPage() {
 
     // Form
     const [email, setEmail] = useState('')
-    const [role, setRole] = useState<'ADMIN' | 'STAFF' | 'REPRESENTATIVE'>('STAFF')
+    const [role, setRole] = useState<'ADMIN' | 'EDITOR' | 'OBSERVER'>('EDITOR')
     const [state, setState] = useState('')
     const [generatedLink, setGeneratedLink] = useState('')
 
@@ -27,7 +27,7 @@ export default function TeamPage() {
 
     const loadData = async () => {
         try {
-            const data = await getTeamMembers()
+            const data = await getTeamData()
             setMembers(data.members)
             setInvitations(data.invitations)
         } catch (error) {
@@ -43,13 +43,18 @@ export default function TeamPage() {
 
         startTransition(async () => {
             try {
-                if (role === 'REPRESENTATIVE' && !state) {
-                    toast.error('Debes seleccionar un estado para el representante')
-                    return
-                }
-                const res = await inviteTeamMember(email, role, state)
+                // if (role === 'REPRESENTATIVE' && !state) {
+                //     toast.error('Debes seleccionar un estado para el representante')
+                //     return
+                // }
+
+                const formData = new FormData()
+                formData.append('email', email)
+                formData.append('role', role)
+
+                const res = await inviteMember(formData)
                 toast.success('Invitación creada')
-                setGeneratedLink(res.link)
+                // setGeneratedLink(res.link || '') // Action doesn't return link currently, mocks email
                 setEmail('')
                 setState('')
                 loadData()
@@ -62,7 +67,7 @@ export default function TeamPage() {
     const handleDelete = async (id: string) => {
         if (!confirm('¿Eliminar invitación?')) return
         try {
-            await deleteInvitation(id)
+            await cancelInvitation(id)
             toast.success('Eliminada')
             loadData()
         } catch (error) {
@@ -114,27 +119,13 @@ export default function TeamPage() {
                             onChange={(e) => setRole(e.target.value as any)}
                             className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 focus:border-violet-500 outline-none transition text-white appearance-none"
                         >
-                            <option value="STAFF">Staff (Soporte)</option>
+                            <option value="EDITOR">Staff (Editor)</option>
                             <option value="ADMIN">Administrador</option>
-                            <option value="REPRESENTATIVE">Representante</option>
+                            <option value="OBSERVER">Observador</option>
                         </select>
                     </div>
 
-                    {role === 'REPRESENTATIVE' && (
-                        <div className="w-full md:w-48 animate-in fade-in slide-in-from-left-2">
-                            <label className="text-xs uppercase text-gray-500 font-bold mb-1 block">Estado</label>
-                            <select
-                                value={state}
-                                onChange={(e) => setState(e.target.value)}
-                                className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 focus:border-violet-500 outline-none transition text-white appearance-none"
-                            >
-                                <option value="">Seleccionar...</option>
-                                {mexicanStates.map(s => (
-                                    <option key={s} value={s}>{s}</option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
+                    {/* Representative logic temporarily removed */}
                     <button
                         type="submit"
                         disabled={isPending}
