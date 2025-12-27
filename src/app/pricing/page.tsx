@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Check, Sparkles, Zap, Building2, ArrowLeft, Loader2, Globe, BarChart, ShieldCheck } from 'lucide-react'
 import { PRICING } from '@/lib/plans'
+import { toast } from 'sonner'
 
 export default function PricingPage() {
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
@@ -23,6 +24,8 @@ export default function PricingPage() {
 
         try {
             setLoadingPlan(planKey)
+            toast.loading('Contactando servidor...', { id: 'checkout-toast' })
+
             const res = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: {
@@ -40,10 +43,11 @@ export default function PricingPage() {
             }
 
             const { url } = await res.json()
+            toast.success('Redirigiendo a Stripe...', { id: 'checkout-toast' })
             window.location.href = url
         } catch (error: any) {
             console.error(error)
-            alert(`Error: ${error.message}`)
+            toast.error(error.message || 'Error desconocido', { id: 'checkout-toast', duration: 5000 })
             setLoadingPlan(null)
         }
     }
