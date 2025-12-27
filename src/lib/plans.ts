@@ -5,22 +5,22 @@ export const PLAN_LIMITS = {
         maxResponses: 50,
         limits: {
             satisfactionSurveys: 1,
-            staffSurveys: 0,
-            games: 0,
-            teamMembers: 0
+            staffSurveys: 1,
+            games: 2,
+            teamMembers: 2
         },
         features: {
-            branding: false,
+            branding: true,
             advancedReports: false,
             apiAccess: false,
-            automation: false,
-            exportData: false,
-            multiLanguage: false,
+            automation: true,
+            exportData: true,
+            multiLanguage: true,
             whiteLabel: false,
-            teamRoles: false,
+            teamRoles: true,
             sso: false,
-            aiAnalysis: false,
-            staffAlerts: false,
+            aiAnalysis: true,
+            staffAlerts: true,
             whatsappCampaigns: false
         }
     },
