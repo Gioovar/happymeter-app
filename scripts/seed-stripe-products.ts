@@ -10,12 +10,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 const PLANS = {
     GROWTH: {
         name: 'Growth 1K',
-        monthly: 2900, // $29.00
+        monthly: 2400, // $24.00
         yearly: 29000 // $290.00
     },
     POWER: {
         name: 'Power 3X',
-        monthly: 7900, // $79.00
+        monthly: 6600, // $66.00
         yearly: 79000 // $790.00
     },
     CHAIN: {
