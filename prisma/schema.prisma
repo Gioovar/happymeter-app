@@ -9,16 +9,25 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum SurveyType {
+    SATISFACTION
+    STAFF
+}
+
 model Survey {
-  id            String     @id @default(uuid())
+  id            String     @id @default(cuid())
   userId        String
   title         String
   description   String?
+  type          SurveyType @default(SATISFACTION)
+  isActive      Boolean    @default(true)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+  
+  // Customization
+  hexColor      String?    @default("#8b5cf6")
   bannerUrl     String?
   googleMapsUrl String?
-  hexColor      String?    @default("#8b5cf6")
   socialConfig  Json?      // Stores { enabled: boolean, instagram?: string, facebook?: string }
   alertConfig   Json?      // Stores { enabled: boolean, emails: string[], phones: string[], threshold: number }
   recoveryConfig Json?     // Stores { enabled: boolean, offer: string, code: string, activeDays: number }

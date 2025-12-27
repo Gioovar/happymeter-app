@@ -2,8 +2,13 @@ export const PLAN_LIMITS = {
     FREE: {
         code: 'FREE',
         name: 'Starter Test',
-        maxSurveys: 1,
         maxResponses: 50,
+        limits: {
+            satisfactionSurveys: 1,
+            staffSurveys: 0,
+            games: 0,
+            teamMembers: 0
+        },
         features: {
             branding: false,
             advancedReports: false,
@@ -22,28 +27,38 @@ export const PLAN_LIMITS = {
     GROWTH: {
         code: 'GROWTH',
         name: 'Growth 1K',
-        maxSurveys: 1,
         maxResponses: 1000,
+        limits: {
+            satisfactionSurveys: 1,
+            staffSurveys: 1,
+            games: 2,
+            teamMembers: 2
+        },
         features: {
             branding: true,
-            advancedReports: false, // Basic checking
+            advancedReports: false,
             apiAccess: false,
             automation: true,
-            exportData: true, // Added
-            multiLanguage: true, // Added
+            exportData: true,
+            multiLanguage: true,
             whiteLabel: false,
-            teamRoles: false,
+            teamRoles: true,
             sso: false,
-            aiAnalysis: true, // Basic AI
-            staffAlerts: true, // New Feature
+            aiAnalysis: true,
+            staffAlerts: true,
             whatsappCampaigns: false
         }
     },
     POWER: {
         code: 'POWER',
         name: 'Power 3X',
-        maxSurveys: 3,
         maxResponses: Infinity,
+        limits: {
+            satisfactionSurveys: 3,
+            staffSurveys: 3,
+            games: 999, // All games
+            teamMembers: 6
+        },
         features: {
             branding: true,
             advancedReports: true,
@@ -52,19 +67,24 @@ export const PLAN_LIMITS = {
             crm: true,
             exportData: true,
             multiLanguage: true,
-            whiteLabel: true, // Added
-            teamRoles: true, // Added (3 seats)
+            whiteLabel: true,
+            teamRoles: true,
             sso: false,
-            aiAnalysis: true, // Advanced AI
+            aiAnalysis: true,
             staffAlerts: true,
-            whatsappCampaigns: true // New Feature
+            whatsappCampaigns: true
         }
     },
     CHAIN: {
         code: 'CHAIN',
         name: 'Chain Master 100',
-        maxSurveys: 100,
         maxResponses: Infinity,
+        limits: {
+            satisfactionSurveys: 50,
+            staffSurveys: 50,
+            games: 999,
+            teamMembers: 999
+        },
         features: {
             branding: true,
             advancedReports: true,
@@ -75,7 +95,7 @@ export const PLAN_LIMITS = {
             multiLanguage: true,
             whiteLabel: true,
             teamRoles: true,
-            sso: true, // Added
+            sso: true,
             aiAnalysis: true,
             staffAlerts: true,
             whatsappCampaigns: true
@@ -84,8 +104,13 @@ export const PLAN_LIMITS = {
     ENTERPRISE: {
         code: 'ENTERPRISE',
         name: 'HappyMeter Infinity',
-        maxSurveys: Infinity,
         maxResponses: Infinity,
+        limits: {
+            satisfactionSurveys: Infinity,
+            staffSurveys: Infinity,
+            games: Infinity,
+            teamMembers: Infinity
+        },
         features: {
             branding: true,
             advancedReports: true,

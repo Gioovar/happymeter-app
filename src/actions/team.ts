@@ -4,6 +4,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
+import { PLAN_LIMITS } from '@/lib/plans'
 
 // In a real app, use an email service like Resend/SendGrid
 // For this MVP, we will assume the link is generated and maybe returned or logged.
@@ -66,9 +67,22 @@ export async function inviteMember(formData: FormData) {
 
     if (!email) throw new Error('Email requerido')
 
-    // Check if user exists (Optional: can invite non-users?)
-    // Detailed check: Is he already a member?
-    // We need to resolve userId from email if they exist, but for invitation we just need email.
+    // Check Plan Limits
+    const userSettings = await prisma.userSettings.findUnique({
+        where: { userId }
+    })
+
+    // Default to FREE if no settings (safe fallback)
+    const planCode = (userSettings?.plan || 'FREE').toUpperCase() as keyof typeof PLAN_LIMITS
+    const currentPlan = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE
+    const maxMembers = currentPlan.limits.teamMembers
+
+    const currentMembers = await prisma.teamMember.count({ where: { ownerId: userId } })
+    const pendingInvites = await prisma.teamInvitation.count({ where: { inviterId: userId } })
+
+    if ((currentMembers + pendingInvites) >= maxMembers) {
+        throw new Error(`Has alcanzado el límite de ${maxMembers} colaboradores para tu plan ${currentPlan.name}.`)
+    }
 
     // Check existing invite
     const existingInvite = await prisma.teamInvitation.findFirst({

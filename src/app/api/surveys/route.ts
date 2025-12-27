@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { PLAN_LIMITS } from '@/lib/plans'
 
 export async function GET() {
     console.time('Surveys API Total')
@@ -123,12 +124,10 @@ export async function POST(req: Request) {
 
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 })
-            return new NextResponse("Unauthorized", { status: 401 })
         }
 
         const body = await req.json()
-        // console.log('[SURVEYS_POST] Body:', JSON.stringify(body, null, 2)) // Commented out to avoid huge logs
-        const { title, description, questions, bannerUrl, googleMapsUrl, hexColor, socialConfig, recoveryConfig, alertConfig } = body
+        const { title, description, questions, bannerUrl, googleMapsUrl, hexColor, socialConfig, recoveryConfig, alertConfig, type = 'SATISFACTION' } = body
 
         if (!title) {
             return new NextResponse("Title is required", { status: 400 })
@@ -138,33 +137,40 @@ export async function POST(req: Request) {
             return new NextResponse("Questions must be an array", { status: 400 })
         }
 
-        // Check subscription limits
+        // Get User Plan
         let userSettings = await prisma.userSettings.findUnique({
             where: { userId }
         })
-        console.log('[SURVEYS_POST] UserSettings found:', userSettings)
 
         if (!userSettings) {
-
             userSettings = await prisma.userSettings.create({
                 data: {
                     userId,
-                    plan: 'PRO',
-                    maxSurveys: 1000
+                    plan: 'FREE'
                 }
             })
         }
 
-        const surveyCount = await prisma.survey.count({
-            where: { userId }
+        // Check Limits
+        const planCode = (userSettings.plan || 'FREE').toUpperCase() as keyof typeof PLAN_LIMITS
+        const currentPlan = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE
+
+        const limit = type === 'STAFF'
+            ? currentPlan.limits.staffSurveys
+            : currentPlan.limits.satisfactionSurveys
+
+        const currentCount = await prisma.survey.count({
+            where: {
+                userId,
+                type: type // Check count for specific type
+            }
         })
 
-
-        const limit = userSettings?.maxSurveys || 3 // Default to 3 if no settings found
-
-        if (surveyCount >= limit) {
-            console.log('[SURVEYS_POST] Limit reached')
-            return new NextResponse("Survey limit reached", { status: 403 })
+        if (currentCount >= limit) {
+            return new NextResponse(
+                JSON.stringify({ error: `Has alcanzado el límite de encuestas ${type === 'STAFF' ? 'de personal' : 'de satisfacción'} para tu plan (${currentPlan.name}).` }),
+                { status: 403 }
+            )
         }
 
         console.log('[SURVEYS_POST] Creating survey in DB...')
@@ -173,6 +179,7 @@ export async function POST(req: Request) {
                 userId,
                 title,
                 description,
+                type,
                 bannerUrl,
                 googleMapsUrl,
                 hexColor,
@@ -190,7 +197,6 @@ export async function POST(req: Request) {
                 }
             }
         })
-
 
         return NextResponse.json(survey)
     } catch (error: any) {

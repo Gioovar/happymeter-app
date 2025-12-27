@@ -188,6 +188,7 @@ export default function CreateSurveyPage() {
                 body: JSON.stringify({
                     title,
                     description,
+                    type: isAnonymousMode ? 'STAFF' : 'SATISFACTION',
                     googleMapsUrl,
                     hexColor,
                     questions,
