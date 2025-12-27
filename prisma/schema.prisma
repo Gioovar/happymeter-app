@@ -103,6 +103,25 @@ model UserSettings {
   // Location for Business/Sales Attribution
   state               String?
   city                String?
+
+  // Team
+  teamMembers         TeamMember[] @relation("OwnerOf")
+  memberships         TeamMember[] @relation("MemberOf")
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  userId    String
+  ownerId   String   // The owner of the workspace
+  role      TeamRole
+  joinedAt  DateTime @default(now())
+  
+  user      UserSettings @relation("MemberOf", fields: [userId], references: [userId], onDelete: Cascade)
+  owner     UserSettings @relation("OwnerOf", fields: [ownerId], references: [userId], onDelete: Cascade)
+
+  @@unique([userId, ownerId])
+  @@index([ownerId])
+  @@index([userId])
 }
 
 enum UserRole {
@@ -112,6 +131,14 @@ enum UserRole {
   SUPER_ADMIN
   REPRESENTATIVE
 }
+
+enum TeamRole {
+  ADMIN
+  EDITOR
+  OBSERVER
+}
+
+// ... existing models ...
 
 // ... existing models ...
 
@@ -434,13 +461,15 @@ model AdminChatMessage {
 
 model TeamInvitation {
   id        String   @id @default(cuid())
-  email     String   @unique
-  role      UserRole
+  email     String
+  role      TeamRole @default(OBSERVER) // Changed from UserRole
+  inviterId String
   token     String   @unique
-  state     String?  // If role is REPRESENTATIVE
   status    String   @default("PENDING") // PENDING, ACCEPTED
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([email, inviterId])
 }
 
 model PushSubscription {

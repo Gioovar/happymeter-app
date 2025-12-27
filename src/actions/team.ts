@@ -2,87 +2,94 @@
 
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-import { UserRole } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 
-export async function inviteTeamMember(email: string, role: UserRole, state?: string) {
-    const { userId } = await auth()
-    if (!userId) throw new Error('Unauthorized')
-
-    // Verify Super Admin
-    const currentUser = await prisma.userSettings.findUnique({
-        where: { userId }
-    })
-
-    if (currentUser?.role !== 'SUPER_ADMIN') {
-        throw new Error('Solo los Super Admins pueden invitar miembros.')
-    }
-
-    // Check if invitation exists
-    const existing = await prisma.teamInvitation.findUnique({
-        where: { email }
-    })
-
-    if (existing) {
-        throw new Error('Ya existe una invitación para este correo.')
-    }
-
-    // Create Token
-    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-
-    try {
-        await prisma.teamInvitation.create({
-            data: {
-                email,
-                role,
-                token,
-                status: 'PENDING',
-                state
-            }
-        })
-    } catch (dbError) {
-        console.error('DB Error creating invitation:', dbError)
-        throw new Error('Error de base de datos al crear la invitación.')
-    }
-
-    revalidatePath('/admin/team')
-
-    // In a real app, we would send an email here.
-    // For now, we return the link to the frontend so the admin can copy it.
-    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'}/sign-up?email=${email}`
-
-    return { success: true, link: inviteLink }
+// In a real app, use an email service like Resend/SendGrid
+// For this MVP, we will assume the link is generated and maybe returned or logged.
+async function sendInvitationEmail(email: string, token: string, inviterName: string) {
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/join-team?token=${token}`
+    console.log(`[MOCK EMAIL] To: ${email}, Link: ${inviteLink}, From: ${inviterName}`)
+    // TODO: Integrate Resend here
 }
 
-export async function getTeamMembers() {
+export async function getTeamData() {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
-    // Get Active Members (excluding USER role)
-    const members = await prisma.userSettings.findMany({
-        where: {
-            role: { in: ['ADMIN', 'STAFF', 'SUPER_ADMIN'] }
-        },
-        orderBy: { createdAt: 'desc' }
+    // Get members of MY team
+    const members = await prisma.teamMember.findMany({
+        where: { ownerId: userId },
+        include: { user: true }
     })
 
-    // Get Pending Invitations
+    // Get pending invitations I sent
     const invitations = await prisma.teamInvitation.findMany({
-        orderBy: { createdAt: 'desc' },
-        where: { status: 'PENDING' }
+        where: { inviterId: userId }
     })
 
     return { members, invitations }
 }
 
-export async function deleteInvitation(id: string) {
+export async function inviteMember(formData: FormData) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
-    const currentUser = await prisma.userSettings.findUnique({ where: { userId } })
-    if (currentUser?.role !== 'SUPER_ADMIN') throw new Error('Unauthorized')
+    const email = formData.get('email') as string
+    const role = formData.get('role') as 'ADMIN' | 'EDITOR' | 'OBSERVER'
 
-    await prisma.teamInvitation.delete({ where: { id } })
-    revalidatePath('/admin/team')
+    if (!email) throw new Error('Email requerido')
+
+    // Check if user exists (Optional: can invite non-users?)
+    // Detailed check: Is he already a member?
+    // We need to resolve userId from email if they exist, but for invitation we just need email.
+
+    // Check existing invite
+    const existingInvite = await prisma.teamInvitation.findFirst({
+        where: { email, inviterId: userId }
+    })
+
+    if (existingInvite) {
+        throw new Error('Ya existe una invitación pendiente para este correo.')
+    }
+
+    // Generate token
+    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+
+    await prisma.teamInvitation.create({
+        data: {
+            email,
+            role,
+            inviterId: userId,
+            token
+        }
+    })
+
+    await sendInvitationEmail(email, token, 'Manager') // You'd pass the actual name
+
+    revalidatePath('/dashboard/team')
     return { success: true }
+}
+
+export async function removeMember(memberId: string) {
+    const { userId } = await auth()
+    if (!userId) throw new Error('Unauthorized')
+
+    // Ensure I own this membership record
+    await prisma.teamMember.deleteMany({
+        where: { id: memberId, ownerId: userId }
+    })
+
+    revalidatePath('/dashboard/team')
+}
+
+export async function cancelInvitation(inviteId: string) {
+    const { userId } = await auth()
+    if (!userId) throw new Error('Unauthorized')
+
+    await prisma.teamInvitation.deleteMany({
+        where: { id: inviteId, inviterId: userId }
+    })
+
+    revalidatePath('/dashboard/team')
 }
