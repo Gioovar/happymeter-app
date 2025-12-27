@@ -1,4 +1,4 @@
-```
+
 import Link from 'next/link'
 import { ArrowRight, Sparkles, Wallet, Video } from 'lucide-react'
 
