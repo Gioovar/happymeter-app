@@ -76,7 +76,7 @@ export async function sendResponseAlert(
     if (!to) return
 
     try {
-        const link = `https://happymeter.app/dashboard/responses/${responseId}`
+        const link = `https://www.happymeters.com/dashboard/responses/${responseId}`
 
         // Subject line varies by score to catch attention
         const emoji = npsScore <= 6 ? '🚨' : npsScore >= 9 ? '⭐' : '💬'

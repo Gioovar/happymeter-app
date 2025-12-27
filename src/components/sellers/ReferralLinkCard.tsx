@@ -11,7 +11,7 @@ export default function ReferralLinkCard({ referralCode }: { referralCode: strin
     if (!referralCode) return null
 
     // Determine base URL (default to production if verifying, but flexible)
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://happymeter.app'
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.happymeters.com'
     const referralLink = `${baseUrl}?ref=${referralCode}`
 
     const handleCopy = () => {

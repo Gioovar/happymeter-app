@@ -3,7 +3,7 @@ import webpush from 'web-push'
 // Configure VAPID keys
 // In production, these should be environment variables
 // VAPID_SUBJECT is commonly a mailto link
-const subject = 'mailto:soporte@happymeter.app'
+const subject = 'mailto:soporte@happymeters.com'
 
 const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
 const privateKey = process.env.VAPID_PRIVATE_KEY || ''

@@ -25,7 +25,7 @@ export const NewResponseEmail = ({
     surveyName = 'Encuesta General',
     npsScore = 10,
     comment,
-    responseLink = 'https://happymeter.app/dashboard',
+    responseLink = 'https://www.happymeters.com/dashboard',
 }: NewResponseEmailProps) => {
 
     const isNegative = npsScore <= 6;
@@ -125,7 +125,7 @@ export const NewResponseEmail = ({
                         <Section className="mt-6 mb-8 text-center">
                             <Text className="text-gray-400 text-xs">
                                 © 2025 HappyMeter Inc. <br />
-                                <Link href="https://happymeter.app/settings" className="text-gray-400 underline">Ajustar notificaciones</Link>
+                                <Link href="https://www.happymeters.com/settings" className="text-gray-400 underline">Ajustar notificaciones</Link>
                             </Text>
                         </Section>
 
