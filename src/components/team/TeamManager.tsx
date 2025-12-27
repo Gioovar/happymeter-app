@@ -126,9 +126,11 @@ export default function TeamManager({ initialData }: { initialData: any }) {
                                     <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">Activo</Badge>
                                 </td>
                                 <td className="p-4 text-right">
-                                    <Button variant="ghost" size="icon" onClick={() => handleRemove(member.id)} className="text-red-400 hover:bg-red-500/10">
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
+                                    {(initialData.isOwner || (initialData.currentUserRole === 'ADMIN' && member.role !== 'ADMIN')) && (
+                                        <Button variant="ghost" size="icon" onClick={() => handleRemove(member.id)} className="text-red-400 hover:bg-red-500/10">
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    )}
                                 </td>
                             </tr>
                         ))}
