@@ -4,6 +4,7 @@ import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { BackgroundLights } from '@/components/ui/BackgroundLights'
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
     const post = getPostBySlug(params.slug, ['title', 'excerpt', 'coverImage'])
@@ -54,7 +55,9 @@ export default async function BlogPost({ params }: { params: { slug: string } })
     }
 
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-violet-500/30">
+        <div className="min-h-screen bg-black text-white selection:bg-violet-500/30 relative">
+            <BackgroundLights />
+
             {/* Minimal Header */}
             <div className="fixed top-0 left-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
                 <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -92,7 +95,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
                     </h1>
 
                     <div className="flex flex-wrap justify-center gap-2 mb-12">
-                        {(post.tags || []).map(tag => (
+                        {(post.tags || []).map((tag: string) => (
                             <span key={tag} className="text-xs font-bold uppercase tracking-wider border border-white/20 px-3 py-1 rounded-full text-gray-300">
                                 {tag}
                             </span>
@@ -121,7 +124,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
                                 blockquote: ({ node, ...props }) => (
                                     <blockquote className="border-l-4 border-violet-500 pl-6 py-2 my-8 italic text-xl text-gray-400 bg-white/5 rounded-r-lg" {...props} />
                                 ),
-                                code: ({ node, inline, className, children, ...props }) => { // Fixed signature with inline prop
+                                code: ({ node, inline, className, children, ...props }: any) => { // Fixed signature with inline prop
                                     if (inline) {
                                         return <code className="bg-white/10 px-1 py-0.5 rounded text-fuchsia-300 font-mono text-sm" {...props}>{children}</code>
                                     }
