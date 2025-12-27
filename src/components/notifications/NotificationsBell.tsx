@@ -196,7 +196,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                                             key={notif.id}
                                             onClick={() => handleNotificationClick(notif)}
                                             className={`p-4 hover:bg-white/5 transition relative group 
-                                                ${!notif.isRead ? 'bg-white/[0.02]' : ''} 
+                                                ${!notif.isRead ? 'bg-violet-500/5 border-l-2 border-violet-500 shadow-[inset_0_0_20px_rgba(139,92,246,0.05)]' : 'border-l-2 border-transparent'} 
                                                 ${notif.meta?.responseId ? 'cursor-pointer' : 'cursor-default'}
                                                 ${loadingId === notif.id ? 'opacity-70 pointer-events-none' : ''}
                                             `}
