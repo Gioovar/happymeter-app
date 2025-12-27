@@ -4,6 +4,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
 import { esES } from '@clerk/localizations'
 import { Toaster } from 'sonner'
+import { Analytics } from "@vercel/analytics/react"
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -61,6 +62,7 @@ export default function RootLayout({
         <body className={inter.className}>
           {children}
           <Toaster position="top-center" richColors />
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
