@@ -32,8 +32,8 @@ export async function POST(req: Request) {
         const priceId = PLANS[priceKey]
 
         if (!priceId) {
-            console.error(`Price ID missing for ${priceKey}`)
-            return new NextResponse('Price ID not configured', { status: 500 })
+            console.error(`❌ [CHECKOUT_ERROR] Price ID missing for key: ${priceKey}. Verify Vercel Env Vars.`)
+            return new NextResponse(`Configuration Error: Price for ${plan} (${interval}) not found. Contact Support.`, { status: 500 })
         }
 
         // Check for affiliate cookie
