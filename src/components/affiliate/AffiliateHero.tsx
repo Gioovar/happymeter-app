@@ -1,6 +1,6 @@
-
+```
 import Link from 'next/link'
-import { ArrowRight, Sparkles, Wallet } from 'lucide-react'
+import { ArrowRight, Sparkles, Wallet, Video } from 'lucide-react'
 
 export default function AffiliateHero() {
     return (
@@ -31,7 +31,7 @@ export default function AffiliateHero() {
                     <div className="group relative p-8 rounded-3xl bg-[#111] border border-white/5 hover:border-violet-500/50 transition-all duration-300 hover:-translate-y-1">
                         <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-violet-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:bg-violet-500/20 transition-colors">
-                            <Sparkles className="w-6 h-6 text-violet-400" />
+                            <Video className="w-6 h-6 text-violet-400" />
                         </div>
                         <h3 className="text-2xl font-bold text-white mb-2">Para Creadores</h3>
                         <p className="text-gray-400 text-sm mb-6 h-12">
