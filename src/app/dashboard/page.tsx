@@ -279,11 +279,34 @@ export default function DashboardPage() {
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/5">
                         <div className="space-y-2">
                             {/* ... existing hero code ... */}
-                            <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-gray-400">
-                                {getGreeting()}, <br className="md:hidden" />
-                                Bienvenido.
-                            </h1>
-                            <p className="text-gray-400 max-w-md">Gestiona tus encuestas de satisfacción.</p>
+                            <div className="flex flex-col gap-2">
+                                <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-gray-400">
+                                    {getGreeting()}, <br className="md:hidden" />
+                                    Bienvenido.
+                                </h1>
+                                <div className="flex items-center gap-3">
+                                    <p className="text-gray-400 text-sm">Gestiona tus encuestas de satisfacción.</p>
+
+                                    {!loadingAnalytics && (
+                                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-500">
+                                            <div className="h-4 w-px bg-white/10 mx-2" />
+                                            <div className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${statsData.plan === 'POWER' ? 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20 shadow-[0_0_10px_rgba(232,121,249,0.1)]' :
+                                                    statsData.plan === 'GROWTH' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(96,165,250,0.1)]' :
+                                                        statsData.plan === 'CHAIN' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(251,191,36,0.1)]' :
+                                                            'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                                                }`}>
+                                                {statsData.plan === 'FREE' ? 'Plan Gratis' : `${statsData.plan.replace('_', ' ')}`}
+                                            </div>
+
+                                            {statsData.plan !== 'POWER' && statsData.plan !== 'CHAIN' && statsData.plan !== 'ENTERPRISE' && (
+                                                <Link href="/pricing" className="px-2 py-0.5 rounded-full bg-violet-500 text-white text-[10px] font-bold hover:bg-violet-400 transition shadow-lg shadow-violet-500/20 flex items-center gap-1">
+                                                    <Sparkles className="w-2.5 h-2.5" /> Mejorar
+                                                </Link>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Quick Actions */}

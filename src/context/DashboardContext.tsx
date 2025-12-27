@@ -32,6 +32,7 @@ export interface StatsData {
     recentFeedback: any[]
     worstFeedback: any[]
     surveysWithStats: { id: string, rating: string }[]
+    plan?: string
 }
 
 interface DashboardContextType {

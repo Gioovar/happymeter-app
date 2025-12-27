@@ -19,7 +19,10 @@ export const getCachedAnalyticsData = unstable_cache(
         }
 
         // 1. Total Count (Fast)
-        const totalResponses = await prisma.response.count({ where: whereClause })
+        const [totalResponses, userSettings] = await Promise.all([
+            prisma.response.count({ where: whereClause }),
+            prisma.userSettings.findUnique({ where: { userId }, select: { plan: true } })
+        ])
 
         // 2. Bulk Stats Data
         let dateFilterForBulk: any = {}
@@ -427,6 +430,7 @@ export const getCachedAnalyticsData = unstable_cache(
         })
 
         return {
+            plan: userSettings?.plan || 'FREE',
             surveysList: allSurveys,
             totalResponses,
             averageSatisfaction,
