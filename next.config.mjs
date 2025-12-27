@@ -3,6 +3,7 @@ import withPWA from "next-pwa";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Force Re-deploy for Clerk Production Keys
     eslint: {
         ignoreDuringBuilds: true,
     },
