@@ -2,7 +2,7 @@
 title: "Encuestas de Papel vs Código QR: Por qué perder dinero en 2024 es opcional"
 date: "2024-01-05"
 excerpt: "El buzón de sugerencias físico está muerto. Descubre cómo digitalizar la opinión de tus clientes puede aumentar tu ticket promedio un 15%."
-coverImage: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=1000"
+coverImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2670&auto=format&fit=crop"
 author: "HappyMeter Team"
 tags: ["Restaurantes", "Tecnología", "Ventas"]
 ---
