@@ -62,3 +62,13 @@ export function getAllPosts(fields: string[] = []) {
         .sort((post1, post2) => (post1.date > post2.date ? -1 : 1))
     return posts
 }
+
+export function getRelatedPosts(currentSlug: string, limit = 3) {
+    const allPosts = getAllPosts(['title', 'date', 'slug', 'coverImage', 'excerpt'])
+    // Filter out current post
+    const otherPosts = allPosts.filter((post) => post.slug !== currentSlug)
+    // Shuffle or just return first N
+    // Simple shuffle
+    const shuffled = otherPosts.sort(() => 0.5 - Math.random())
+    return shuffled.slice(0, limit)
+}

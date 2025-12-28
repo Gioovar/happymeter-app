@@ -1,4 +1,4 @@
-import { getPostBySlug, getAllPosts } from '@/lib/blog'
+import { getPostBySlug, getAllPosts, getRelatedPosts } from '@/lib/blog'
 import { ArrowLeft, Calendar, User, Share2 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { BackgroundLights } from '@/components/ui/BackgroundLights'
 import ShareButton from '@/components/blog/ShareButton'
+import RelatedPosts from '@/components/blog/RelatedPosts'
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
     const post = getPostBySlug(params.slug, ['title', 'excerpt', 'coverImage'])
@@ -56,6 +57,8 @@ export default async function BlogPost({ params }: { params: { slug: string } })
         notFound()
     }
 
+    const relatedPosts = getRelatedPosts(params.slug)
+
     return (
         <div className="min-h-screen bg-black text-white selection:bg-violet-500/30 relative">
             <BackgroundLights />
@@ -78,7 +81,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
             </div>
 
             {/* Article Content */}
-            <article className="pt-32 pb-32 relative z-10">
+            <article className="pt-32 relative z-10">
                 {/* Hero */}
                 <header className="max-w-4xl mx-auto px-6 mb-12 text-center">
                     <div className="flex items-center justify-center gap-4 text-sm text-gray-500 mb-6">
@@ -117,7 +120,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
                 </header>
 
                 {/* Prose Body */}
-                <div className="max-w-2xl mx-auto px-6">
+                <div className="max-w-2xl mx-auto px-6 mb-32">
                     <div className="prose prose-invert prose-lg prose-violet max-w-none">
                         <ReactMarkdown
                             components={{
@@ -157,6 +160,10 @@ export default async function BlogPost({ params }: { params: { slug: string } })
                         </div>
                     </div>
                 </div>
+
+                {/* Related Posts Section */}
+                <RelatedPosts posts={relatedPosts as any} />
+
             </article>
         </div>
     )
