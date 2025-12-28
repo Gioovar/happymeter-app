@@ -572,3 +572,70 @@ model SellerLead {
   @@index([representativeId])
   @@index([status])
 }
+
+// --- Academy / Tutorials System ---
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  slug        String   @unique
+  coverImage  String?
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  modules     Module[]
+  
+  @@index([slug])
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  order       Int      @default(0)
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  lessons     Lesson[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([courseId])
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String
+  videoUrl    String   // YouTube/Vimeo URL
+  content     String?  @db.Text // Markdown
+  duration    Int?     // Seconds
+  order       Int      @default(0)
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  published   Boolean  @default(true)
+  description String?  // Short text below video
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  progress    UserLessonProgress[]
+
+  @@unique([moduleId, slug])
+  @@index([moduleId])
+}
+
+model UserLessonProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  lessonId  String
+  completedAt DateTime @default(now())
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+}

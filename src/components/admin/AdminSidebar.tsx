@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, CreditCard, BarChart2, ShieldAlert, Settings, LogOut, Lock, Globe, Briefcase, Award, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Users, CreditCard, BarChart2, ShieldAlert, Settings, LogOut, Lock, Globe, Briefcase, Award, Menu, X, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
@@ -43,6 +43,11 @@ const menuItems = [
         title: 'Auditoría & Logs',
         href: '/admin/audit',
         icon: ShieldAlert
+    },
+    {
+        title: 'Academy CMS',
+        href: '/admin/academy',
+        icon: BookOpen
     },
     {
         title: 'Configuración',

@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { LayoutDashboard, PlusCircle, HelpCircle, Settings, LogOut, Home, PieChart, Megaphone, Menu, X, FileText, Gamepad2, MessageSquare, Trophy, Shield, Store, Calendar, Users } from 'lucide-react'
+import { LayoutDashboard, PlusCircle, HelpCircle, Settings, LogOut, Home, PieChart, Megaphone, Menu, X, FileText, Gamepad2, MessageSquare, Trophy, Shield, Store, Calendar, Users, GraduationCap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
@@ -67,6 +67,11 @@ const menuItems = [
         title: 'Logros',
         href: '/dashboard/achievements',
         icon: Trophy
+    },
+    {
+        title: 'Academy',
+        href: '/dashboard/academy',
+        icon: GraduationCap
     },
     {
         title: 'Ayuda y Soporte',
