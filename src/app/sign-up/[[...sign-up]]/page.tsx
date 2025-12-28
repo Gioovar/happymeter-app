@@ -7,7 +7,21 @@ import { useSearchParams } from "next/navigation";
 export default function Page() {
     const searchParams = useSearchParams()
     const intent = searchParams.get('intent')
-    const redirectUrl = intent === 'creator' ? '/api/auth-callback?signup_intent=creator' : '/api/auth-callback'
+    const plan = searchParams.get('plan')
+    const interval = searchParams.get('interval')
+
+    let redirectUrl = '/api/auth-callback'
+
+    if (intent === 'creator') {
+        redirectUrl = '/api/auth-callback?signup_intent=creator'
+    } else if (intent === 'checkout' && plan) {
+        // Redirect back to pricing to trigger auto-checkout
+        const params = new URLSearchParams()
+        params.set('checkout', 'true')
+        params.set('plan', plan)
+        if (interval) params.set('interval', interval)
+        redirectUrl = `/pricing?${params.toString()}`
+    }
 
     return (
         <div className="flex flex-col justify-center items-center min-h-screen bg-[#0a0a0a] relative overflow-hidden">

@@ -28,6 +28,24 @@ export async function GET(request: NextRequest) {
         redirect('/sellers/join')
     }
 
+    if (intent === 'checkout') {
+        const plan = cookieStore.get('checkout_plan')?.value
+        const interval = cookieStore.get('checkout_interval')?.value
+
+        // Clean up intent cookies
+        cookieStore.delete('signup_intent')
+        cookieStore.delete('checkout_plan')
+        cookieStore.delete('checkout_interval')
+
+        if (plan) {
+            const params = new URLSearchParams()
+            params.set('checkout', 'true')
+            params.set('plan', plan)
+            if (interval) params.set('interval', interval)
+            redirect(`/pricing?${params.toString()}`)
+        }
+    }
+
 
     // Check if user has completed onboarding
     let userSettings = null

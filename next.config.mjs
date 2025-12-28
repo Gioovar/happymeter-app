@@ -3,7 +3,7 @@ import withPWA from "next-pwa";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Force Re-deploy for Clerk Production Keys
+    // Force Deploy: 2025-12-27 - MXN Pricing & Checkout Redirect Fix (Final)Keys
     eslint: {
         ignoreDuringBuilds: true,
     },

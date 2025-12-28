@@ -66,6 +66,35 @@ export default function DashboardPage() {
         setSurveys
     } = useDashboard()
 
+    // SABOTAGE SAFEGUARD: Check for pending checkout cookie
+    // If user lands here after sign up but wanted to buy, send them back to pay.
+    useEffect(() => {
+        const getCookie = (name: string) => {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop()?.split(';').shift();
+        }
+
+        const pendingPlan = getCookie('checkout_plan')
+
+        if (pendingPlan) {
+            const pendingInterval = getCookie('checkout_interval')
+
+            // Clear cookies to avoid infinite loops
+            document.cookie = "checkout_plan=; max-age=0; path=/"
+            document.cookie = "signup_intent=; max-age=0; path=/"
+            document.cookie = "checkout_interval=; max-age=0; path=/"
+
+            toast.loading('Finalizando proceso de compra...')
+
+            const params = new URLSearchParams()
+            params.set('checkout', 'true')
+            params.set('plan', pendingPlan)
+            if (pendingInterval) params.set('interval', pendingInterval)
+            window.location.href = `/pricing?${params.toString()}`
+        }
+    }, [])
+
     const [qrModalOpen, setQrModalOpen] = useState(false)
     const [reportModalOpen, setReportModalOpen] = useState(false)
     const [helpModalOpen, setHelpModalOpen] = useState(false)
@@ -292,9 +321,9 @@ export default function DashboardPage() {
                                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-500">
                                             <div className="h-4 w-px bg-white/10 mx-2" />
                                             <div className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${statsData.plan === 'POWER' ? 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20 shadow-[0_0_10px_rgba(232,121,249,0.1)]' :
-                                                    statsData.plan === 'GROWTH' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(96,165,250,0.1)]' :
-                                                        statsData.plan === 'CHAIN' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(251,191,36,0.1)]' :
-                                                            'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                                                statsData.plan === 'GROWTH' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(96,165,250,0.1)]' :
+                                                    statsData.plan === 'CHAIN' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(251,191,36,0.1)]' :
+                                                        'bg-gray-500/10 text-gray-400 border-gray-500/20'
                                                 }`}>
                                                 {(statsData.plan || 'FREE') === 'FREE' ? 'Plan Gratis' : `${(statsData.plan || 'FREE').replace('_', ' ')}`}
                                             </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@clerk/nextjs'
@@ -24,11 +24,41 @@ export default function PricingPage() {
         }
     }, [searchParams])
 
-    const handleCheckout = async (planKey: string) => {
-        // 1. Auth Check: If not logged in, redirect to Sign Up
+    // Auto-checkout effect for returning users from Sign Up
+    useEffect(() => {
+        const checkoutPending = searchParams.get('checkout') === 'true'
+        const planKey = searchParams.get('plan')
+        const paramInterval = searchParams.get('interval') as 'month' | 'year' | null
+
+        if (userId && checkoutPending && planKey) {
+            // Clean URL implies we handled it, but let's just trigger first
+            handleCheckout(planKey, paramInterval || undefined)
+
+            // Optional: Clean URL to prevent re-triggering on refresh? 
+            // For now, let's leave it, as the checkout redirects away anyway.
+        }
+    }, [userId, searchParams])
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const handleCheckout = useCallback(async (planKey: string, intervalParam?: 'month' | 'year') => {
+        const selectedInterval = intervalParam || interval
+
+        // 1. Auth Check: If not logged in, redirect to Sign Up with intent
         if (!userId) {
             toast.error('Necesitas crear una cuenta para suscribirte.')
-            router.push('/sign-up')
+
+            // Set cookies for robust redirect after OAuth
+            document.cookie = `signup_intent=checkout; path=/; max-age=3600`
+            document.cookie = `checkout_plan=${planKey}; path=/; max-age=3600`
+            if (selectedInterval) {
+                document.cookie = `checkout_interval=${selectedInterval}; path=/; max-age=3600`
+            }
+
+            const params = new URLSearchParams()
+            params.set('intent', 'checkout')
+            params.set('plan', planKey)
+            params.set('interval', selectedInterval)
+            router.push(`/sign-up?${params.toString()}`)
             return
         }
 
@@ -52,7 +82,7 @@ export default function PricingPage() {
                 },
                 body: JSON.stringify({
                     plan: planKey,
-                    interval: interval
+                    interval: selectedInterval
                 }),
             })
 
@@ -75,7 +105,7 @@ export default function PricingPage() {
             toast.error(error.message || 'Error desconocido', { id: 'checkout-toast', duration: 5000 })
             setLoadingPlan(null)
         }
-    }
+    }, [userId, interval, router])
 
     const plans = [
         {
