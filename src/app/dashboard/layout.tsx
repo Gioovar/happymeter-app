@@ -22,7 +22,7 @@ export default async function DashboardLayout({
 
     let realRole = 'USER'
     let affiliateProfile = null
-    let hasSeenTour = true
+    let hasSeenTour = false // Default to FALSE to ensure new users see the tour if settings fetch fails or is pending
 
     try {
         if (userId) {
@@ -34,6 +34,10 @@ export default async function DashboardLayout({
             if (settings) {
                 hasSeenTour = settings.hasSeenTour
                 realRole = settings.role || 'USER'
+            } else {
+                // If no settings found, it's likely a brand new user. 
+                // We should show the tour (hasSeenTour = false).
+                // (Already set to false by default above)
             }
         }
     } catch (error) {

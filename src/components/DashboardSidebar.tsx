@@ -110,6 +110,7 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
                 return (
                     <Link
                         key={item.href}
+                        id={`nav-item-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                         href={item.href}
                         onClick={() => setIsMobileOpen(false)}
                         className={cn(
@@ -163,6 +164,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
             <div className="px-4 pb-3 mt-6">
                 <Link
                     href="/dashboard/chat"
+                    id="nav-item-ai-chat"
                     onClick={() => setIsMobileOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
                 >
