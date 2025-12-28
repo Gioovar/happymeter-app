@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { BackgroundLights } from '@/components/ui/BackgroundLights'
+import ShareButton from '@/components/blog/ShareButton'
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
     const post = getPostBySlug(params.slug, ['title', 'excerpt', 'coverImage'])
@@ -69,9 +70,10 @@ export default async function BlogPost({ params }: { params: { slug: string } })
                     <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400 hidden md:block">
                         HappyMeter
                     </span>
-                    <button className="text-gray-400 hover:text-white transition">
-                        <Share2 className="w-4 h-4" />
-                    </button>
+                    <ShareButton
+                        title={post.title}
+                        text={post.excerpt || 'Checa este artículo de HappyMeter'}
+                    />
                 </div>
             </div>
 
