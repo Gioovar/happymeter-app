@@ -7,7 +7,13 @@ import { useSearchParams } from "next/navigation";
 export default function Page() {
     const searchParams = useSearchParams()
     const intent = searchParams.get('intent')
-    const redirectUrl = intent === 'creator' ? '/api/auth-callback?signup_intent=creator' : '/api/auth-callback'
+    let redirectUrl = '/api/auth-callback'
+
+    if (intent === 'creator') {
+        redirectUrl = '/api/auth-callback?signup_intent=creator'
+    } else if (intent === 'view_pricing') {
+        redirectUrl = '/api/auth-callback?signup_intent=view_pricing'
+    }
 
     return (
         <div className="flex flex-col justify-center items-center min-h-screen bg-[#0a0a0a] relative overflow-hidden">

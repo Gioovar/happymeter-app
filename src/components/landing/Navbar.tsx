@@ -64,7 +64,7 @@ export default function Navbar() {
                 {/* CTA Buttons */}
                 <div className="hidden md:flex items-center gap-4">
                     <Link
-                        href="/sign-in"
+                        href="/sign-in?intent=view_pricing"
                         className="text-sm font-medium text-gray-300 hover:text-white transition-colors"
                     >
                         Entrar
@@ -113,7 +113,7 @@ export default function Navbar() {
                     <div className="h-px bg-white/10" />
 
                     <div className="space-y-4">
-                        <Link href="/sign-in" onClick={() => setIsOpen(false)} className="block w-full py-4 text-center text-gray-400 font-medium hover:text-white">
+                        <Link href="/sign-in?intent=view_pricing" onClick={() => setIsOpen(false)} className="block w-full py-4 text-center text-gray-400 font-medium hover:text-white">
                             Iniciar Sesión
                         </Link>
                         <Link href="/sign-up?intent=view_pricing" onClick={() => setIsOpen(false)} className="block w-full py-4 text-center bg-white text-black font-bold rounded-xl active:scale-95 transition-transform">
