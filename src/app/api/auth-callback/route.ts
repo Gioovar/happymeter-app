@@ -47,26 +47,28 @@ export async function GET(request: NextRequest) {
 
     }
 
-    if (intent === 'view_pricing') {
-        const userId = await auth().then(a => a.userId);
-        // Only redirect to pricing if not already a paid user or just signed up
-        // But simpler: just go to pricing, let them see plans.
-        if (intentCookie) cookieStore.delete('signup_intent')
-        redirect('/pricing')
-    }
-
-
-    // Check if user has completed onboarding
+    // Check if user has completed onboarding or has subscription
     let userSettings = null
     try {
-        userSettings = await prisma.userSettings.findUnique({
-            where: { userId }
-        })
+        if (userId) { // Ensure userId is present
+            userSettings = await prisma.userSettings.findUnique({
+                where: { userId }
+            })
+        }
     } catch (error) {
         console.error("Auth Callback DB Error:", error)
-        // If DB is down, we allow access to dashboard to avoid hard block
-        // The dashboard itself handles missing data gracefully now
-        redirect('/dashboard')
+    }
+
+    if (intent === 'view_pricing') {
+        // If user already has a paid plan, don't force them to pricing
+        if (userSettings && userSettings.plan !== 'FREE' && userSettings.subscriptionStatus === 'active') {
+            if (intentCookie) cookieStore.delete('signup_intent')
+            redirect('/dashboard')
+        }
+
+        // Otherwise, send them to pricing to convert
+        if (intentCookie) cookieStore.delete('signup_intent')
+        redirect('/pricing')
     }
 
     if (userSettings && !userSettings.isOnboarded) {
