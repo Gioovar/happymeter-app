@@ -53,7 +53,8 @@ export async function POST(req: Request) {
                     quantity: 1,
                 },
             ],
-            customer_email: user.emailAddresses[0].emailAddress,
+            // Use safe access (optional chaining) or undefined if no email
+            customer_email: user.emailAddresses?.[0]?.emailAddress,
             client_reference_id: userId,
             metadata: {
                 userId: userId,
