@@ -81,7 +81,7 @@ export default function PricingTeaser() {
                                 Catálogo de Juegos (Dados/Cartas)
                             </li>
                         </ul>
-                        <Link href="/sign-up?plan=growth">
+                        <Link href="/pricing?checkout=true&plan=GROWTH&interval=month">
                             <button className="w-full py-3.5 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-500 transition shadow-lg shadow-violet-600/20">
                                 Elegir Growth
                             </button>
@@ -116,7 +116,7 @@ export default function PricingTeaser() {
                                 <Check className="w-4 h-4 text-blue-500 flex-shrink-0" /> Juegos Premium (Ruleta/Raspa)
                             </li>
                         </ul>
-                        <Link href="/sign-up?plan=power">
+                        <Link href="/pricing?checkout=true&plan=POWER&interval=month">
                             <button className="w-full py-3 rounded-xl bg-white/5 text-white font-bold hover:bg-white/10 transition border border-white/10">
                                 Elegir Power
                             </button>

@@ -39,7 +39,7 @@ export default function Hero() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-                    <Link href="/sign-up">
+                    <Link href="/sign-up?intent=view_pricing">
                         <button className="px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:scale-105 transition duration-300 flex items-center gap-2 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)]">
                             Empezar Gratis Ahora
                             <ArrowRight className="w-5 h-5" />

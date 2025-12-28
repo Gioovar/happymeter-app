@@ -69,7 +69,7 @@ export default function Navbar() {
                     >
                         Entrar
                     </Link>
-                    <Link href="/sign-up" className="group relative">
+                    <Link href="/sign-up?intent=view_pricing" className="group relative">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-200" />
                         <button className="relative px-6 py-2.5 rounded-full bg-black border border-white/10 text-white text-sm font-bold flex items-center gap-2 group-hover:bg-[#0a0a0a] transition-colors">
                             <Sparkles className="w-3 h-3 text-fuchsia-400" />
@@ -116,7 +116,7 @@ export default function Navbar() {
                         <Link href="/sign-in" onClick={() => setIsOpen(false)} className="block w-full py-4 text-center text-gray-400 font-medium hover:text-white">
                             Iniciar Sesión
                         </Link>
-                        <Link href="/sign-up" onClick={() => setIsOpen(false)} className="block w-full py-4 text-center bg-white text-black font-bold rounded-xl active:scale-95 transition-transform">
+                        <Link href="/sign-up?intent=view_pricing" onClick={() => setIsOpen(false)} className="block w-full py-4 text-center bg-white text-black font-bold rounded-xl active:scale-95 transition-transform">
                             Crear Cuenta Gratis
                         </Link>
                     </div>

@@ -44,6 +44,15 @@ export async function GET(request: NextRequest) {
             if (interval) params.set('interval', interval)
             redirect(`/pricing?${params.toString()}`)
         }
+
+    }
+
+    if (intent === 'view_pricing') {
+        const userId = await auth().then(a => a.userId);
+        // Only redirect to pricing if not already a paid user or just signed up
+        // But simpler: just go to pricing, let them see plans.
+        if (intentCookie) cookieStore.delete('signup_intent')
+        redirect('/pricing')
     }
 
 

@@ -21,6 +21,9 @@ export default function Page() {
         params.set('plan', plan)
         if (interval) params.set('interval', interval)
         redirectUrl = `/pricing?${params.toString()}`
+
+    } else if (intent === 'view_pricing') {
+        redirectUrl = '/api/auth-callback?signup_intent=view_pricing'
     }
 
     return (
