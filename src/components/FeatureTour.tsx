@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronRight, Sparkles } from 'lucide-react'
+import { ChevronRight, Sparkles } from 'lucide-react'
 import { completeTour } from '@/actions/user'
 import { createPortal } from 'react-dom'
+import { useDashboard } from '@/context/DashboardContext'
 
 const TOUR_STEPS = [
     {
@@ -38,6 +39,7 @@ export default function FeatureTour() {
     const [isVisible, setIsVisible] = useState(true)
     const [rect, setRect] = useState<{ top: number, left: number, width: number, height: number } | null>(null)
     const [mounted, setMounted] = useState(false)
+    const { toggleMobileMenu } = useDashboard()
 
     useEffect(() => {
         setMounted(true)
@@ -50,6 +52,20 @@ export default function FeatureTour() {
 
     const currentStep = TOUR_STEPS[step]
 
+    // Auto-open mobile menu if needed
+    useEffect(() => {
+        if (currentStep.target && window.innerWidth < 768) {
+            // It's a sidebar item, ensure menu is open
+            toggleMobileMenu(true)
+
+            // Re-measure after animation
+            setTimeout(() => {
+                const event = new Event('resize')
+                window.dispatchEvent(event)
+            }, 350)
+        }
+    }, [step, currentStep.target, toggleMobileMenu])
+
     // Measure target element
     const measure = useCallback(() => {
         if (!currentStep.target) {
@@ -60,6 +76,13 @@ export default function FeatureTour() {
         const el = document.getElementById(currentStep.target)
         if (el) {
             const r = el.getBoundingClientRect()
+
+            // Checking if visible
+            if (r.width === 0 && r.height === 0) {
+                setRect(null) // Not visible yet
+                return
+            }
+
             setRect({
                 top: r.top,
                 left: r.left,
@@ -67,7 +90,6 @@ export default function FeatureTour() {
                 height: r.height
             })
         } else {
-            // Element not found (maybe mobile menu closed?), fallback to center or skip
             setRect(null)
         }
     }, [currentStep.target])
@@ -89,6 +111,12 @@ export default function FeatureTour() {
     const handleFinish = async () => {
         setIsVisible(false)
         document.body.style.overflow = 'unset'
+
+        // Close menu on mobile if open
+        if (window.innerWidth < 768) {
+            toggleMobileMenu(false)
+        }
+
         await completeTour()
     }
 
@@ -144,9 +172,9 @@ export default function FeatureTour() {
                         style={
                             rect
                                 ? {
-                                    top: rect.top + (rect.height / 2) - 100, // Roughly center vertically relative to item, or adjust
-                                    left: rect.left + rect.width + 24, // To the right of the item
-                                    // Handle if it goes off screen? For sidebar (left), typically plenty of space on right.
+                                    top: rect.top + (rect.height / 2) - 100,
+                                    left: window.innerWidth < 768 ? rect.left + rect.width + 12 : rect.left + rect.width + 24, // Adjust for mobile
+                                    maxWidth: window.innerWidth < 768 ? '200px' : '320px' // Smaller card on mobile
                                 }
                                 : {
                                     // Center positioning
@@ -161,9 +189,9 @@ export default function FeatureTour() {
                         {/* Card Design */}
                         <div className={`
                             bg-[#1a1a1a] border border-white/10 shadow-2xl overflow-hidden
-                            ${rect ? 'w-80 rounded-xl' : 'w-full max-w-md rounded-2xl -translate-x-1/2 -translate-y-1/2'}
+                            ${rect ? 'rounded-xl' : 'w-full max-w-md rounded-2xl -translate-x-1/2 -translate-y-1/2'}
                          `}>
-                            {/* Progress (Only for card, not modal loop if desired, but consistent is good) */}
+                            {/* Progress */}
                             <div className="h-1 bg-white/5 w-full">
                                 <motion.div
                                     className="h-full bg-violet-500"

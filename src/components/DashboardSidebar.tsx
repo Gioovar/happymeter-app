@@ -129,8 +129,10 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
     )
 }
 
+import { useDashboard } from '@/context/DashboardContext'
+
 export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: boolean, userRole?: string }) {
-    const [isMobileOpen, setIsMobileOpen] = useState(false)
+    const { isMobileMenuOpen, toggleMobileMenu } = useDashboard()
     const pathname = usePathname() // Safe to use here without Suspense in Layout generally, but safer to keep high
 
     const SidebarContent = () => (
@@ -150,7 +152,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
 
                 {/* Close button for mobile only */}
                 <button
-                    onClick={() => setIsMobileOpen(false)}
+                    onClick={() => toggleMobileMenu(false)}
                     className="md:hidden p-2 text-gray-400 hover:text-white"
                 >
                     <X className="w-6 h-6" />
@@ -158,14 +160,14 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
             </div>
 
             <Suspense fallback={<div className="flex-1 p-4"><div className="w-full h-8 bg-white/5 rounded-xl animate-pulse" /></div>}>
-                <SidebarNav setIsMobileOpen={setIsMobileOpen} />
+                <SidebarNav setIsMobileOpen={toggleMobileMenu} />
             </Suspense>
 
             <div className="px-4 pb-3 mt-6">
                 <Link
                     href="/dashboard/chat"
                     id="nav-item-ai-chat"
-                    onClick={() => setIsMobileOpen(false)}
+                    onClick={() => toggleMobileMenu(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
                 >
                     <Image
@@ -191,7 +193,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                     <div className="px-4 pb-3">
                         <Link
                             href="/creators/dashboard"
-                            onClick={() => setIsMobileOpen(false)}
+                            onClick={() => toggleMobileMenu(false)}
                             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-md hover:shadow-violet-600/20 transition-all group"
                         >
                             <LayoutDashboard className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -209,7 +211,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                     <div className="px-4 pb-3">
                         <Link
                             href="/admin"
-                            onClick={() => setIsMobileOpen(false)}
+                            onClick={() => toggleMobileMenu(false)}
                             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-md hover:shadow-red-600/20 transition-all group"
                         >
                             <Shield className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -227,7 +229,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                     <div className="px-4 pb-3 space-y-2">
                         <Link
                             href="/staff"
-                            onClick={() => setIsMobileOpen(false)}
+                            onClick={() => toggleMobileMenu(false)}
                             className={cn(
                                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all group",
                                 pathname === '/staff'
@@ -244,7 +246,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
 
                         <Link
                             href="/staff/places"
-                            onClick={() => setIsMobileOpen(false)}
+                            onClick={() => toggleMobileMenu(false)}
                             className={cn(
                                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all group",
                                 pathname === '/staff/places'
@@ -258,7 +260,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
 
                         <Link
                             href="/staff/visits"
-                            onClick={() => setIsMobileOpen(false)}
+                            onClick={() => toggleMobileMenu(false)}
                             className={cn(
                                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all group",
                                 pathname === '/staff/visits'
@@ -276,7 +278,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
             <div className="p-4 border-t border-white/10 space-y-2 bg-[#111]">
                 <Link
                     href="/"
-                    onClick={() => setIsMobileOpen(false)}
+                    onClick={() => toggleMobileMenu(false)}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-white/5 cursor-pointer transition text-gray-400 hover:text-white"
                 >
                     <Home className="w-5 h-5" />
@@ -284,7 +286,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                 </Link>
                 <Link
                     href="/dashboard/settings"
-                    onClick={() => setIsMobileOpen(false)}
+                    onClick={() => toggleMobileMenu(false)}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-white/5 cursor-pointer transition text-gray-400 hover:text-white"
                 >
                     <Settings className="w-5 h-5" />
@@ -306,7 +308,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
             <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 z-40 transition-all duration-300">
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => setIsMobileOpen(true)}
+                        onClick={() => toggleMobileMenu(true)}
                         className="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                     >
                         <Menu className="w-6 h-6" />
@@ -322,12 +324,12 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
             </div>
 
             {/* Mobile Drawer */}
-            {isMobileOpen && (
+            {isMobileMenuOpen && (
                 <div className="fixed inset-0 z-50 md:hidden">
                     {/* Backdrop */}
                     <div
                         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                        onClick={() => setIsMobileOpen(false)}
+                        onClick={() => toggleMobileMenu(false)}
                     />
                     {/* Sidebar container */}
                     <aside className="absolute inset-y-0 left-0 w-64 bg-[#111] border-r border-white/10 flex flex-col h-full shadow-2xl animate-in slide-in-from-left duration-200">

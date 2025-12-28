@@ -43,6 +43,8 @@ interface DashboardContextType {
     lastUpdated: Date | null
     refreshData: () => Promise<void>
     setSurveys: (surveys: Survey[]) => void // Allow local updates (e.g. optimistic delete)
+    isMobileMenuOpen: boolean
+    toggleMobileMenu: (val: boolean) => void
 }
 
 const defaultStats: StatsData = {
@@ -69,6 +71,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     const [loadingSurveys, setLoadingSurveys] = useState(true)
     const [loadingAnalytics, setLoadingAnalytics] = useState(true)
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
     // Setter wrapper to allow consumers to update state (e.g. after deletion)
     const setSurveys = (newSurveys: Survey[]) => {
@@ -156,7 +159,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             loadingAnalytics,
             lastUpdated,
             refreshData: fetchData,
-            setSurveys
+            setSurveys,
+            isMobileMenuOpen,
+            toggleMobileMenu: setIsMobileMenuOpen
         }}>
             {children}
         </DashboardContext.Provider>
