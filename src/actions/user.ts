@@ -8,9 +8,13 @@ export async function completeTour() {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
-    await prisma.userSettings.update({
+    await prisma.userSettings.upsert({
         where: { userId },
-        data: { hasSeenTour: true }
+        update: { hasSeenTour: true },
+        create: {
+            userId,
+            hasSeenTour: true
+        }
     })
 
     revalidatePath('/dashboard')

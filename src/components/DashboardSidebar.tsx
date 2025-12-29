@@ -164,11 +164,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                 </button>
             </div>
 
-            <Suspense fallback={<div className="flex-1 p-4"><div className="w-full h-8 bg-white/5 rounded-xl animate-pulse" /></div>}>
-                <SidebarNav setIsMobileOpen={toggleMobileMenu} />
-            </Suspense>
-
-            <div className="px-4 pb-3 mt-6">
+            <div className="px-4 pb-2 pt-2">
                 <Link
                     href="/dashboard/chat"
                     id="nav-item-ai-chat"
@@ -187,6 +183,14 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                         <span className="text-xs font-bold leading-tight">Consultar IA</span>
                     </div>
                 </Link>
+            </div>
+
+            <Suspense fallback={<div className="flex-1 p-4"><div className="w-full h-8 bg-white/5 rounded-xl animate-pulse" /></div>}>
+                <SidebarNav setIsMobileOpen={toggleMobileMenu} />
+            </Suspense>
+
+            <div className="px-4 pb-3 mt-6">
+
                 <div className="mt-2">
                     <PWAInstallButton className="w-full" />
                 </div>
