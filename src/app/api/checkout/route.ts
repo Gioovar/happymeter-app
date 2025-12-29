@@ -46,8 +46,7 @@ export async function POST(req: Request) {
         // Create Checkout Session
         const session = await stripe.checkout.sessions.create({
             mode: 'subscription',
-            // @ts-ignore
-            automatic_payment_methods: { enabled: true },
+            payment_method_types: ['card'],
             line_items: [
                 {
                     price: priceId,
