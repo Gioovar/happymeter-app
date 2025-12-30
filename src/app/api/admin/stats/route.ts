@@ -24,12 +24,30 @@ export async function GET() {
             return new NextResponse("Unauthorized", { status: 403 })
         }
 
-        // 1. Calculate MRR (Simulated based on Plans)
-        // Assuming PRO plan is $29/month
-        const proUsersCount = await prisma.userSettings.count({
-            where: { plan: 'PRO' }
+        // 1. Calculate MRR based on Active Users and their Plans
+        // Pricing constants (MXN)
+        const PRICING = {
+            'GROWTH': 499,
+            'POWER': 1499,
+            'CHAIN': 2999
+        }
+
+        const activeSubs = await prisma.userSettings.groupBy({
+            by: ['plan'],
+            where: {
+                OR: [
+                    { subscriptionStatus: 'active' },
+                    { plan: { not: 'FREE' } } // Fallback if status is missing but plan is set
+                ]
+            },
+            _count: true
         })
-        const mrr = proUsersCount * 29
+
+        let mrr = 0
+        activeSubs.forEach(group => {
+            const price = PRICING[group.plan as keyof typeof PRICING] || 0
+            mrr += price * group._count
+        })
 
         // 2. User Stats
         const totalUsers = await prisma.userSettings.count()
@@ -43,42 +61,86 @@ export async function GET() {
             where: { createdAt: { gte: thirtyDaysAgo } }
         }).then(res => res.length)
 
-        // 3. Growth Chart Data (Last 6 months)
-        // This is a bit complex with just Prisma, so we'll simulate a trend based on real total
-        // In a real app, we'd query User creation dates.
-        // For now, let's get real user creation dates from UserSettings (which we sync)
+        // 3. Financial Chart Data (Real Sales from 'Sale' table)
+        // Group sales by month for the last 6 months
+        const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5))
 
-        const sixMonthsAgo = subMonths(new Date(), 5)
-        const monthlySignups = await prisma.userSettings.groupBy({
-            by: ['createdAt'],
-            where: { createdAt: { gte: startOfMonth(sixMonthsAgo) } },
+        const sales = await prisma.sale.findMany({
+            where: {
+                createdAt: { gte: sixMonthsAgo },
+                status: 'COMPLETED'
+            },
+            select: {
+                createdAt: true,
+                amount: true
+            }
         })
 
-        // Aggregate by month manually since Prisma groupBy date is specific
-        // Note: In a real production app with high volume, use raw SQL date_trunc
+        const usersJoined = await prisma.userSettings.findMany({
+            where: { createdAt: { gte: sixMonthsAgo } },
+            select: { createdAt: true }
+        })
 
-        // Mocking chart data for visual demonstration if not enough real data exists
-        const chartData = [
-            { name: 'Ene', revenue: mrr * 0.5, users: Math.floor(totalUsers * 0.4) },
-            { name: 'Feb', revenue: mrr * 0.6, users: Math.floor(totalUsers * 0.5) },
-            { name: 'Mar', revenue: mrr * 0.8, users: Math.floor(totalUsers * 0.7) },
-            { name: 'Abr', revenue: mrr * 0.9, users: Math.floor(totalUsers * 0.8) },
-            { name: 'May', revenue: mrr * 0.95, users: Math.floor(totalUsers * 0.9) },
-            { name: 'Jun', revenue: mrr, users: totalUsers },
-        ]
+        // Process data into monthly buckets
+        const monthlyData = new Map<string, { revenue: number, users: number }>()
 
-        // 4. Recent Activity (Audit Logs)
+        // Initialize last 6 months
+        for (let i = 0; i < 6; i++) {
+            const d = subMonths(new Date(), i)
+            const key = format(d, 'MMM') // e.g., "Dic"
+            monthlyData.set(key, { revenue: 0, users: 0 })
+        }
+
+        sales.forEach(sale => {
+            const key = format(sale.createdAt, 'MMM')
+            if (monthlyData.has(key)) {
+                const current = monthlyData.get(key)!
+                current.revenue += sale.amount
+                monthlyData.set(key, current)
+            }
+        })
+
+        usersJoined.forEach(user => {
+            const key = format(user.createdAt, 'MMM')
+            if (monthlyData.has(key)) {
+                const current = monthlyData.get(key)!
+                current.users += 1
+                monthlyData.set(key, current)
+            }
+        })
+
+        // Convert Map to Array and reverse (Chronological order)
+        // Note: Map iterates insertion order, but we want chronological.
+        // Let's rebuild it cleanly.
+        const chartData = []
+        for (let i = 5; i >= 0; i--) {
+            const d = subMonths(new Date(), i)
+            const key = format(d, 'MMM')
+            const data = monthlyData.get(key) || { revenue: 0, users: 0 }
+            chartData.push({
+                name: key,
+                revenue: data.revenue,
+                users: data.users
+            })
+        }
+
+        // 4. Recent Activity (Audit Logs + Recent Sales)
+        // Combine logs and sales for a richer feed
         const recentLogs = await prisma.auditLog.findMany({
             take: 5,
             orderBy: { createdAt: 'desc' }
         })
 
+        // If we want to show sales in the logs area, we'd need to map them, 
+        // but for now let's keep the dashboard generic or add a "recent sales" section later.
+        // The frontend expects 'recentLogs'.
+
         return NextResponse.json({
-            mrr,
+            mrr, // Now calculated dynamically
             totalUsers,
             activeUsers: activeUsersCount,
             inactiveUsers: totalUsers - activeUsersCount,
-            chartData,
+            chartData, // Now reflects real Sales and User Joins
             recentLogs
         })
 
