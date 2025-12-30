@@ -1,6 +1,6 @@
 import NotificationCenter from '@/components/admin/NotificationCenter'
 
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
@@ -32,7 +32,24 @@ export default async function AdminLayout({
         // we just let userSettings be null which triggers the check below.
     }
 
-    if (userSettings?.role !== 'SUPER_ADMIN') {
+    // Security: Check Role or Email Fallback
+    const user = await currentUser()
+    const email = user?.emailAddresses[0]?.emailAddress
+    const ADMIN_EMAILS = ['admin@happymeter.com', 'gioovar@gmail.com', 'gtrendy2017@gmail.com'] // Explicitly added gtrendy2017
+
+    let isSuperAdmin = false
+
+    // 1. Check DB Role
+    if (userSettings?.role === 'SUPER_ADMIN') {
+        isSuperAdmin = true
+    }
+
+    // 2. Check Email Fallback (if not already approved)
+    if (!isSuperAdmin && email && ADMIN_EMAILS.includes(email)) {
+        isSuperAdmin = true
+    }
+
+    if (!isSuperAdmin) {
         if (userSettings?.role === 'STAFF' || userSettings?.role === 'ADMIN') {
             redirect('/staff')
         }
