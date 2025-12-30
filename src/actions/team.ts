@@ -57,7 +57,7 @@ export async function inviteMember(formData: FormData) {
     if (!userId) throw new Error('Unauthorized')
 
     const email = formData.get('email') as string
-    const role = formData.get('role') as 'ADMIN' | 'EDITOR' | 'OBSERVER'
+    const role = formData.get('role') as 'ADMIN' | 'EDITOR' | 'OBSERVER' | 'OPERATOR'
 
     if (!email) throw new Error('Email requerido')
 
@@ -174,4 +174,108 @@ export async function cancelInvitation(inviteId: string) {
     })
 
     revalidatePath('/dashboard/team')
+}
+
+export async function acceptInvitation(token: string) {
+    const { userId } = await auth()
+    if (!userId) return { success: false, error: "Unauthorized" }
+
+    // 1. Find Invite
+    const invite = await prisma.teamInvitation.findUnique({
+        where: { token }
+    })
+    if (!invite) return { success: false, error: "Invitación inválida o expirada" }
+
+    // 2. Check if user is already a member
+    const existingMember = await prisma.teamMember.findUnique({
+        where: {
+            userId_ownerId: {
+                userId,
+                ownerId: invite.inviterId
+            }
+        }
+    })
+
+    if (existingMember) {
+        // Already member, just delete invite and success
+        await prisma.teamInvitation.delete({ where: { token } })
+        return { success: true, role: existingMember.role }
+    }
+
+    // 3. Create Member
+    await prisma.teamMember.create({
+        data: {
+            userId,
+            ownerId: invite.inviterId,
+            role: invite.role
+        }
+    })
+
+    // 4. Delete Invite
+    await prisma.teamInvitation.delete({ where: { token } })
+
+    return { success: true, role: invite.role }
+}
+
+// --- OPERATOR MANAGEMENT ---
+
+export async function getOperators() {
+    const { userId } = await auth()
+    if (!userId) throw new Error("Unauthorized")
+
+    // Verify user is owner or admin (simplified logic for now, using userSettings implicit check)
+    // We fetch members where the current user is the owner
+    const operators = await prisma.teamMember.findMany({
+        where: {
+            ownerId: userId,
+            role: 'OPERATOR'
+        },
+        include: {
+            user: {
+                select: {
+                    userId: true,
+                    // We need name/email from Clerk ideally, but for now we might rely on UserSettings or just return what we have
+                    // Note: UserSettings doesn't have name/email by default usually, it's in Auth. 
+                    // We will fetch UserSettings profile info (photo, phone)
+                    photoUrl: true,
+                    phone: true,
+                    businessName: true // Fallback for name if needed
+                }
+            }
+        }
+    })
+
+    // To get names/emails, we might need to rely on what we have or fetch from Clerk if needed.
+    // For this implementation, we will assume we can rely on `businessName` or similar, 
+    // OR we might need to store email in UserSettings or TeamMember to display it.
+    // However, TeamInvitation has email. TeamMember links to UserSettings.
+    // Let's return the data we have. We might need to fetch email from Clerk in a real app, 
+    // but for now let's hope the user profile (businessName) or just the fact they are listed is enough.
+    // WAIT: We don't have email in TeamMember. We have it in Invite. 
+    // Let's just return what we have and maybe the frontend can show "Operador" if name is missing.
+
+    return operators
+}
+
+export async function toggleMemberStatus(memberId: string, isActive: boolean) {
+    const { userId } = await auth()
+    if (!userId) throw new Error("Unauthorized")
+
+    // Verify ownership
+    const member = await prisma.teamMember.findFirst({
+        where: {
+            id: memberId,
+            ownerId: userId
+        }
+    })
+
+    if (!member) throw new Error("Member not found or unauthorized")
+
+    await prisma.teamMember.update({
+        where: { id: memberId },
+        data: { isActive }
+    })
+
+    revalidatePath('/dashboard/loyalty')
+    return { success: true }
 }

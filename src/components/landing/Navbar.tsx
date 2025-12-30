@@ -56,7 +56,9 @@ export default function Navbar() {
                     <div className="flex items-center gap-8 px-8 py-2.5 rounded-full bg-white/5 border border-white/5 backdrop-blur-md">
                         <NavLink href="/pricing">Precios</NavLink>
                         <NavLink href="/blog" isNew>Blog</NavLink>
-                        <NavLink href="/blog/guia-digitalizar-feedback">Tutoriales</NavLink> {/* Direct link to guide or /tutorials if it existed */}
+                        <NavLink href="/blog/guia-digitalizar-feedback">Tutoriales</NavLink>
+                        <NavLink href="/creators" isNew>Creadores</NavLink>
+                        <NavLink href="/sellers">Aliados</NavLink>
                         <NavLink href="mailto:soporte@happymeters.com">Ayuda</NavLink>
                     </div>
                 </div>
@@ -104,6 +106,12 @@ export default function Navbar() {
                         </Link>
                         <Link href="/blog/guia-digitalizar-feedback" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
                             Tutoriales
+                        </Link>
+                        <Link href="/creators" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
+                            Creadores
+                        </Link>
+                        <Link href="/sellers" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
+                            Aliados
                         </Link>
                         <Link href="mailto:soporte@happymeters.com" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
                             Ayuda y Soporte

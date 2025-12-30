@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { auth } from '@clerk/nextjs/server'
+import { redirect } from "next/navigation"
 import { prisma } from '@/lib/prisma'
 import DashboardSidebar from '@/components/DashboardSidebar'
 import FeatureTour from '@/components/FeatureTour'
@@ -42,6 +43,23 @@ export default async function DashboardLayout({
         }
     } catch (error) {
         console.error('Failed to fetch data in layout:', error)
+    }
+
+    // WAITER/OPERATOR PROTECTION: 
+    // If user has no settings (not an owner) but IS a team member with OPERATOR role,
+    // they should ONLY be allowing in /ops. Redirect them.
+    if (!realRole || realRole === 'USER') { // Basic Check
+        const member = await prisma.teamMember.findFirst({
+            where: { userId }
+        })
+        if (member && (member.role as string) === 'OPERATOR') {
+            // Use import { redirect } from "next/navigation" (already imported)
+            // We need to ensure we don't redirect if we are already in /ops (but this is /dashboard layout so it's safe)
+            const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
+            if (!userSettings) {
+                redirect('/ops')
+            }
+        }
     }
 
     return (

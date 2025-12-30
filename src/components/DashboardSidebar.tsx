@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { LayoutDashboard, PlusCircle, HelpCircle, Settings, LogOut, Home, PieChart, Megaphone, Menu, X, FileText, Gamepad2, MessageSquare, Trophy, Shield, Store, Calendar, Users, GraduationCap } from 'lucide-react'
+import { LayoutDashboard, PlusCircle, HelpCircle, Settings, LogOut, Home, PieChart, Megaphone, Menu, X, FileText, Gamepad2, MessageSquare, Trophy, Shield, Store, Calendar, Users, GraduationCap, ScanLine } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
@@ -57,6 +57,11 @@ const menuItems = [
         title: 'Campañas',
         href: '/dashboard/campaigns',
         icon: Megaphone
+    },
+    {
+        title: 'Lealtad',
+        href: '/dashboard/loyalty',
+        icon: ScanLine
     },
     {
         title: 'Juegos',
@@ -280,6 +285,8 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                             <Calendar className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                             <span className="text-sm font-medium">Solicitudes de Visita</span>
                         </Link>
+
+
                     </div >
                 )
             }

@@ -90,6 +90,7 @@ model UserSettings {
   businessName        String?
   isOnboarded         Boolean   @default(false)
   phone               String?
+  photoUrl            String?
   socialLinks         Json?
   isPhoneVerified     Boolean   @default(false)
   phoneVerifiedAt     DateTime?
@@ -116,6 +117,9 @@ model UserSettings {
   // Team
   teamMembers         TeamMember[] @relation("OwnerOf")
   memberships         TeamMember[] @relation("MemberOf")
+
+  // Loyalty
+  loyaltyProgram      LoyaltyProgram?
 }
 
 model TeamMember {
@@ -124,6 +128,7 @@ model TeamMember {
   ownerId   String   // The owner of the workspace
   role      TeamRole
   joinedAt  DateTime @default(now())
+  isActive  Boolean  @default(true)
   
   user      UserSettings @relation("MemberOf", fields: [userId], references: [userId], onDelete: Cascade)
   owner     UserSettings @relation("OwnerOf", fields: [ownerId], references: [userId], onDelete: Cascade)
@@ -145,6 +150,7 @@ enum TeamRole {
   ADMIN
   EDITOR
   OBSERVER
+  OPERATOR
 }
 
 // ... existing models ...
@@ -638,4 +644,192 @@ model UserLessonProgress {
 
   @@unique([userId, lessonId])
   @@index([userId])
+}
+// --- Loyalty Program System ---
+
+model LoyaltyProgram {
+  id             String   @id @default(uuid())
+  userId         String   @unique // One program per UserSettings (Business Owner)
+  businessName   String
+  description    String?  @db.Text
+  logoUrl        String?
+  themeColor     String   @default("#8b5cf6") // Hex color
+  cardDesign     String   @default("SIMPLE")  // SIMPLE, PREMIUN, CUSTOM (for future)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Points System Configuration
+  pointsPercentage Float    @default(5.0)
+
+  user           UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  rewards        LoyaltyReward[]
+  customers      LoyaltyCustomer[]
+  visits         LoyaltyVisit[]
+  redemptions    LoyaltyRedemption[]
+  tiers          LoyaltyTier[]
+  rules          LoyaltyRule[]
+  events         LoyaltyEvent[]
+  promotions     LoyaltyPromotion[]
+}
+
+model LoyaltyPromotion {
+  id          String   @id @default(uuid())
+  programId   String
+  program     LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  imageUrl    String
+  title       String?
+  description String?
+  terms       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([programId])
+}
+
+model LoyaltyReward {
+  id              String   @id @default(uuid())
+  programId       String
+  name            String
+  description     String?
+  costInVisits    Int      // e.g. 5 visits required
+  costInPoints    Int      @default(0)
+  imageUrl        String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  program         LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  redemptions     LoyaltyRedemption[]
+  rules           LoyaltyRule[]
+
+  @@index([programId])
+}
+
+model LoyaltyCustomer {
+  id              String   @id @default(uuid())
+  programId       String
+  phone           String
+  name            String?
+  email           String?
+  joinDate        DateTime @default(now())
+  totalVisits     Int      @default(0)
+  currentVisits   Int      @default(0) // Visits available to redeem
+  
+  // Points System
+  totalPoints     Float    @default(0)
+  currentPoints   Float    @default(0)
+
+  lastVisitDate   DateTime?
+  
+  // Rating System
+  averageRating   Float    @default(0)
+  ratingCount     Int      @default(0)
+  
+  // Quick login token
+  magicToken      String?  @unique 
+  
+  program         LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  visits          LoyaltyVisit[]
+  redemptions     LoyaltyRedemption[]
+  events          LoyaltyEvent[]
+  
+  // Tier info
+  tierId          String?
+  tier            LoyaltyTier?   @relation(fields: [tierId], references: [id])
+
+  // Constraint: One profile per phone per program
+  @@unique([programId, phone]) 
+  @@index([programId])
+}
+
+model LoyaltyVisit {
+  id              String   @id @default(uuid())
+  programId       String
+  customerId      String
+  staffId         String?  // Who scanned it?
+  visitDate       DateTime @default(now())
+  
+  // Points Transaction
+  spendAmount     Float    @default(0)
+  pointsEarned    Float    @default(0)
+  
+  // Rating for this specific visit
+  rating          Int?     // 1-5
+  comment         String?  @db.Text
+  
+  program         LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  customer        LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  // Optional: Link to a specific survey answer if they got a stamp for answering?
+  // For now simple scan.
+
+  @@index([programId])
+  @@index([customerId])
+}
+
+model LoyaltyRedemption {
+  id              String   @id @default(uuid())
+  programId       String
+  customerId      String
+  rewardId        String
+  staffId         String?  // Who processed the redemption?
+  redeemedAt      DateTime @default(now())
+  
+  // Unique code for this specific redemption instance that staff scans
+  redemptionCode  String   @unique @default(uuid())
+  status          String   @default("PENDING") // PENDING (customer unlocked), REDEEMED (staff scanned)
+
+  program         LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  customer        LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  reward          LoyaltyReward   @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+
+
+  @@index([programId])
+  @@index([customerId])
+}
+
+model LoyaltyTier {
+  id              String   @id @default(uuid())
+  programId       String
+  name            String   // e.g. "Bronze", "Silver", "Gold"
+  order           Int      // 1, 2, 3
+  requiredVisits  Int      // 0, 5, 15
+  requiredPoints  Int      @default(0) // New: Support points-based tiers
+  benefits        String?  @db.Text // JSON or text list of perks
+  color           String   @default("#cccccc")
+  
+  program         LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  customers       LoyaltyCustomer[]
+
+  @@index([programId])
+}
+
+model LoyaltyRule {
+  id              String   @id @default(uuid())
+  programId       String
+  name            String   // e.g. "Double Points Tuesday", "2 visits in 3 days"
+  trigger         String   // CHECK_IN, SPEND, VISIT_FREQUENCY, REFERRAL
+  conditions      Json     // { daysBetween: 7, minSpend: 100, specificDay: 2 }
+  rewardId        String?  // If direct reward
+  pointsMultiplier Float   @default(1.0)
+  isActive        Boolean  @default(true)
+  
+  program         LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  reward          LoyaltyReward? @relation(fields: [rewardId], references: [id])
+}
+
+model LoyaltyEvent {
+  id              String   @id @default(uuid())
+  programId       String
+  customerId      String
+  type            String   // CHECK_IN, REDEMPTION, TIER_UP
+  metadata        Json?    // { location: "Bar", spend: 500 }
+  createdAt       DateTime @default(now())
+  
+  program         LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  customer        LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+  @@index([customerId])
 }

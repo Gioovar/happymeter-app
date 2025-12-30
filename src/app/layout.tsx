@@ -5,7 +5,7 @@ import { dark } from '@clerk/themes'
 import { esES } from '@clerk/localizations'
 import { Toaster } from 'sonner'
 import { Analytics } from "@vercel/analytics/react"
-import "./globals.css";
+import "./main.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -67,4 +67,5 @@ export default function RootLayout({
       </html>
     </ClerkProvider>
   );
+  // Forced rebuild
 }

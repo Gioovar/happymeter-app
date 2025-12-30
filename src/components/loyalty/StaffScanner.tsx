@@ -1,0 +1,223 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { Html5QrcodeScanner } from "html5-qrcode"
+import { toast } from "sonner"
+import { validateVisitScan, logCustomerVisit, redeemReward } from "@/actions/loyalty"
+import { Loader2, ScanLine, Tag, UtensilsCrossed, X, DollarSign, Camera } from "lucide-react"
+
+interface StaffScannerProps {
+    staffId: string
+}
+
+export function StaffScanner({ staffId }: StaffScannerProps) {
+    const [scanResult, setScanResult] = useState<string | null>(null)
+    const [isProcessing, setIsProcessing] = useState(false)
+    const scannerRef = useRef<Html5QrcodeScanner | null>(null)
+
+    // Points Logic State
+    const [showAmountModal, setShowAmountModal] = useState(false)
+    const [pendingVisitToken, setPendingVisitToken] = useState<string | null>(null)
+    const [customerName, setCustomerName] = useState("")
+    const [spendAmount, setSpendAmount] = useState("")
+
+    useEffect(() => {
+        // Initialize scanner on mount
+        const scanner = new Html5QrcodeScanner(
+            "reader",
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            },
+            /* verbose= */ false
+        )
+
+        scanner.render(onScanSuccess, onScanFailure)
+        scannerRef.current = scanner
+
+        function onScanSuccess(decodedText: string, decodedResult: any) {
+            handleScan(decodedText)
+        }
+
+        function onScanFailure(error: any) {
+            // quiet failure
+        }
+
+        return () => {
+            scanner.clear().catch(error => console.error("Failed to clear scanner", error))
+        }
+    }, [])
+
+    const handleScan = async (data: string) => {
+        if (isProcessing) return
+        setIsProcessing(true)
+
+        let type = "UNKNOWN"
+        let payload = data
+
+        if (data.startsWith("V:")) {
+            type = "VISIT"
+            payload = data.substring(2)
+        } else if (data.startsWith("R:")) {
+            type = "REDEEM"
+            payload = data.substring(2)
+        } else {
+            if (data.includes("-")) {
+                type = 'VISIT' // Assume magic token
+            } else {
+                type = 'REDEEM' // Short code
+            }
+        }
+
+        if (type === 'VISIT') {
+            toast.loading("Verificando cliente...")
+
+            // VALIDATE FIRST
+            const validation = await validateVisitScan(payload)
+
+            if (validation.success) {
+                if (validation.programType === 'POINTS') {
+                    // STOP and Ask for Amount
+                    toast.dismiss()
+                    setPendingVisitToken(payload)
+                    setCustomerName(validation.customerName || "Cliente")
+                    setShowAmountModal(true)
+                    // Note: Scanner keeps running in background, but isProcessing=true blocks new scans
+                } else {
+                    // Log immediately for Visits based
+                    await submitVisit(payload)
+                }
+            } else {
+                toast.dismiss()
+                toast.error(validation.error || "Cliente no encontrado")
+                pauseFor(2000)
+            }
+
+        } else if (type === 'REDEEM') {
+            toast.loading("Verificando premio...")
+            const res = await redeemReward(staffId, payload)
+            if (res.success) {
+                toast.dismiss()
+                toast.success(`PREMIO ENTREGADO: ${res.rewardName}`, {
+                    description: `Cliente: ${res.customerName}`,
+                    duration: 5000,
+                    icon: <Tag className="w-5 h-5 text-purple-500" />
+                })
+                pauseFor(3000)
+            } else {
+                toast.dismiss()
+                toast.error(res.error || "Código inválido o ya usado")
+                pauseFor(2000)
+            }
+        }
+    }
+
+    const submitVisit = async (token: string, amount: number = 0) => {
+        toast.loading("Registrando visita...")
+        const res = await logCustomerVisit(staffId, token, undefined, amount > 0 ? { spendAmount: amount } : undefined)
+
+        toast.dismiss()
+        if (res.success) {
+            toast.success(`Visita registrada!\n${res.tierName ? `MEMBER ${res.tierName}` : ""}`, {
+                description: amount > 0 ? `Puntos ganados: ${res.pointsEarned}` : `Total de visitas: ${res.newTotal}`,
+                duration: 4000,
+                icon: <UtensilsCrossed className="w-5 h-5 text-green-500" />
+            })
+            // Reset modal
+            setShowAmountModal(false)
+            setPendingVisitToken(null)
+            setSpendAmount("")
+            pauseFor(3000)
+        } else {
+            toast.error(res.error || "Error al registrar")
+            // Even on error, we reset to allow retry
+            pauseFor(2000)
+        }
+    }
+
+    const handleConfirmAmount = () => {
+        if (!pendingVisitToken) return
+        submitVisit(pendingVisitToken, parseFloat(spendAmount) || 0)
+    }
+
+    const pauseFor = (ms: number) => {
+        setTimeout(() => setIsProcessing(false), ms)
+    }
+
+    return (
+        <div className="w-full max-w-md mx-auto relative">
+            <div className="bg-white rounded-xl shadow-lg border border-slate-100 p-4">
+                <div className="text-center mb-4">
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center justify-center gap-2">
+                        <ScanLine className="w-5 h-5 text-indigo-600" /> Escaner de Lealtad
+                    </h2>
+                    <p className="text-sm text-slate-500">Escanea el QR del cliente o su premio</p>
+                </div>
+
+                <div id="reader" className="w-full overflow-hidden rounded-lg"></div>
+
+                {isProcessing && !showAmountModal && (
+                    <div className="mt-4 p-3 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" /> Procesando...
+                    </div>
+                )}
+            </div>
+
+            {/* AMOUNT INPUT MODAL */}
+            {showAmountModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900">Registrar Consumo</h3>
+                                <p className="text-slate-500 text-sm">Cliente: {customerName}</p>
+                            </div>
+                            <button onClick={() => { setShowAmountModal(false); setPendingVisitToken(null); setIsProcessing(false); }} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Monto del Ticket</label>
+                                <div className="flex items-center gap-2">
+                                    <DollarSign className="w-6 h-6 text-slate-400" />
+                                    <input
+                                        type="number"
+                                        value={spendAmount}
+                                        onChange={(e) => setSpendAmount(e.target.value)}
+                                        placeholder="0.00"
+                                        autoFocus
+                                        className="bg-transparent text-3xl font-bold text-slate-900 w-full outline-none placeholder:text-slate-300"
+                                    />
+                                </div>
+                            </div>
+
+                            <button className="w-full py-3 bg-slate-100 border border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-2 text-slate-500 hover:bg-slate-200 transition-colors">
+                                <Camera className="w-4 h-4" />
+                                <span className="font-medium">Adjuntar Foto del Ticket</span>
+                            </button>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => { setShowAmountModal(false); setPendingVisitToken(null); setIsProcessing(false); }}
+                                className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleConfirmAmount}
+                                disabled={!spendAmount}
+                                className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
+                            >
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}

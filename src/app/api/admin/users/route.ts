@@ -36,20 +36,20 @@ export async function GET() {
         })
 
         // 2. Fetch local data (Plans, Survey Counts)
-        const userIds = clerkUsers.data.map(u => u.id)
-
-        const userSettings = await prisma.userSettings.findMany({
-            where: { userId: { in: userIds } }
-        })
+        // Fetch ALL user settings, not just matching Clerk IDs
+        const userSettings = await prisma.userSettings.findMany()
+        const allUserIds = userSettings.map(u => u.userId)
 
         const surveyCounts = await prisma.survey.groupBy({
             by: ['userId'],
             _count: { id: true },
-            where: { userId: { in: userIds } }
+            where: { userId: { in: allUserIds } }
         })
 
-        // 3. Merge Data
-        const users = clerkUsers.data.map(u => {
+        // 3. Merge Data (Prioritize Clerk, but include DB-only users)
+
+        // a) Map Clerk Users
+        const mappedClerkUsers = clerkUsers.data.map((u: any) => {
             const settings = userSettings.find(s => s.userId === u.id)
             const count = surveyCounts.find(c => c.userId === u.id)
 
@@ -62,9 +62,32 @@ export async function GET() {
                 createdAt: u.createdAt,
                 banned: u.banned,
                 plan: settings?.plan || 'FREE',
-                surveyCount: count?._count.id || 0
+                surveyCount: count?._count.id || 0,
+                source: 'CLERK'
             }
         })
+
+        // b) Find DB-only users (Restored but not in Clerk yet)
+        const clerkUserIds = new Set(clerkUsers.data.map((u: any) => u.id))
+        const dbOnlyUsers = userSettings.filter(u => !clerkUserIds.has(u.userId))
+
+        const mappedDbUsers = dbOnlyUsers.map(u => {
+            const count = surveyCounts.find(c => c.userId === u.userId)
+            return {
+                id: u.userId,
+                name: u.businessName || 'Usuario Restaurado (DB)',
+                email: 'Restored / No Login', // Cannot know email if not in Clerk (unless we store it, but UserSettings usage varies)
+                image: null,
+                lastLogin: null,
+                createdAt: null,
+                banned: false,
+                plan: u.plan || 'FREE',
+                surveyCount: count?._count.id || 0,
+                source: 'DB_ONLY'
+            }
+        })
+
+        const users = [...mappedClerkUsers, ...mappedDbUsers]
 
         return NextResponse.json(users)
     } catch (error) {

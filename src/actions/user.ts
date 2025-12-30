@@ -17,5 +17,29 @@ export async function completeTour() {
         }
     })
 
+
     revalidatePath('/dashboard')
+}
+
+export async function updateUserProfile(data: { phone: string, photoUrl: string }) {
+    const { userId } = await auth()
+    if (!userId) throw new Error('Unauthorized')
+
+    await prisma.userSettings.upsert({
+        where: { userId },
+        update: {
+            phone: data.phone,
+            photoUrl: data.photoUrl,
+            isOnboarded: true // Assuming this completes basic onboarding
+        },
+        create: {
+            userId,
+            phone: data.phone,
+            photoUrl: data.photoUrl,
+            isOnboarded: true
+        }
+    })
+
+    revalidatePath('/ops')
+    return { success: true }
 }

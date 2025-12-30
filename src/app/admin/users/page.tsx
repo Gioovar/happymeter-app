@@ -188,7 +188,7 @@ export default function AdminUsersPage() {
                                             <td className="p-4 text-sm text-gray-500">
                                                 <div className="flex items-center gap-1">
                                                     <Calendar className="w-3 h-3" />
-                                                    {format(new Date(user.createdAt), 'dd MMM yyyy')}
+                                                    {user.createdAt ? format(new Date(user.createdAt), 'dd MMM yyyy') : '-'}
                                                 </div>
                                             </td>
                                             <td className="p-4 text-right">
