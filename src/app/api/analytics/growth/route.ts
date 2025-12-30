@@ -86,26 +86,47 @@ export async function GET() {
         // But Maps iterate in insertion order. Since we inserted current month first (i=0), it's reverse chrono.
         // Let's fix loop to be chronological:
 
+        // Fetch Users and Surveys for the period
+        const users = await prisma.userSettings.findMany({
+            where: { createdAt: { gte: sixMonthsAgo } },
+            select: { createdAt: true }
+        })
+
+        const surveys = await prisma.survey.findMany({
+            where: { createdAt: { gte: sixMonthsAgo } },
+            select: { createdAt: true }
+        })
+
         const chartData = []
         for (let i = 5; i >= 0; i--) {
             const d = new Date()
             d.setMonth(d.getMonth() - i)
             const key = monthNames[d.getMonth()]
-            // Need to re-sum because the map filler was separate... actually let's just redo simpler.
 
-            // Filter sales for this month
-            const monthSales = sales.filter(s =>
-                s.createdAt.getMonth() === d.getMonth() &&
-                s.createdAt.getFullYear() === d.getFullYear()
-            ).reduce((acc, curr) => acc + curr.amount, 0)
+            // Filter for specific month
+            const isSameMonth = (date: Date) =>
+                date.getMonth() === d.getMonth() &&
+                date.getFullYear() === d.getFullYear()
+
+            const monthRevenue = sales
+                .filter(s => isSameMonth(s.createdAt))
+                .reduce((acc, curr) => acc + curr.amount, 0)
+
+            const monthUsers = users.filter(u => isSameMonth(u.createdAt)).length
+            const monthSurveys = surveys.filter(s => isSameMonth(s.createdAt)).length
 
             chartData.push({
                 name: key,
-                revenue: monthSales,
-                // We could also add "users" growth here if we fetched users with timestamps
-                users: 0 // Placeholder or separate query
+                revenue: monthRevenue,
+                newCreators: monthUsers,
+                surveys: monthSurveys,
+                churn: 0 // Placeholder
             })
         }
+
+        const newSurveysCount = await prisma.survey.count({
+            where: { createdAt: { gte: thirtyDaysAgo } }
+        })
 
         // Calculate net growth
         const netGrowth = activeUsersCount - 0 // Simplify for MVP
@@ -115,7 +136,7 @@ export async function GET() {
                 totalRevenue: revenue,
                 totalNew: newUsersCount,
                 totalChurn: 0,
-                totalSurveys: 0, // Pending implementation
+                totalSurveys: newSurveysCount,
                 netGrowth: netGrowth
             },
             chartData: chartData // Rename 'chart' to 'chartData' as expected by frontend
