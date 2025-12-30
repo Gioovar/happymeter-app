@@ -64,6 +64,11 @@ const menuItems = [
         icon: ScanLine
     },
     {
+        title: 'Clientes',
+        href: '/dashboard/loyalty?tab=clients',
+        icon: Users
+    },
+    {
         title: 'Juegos',
         href: '/dashboard/games',
         icon: Gamepad2

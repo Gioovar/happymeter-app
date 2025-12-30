@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import { Plus, Save, Gift, Trophy, QrCode, Zap, Layers, BarChart3, ArrowRight, Sparkles, Crown, X, Pencil, Eye, Utensils, Wine, Star, Camera, Users, Loader2 } from "lucide-react"
 import { CustomerLoyaltyCard } from "./CustomerLoyaltyCard"
 import { cn } from "@/lib/utils"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { VisitsLoyaltyView } from "./VisitsLoyaltyView"
 import { PointsLoyaltyView } from "./PointsLoyaltyView"
 import { CustomerList } from "./CustomerList"
@@ -331,6 +331,14 @@ interface LoyaltyDashboardProps {
 export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
     // State for the View Mode: 'hub' | 'advanced' | 'visits' | 'points'
     const [viewMode, setViewMode] = useState<'hub' | 'advanced' | 'visits' | 'points'>('hub')
+
+    // Force Advanced View if tab is present in URL
+    const searchParams = useSearchParams()
+    useEffect(() => {
+        if (searchParams.get('tab')) {
+            setViewMode('advanced')
+        }
+    }, [searchParams])
     const [targetTab, setTargetTab] = useState('overview')
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
     const [showSharedQr, setShowSharedQr] = useState(false)
@@ -401,6 +409,13 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
                         >
                             <Users className="w-5 h-5" />
                             <span>Gestionar Equipo Operativo</span>
+                        </button>
+                        <button
+                            onClick={() => setViewMode('advanced')}
+                            className="px-6 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
+                        >
+                            <BarChart3 className="w-5 h-5" />
+                            <span>Panel Avanzado (Clientes, Promos)</span>
                         </button>
                     </div>
 
@@ -545,9 +560,19 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
     )
 }
 
-function AdvancedLoyaltyView({ userId, program, onBack, initialTab = 'overview' }: any) {
+function AdvancedLoyaltyView({ userId, program, onBack, initialTab: propInitialTab = 'overview' }: any) {
     const router = useRouter()
+
+    // Initialize Dashboard State
+    const searchParams = useSearchParams()
+    const initialTab = searchParams.get('tab') || propInitialTab
     const [activeTab, setActiveTab] = useState(initialTab)
+
+    // Update activeTab when URL changes
+    useEffect(() => {
+        const tab = searchParams.get('tab')
+        if (tab) setActiveTab(tab)
+    }, [searchParams])
 
     // -- RULES STATE --
     // State for existing features
