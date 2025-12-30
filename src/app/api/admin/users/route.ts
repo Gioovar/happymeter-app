@@ -8,10 +8,18 @@ const ADMIN_EMAILS = ['admin@happymeter.com', 'gioovar@gmail.com']
 
 async function isAdmin() {
     const user = await currentUser()
-    if (!user || !user.emailAddresses.some(email => ADMIN_EMAILS.includes(email.emailAddress))) {
-        return false
-    }
-    return true
+    if (!user) return false
+
+    // Check Database Role
+    const dbUser = await prisma.userSettings.findUnique({
+        where: { userId: user.id },
+        select: { role: true }
+    })
+
+    if (dbUser?.role === 'SUPER_ADMIN') return true
+
+    // Fallback
+    return user.emailAddresses.some(email => ADMIN_EMAILS.includes(email.emailAddress))
 }
 
 export async function GET() {
