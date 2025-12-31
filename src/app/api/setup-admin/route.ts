@@ -9,8 +9,8 @@ export async function GET(request: NextRequest) {
     const secret = searchParams.get('secret')
 
     // 1. Simple protection
-    if (secret !== 'HAPPY_GOD_MODE_2025') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (secret?.trim() !== 'HAPPY_GOD_MODE_2025') {
+        return NextResponse.json({ error: 'Unauthorized', received: secret }, { status: 401 })
     }
 
     if (!email) {
