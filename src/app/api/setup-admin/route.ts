@@ -5,12 +5,19 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
-    const email = searchParams.get('email')
-    const secret = searchParams.get('secret')
+    // 0. Manual Parse Fallback (in case nextUrl fails)
+    const url = new URL(request.url)
+    const secret = searchParams.get('secret') || url.searchParams.get('secret')
+    const email = searchParams.get('email') || url.searchParams.get('email')
 
     // 1. Simple protection
     if (secret?.trim() !== 'HAPPY_GOD_MODE_2025') {
-        return NextResponse.json({ error: 'Unauthorized', received: secret }, { status: 401 })
+        return NextResponse.json({
+            error: 'Unauthorized',
+            received: secret,
+            url: request.url,
+            tips: "Check if the URL contains ?secret=HAPPY_GOD_MODE_2025"
+        }, { status: 401 })
     }
 
     if (!email) {
