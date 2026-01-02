@@ -396,7 +396,7 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
 
     if (viewMode === 'hub') {
         return (
-            <div className="min-h-screen bg-[#0a0a0f] p-4 lg:p-8 font-sans">
+            <div className="min-h-screen bg-[#0a0a0f] p-2 sm:p-4 lg:p-8 font-sans">
                 <div className="max-w-6xl mx-auto">
                     <div className="mb-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <div>
@@ -421,40 +421,45 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
                         </div>
                     </div>
 
+
                     {/* QUICK INVITE MODAL */}
-                    {isInviteModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
-                            <div className="bg-[#111] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden p-8 relative">
-                                <button
-                                    onClick={() => setIsInviteModalOpen(false)}
-                                    className="absolute top-4 right-4 p-2 bg-white/5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
+                    {
+                        isInviteModalOpen && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+                                <div className="bg-[#111] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden p-8 relative">
+                                    <button
+                                        onClick={() => setIsInviteModalOpen(false)}
+                                        className="absolute top-4 right-4 p-2 bg-white/5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
 
-                                <div className="text-center mb-6">
-                                    <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
-                                        <Users className="w-8 h-8 text-indigo-400" />
+                                    <div className="text-center mb-6">
+                                        <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
+                                            <Users className="w-8 h-8 text-indigo-400" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-white mb-2">Invitar Operador</h3>
+                                        <p className="text-gray-400 text-sm">Invita a meseros o personal operativo. Recibirán un correo para unirse.</p>
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-2">Invitar Operador</h3>
-                                    <p className="text-gray-400 text-sm">Invita a meseros o personal operativo. Recibirán un correo para unirse.</p>
-                                </div>
 
-                                <StaffInviteForm className="flex-col" />
+                                    <StaffInviteForm className="flex-col" />
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )
+                    }
 
                     {/* SHARED QR MODAL */}
-                    {qrProgramData && (
-                        <ProgramSharedQrModal
-                            isOpen={showSharedQr}
-                            onClose={() => setShowSharedQr(false)}
-                            programName={qrProgramData.name}
-                            programType={qrProgramData.type}
-                            programUrl={qrProgramData.url}
-                        />
-                    )}
+                    {
+                        qrProgramData && (
+                            <ProgramSharedQrModal
+                                isOpen={showSharedQr}
+                                onClose={() => setShowSharedQr(false)}
+                                programName={qrProgramData.name}
+                                programType={qrProgramData.type}
+                                programUrl={qrProgramData.url}
+                            />
+                        )
+                    }
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         {/* OPTION 1: VISITS */}
@@ -547,8 +552,8 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                </div >
+            </div >
         )
     }
 

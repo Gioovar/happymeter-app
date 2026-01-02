@@ -12,7 +12,7 @@ export default async function LoyaltyPage() {
     const program = await getLoyaltyProgram(userId)
 
     return (
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="p-0 md:p-8 max-w-5xl mx-auto">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-white bg-clip-text text-transparent inline-block">
                     Programa de Lealtad (Avanzado)
