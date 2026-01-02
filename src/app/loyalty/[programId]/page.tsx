@@ -166,7 +166,7 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                                         footerActionLink: "text-violet-600 hover:text-violet-700"
                                     }
                                 }}
-                                signUpUrl={`/sign-up?redirect_url=/loyalty/${params.programId}`}
+                                signUpUrl={`/sign-up?redirect_url=/loyalty/${params.programId}&program_id=${params.programId}`}
                                 forceRedirectUrl={`/loyalty/${params.programId}`}
                                 signUpForceRedirectUrl={`/loyalty/${params.programId}`}
                             />
