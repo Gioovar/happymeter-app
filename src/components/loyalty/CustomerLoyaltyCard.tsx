@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import { unlockReward, getMemberLoyaltyPrograms } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet } from "lucide-react"
+import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useClerk, useUser } from "@clerk/nextjs"
 import Link from "next/link"
@@ -186,6 +186,31 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             </div>
                         </div>
                     )}
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <button
+                            onClick={() => toast.info("Próximamente: Sistema de Reservas", {
+                                description: "Pronto podrás reservar tu mesa directamente desde aquí."
+                            })}
+                            className="bg-[#1a1a24] hover:bg-[#20202b] text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] border border-white/5"
+                        >
+                            <Calendar className="w-6 h-6 text-violet-400" />
+                            <span className="text-sm font-bold">Reservar</span>
+                        </button>
+
+                        <button
+                            onClick={() => toast.info("Próximamente: Menú Digital", {
+                                description: "Pronto podrás ver el menú completo aquí."
+                            })}
+                            className="bg-[#1a1a24] hover:bg-[#20202b] text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] border border-white/5"
+                        >
+                            <div className="w-6 h-6 rounded-md border-2 border-dashed border-gray-500 flex items-center justify-center">
+                                <span className="text-[10px] font-bold">M</span>
+                            </div>
+                            <span className="text-sm font-bold">Menú</span>
+                        </button>
+                    </div>
 
                     {/* Content Injection (Promotions) */}
                     {children}
