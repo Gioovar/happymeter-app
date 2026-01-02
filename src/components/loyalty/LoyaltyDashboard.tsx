@@ -172,31 +172,33 @@ function PremiumTabs({ activeTab, setActiveTab, children }: any) {
 
     return (
         <div className="w-full space-y-8">
-            <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 w-fit backdrop-blur-sm">
-                {tabs.map(tab => {
-                    const Icon = tab.icon
-                    const isActive = activeTab === tab.id
-                    return (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={cn(
-                                "flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden",
-                                isActive
-                                    ? "text-white shadow-lg"
-                                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                            )}
-                        >
-                            {isActive && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 opacity-100" />
-                            )}
-                            <div className="relative flex items-center gap-2 z-10">
-                                <Icon className={cn("w-4 h-4", isActive ? "text-white" : "text-gray-500")} />
-                                {tab.label}
-                            </div>
-                        </button>
-                    )
-                })}
+            <div className="flex overflow-x-auto pb-2 -mb-2 lg:mb-0 lg:pb-0 scrollbar-hide max-w-full">
+                <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 w-fit backdrop-blur-sm mx-auto lg:mx-0 min-w-min">
+                    {tabs.map(tab => {
+                        const Icon = tab.icon
+                        const isActive = activeTab === tab.id
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={cn(
+                                    "flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden whitespace-nowrap shrink-0",
+                                    isActive
+                                        ? "text-white shadow-lg"
+                                        : "text-gray-400 hover:text-white hover:bg-white/5"
+                                )}
+                            >
+                                {isActive && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 opacity-100" />
+                                )}
+                                <div className="relative flex items-center gap-2 z-10">
+                                    <Icon className={cn("w-4 h-4", isActive ? "text-white" : "text-gray-500")} />
+                                    {tab.label}
+                                </div>
+                            </button>
+                        )
+                    })}
+                </div>
             </div>
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {children}
