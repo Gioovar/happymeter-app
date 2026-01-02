@@ -2,7 +2,7 @@
     "name": "Happy Meter Dashboard",
     "short_name": "HappyMeter",
     "description": "Gestiona y analiza la satisfacción de tus clientes en tiempo real.",
-    "start_url": "/",
+    "start_url": "/app",
     "display": "standalone",
     "background_color": "#0a0a0a",
     "theme_color": "#8b5cf6",

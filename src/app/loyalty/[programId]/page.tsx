@@ -1,5 +1,6 @@
 "use client"
 
+import { InstallPwa } from "@/components/pwa/InstallPwa"
 import { useState, useEffect } from "react"
 import { CustomerLoyaltyCard } from "@/components/loyalty/CustomerLoyaltyCard"
 import { syncClerkLoyaltyCustomer, updateLoyaltyProfile, getCustomerStatus, getPublicLoyaltyProgramInfo } from "@/actions/loyalty"
@@ -17,6 +18,7 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
     const [programInfo, setProgramInfo] = useState<any>(null)
     const [showProfileForm, setShowProfileForm] = useState(false)
     const [missingPhone, setMissingPhone] = useState(false)
+    const [showInstallPrompt, setShowInstallPrompt] = useState(false)
 
     // Profile Data
     const [name, setName] = useState("")
@@ -78,6 +80,8 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
             toast.success("¡Perfil actualizado!")
             setCustomer(res.customer)
             setShowProfileForm(false)
+            // Trigger install prompt
+            setTimeout(() => setShowInstallPrompt(true), 1500)
         } else {
             toast.error(res.error)
         }
@@ -171,6 +175,7 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
             </SignedOut>
 
             <SignedIn>
+                <InstallPwa mode="modal" isOpen={showInstallPrompt} onClose={() => setShowInstallPrompt(false)} />
                 {isLoading ? (
                     <div className="min-h-screen flex items-center justify-center">
                         <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
