@@ -152,6 +152,7 @@ export async function getMemberLoyaltyPrograms(clerkUserId: string) {
 // --- Notifications System ---
 
 export async function sendLoyaltyNotification(programId: string, title: string, message: string) {
+    console.log(`Sending notification for program ${programId}: ${title}`)
     try {
         const notification = await prisma.loyaltyNotification.create({
             data: {
@@ -160,6 +161,7 @@ export async function sendLoyaltyNotification(programId: string, title: string, 
                 message
             }
         })
+        console.log("Notification created:", notification)
         return { success: true, notification }
     } catch (error) {
         console.error("Error sending notification:", error)
@@ -168,19 +170,29 @@ export async function sendLoyaltyNotification(programId: string, title: string, 
 }
 
 export async function getLoyaltyNotifications(programId: string, customerId: string) {
+    console.log(`Fetching notifications for program ${programId}, customer ${customerId}`)
     try {
         const notifications = await prisma.loyaltyNotification.findMany({
             where: { programId },
             orderBy: { createdAt: 'desc' },
             take: 20 // Limit to last 20 messages
         })
+        console.log(`Found ${notifications.length} notifications`)
 
         const customer = await prisma.loyaltyCustomer.findUnique({
             where: { id: customerId },
             select: { lastNotificationReadAt: true }
         })
 
-        if (!customer) return { success: false, error: "Cliente no encontrado" }
+        // If trying to load history for admin (dummy-admin), just return notifications
+        if (customerId === "dummy-admin") {
+            return { success: true, notifications, unreadCount: 0 }
+        }
+
+        if (!customer) {
+            console.log("Customer not found for notifications")
+            return { success: false, error: "Cliente no encontrado" }
+        }
 
         const lastRead = customer.lastNotificationReadAt ? new Date(customer.lastNotificationReadAt).getTime() : 0
 
