@@ -486,7 +486,7 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
                                         setQrProgramData({
                                             name: program.businessName || "Programa de Visitas",
                                             type: "Visits",
-                                            url: `https://happymeter.app/loyalty/join/${program.id}`
+                                            url: `https://www.happymeters.com/loyalty/join/${program.id}`
                                         })
                                         setShowSharedQr(true)
                                     }}
@@ -520,7 +520,7 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
                                         setQrProgramData({
                                             name: program.businessName || "Programa de Puntos",
                                             type: "Points",
-                                            url: `https://happymeter.app/loyalty/join/${program.id}`
+                                            url: `https://www.happymeters.com/loyalty/join/${program.id}`
                                         })
                                         setShowSharedQr(true)
                                     }}
