@@ -9,8 +9,9 @@ export default function Page() {
     const intent = searchParams.get('intent')
     const plan = searchParams.get('plan')
     const interval = searchParams.get('interval')
+    const finalRedirect = searchParams.get('redirect_url')
 
-    let redirectUrl = '/api/auth-callback'
+    let redirectUrl = finalRedirect || '/api/auth-callback'
 
     if (intent === 'creator') {
         redirectUrl = '/api/auth-callback?signup_intent=creator'
