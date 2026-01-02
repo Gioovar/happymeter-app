@@ -344,6 +344,17 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                 </div>
             </div>
 
+            {/* FLOATING QR BUTTON (Bottom) */}
+            <div className="absolute bottom-6 left-0 right-0 z-30 px-6 flex justify-center pointer-events-none">
+                <button
+                    onClick={() => setShowQr(true)}
+                    className="pointer-events-auto bg-gradient-to-r from-orange-500 to-pink-500 text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 hover:scale-105 transition-transform active:scale-95 border-2 border-white/20 text-sm tracking-wide"
+                >
+                    <QrCode className="w-5 h-5" />
+                    MOSTRAR MI CÓDIGO
+                </button>
+            </div>
+
             {/* Notifications Modal (Portal) */}
             {showNotifications && mounted && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
