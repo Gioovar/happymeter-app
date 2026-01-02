@@ -398,25 +398,27 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
         return (
             <div className="min-h-screen bg-[#0a0a0f] p-8 font-sans">
                 <div className="max-w-6xl mx-auto">
-                    <div className="mb-12 flex items-center justify-between">
+                    <div className="mb-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <div>
                             <h1 className="text-4xl font-bold text-white mb-2">Centro de Lealtad y Gamificación</h1>
                             <p className="text-gray-400">Selecciona el tipo de programa que deseas gestionar.</p>
                         </div>
-                        <button
-                            onClick={() => setIsInviteModalOpen(true)}
-                            className="px-6 py-3 bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600/20 text-indigo-400 rounded-xl font-medium transition-colors flex items-center gap-2"
-                        >
-                            <Users className="w-5 h-5" />
-                            <span>Gestionar Equipo Operativo</span>
-                        </button>
-                        <button
-                            onClick={() => setViewMode('advanced')}
-                            className="px-6 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
-                        >
-                            <BarChart3 className="w-5 h-5" />
-                            <span>Panel Avanzado (Clientes, Promos)</span>
-                        </button>
+                        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
+                            <button
+                                onClick={() => setIsInviteModalOpen(true)}
+                                className="px-6 py-3 bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600/20 text-indigo-400 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
+                            >
+                                <Users className="w-5 h-5" />
+                                <span>Gestionar Equipo Operativo</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('advanced')}
+                                className="px-6 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
+                            >
+                                <BarChart3 className="w-5 h-5" />
+                                <span>Panel Avanzado</span>
+                            </button>
+                        </div>
                     </div>
 
                     {/* QUICK INVITE MODAL */}
