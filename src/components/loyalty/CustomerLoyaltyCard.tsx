@@ -11,9 +11,10 @@ interface CustomerLoyaltyCardProps {
     customer: any // Prisma type with relations
     filterType?: "all" | "visits" | "points"
     children?: React.ReactNode
+    className?: string
 }
 
-export function CustomerLoyaltyCard({ customer, filterType = "all", children }: CustomerLoyaltyCardProps) {
+export function CustomerLoyaltyCard({ customer, filterType = "all", children, className }: CustomerLoyaltyCardProps) {
     // ... existing hook logic
     const { program, visits, currentVisits } = customer
     const [selectedReward, setSelectedReward] = useState<any | null>(null)
@@ -44,7 +45,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children }: 
     const tierName = customer.tier?.name || "Miembro"
 
     return (
-        <div className="h-full w-full bg-[#0a0a0f] text-white relative overflow-hidden font-sans">
+        <div className={cn("h-full w-full bg-[#0a0a0f] text-white relative overflow-hidden font-sans", className)}>
             {/* Dynamic Background Glows */}
             <div
                 className="absolute top-[-20%] left-[-20%] w-[80%] h-[50%] rounded-full blur-[100px] pointer-events-none opacity-40"

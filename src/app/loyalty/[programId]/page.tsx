@@ -79,11 +79,7 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
     }
 
     if (customer) {
-        return (
-            <div className="min-h-screen w-full">
-                <CustomerLoyaltyCard customer={customer} />
-            </div>
-        )
+        return <CustomerLoyaltyCard customer={customer} className="min-h-screen" />
     }
 
     return (
