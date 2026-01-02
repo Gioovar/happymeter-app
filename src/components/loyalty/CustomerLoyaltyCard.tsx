@@ -5,7 +5,7 @@ import { createPortal } from "react-dom"
 import { QRCodeSVG } from "qrcode.react"
 import { unlockReward, getMemberLoyaltyPrograms, getLoyaltyNotifications, markNotificationsAsRead } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar, Bell } from "lucide-react"
+import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar, Bell, QrCode } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useClerk, useUser } from "@clerk/nextjs"
 import Link from "next/link"
@@ -158,6 +158,13 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                         {/* Card Gloss Effect */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 z-0" />
 
+                        {/* QR Hint Button (New) */}
+                        <div className="absolute top-6 right-6 z-20">
+                            <div className="p-2 bg-white/10 rounded-full backdrop-blur-md border border-white/10 group-hover:bg-white/20 transition-colors shadow-lg">
+                                <QrCode className="w-5 h-5 text-white" />
+                            </div>
+                        </div>
+
                         {/* Chip & Logo */}
                         <div className="relative z-10 flex justify-between items-start mb-12">
                             <div
@@ -173,11 +180,10 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                 <div className="h-full w-[1px] bg-black/20 absolute left-1/3" />
                                 <div className="h-full w-[1px] bg-black/20 absolute right-1/3" />
                             </div>
-                            <div className="flex items-center gap-3 opacity-90">
+                            <div className="flex items-center gap-3 opacity-90 pr-12">
                                 <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-[#0a0a0f] border border-white/10 shadow-sm" style={{ color: tierColor }}>
                                     {tierName.toUpperCase().includes("MIEMBRO") ? tierName : `MIEMBRO ${tierName}`}
                                 </span>
-                                <CreditCard className="w-5 h-5 text-white/50" />
                             </div>
                         </div>
 
@@ -210,9 +216,9 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                         </div>
                     </div>
 
-                    {/* QR Code Popover */}
-                    {showQr && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowQr(false)}>
+                    {/* QR Code Popover (Portal) */}
+                    {showQr && mounted && createPortal(
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowQr(false)}>
                             <div className="bg-white p-6 rounded-3xl shadow-2xl scale-100 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
                                 <div className="mb-4 text-center">
                                     <h3 className="text-black font-bold text-lg">Tu Código de Miembro</h3>
@@ -229,8 +235,10 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                 </div>
                                 <p className="mt-4 text-center font-mono text-sm font-bold text-gray-900 tracking-widest">{customer.magicToken}</p>
                             </div>
-                        </div>
+                        </div>,
+                        document.body
                     )}
+
 
                     {/* Action Buttons */}
                     <div className="grid grid-cols-2 gap-4">
