@@ -106,6 +106,24 @@ export async function getLoyaltyProgram(userId: string) {
 }
 
 
+
+export async function getPublicLoyaltyProgramInfo(programId: string) {
+    try {
+        const program = await prisma.loyaltyProgram.findUnique({
+            where: { id: programId },
+            select: {
+                businessName: true,
+                logoUrl: true,
+                themeColor: true,
+                cardDesign: true
+            }
+        })
+        return program
+    } catch (error) {
+        return null
+    }
+}
+
 // --- Customer Actions ---
 
 export async function registerLoyaltyCustomer(programId: string, data: {

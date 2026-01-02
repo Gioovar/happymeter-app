@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { CustomerLoyaltyCard } from "@/components/loyalty/CustomerLoyaltyCard"
-import { syncClerkLoyaltyCustomer, updateLoyaltyProfile, getCustomerStatus } from "@/actions/loyalty"
+import { syncClerkLoyaltyCustomer, updateLoyaltyProfile, getCustomerStatus, getPublicLoyaltyProgramInfo } from "@/actions/loyalty"
 import { toast } from "sonner"
 import { Phone, ArrowRight, Loader2, Sparkles, User, Calendar, KeyRound } from "lucide-react"
 import { SignIn, SignUp, useUser, SignedIn, SignedOut, useClerk } from "@clerk/nextjs"
@@ -14,6 +14,7 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
     const [isLoading, setIsLoading] = useState(true)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [customer, setCustomer] = useState<any>(null)
+    const [programInfo, setProgramInfo] = useState<any>(null)
     const [showProfileForm, setShowProfileForm] = useState(false)
     const [missingPhone, setMissingPhone] = useState(false)
 
@@ -21,6 +22,13 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
     const [name, setName] = useState("")
     const [username, setUsername] = useState("")
     const [birthday, setBirthday] = useState("")
+
+    useEffect(() => {
+        // Load Public Program Info immediately
+        getPublicLoyaltyProgramInfo(params.programId).then(info => {
+            if (info) setProgramInfo(info)
+        })
+    }, [params.programId])
 
     useEffect(() => {
         if (!isClerkLoaded) return
@@ -92,7 +100,7 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                     </div>
                     <h2 className="text-xl font-bold mb-3">Falta tu celular</h2>
                     <p className="text-gray-400 mb-8 text-sm leading-relaxed">
-                        Para acumular puntos y proteger tu cuenta, necesitamos vincular un número de teléfono a tu perfil.
+                        Para acumular puntos en <strong>{programInfo?.businessName || "este negocio"}</strong>, necesitamos vincular un número de teléfono a tu perfil.
                     </p>
 
                     <button
@@ -130,11 +138,15 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
 
                     <div className="w-full max-w-md relative z-10 animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center">
                         <div className="text-center mb-8">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/25 mb-6">
-                                <Sparkles className="w-8 h-8 text-white" />
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/25 mb-6 overflow-hidden">
+                                {programInfo?.logoUrl ? (
+                                    <img src={programInfo.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                                ) : (
+                                    <Sparkles className="w-8 h-8 text-white" />
+                                )}
                             </div>
-                            <h1 className="text-3xl font-bold mb-2">Programa Rewards</h1>
-                            <p className="text-gray-400">Inicia sesión para ver tus puntos</p>
+                            <h1 className="text-3xl font-bold mb-2">{programInfo?.businessName || "Programa Rewards"}</h1>
+                            <p className="text-gray-400">Regístrate para ver tus puntos y recompensas</p>
                         </div>
 
                         <div className="w-full bg-white rounded-2xl overflow-hidden shadow-2xl">
@@ -150,7 +162,8 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                                         footerActionLink: "text-violet-600 hover:text-violet-700"
                                     }
                                 }}
-                                redirectUrl={`/loyalty/${params.programId}`}
+                                forceRedirectUrl={`/loyalty/${params.programId}`}
+                                signUpForceRedirectUrl={`/loyalty/${params.programId}`}
                             />
                         </div>
                     </div>
@@ -200,12 +213,13 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Cumpleaños</label>
                                         <div className="relative group">
-                                            <Calendar className="absolute left-4 top-4 w-5 h-5 text-gray-500 group-focus-within:text-violet-400 transition-colors" />
+                                            <Calendar className="absolute left-4 top-4 w-5 h-5 text-gray-500 group-focus-within:text-violet-400 transition-colors pointer-events-none" />
                                             <input
                                                 type="date"
                                                 value={birthday}
                                                 onChange={e => setBirthday(e.target.value)}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 transition-all font-medium min-h-[58px]"
+                                                style={{ colorScheme: 'dark' }}
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 h-[58px] text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 transition-all font-medium appearance-none text-left"
                                             />
                                         </div>
                                     </div>
