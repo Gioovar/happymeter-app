@@ -86,11 +86,17 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
         }
     }
 
-    // Filter rewards based on filterType
+    // Filter rewards based on filterType and Active status
     const displayedRewards = program?.rewards?.filter((reward: any) => {
+        if (!reward.isActive) return false // Hide inactive
         if (filterType === "visits") return reward.costInVisits > 0
         if (filterType === "points") return reward.costInPoints > 0
         return true
+    }).sort((a: any, b: any) => {
+        // Sort by cost (Visits or Points)
+        const costA = a.costInVisits || a.costInPoints || 0
+        const costB = b.costInVisits || b.costInPoints || 0
+        return costA - costB
     }) || []
 
     const tierColor = customer.tier?.color || "#fbbf24" // Default Gold
@@ -267,7 +273,25 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                     </div>
 
                     {/* Content Injection (Promotions) */}
-                    {children}
+                    {children ? children : (
+                        <div className="space-y-4 mb-6">
+                            {program?.promotions?.map((promo: any) => (
+                                <div key={promo.id} className="relative overflow-hidden rounded-2xl aspect-[2/1] bg-gray-800 shadow-lg group">
+                                    <img src={promo.imageUrl} alt={promo.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                    <div className="absolute bottom-0 left-0 p-4 w-full">
+                                        <h3 className="text-white font-bold text-lg mb-1">{promo.title || "Promoción"}</h3>
+                                        <p className="text-gray-300 text-xs line-clamp-2">{promo.description}</p>
+                                    </div>
+                                    {promo.terms && (
+                                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md">
+                                            <p className="text-[10px] text-gray-300 font-medium">{promo.terms}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     <div className="text-sm text-gray-400 px-2 font-medium">Tus Recompensas</div>
 
