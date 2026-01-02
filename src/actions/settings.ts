@@ -50,6 +50,19 @@ export async function updateSettings(formData: FormData) {
             }
         })
 
+        // Sync to Loyalty Program if exists
+        try {
+            const program = await prisma.loyaltyProgram.findUnique({ where: { userId } })
+            if (program) {
+                await prisma.loyaltyProgram.update({
+                    where: { id: program.id },
+                    data: { businessName }
+                })
+            }
+        } catch (e) {
+            console.error("Error syncing loyalty program name:", e)
+        }
+
         revalidatePath('/dashboard/settings')
         // revalidatePath('/dashboard') // Validation optimization: Avoid refreshing unrelated dashboard components
 
