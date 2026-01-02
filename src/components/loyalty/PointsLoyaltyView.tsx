@@ -115,8 +115,7 @@ export function PointsLoyaltyView({ userId, program, onBack }: PointsLoyaltyView
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-0 pb-20 lg:pb-0">
 
                 {/* LEFT: CONFIGURATION */}
-                <div className="bg-[#111] border border-white/10 rounded-3xl p-6 lg:p-8 flex flex-col gap-8 order-2 lg:order-1 h-fit lg:h-auto lg:overflow-y-auto custom-scrollbar">
-
+                <div className="bg-[#111] border border-white/10 rounded-3xl p-6 lg:p-8 flex flex-col gap-8 h-fit lg:h-auto lg:overflow-y-auto custom-scrollbar">
                     {/* PERCENTAGE SETTING */}
                     <div className="bg-blue-900/10 border border-blue-500/20 p-5 rounded-2xl">
                         <div className="flex flex-col sm:flex-row items-start gap-4">
@@ -217,7 +216,7 @@ export function PointsLoyaltyView({ userId, program, onBack }: PointsLoyaltyView
                 </div>
 
                 {/* RIGHT: PREVIEW */}
-                <div className="order-1 lg:order-2">
+                <div>
                     <div className="bg-[#050505] rounded-[40px] border-[8px] border-[#222] shadow-2xl relative overflow-hidden flex flex-col max-w-[340px] sm:max-w-[400px] mx-auto w-full h-[600px] lg:h-full">
                         {/* Fake Status Bar */}
                         <div className="h-12 bg-black flex justify-between items-center px-6 text-white text-xs font-medium shrink-0 z-20">

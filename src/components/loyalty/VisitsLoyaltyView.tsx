@@ -100,7 +100,7 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-0 pb-20 lg:pb-0">
 
                 {/* LEFT: CONFIGURATION */}
-                <div className="bg-[#111] border border-white/10 rounded-3xl p-6 lg:p-8 h-fit lg:h-auto lg:overflow-y-auto custom-scrollbar order-2 lg:order-1">
+                <div className="bg-[#111] border border-white/10 rounded-3xl p-6 lg:p-8 h-fit lg:h-auto lg:overflow-y-auto custom-scrollbar">
                     <h3 className="text-lg font-bold text-white mb-6 sticky top-0 bg-[#111] z-10 py-2 border-b border-white/5">
                         Escalera de Premios
                     </h3>
@@ -143,7 +143,7 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
                 </div>
 
                 {/* RIGHT: PREVIEW */}
-                <div className="order-1 lg:order-2">
+                <div>
                     <div className="bg-[#050505] rounded-[40px] border-[8px] border-[#222] shadow-2xl relative overflow-hidden flex flex-col max-w-[340px] sm:max-w-[400px] mx-auto w-full h-[600px] lg:h-full">
                         {/* Fake Status Bar */}
                         <div className="h-12 bg-black flex justify-between items-center px-6 text-white text-xs font-medium shrink-0 z-20">
