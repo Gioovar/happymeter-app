@@ -83,21 +83,24 @@ export async function POST(req: Request) {
         })
 
         // If invited as Representative, create Profile
+        /* 
+        // DISABLED due to missing 'state' field in TeamInvitation model
         if (role === 'REPRESENTATIVE' && primaryEmail) {
             const invitation = await prisma.teamInvitation.findUnique({
                 where: { email: primaryEmail }
             })
 
-            if (invitation && invitation.state) {
+            if (invitation && (invitation as any).state) {
                 await prisma.representativeProfile.create({
                     data: {
                         userId: id,
-                        state: invitation.state,
+                        state: (invitation as any).state,
                         commissionRate: 15.0
                     }
                 })
             }
         }
+        */
 
         // Send Welcome Email
         if (primaryEmail) {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { createPromotion, deletePromotion, getPromotions } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { Plus, Trash2, Loader2, ImagePlus } from "lucide-react"
+import { Plus, Trash2, Loader2, ImagePlus, X } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface PromotionsManagerProps {
@@ -72,23 +72,65 @@ export function PromotionsManager({ programId }: PromotionsManagerProps) {
                             <Plus className="w-4 h-4" /> Nueva Promoción
                         </button>
                     </DialogTrigger>
-                    <DialogContent className="bg-[#111] border-white/10 text-white">
+                    <DialogContent className="bg-[#111] border-white/10 text-white sm:max-w-md">
                         <DialogHeader>
                             <DialogTitle>Nueva Promoción</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 pt-4">
+                            {/* IMAGE UPLOAD AREA */}
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">URL de Imagen</label>
-                                <div className="flex gap-2">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Imagen de la Promoción</label>
+                                <div className="relative group w-full aspect-video rounded-xl border-2 border-dashed border-white/10 hover:border-indigo-500/50 transition-colors bg-white/5 overflow-hidden flex flex-col items-center justify-center cursor-pointer">
                                     <input
-                                        value={newPromo.imageUrl}
-                                        onChange={(e) => setNewPromo({ ...newPromo, imageUrl: e.target.value })}
-                                        placeholder="https://..."
-                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) {
+                                                if (file.size > 2 * 1024 * 1024) {
+                                                    toast.error("La imagen es muy pesada. Máximo 2MB.")
+                                                    return
+                                                }
+                                                const reader = new FileReader()
+                                                reader.onloadend = () => {
+                                                    setNewPromo({ ...newPromo, imageUrl: reader.result as string })
+                                                }
+                                                reader.readAsDataURL(file)
+                                            }
+                                        }}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                     />
+
+                                    {newPromo.imageUrl ? (
+                                        <>
+                                            <img src={newPromo.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20 pointer-events-none">
+                                                <p className="text-white font-medium flex items-center gap-2">
+                                                    <ImagePlus className="w-5 h-5" /> Cambiar Imagen
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setNewPromo({ ...newPromo, imageUrl: "" })
+                                                }}
+                                                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors z-30"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <div className="text-center p-6">
+                                            <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400 group-hover:text-indigo-400 group-hover:scale-110 transition-all">
+                                                <ImagePlus className="w-6 h-6" />
+                                            </div>
+                                            <p className="text-sm font-medium text-gray-300">Sube una foto</p>
+                                            <p className="text-xs text-gray-500 mt-1">PNG, JPG, WebP (Max 2MB)</p>
+                                        </div>
+                                    )}
                                 </div>
-                                <p className="text-xs text-gray-600 mt-2">Recomendado: 800x400px</p>
                             </div>
+
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Título (Opcional)</label>
                                 <input
@@ -103,14 +145,14 @@ export function PromotionsManager({ programId }: PromotionsManagerProps) {
                                 <textarea
                                     value={newPromo.description}
                                     onChange={(e) => setNewPromo({ ...newPromo, description: e.target.value })}
-                                    placeholder="Detalles de la promo..."
+                                    placeholder="Detalles, restricciones o código..."
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 h-24 resize-none"
                                 />
                             </div>
                             <button
                                 onClick={handleCreate}
                                 disabled={!newPromo.imageUrl}
-                                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50"
+                                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:shadow-none"
                             >
                                 Crear Promoción
                             </button>
