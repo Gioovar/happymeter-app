@@ -5,14 +5,16 @@ import { CustomerLoyaltyCard } from "@/components/loyalty/CustomerLoyaltyCard"
 import { syncClerkLoyaltyCustomer, updateLoyaltyProfile, getCustomerStatus } from "@/actions/loyalty"
 import { toast } from "sonner"
 import { Phone, ArrowRight, Loader2, Sparkles, User, Calendar, KeyRound } from "lucide-react"
-import { SignIn, SignUp, useUser, SignedIn, SignedOut } from "@clerk/nextjs"
+import { SignIn, SignUp, useUser, SignedIn, SignedOut, useClerk } from "@clerk/nextjs"
 
 export default function CustomerLoyaltyPage({ params }: { params: { programId: string } }) {
     const { user, isLoaded: isClerkLoaded } = useUser()
+    const { openUserProfile, signOut } = useClerk()
     const [isLoading, setIsLoading] = useState(true)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [customer, setCustomer] = useState<any>(null)
     const [showProfileForm, setShowProfileForm] = useState(false)
+    const [missingPhone, setMissingPhone] = useState(false)
 
     // Profile Data
     const [name, setName] = useState("")
@@ -31,6 +33,7 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
 
     const handleSync = async () => {
         setIsLoading(true)
+        setMissingPhone(false) // Reset
         const res = await syncClerkLoyaltyCustomer(params.programId)
         if (res.success && res.customer) {
             setCustomer(res.customer)
@@ -41,7 +44,11 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                 setShowProfileForm(true)
             }
         } else {
-            if (res.error) toast.error(res.error)
+            if (res.error?.includes("número de celular")) {
+                setMissingPhone(true)
+            } else if (res.error) {
+                toast.error(res.error)
+            }
         }
         setIsLoading(false)
     }
@@ -71,6 +78,43 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
         return (
             <div className="min-h-screen flex items-center justify-center bg-black">
                 <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+            </div>
+        )
+    }
+
+    if (missingPhone) {
+        return (
+            <div className="min-h-screen bg-black text-white font-sans flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-full max-w-sm bg-gray-900 border border-red-900/50 rounded-2xl p-8 shadow-2xl">
+                    <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Phone className="w-8 h-8 text-red-500" />
+                    </div>
+                    <h2 className="text-xl font-bold mb-3">Falta tu celular</h2>
+                    <p className="text-gray-400 mb-8 text-sm leading-relaxed">
+                        Para acumular puntos y proteger tu cuenta, necesitamos vincular un número de teléfono a tu perfil.
+                    </p>
+
+                    <button
+                        onClick={() => openUserProfile()}
+                        className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-gray-100 transition-colors mb-3 flex items-center justify-center gap-2"
+                    >
+                        Agrega tu Celular
+                    </button>
+
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="w-full bg-transparent border border-white/10 text-white font-medium py-3.5 rounded-xl hover:bg-white/5 transition-colors mb-6"
+                    >
+                        Ya lo agregué
+                    </button>
+
+                    <button
+                        onClick={() => signOut({ redirectUrl: `/loyalty/${params.programId}` })}
+                        className="text-xs text-gray-500 hover:text-gray-300 underline"
+                    >
+                        Cerrar sesión e intentar con otra cuenta
+                    </button>
+                </div>
             </div>
         )
     }
