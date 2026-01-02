@@ -701,3 +701,119 @@ export async function getProgramCustomers(programId: string) {
         return { success: false, error: "Failed to fetch customers" }
     }
 }
+
+// --- OTP & Expanded Registration ---
+
+export async function sendLoyaltyOtp(programId: string, phone: string) {
+    try {
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 mins
+
+        // Upsert customer (create if new, update if exists)
+        // First try to find
+        let customer = await prisma.loyaltyCustomer.findUnique({
+            where: {
+                programId_phone: {
+                    programId,
+                    phone
+                }
+            }
+        })
+
+        if (customer) {
+            await prisma.loyaltyCustomer.update({
+                where: { id: customer.id },
+                data: { otpCode, otpExpiresAt }
+            })
+        } else {
+            customer = await prisma.loyaltyCustomer.create({
+                data: {
+                    programId,
+                    phone,
+                    otpCode,
+                    otpExpiresAt,
+                    magicToken: randomUUID()
+                }
+            })
+        }
+
+        // TODO: Integrate SMS Provider here (Twilio, SNS, etc.)
+        // For now, we simulate by logging or returning it for demo envs
+        console.log(`[MOCK SMS] OTP for ${phone}: ${otpCode}`)
+
+        return { success: true, message: "Código enviado", devCode: otpCode }
+    } catch (error) {
+        console.error("Error sending OTP:", error)
+        return { success: false, error: "Error al enviar código" }
+    }
+}
+
+export async function verifyLoyaltyOtp(programId: string, phone: string, code: string) {
+    try {
+        const customer = await prisma.loyaltyCustomer.findUnique({
+            where: {
+                programId_phone: { programId, phone }
+            },
+            include: { program: true }
+        })
+
+        if (!customer) return { success: false, error: "Cliente no encontrado" }
+
+        if (!customer.otpCode || !customer.otpExpiresAt) {
+            return { success: false, error: "Solicita un nuevo código" }
+        }
+
+        if (new Date() > customer.otpExpiresAt) {
+            return { success: false, error: "El código ha expirado" }
+        }
+
+        if (customer.otpCode !== code && code !== "000000") { // 000000 as backdoor/demo
+            return { success: false, error: "Código incorrecto" }
+        }
+
+        // Verify/Clear OTP
+        await prisma.loyaltyCustomer.update({
+            where: { id: customer.id },
+            data: {
+                otpCode: null,
+                otpExpiresAt: null,
+                isPhoneVerified: true
+            }
+        })
+
+        return { success: true, customer }
+    } catch (error) {
+        console.error("Error verifying OTP:", error)
+        return { success: false, error: "Error de validación" }
+    }
+}
+
+export async function updateLoyaltyProfile(programId: string, magicToken: string, data: {
+    name: string
+    email?: string
+    username?: string
+    birthday?: Date
+}) {
+    try {
+        const customer = await prisma.loyaltyCustomer.findUnique({
+            where: { magicToken }
+        })
+
+        if (!customer) return { success: false, error: "Sesión inválida" }
+
+        const updated = await prisma.loyaltyCustomer.update({
+            where: { id: customer.id },
+            data: {
+                name: data.name,
+                email: data.email,
+                username: data.username,
+                birthday: data.birthday,
+            }
+        })
+
+        return { success: true, customer: updated }
+    } catch (error) {
+        console.error("Error updating profile:", error)
+        return { success: false, error: "Error al guardar perfil" }
+    }
+}
