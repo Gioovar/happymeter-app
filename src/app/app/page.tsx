@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { getMemberLoyaltyPrograms } from "@/actions/loyalty"
 
 export default async function AppEntryPoint() {
-    const { userId } = auth()
+    const { userId } = await auth()
 
     // If not logged in, go to landing page
     if (!userId) redirect("/")
