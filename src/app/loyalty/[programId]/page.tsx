@@ -6,6 +6,7 @@ import { syncClerkLoyaltyCustomer, updateLoyaltyProfile, getCustomerStatus } fro
 import { toast } from "sonner"
 import { Phone, ArrowRight, Loader2, Sparkles, User, Calendar, KeyRound } from "lucide-react"
 import { SignIn, SignUp, useUser, SignedIn, SignedOut, useClerk } from "@clerk/nextjs"
+import { esES } from "@clerk/localizations"
 
 export default function CustomerLoyaltyPage({ params }: { params: { programId: string } }) {
     const { user, isLoaded: isClerkLoaded } = useUser()
