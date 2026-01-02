@@ -1,5 +1,6 @@
 'use server'
 
+import { auth, currentUser } from "@clerk/nextjs/server"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { randomUUID } from "crypto"
@@ -815,5 +816,61 @@ export async function updateLoyaltyProfile(programId: string, magicToken: string
     } catch (error) {
         console.error("Error updating profile:", error)
         return { success: false, error: "Error al guardar perfil" }
+    }
+
+
+}
+
+export async function syncClerkLoyaltyCustomer(programId: string) {
+    try {
+        const user = await currentUser()
+        if (!user) return { success: false, error: "No autorizado" }
+
+        // Get phone from Clerk
+        const phone = user.primaryPhoneNumber?.phoneNumber || user.phoneNumbers[0]?.phoneNumber
+        if (!phone) return { success: false, error: "Se requiere número de celular en tu cuenta" }
+
+        const email = user.primaryEmailAddress?.emailAddress || user.emailAddresses[0]?.emailAddress
+        const name = `${user.firstName || ''} ${user.lastName || ''}`.trim()
+
+        // Upsert customer linked to Clerk ID
+        // We use programId + phone as the unique constraint
+        // But we update clerkUserId
+
+        let customer = await prisma.loyaltyCustomer.findUnique({
+            where: {
+                programId_phone: {
+                    programId,
+                    phone
+                }
+            }
+        })
+
+        if (customer) {
+            customer = await prisma.loyaltyCustomer.update({
+                where: { id: customer.id },
+                data: {
+                    clerkUserId: user.id,
+                    // Update email/name if missing? Maybe not to overwrite user edits.
+                    // But we can backfill
+                }
+            })
+        } else {
+            customer = await prisma.loyaltyCustomer.create({
+                data: {
+                    programId,
+                    phone,
+                    clerkUserId: user.id,
+                    email,
+                    name: name || undefined,
+                    magicToken: randomUUID()
+                }
+            })
+        }
+
+        return { success: true, customer }
+    } catch (error) {
+        console.error("Error syncing Clerk customer:", error)
+        return { success: false, error: "Error al sincronizar cuenta" }
     }
 }

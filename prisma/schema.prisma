@@ -709,6 +709,8 @@ model LoyaltyReward {
 model LoyaltyCustomer {
   id              String   @id @default(uuid())
   programId       String
+  // Identity
+  clerkUserId     String?  // Link to Clerk User
   phone           String
   name            String?
   username        String?  // Requested by user
