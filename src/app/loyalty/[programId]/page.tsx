@@ -249,7 +249,18 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                     customer && <CustomerLoyaltyCard
                         customer={customer}
                         className="min-h-screen"
-                        onEditProfile={() => setShowProfileForm(true)}
+                        onEditProfile={() => {
+                            setName(customer.name || user?.firstName || "")
+                            setUsername(customer.username || "")
+                            // Format date to YYYY-MM-DD for input type="date"
+                            if (customer.birthday) {
+                                const d = new Date(customer.birthday)
+                                setBirthday(d.toISOString().split('T')[0])
+                            } else {
+                                setBirthday("")
+                            }
+                            setShowProfileForm(true)
+                        }}
                     />
                 )}
             </SignedIn>
