@@ -869,8 +869,19 @@ export async function syncClerkLoyaltyCustomer(programId: string) {
                 where: { id: customer.id },
                 data: {
                     clerkUserId: user.id,
-                    // Update email/name if missing? Maybe not to overwrite user edits.
-                    // But we can backfill
+                },
+                include: {
+                    program: {
+                        include: {
+                            rewards: true,
+                            promotions: { where: { isActive: true } }
+                        }
+                    },
+                    redemptions: {
+                        where: { status: 'PENDING' },
+                        include: { reward: true }
+                    },
+                    tier: true
                 }
             })
         } else {
@@ -882,6 +893,19 @@ export async function syncClerkLoyaltyCustomer(programId: string) {
                     email,
                     name: name || undefined,
                     magicToken: randomUUID()
+                },
+                include: {
+                    program: {
+                        include: {
+                            rewards: true,
+                            promotions: { where: { isActive: true } }
+                        }
+                    },
+                    redemptions: {
+                        where: { status: 'PENDING' },
+                        include: { reward: true }
+                    },
+                    tier: true
                 }
             })
         }
