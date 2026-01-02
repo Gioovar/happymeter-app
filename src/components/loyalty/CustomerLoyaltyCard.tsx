@@ -57,9 +57,14 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
             <div className="absolute inset-0 overflow-y-auto p-6 pb-32 scrollbar-hide">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8 relative z-10">
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight">{program?.businessName || "HappyMember"}</h1>
-                        <p className="text-xs text-gray-400 uppercase tracking-widest">Membresía Digital</p>
+                    <div className="flex items-center gap-3">
+                        {program?.logoUrl ? (
+                            <img src={program.logoUrl} alt={program.businessName} className="w-10 h-10 object-contain rounded-full bg-white/10 p-1" />
+                        ) : null}
+                        <div>
+                            <h1 className="text-xl font-bold tracking-tight">{program?.businessName || "Mi Negocio"}</h1>
+                            <p className="text-xs text-gray-400 uppercase tracking-widest">Membresía Digital</p>
+                        </div>
                     </div>
                     <button className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
                         <Menu className="w-5 h-5 text-gray-300" />
@@ -119,7 +124,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             <div className="flex justify-between items-end">
                                 <div>
                                     <div className="text-[10px] text-gray-400 uppercase mb-1 font-medium">Titular</div>
-                                    <div className="font-medium tracking-wide text-lg">{customer.firstName || "Miembro VIP"}</div>
+                                    <div className="font-medium tracking-wide text-lg capitalize">{customer.name || "Miembro"}</div>
                                     <div className="text-[11px] text-gray-400/80 mt-0.5 font-medium">
                                         {program?.pointsPercentage
                                             ? `${customer.currentPoints || 0} Puntos`
