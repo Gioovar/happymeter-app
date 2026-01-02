@@ -124,6 +124,30 @@ export async function getPublicLoyaltyProgramInfo(programId: string) {
     }
 }
 
+
+export async function getMemberLoyaltyPrograms(clerkUserId: string) {
+    try {
+        const memberships = await prisma.loyaltyCustomer.findMany({
+            where: { clerkUserId },
+            include: {
+                program: {
+                    select: {
+                        id: true,
+                        businessName: true,
+                        logoUrl: true,
+                        themeColor: true
+                    }
+                }
+            },
+            orderBy: { lastVisitDate: 'desc' }
+        })
+        return { success: true, memberships }
+    } catch (error) {
+        console.error("Error fetching memberships:", error)
+        return { success: false, error: "Error al cargar tarjetas" }
+    }
+}
+
 // --- Customer Actions ---
 
 export async function registerLoyaltyCustomer(programId: string, data: {

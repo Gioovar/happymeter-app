@@ -1,36 +1,55 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { QRCodeSVG } from "qrcode.react"
-import { unlockReward } from "@/actions/loyalty"
+import { unlockReward, getMemberLoyaltyPrograms } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy } from "lucide-react"
+import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useClerk, useUser } from "@clerk/nextjs"
+import Link from "next/link"
 
 interface CustomerLoyaltyCardProps {
     customer: any // Prisma type with relations
     filterType?: "all" | "visits" | "points"
     children?: React.ReactNode
     className?: string
+    onEditProfile?: () => void
 }
 
-export function CustomerLoyaltyCard({ customer, filterType = "all", children, className }: CustomerLoyaltyCardProps) {
-    // ... existing hook logic
+export function CustomerLoyaltyCard({ customer, filterType = "all", children, className, onEditProfile }: CustomerLoyaltyCardProps) {
+    const { user } = useUser()
+    const { signOut, openUserProfile } = useClerk()
     const { program, visits, currentVisits } = customer
     const [selectedReward, setSelectedReward] = useState<any | null>(null)
     const [showQr, setShowQr] = useState(false)
+    const [showMenu, setShowMenu] = useState(false)
+    const [myCards, setMyCards] = useState<any[]>([])
+
+    // Load other cards when menu opens
+    useEffect(() => {
+        if (showMenu && customer.clerkUserId) {
+            getMemberLoyaltyPrograms(customer.clerkUserId).then(res => {
+                if (res.success) {
+                    setMyCards(res.memberships || [])
+                }
+            })
+        }
+    }, [showMenu, customer.clerkUserId])
 
     // Find current unlocked rewards (pending redemption)
     const pendingRedemptions = customer.redemptions ? customer.redemptions.filter((r: any) => r.status === 'PENDING') : []
 
     const handleUnlock = async (rewardId: string) => {
-        // ... existing unlock logic
+        if (customer.currentPoints < 0 && customer.currentVisits < 0) return // Basic check
+
+        // Optimistic UI could go here
         const res = await unlockReward(customer.id, rewardId)
         if (res.success) {
             toast.success("¡Premio desbloqueado! Muestra el código al personal.")
             window.location.reload()
         } else {
-            toast.error(res.error || "No tienes suficientes visitas")
+            toast.error(res.error || "No tienes suficientes visitas/puntos")
         }
     }
 
@@ -66,7 +85,10 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             <p className="text-xs text-gray-400 uppercase tracking-widest">Membresía Digital</p>
                         </div>
                     </div>
-                    <button className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
+                    <button
+                        onClick={() => setShowMenu(true)}
+                        className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors"
+                    >
                         <Menu className="w-5 h-5 text-gray-300" />
                     </button>
                 </div>
@@ -143,6 +165,28 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                         </div>
                     </div>
 
+                    {/* QR Code Popover */}
+                    {showQr && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowQr(false)}>
+                            <div className="bg-white p-6 rounded-3xl shadow-2xl scale-100 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                                <div className="mb-4 text-center">
+                                    <h3 className="text-black font-bold text-lg">Tu Código de Miembro</h3>
+                                    <p className="text-gray-500 text-xs">Muestra esto al personal para registrar tu visita</p>
+                                </div>
+                                <div className="bg-white p-2 rounded-xl border-2 border-dashed border-gray-200">
+                                    <QRCodeSVG
+                                        value={`https://happymeters.com/admin/scan/${customer.magicToken}`}
+                                        size={200}
+                                        level="H"
+                                        includeMargin={true}
+                                        className="w-full h-auto"
+                                    />
+                                </div>
+                                <p className="mt-4 text-center font-mono text-sm font-bold text-gray-900 tracking-widest">{customer.magicToken}</p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Content Injection (Promotions) */}
                     {children}
 
@@ -155,71 +199,66 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             </div>
                         )}
                         {displayedRewards.map((reward: any) => {
-                            const isPointsBased = reward.costInPoints > 0
-                            const currentMetric = isPointsBased ? (customer.currentPoints || 0) : currentVisits
-                            const targetMetric = isPointsBased ? reward.costInPoints : reward.costInVisits
+                            // Check if locked
+                            let isLocked = true
+                            let progress = 0
+                            let requirementText = ""
 
-                            const isUnlocked = currentMetric >= targetMetric
-                            const pendingRedemption = pendingRedemptions.find((r: any) => r.rewardId === reward.id)
-                            const isPending = !!pendingRedemption
-                            const progress = Math.min(100, (currentMetric / targetMetric) * 100)
+                            if (reward.costInVisits > 0) {
+                                isLocked = (customer.currentVisits || 0) < reward.costInVisits
+                                progress = Math.min(100, ((customer.currentVisits || 0) / reward.costInVisits) * 100)
+                                requirementText = `${reward.costInVisits} visitas requeridas`
+                            } else if (reward.costInPoints > 0) {
+                                isLocked = (customer.currentPoints || 0) < reward.costInPoints
+                                progress = Math.min(100, ((customer.currentPoints || 0) / reward.costInPoints) * 100)
+                                requirementText = `${reward.costInPoints} Puntos requeridos`
+                            }
+
+                            // Check pending redemption
+                            const pending = pendingRedemptions.find((r: any) => r.rewardId === reward.id)
 
                             return (
-                                <div key={reward.id} className="relative group">
-                                    <div className={cn(
-                                        "relative overflow-hidden rounded-2xl p-5 border transition-all duration-300",
-                                        isUnlocked || isPending
-                                            ? "bg-gradient-to-r from-pink-500/20 to-purple-600/20 border-pink-500/50 shadow-[0_0_30px_-10px_rgba(236,72,153,0.3)]"
-                                            : "bg-white/5 border-white/5 hover:bg-white/10"
-                                    )}>
-                                        <div className="flex justify-between items-start mb-4 relative z-10">
-                                            <div className="flex items-center gap-4">
-                                                <div className={cn(
-                                                    "w-10 h-8 rounded-md flex items-center justify-center",
-                                                    isUnlocked || isPending ? "bg-gradient-to-br from-pink-500 to-purple-600 text-white shadow-lg" : "bg-white/10 text-gray-500"
-                                                )}>
-                                                    {isUnlocked || isPending ? <Gift className="w-5 h-5" /> : <Lock className="w-4 h-4" />}
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-lg">{reward.name}</div>
-                                                    <div className="text-xs text-gray-400">
-                                                        {isPointsBased
-                                                            ? `${reward.costInPoints} Puntos requeridos`
-                                                            : `${reward.costInVisits} visitas requeridas`
-                                                        }
-                                                    </div>
-                                                </div>
+                                <div
+                                    key={reward.id}
+                                    onClick={() => !isLocked && !pending && handleUnlock(reward.id)}
+                                    className={cn(
+                                        "relative overflow-hidden rounded-2xl border border-white/5 bg-[#12121a] p-4 transition-all duration-300",
+                                        isLocked ? "opacity-70" : "hover:border-violet-500/30 hover:bg-[#1a1a24] cursor-pointer active:scale-[0.98]",
+                                        pending ? "border-yellow-500/50 bg-yellow-900/10" : ""
+                                    )}
+                                >
+                                    <div className="flex gap-4 items-center relative z-10">
+                                        <div className={cn(
+                                            "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                                            isLocked ? "bg-white/5 text-gray-500" : pending ? "bg-yellow-500/20 text-yellow-500" : "bg-violet-500/20 text-violet-400"
+                                        )}>
+                                            {pending ? <Sparkles className="w-6 h-6 animate-pulse" /> : <Gift className="w-6 h-6" />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h3 className={cn("font-bold truncate pr-2", pending ? "text-yellow-500" : "text-white")}>
+                                                    {reward.name}
+                                                </h3>
+                                                {isLocked && <Lock className="w-4 h-4 text-gray-500 shrink-0 mt-1" />}
+                                            </div>
+                                            <p className="text-xs text-gray-400 mb-2">{requirementText}</p>
+
+                                            {/* Progress Bar */}
+                                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                                <div
+                                                    className={cn("h-full rounded-full transition-all duration-500", pending ? "bg-yellow-500" : "bg-violet-500")}
+                                                    style={{ width: `${progress}%` }}
+                                                />
                                             </div>
                                         </div>
-
-                                        {/* Progress Indicator */}
-                                        <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                                            <div
-                                                className={cn("h-full rounded-full transition-all duration-1000", isUnlocked || isPending ? "bg-gradient-to-r from-pink-500 to-purple-500" : "bg-gray-600")}
-                                                style={{ width: `${progress}%` }}
-                                            />
-                                        </div>
-
-                                        {/* ACTIONS */}
-                                        {isPending ? (
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedReward(pendingRedemption)
-                                                    setShowQr(true)
-                                                }}
-                                                className="absolute right-4 bottom-4 px-4 py-1.5 bg-white text-black text-xs font-bold rounded-full hover:scale-105 transition-transform flex items-center gap-1"
-                                            >
-                                                <QRCodeSVG value="icon" size={14} /> Ver Código
-                                            </button>
-                                        ) : isUnlocked ? (
-                                            <button
-                                                onClick={() => handleUnlock(reward.id)}
-                                                className="absolute right-4 bottom-4 px-4 py-1.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold rounded-full hover:scale-105 transition-transform"
-                                            >
-                                                Canjear Puntos
-                                            </button>
-                                        ) : null}
                                     </div>
+
+                                    {pending && (
+                                        <div className="mt-3 bg-yellow-500/10 rounded-lg p-2 flex items-center gap-2 justify-center border border-yellow-500/20">
+                                            <Sparkles className="w-4 h-4 text-yellow-500" />
+                                            <span className="text-xs font-bold text-yellow-500 uppercase tracking-wide">Código de canje generado</span>
+                                        </div>
+                                    )}
                                 </div>
                             )
                         })}
@@ -227,51 +266,108 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                 </div>
             </div>
 
-            {/* Bottom Action Button - Now ABSOLUTE inside the container */}
-            <div className="absolute bottom-6 left-6 right-6 z-20">
-                <button
-                    onClick={() => setShowQr(true)}
-                    className="w-full bg-gradient-to-r from-orange-400 to-pink-500 py-4 rounded-full font-bold text-white shadow-2xl shadow-orange-500/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                    <QRCodeSVG value="icon" size={20} className="hidden" />
-                    <Sparkles className="w-5 h-5" /> MOSTRAR CÓDIGO
-                </button>
-            </div>
+            {/* SIDEBAR MENU */}
+            {showMenu && (
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 animate-in fade-in duration-300"
+                        onClick={() => setShowMenu(false)}
+                    />
 
-            {/* QR FULLSCREEN MODAL */}
-            {showQr && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl animate-in fade-in duration-200" onClick={() => { setShowQr(false); setTimeout(() => setSelectedReward(null), 300); }}>
-                    <div className="w-full max-w-sm bg-[#111] border border-white/10 rounded-[32px] p-8 text-center relative overflow-hidden" onClick={e => e.stopPropagation()}>
-                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-orange-400 to-pink-500" />
-
-                        <h3 className="text-2xl font-bold text-white mb-2">
-                            {selectedReward ? "Canjear Premio" : "Tu Código QR"}
-                        </h3>
-                        <p className="text-gray-400 text-sm mb-8">
-                            {selectedReward ? "Muestra este código al mesero para recibir tu premio." : "Muestra este código para sumar visitas."}
-                        </p>
-
-                        <div className="bg-white p-4 rounded-2xl inline-block shadow-2xl mb-8">
-                            {/* Prefix 'R:' for Reward Redemption, 'V:' for Visit Log */}
-                            <QRCodeSVG
-                                value={selectedReward ? `R:${selectedReward.redemptionCode}` : `V:${customer.magicToken}`}
-                                size={200}
-                            />
+                    {/* Menu Drawer */}
+                    <div className="fixed inset-y-0 right-0 w-72 bg-[#111115] border-l border-white/10 z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+                        {/* Header */}
+                        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#16161e]">
+                            <div className="flex items-center gap-3">
+                                {user?.imageUrl ? (
+                                    <img src={user.imageUrl} alt="User" className="w-10 h-10 rounded-full border border-white/10" />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center">
+                                        <span className="font-bold text-white">{customer.name?.charAt(0) || "U"}</span>
+                                    </div>
+                                )}
+                                <div>
+                                    <div className="font-bold text-sm truncate max-w-[120px]">{customer.name || "Usuario"}</div>
+                                    <div className="text-xs text-gray-400">Miembro</div>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowMenu(false)} className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        {selectedReward && (
-                            <div className="mb-6 font-mono text-xl tracking-widest text-pink-500 font-bold">
-                                {selectedReward.redemptionCode}
-                            </div>
-                        )}
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
-                        <div className="flex gap-2 justify-center">
-                            <button onClick={() => { setShowQr(false); setTimeout(() => setSelectedReward(null), 300); }} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors">
-                                Cerrar
+                            {/* Profile Actions */}
+                            <div className="space-y-2">
+                                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-2">Mi Cuenta</div>
+                                <button
+                                    onClick={() => onEditProfile ? onEditProfile() : openUserProfile()}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors">
+                                        <User className="w-4 h-4" />
+                                    </div>
+                                    <div className="text-sm font-medium text-gray-300 group-hover:text-white">Perfil & Datos</div>
+                                </button>
+                            </div>
+
+                            {/* Wallet / Other Cards */}
+                            <div className="space-y-2">
+                                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-2 flex justify-between items-center">
+                                    <span>Mis Tarjetas</span>
+                                    <span className="text-[10px] bg-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded-full">{myCards.length}</span>
+                                </div>
+
+                                <div className="space-y-2">
+                                    {myCards.length > 0 ? myCards.map((membership: any) => (
+                                        <Link
+                                            key={membership.program.id}
+                                            href={`/loyalty/${membership.program.id}`}
+                                            className={cn(
+                                                "flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5",
+                                                membership.program.id === program.id ? "bg-white/5 border-white/10" : ""
+                                            )}
+                                        >
+                                            <div className="w-10 h-10 rounded-full bg-black/50 p-1 flex items-center justify-center border border-white/5 shrink-0 overflow-hidden">
+                                                {membership.program.logoUrl ? (
+                                                    <img src={membership.program.logoUrl} alt={membership.program.businessName} className="w-full h-full object-cover rounded-full" />
+                                                ) : (
+                                                    <CreditCard className="w-4 h-4 text-gray-500" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-bold text-gray-200 truncate">{membership.program.businessName}</div>
+                                                <div className="text-[10px] text-gray-500 truncate">Ver tarjeta</div>
+                                            </div>
+                                            {membership.program.id === program.id && (
+                                                <div className="w-2 h-2 rounded-full bg-violet-500" />
+                                            )}
+                                        </Link>
+                                    )) : (
+                                        <div className="text-center py-6 px-4 border border-dashed border-white/10 rounded-xl">
+                                            <Wallet className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                                            <p className="text-xs text-gray-500">No tienes otras tarjetas guardadas aún.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-4 border-t border-white/5 bg-[#16161e]">
+                            <button
+                                onClick={() => signOut({ redirectUrl: `/loyalty/${program.id}` })}
+                                className="w-full flex items-center gap-2 justify-center p-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-bold"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                Component Cerrar Sesión
                             </button>
                         </div>
                     </div>
-                </div>
+                </>
             )}
         </div>
     )

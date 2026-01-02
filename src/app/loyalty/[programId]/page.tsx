@@ -224,19 +224,33 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                                         </div>
                                     </div>
 
-                                    <button
-                                        type="submit"
-                                        disabled={!name || isSubmitting}
-                                        className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
-                                    >
-                                        {isSubmitting ? <Loader2 className="animate-spin" /> : "Ver Tarjeta"}
-                                    </button>
+                                    <div className="flex gap-3 pt-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowProfileForm(false)}
+                                            className="flex-1 bg-transparent border border-white/20 text-white font-bold py-4 rounded-xl hover:bg-white/5 disabled:opacity-50"
+                                            disabled={isSubmitting}
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={!name || isSubmitting}
+                                            className="flex-1 bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        >
+                                            {isSubmitting ? <Loader2 className="animate-spin" /> : "Guardar"}
+                                        </button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
                     </div>
                 ) : (
-                    customer && <CustomerLoyaltyCard customer={customer} className="min-h-screen" />
+                    customer && <CustomerLoyaltyCard
+                        customer={customer}
+                        className="min-h-screen"
+                        onEditProfile={() => setShowProfileForm(true)}
+                    />
                 )}
             </SignedIn>
         </div>
