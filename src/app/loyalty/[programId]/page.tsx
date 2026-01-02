@@ -24,12 +24,19 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
     }, [params.programId])
 
     const loadCustomer = async (token: string) => {
-        const data = await getCustomerStatus(params.programId, token)
-        if (data) {
-            setCustomer(data)
-        } else {
-            // Token invalid
-            localStorage.removeItem(`loyalty_token_${params.programId}`)
+        try {
+            const data = await getCustomerStatus(params.programId, token)
+            if (data) {
+                console.log("Customer loaded:", data)
+                setCustomer(data)
+            } else {
+                console.error("Token invalid or customer not found")
+                // Token invalid
+                localStorage.removeItem(`loyalty_token_${params.programId}`)
+            }
+        } catch (error) {
+            console.error("Error loading customer:", error)
+            toast.error("Error al cargar tu tarjeta")
         }
         setIsLoading(false)
     }
