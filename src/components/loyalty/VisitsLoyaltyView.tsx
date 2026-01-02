@@ -144,6 +144,7 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
 
                 {/* RIGHT: PREVIEW */}
                 <div>
+                    <h3 className="text-lg font-bold text-white mb-4 lg:hidden">Vista previa de tu programa de lealtad</h3>
                     <div className="bg-[#050505] rounded-[40px] border-[8px] border-[#222] shadow-2xl relative overflow-hidden flex flex-col max-w-[340px] sm:max-w-[400px] mx-auto w-full h-[600px] lg:h-full">
                         {/* Fake Status Bar */}
                         <div className="h-12 bg-black flex justify-between items-center px-6 text-white text-xs font-medium shrink-0 z-20">
