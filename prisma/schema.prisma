@@ -671,6 +671,7 @@ model LoyaltyProgram {
   rules          LoyaltyRule[]
   events         LoyaltyEvent[]
   promotions     LoyaltyPromotion[]
+  notifications  LoyaltyNotification[]
 }
 
 model LoyaltyPromotion {
@@ -739,6 +740,9 @@ model LoyaltyCustomer {
   // Quick login token
   magicToken      String?  @unique 
   
+  // Notifications
+  lastNotificationReadAt DateTime?
+
   program         LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
   visits          LoyaltyVisit[]
   redemptions     LoyaltyRedemption[]
@@ -750,6 +754,17 @@ model LoyaltyCustomer {
 
   // Constraint: One profile per phone per program
   @@unique([programId, phone]) 
+  @@index([programId])
+}
+
+model LoyaltyNotification {
+  id          String   @id @default(uuid())
+  programId   String
+  program     LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  title       String
+  message     String   @db.Text
+  createdAt   DateTime @default(now())
+
   @@index([programId])
 }
 

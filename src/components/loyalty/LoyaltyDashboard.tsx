@@ -7,7 +7,7 @@ import { inviteMember, getOperators, toggleMemberStatus } from "@/actions/team"
 import { createPromotion, deletePromotion, getPromotions } from "@/actions/loyalty"
 
 import { toast } from "sonner"
-import { Plus, Save, Gift, Trophy, QrCode, Zap, Layers, BarChart3, ArrowRight, Sparkles, Crown, X, Pencil, Eye, Utensils, Wine, Star, Camera, Users, Loader2 } from "lucide-react"
+import { Plus, Save, Gift, Trophy, QrCode, Zap, Layers, BarChart3, ArrowRight, Sparkles, Crown, X, Pencil, Eye, Utensils, Wine, Star, Camera, Users, Loader2, Bell } from "lucide-react"
 import { CustomerLoyaltyCard } from "./CustomerLoyaltyCard"
 import { cn } from "@/lib/utils"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import TiersManager from "./TiersManager"
+import NotificationsManager from "./NotificationsManager"
 
 
 
@@ -166,6 +167,7 @@ function PremiumTabs({ activeTab, setActiveTab, children }: any) {
         { id: 'overview', label: 'Visión General', icon: BarChart3 },
         { id: 'promotions', label: 'Promociones', icon: Layers },
         { id: 'clients', label: 'Clientes', icon: Users },
+        { id: 'notifications', label: 'Comunicaciones', icon: Bell },
         { id: 'tiers', label: 'Niveles VIP', icon: Crown },
         { id: 'staff', label: 'Equipo', icon: Users },
     ]
@@ -1019,6 +1021,12 @@ function AdvancedLoyaltyView({ userId, program, onBack, initialTab: propInitialT
 
 
                     {/* TIERS TAB */}
+                    {activeTab === 'notifications' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <NotificationsManager programId={program.id} />
+                        </div>
+                    )}
+
                     {activeTab === 'tiers' && (
                         <TiersManager programId={program.id} tiers={program.tiers || []} />
                     )}

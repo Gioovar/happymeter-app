@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { QRCodeSVG } from "qrcode.react"
-import { unlockReward, getMemberLoyaltyPrograms } from "@/actions/loyalty"
+import { unlockReward, getMemberLoyaltyPrograms, getLoyaltyNotifications, markNotificationsAsRead } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar } from "lucide-react"
+import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar, Bell } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useClerk, useUser } from "@clerk/nextjs"
 import Link from "next/link"
@@ -25,6 +25,29 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
     const [showQr, setShowQr] = useState(false)
     const [showMenu, setShowMenu] = useState(false)
     const [myCards, setMyCards] = useState<any[]>([])
+    const [notifications, setNotifications] = useState<any[]>([])
+    const [unreadCount, setUnreadCount] = useState(0)
+    const [showNotifications, setShowNotifications] = useState(false)
+
+    // Load notifications on mount
+    useEffect(() => {
+        if (customer?.id && customer?.programId) {
+            getLoyaltyNotifications(customer.programId, customer.id).then(res => {
+                if (res.success && res.notifications) {
+                    setNotifications(res.notifications)
+                    setUnreadCount(res.unreadCount || 0)
+                }
+            })
+        }
+    }, [customer])
+
+    const handleOpenNotifications = async () => {
+        setShowNotifications(true)
+        if (unreadCount > 0) {
+            await markNotificationsAsRead(customer.id)
+            setUnreadCount(0)
+        }
+    }
 
     // Load other cards when menu opens
     useEffect(() => {
@@ -85,12 +108,25 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             <p className="text-xs text-gray-400 uppercase tracking-widest">Membresía Digital</p>
                         </div>
                     </div>
-                    <button
-                        onClick={() => setShowMenu(true)}
-                        className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors"
-                    >
-                        <Menu className="w-5 h-5 text-gray-300" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleOpenNotifications}
+                            className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors relative mr-2"
+                        >
+                            <Bell className="w-5 h-5 text-gray-300" />
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold border border-black">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setShowMenu(true)}
+                            className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors"
+                        >
+                            <Menu className="w-5 h-5 text-gray-300" />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="space-y-6 relative z-10">
@@ -292,108 +328,147 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
             </div>
 
             {/* SIDEBAR MENU */}
-            {showMenu && (
-                <>
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 animate-in fade-in duration-300"
-                        onClick={() => setShowMenu(false)}
-                    />
+            {
+                showMenu && (
+                    <>
+                        {/* Backdrop */}
+                        <div
+                            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 animate-in fade-in duration-300"
+                            onClick={() => setShowMenu(false)}
+                        />
 
-                    {/* Menu Drawer */}
-                    <div className="fixed inset-y-0 right-0 w-72 bg-[#111115] border-l border-white/10 z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-                        {/* Header */}
-                        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#16161e]">
-                            <div className="flex items-center gap-3">
-                                {user?.imageUrl ? (
-                                    <img src={user.imageUrl} alt="User" className="w-10 h-10 rounded-full border border-white/10" />
-                                ) : (
-                                    <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center">
-                                        <span className="font-bold text-white">{customer.name?.charAt(0) || "U"}</span>
+                        {/* Notifications Modal */}
+                        {showNotifications && (
+                            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+                                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowNotifications(false)} />
+                                <div className="relative w-full max-w-md bg-[#18181b] border-t border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] flex flex-col">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-xl font-bold flex items-center gap-2">
+                                            <Bell className="w-5 h-5 text-violet-400" />
+                                            Notificaciones
+                                        </h2>
+                                        <button onClick={() => setShowNotifications(false)} className="p-2 hover:bg-white/10 rounded-full">
+                                            <X className="w-5 h-5" />
+                                        </button>
                                     </div>
-                                )}
-                                <div>
-                                    <div className="font-bold text-sm truncate max-w-[120px]">{customer.name || "Usuario"}</div>
-                                    <div className="text-xs text-gray-400">Miembro</div>
+
+                                    <div className="overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-white/20">
+                                        {notifications.length === 0 ? (
+                                            <div className="text-center py-10 text-gray-500">
+                                                <Bell className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                                <p>No tienes notificaciones nuevas.</p>
+                                            </div>
+                                        ) : (
+                                            notifications.map((note) => (
+                                                <div key={note.id} className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <h4 className="font-bold text-white text-sm">{note.title}</h4>
+                                                        <span className="text-[10px] text-gray-500">{new Date(note.createdAt).toLocaleDateString()}</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-400 leading-relaxed">{note.message}</p>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                            <button onClick={() => setShowMenu(false)} className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
+                        )}
 
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-
-                            {/* Profile Actions */}
-                            <div className="space-y-2">
-                                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-2">Mi Cuenta</div>
-                                <button
-                                    onClick={() => onEditProfile ? onEditProfile() : openUserProfile()}
-                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group"
-                                >
-                                    <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors">
-                                        <User className="w-4 h-4" />
+                        {/* Side Menu (Wallet) */}
+                        <div className="fixed inset-y-0 right-0 w-72 bg-[#111115] border-l border-white/10 z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+                            {/* Header */}
+                            <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#16161e]">
+                                <div className="flex items-center gap-3">
+                                    {user?.imageUrl ? (
+                                        <img src={user.imageUrl} alt="User" className="w-10 h-10 rounded-full border border-white/10" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center">
+                                            <span className="font-bold text-white">{customer.name?.charAt(0) || "U"}</span>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <div className="font-bold text-sm truncate max-w-[120px]">{customer.name || "Usuario"}</div>
+                                        <div className="text-xs text-gray-400">Miembro</div>
                                     </div>
-                                    <div className="text-sm font-medium text-gray-300 group-hover:text-white">Perfil & Datos</div>
+                                </div>
+                                <button onClick={() => setShowMenu(false)} className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors">
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
 
-                            {/* Wallet / Other Cards */}
-                            <div className="space-y-2">
-                                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-2 flex justify-between items-center">
-                                    <span>Mis Tarjetas</span>
-                                    <span className="text-[10px] bg-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded-full">{myCards.length}</span>
+                            {/* Content */}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+
+                                {/* Profile Actions */}
+                                <div className="space-y-2">
+                                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-2">Mi Cuenta</div>
+                                    <button
+                                        onClick={() => onEditProfile ? onEditProfile() : openUserProfile()}
+                                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group"
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors">
+                                            <User className="w-4 h-4" />
+                                        </div>
+                                        <div className="text-sm font-medium text-gray-300 group-hover:text-white">Perfil & Datos</div>
+                                    </button>
                                 </div>
 
+                                {/* Wallet / Other Cards */}
                                 <div className="space-y-2">
-                                    {myCards.length > 0 ? myCards.map((membership: any) => (
-                                        <Link
-                                            key={membership.program.id}
-                                            href={`/loyalty/${membership.program.id}`}
-                                            className={cn(
-                                                "flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5",
-                                                membership.program.id === program.id ? "bg-white/5 border-white/10" : ""
-                                            )}
-                                        >
-                                            <div className="w-10 h-10 rounded-full bg-black/50 p-1 flex items-center justify-center border border-white/5 shrink-0 overflow-hidden">
-                                                {membership.program.logoUrl ? (
-                                                    <img src={membership.program.logoUrl} alt={membership.program.businessName} className="w-full h-full object-cover rounded-full" />
-                                                ) : (
-                                                    <CreditCard className="w-4 h-4 text-gray-500" />
+                                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-2 flex justify-between items-center">
+                                        <span>Mis Tarjetas</span>
+                                        <span className="text-[10px] bg-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded-full">{myCards.length}</span>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        {myCards.length > 0 ? myCards.map((membership: any) => (
+                                            <Link
+                                                key={membership.program.id}
+                                                href={`/loyalty/${membership.program.id}`}
+                                                className={cn(
+                                                    "flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5",
+                                                    membership.program.id === program.id ? "bg-white/5 border-white/10" : ""
                                                 )}
+                                            >
+                                                <div className="w-10 h-10 rounded-full bg-black/50 p-1 flex items-center justify-center border border-white/5 shrink-0 overflow-hidden">
+                                                    {membership.program.logoUrl ? (
+                                                        <img src={membership.program.logoUrl} alt={membership.program.businessName} className="w-full h-full object-cover rounded-full" />
+                                                    ) : (
+                                                        <CreditCard className="w-4 h-4 text-gray-500" />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm font-bold text-gray-200 truncate">{membership.program.businessName}</div>
+                                                    <div className="text-[10px] text-gray-500 truncate">Ver tarjeta</div>
+                                                </div>
+                                                {membership.program.id === program.id && (
+                                                    <div className="w-2 h-2 rounded-full bg-violet-500" />
+                                                )}
+                                            </Link>
+                                        )) : (
+                                            <div className="text-center py-6 px-4 border border-dashed border-white/10 rounded-xl">
+                                                <Wallet className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                                                <p className="text-xs text-gray-500">No tienes otras tarjetas guardadas aún.</p>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-bold text-gray-200 truncate">{membership.program.businessName}</div>
-                                                <div className="text-[10px] text-gray-500 truncate">Ver tarjeta</div>
-                                            </div>
-                                            {membership.program.id === program.id && (
-                                                <div className="w-2 h-2 rounded-full bg-violet-500" />
-                                            )}
-                                        </Link>
-                                    )) : (
-                                        <div className="text-center py-6 px-4 border border-dashed border-white/10 rounded-xl">
-                                            <Wallet className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                                            <p className="text-xs text-gray-500">No tienes otras tarjetas guardadas aún.</p>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Footer */}
-                        <div className="p-4 border-t border-white/5 bg-[#16161e]">
-                            <button
-                                onClick={() => signOut({ redirectUrl: `/loyalty/${program.id}` })}
-                                className="w-full flex items-center gap-2 justify-center p-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-bold"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                Component Cerrar Sesión
-                            </button>
+                            {/* Footer */}
+                            <div className="p-4 border-t border-white/5 bg-[#16161e]">
+                                <button
+                                    onClick={() => signOut({ redirectUrl: `/loyalty/${program.id}` })}
+                                    className="w-full flex items-center gap-2 justify-center p-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-bold"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    Component Cerrar Sesión
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </>
-            )}
-        </div>
+                    </>
+                )
+            }
+        </div >
     )
 }

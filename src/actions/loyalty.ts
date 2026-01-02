@@ -148,6 +148,64 @@ export async function getMemberLoyaltyPrograms(clerkUserId: string) {
     }
 }
 
+
+// --- Notifications System ---
+
+export async function sendLoyaltyNotification(programId: string, title: string, message: string) {
+    try {
+        const notification = await prisma.loyaltyNotification.create({
+            data: {
+                programId,
+                title,
+                message
+            }
+        })
+        return { success: true, notification }
+    } catch (error) {
+        console.error("Error sending notification:", error)
+        return { success: false, error: "Error al enviar notificación" }
+    }
+}
+
+export async function getLoyaltyNotifications(programId: string, customerId: string) {
+    try {
+        const notifications = await prisma.loyaltyNotification.findMany({
+            where: { programId },
+            orderBy: { createdAt: 'desc' },
+            take: 20 // Limit to last 20 messages
+        })
+
+        const customer = await prisma.loyaltyCustomer.findUnique({
+            where: { id: customerId },
+            select: { lastNotificationReadAt: true }
+        })
+
+        if (!customer) return { success: false, error: "Cliente no encontrado" }
+
+        const lastRead = customer.lastNotificationReadAt ? new Date(customer.lastNotificationReadAt).getTime() : 0
+
+        // Count unread
+        const unreadCount = notifications.filter(n => new Date(n.createdAt).getTime() > lastRead).length
+
+        return { success: true, notifications, unreadCount }
+    } catch (error) {
+        console.error("Error fetching notifications:", error)
+        return { success: false, error: "Error al cargar notificaciones" }
+    }
+}
+
+export async function markNotificationsAsRead(customerId: string) {
+    try {
+        await prisma.loyaltyCustomer.update({
+            where: { id: customerId },
+            data: { lastNotificationReadAt: new Date() }
+        })
+        return { success: true }
+    } catch (error) {
+        return { success: false, error: "Error al marcar como leído" }
+    }
+}
+
 // --- Customer Actions ---
 
 export async function registerLoyaltyCustomer(programId: string, data: {
