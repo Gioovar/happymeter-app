@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { QRCodeSVG } from "qrcode.react"
 import { unlockReward, getMemberLoyaltyPrograms, getLoyaltyNotifications, markNotificationsAsRead } from "@/actions/loyalty"
 import { toast } from "sonner"
@@ -28,14 +29,22 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
     const [notifications, setNotifications] = useState<any[]>([])
     const [unreadCount, setUnreadCount] = useState(0)
     const [showNotifications, setShowNotifications] = useState(false)
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     // Load notifications on mount
     useEffect(() => {
         if (customer?.id && customer?.programId) {
             getLoyaltyNotifications(customer.programId, customer.id).then(res => {
                 if (res.success && res.notifications) {
+                    console.log("Notifications loaded:", res.notifications.length)
                     setNotifications(res.notifications)
                     setUnreadCount(res.unreadCount || 0)
+                } else {
+                    console.error("Failed to load notifications:", res.error)
                 }
             })
         }
@@ -327,6 +336,44 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                 </div>
             </div>
 
+            {/* Notifications Modal (Portal) */}
+            {showNotifications && mounted && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowNotifications(false)} />
+                    <div className="relative w-full max-w-md bg-[#18181b] border-t border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] flex flex-col m-auto sm:m-0 bottom-0 sm:bottom-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+                                <Bell className="w-5 h-5 text-violet-400" />
+                                Notificaciones
+                            </h2>
+                            <button onClick={() => setShowNotifications(false)} className="p-2 hover:bg-white/10 rounded-full text-white">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-white/20">
+                            {notifications.length === 0 ? (
+                                <div className="text-center py-10 text-gray-500">
+                                    <Bell className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                    <p>No tienes notificaciones nuevas.</p>
+                                </div>
+                            ) : (
+                                notifications.map((note) => (
+                                    <div key={note.id} className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <h4 className="font-bold text-white text-sm">{note.title}</h4>
+                                            <span className="text-[10px] text-gray-500">{new Date(note.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                        <p className="text-sm text-gray-400 leading-relaxed">{note.message}</p>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
             {/* SIDEBAR MENU */}
             {
                 showMenu && (
@@ -336,43 +383,6 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 animate-in fade-in duration-300"
                             onClick={() => setShowMenu(false)}
                         />
-
-                        {/* Notifications Modal */}
-                        {showNotifications && (
-                            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-                                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowNotifications(false)} />
-                                <div className="relative w-full max-w-md bg-[#18181b] border-t border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] flex flex-col">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h2 className="text-xl font-bold flex items-center gap-2">
-                                            <Bell className="w-5 h-5 text-violet-400" />
-                                            Notificaciones
-                                        </h2>
-                                        <button onClick={() => setShowNotifications(false)} className="p-2 hover:bg-white/10 rounded-full">
-                                            <X className="w-5 h-5" />
-                                        </button>
-                                    </div>
-
-                                    <div className="overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-white/20">
-                                        {notifications.length === 0 ? (
-                                            <div className="text-center py-10 text-gray-500">
-                                                <Bell className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                                <p>No tienes notificaciones nuevas.</p>
-                                            </div>
-                                        ) : (
-                                            notifications.map((note) => (
-                                                <div key={note.id} className="bg-white/5 p-4 rounded-xl border border-white/5">
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <h4 className="font-bold text-white text-sm">{note.title}</h4>
-                                                        <span className="text-[10px] text-gray-500">{new Date(note.createdAt).toLocaleDateString()}</span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-400 leading-relaxed">{note.message}</p>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Side Menu (Wallet) */}
                         <div className="fixed inset-y-0 right-0 w-72 bg-[#111115] border-l border-white/10 z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
@@ -462,7 +472,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                     className="w-full flex items-center gap-2 justify-center p-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-bold"
                                 >
                                     <LogOut className="w-4 h-4" />
-                                    Component Cerrar Sesión
+                                    Cerrar Sesión
                                 </button>
                             </div>
                         </div>
