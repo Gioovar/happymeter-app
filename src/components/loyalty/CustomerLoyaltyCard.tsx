@@ -6,6 +6,7 @@ import { QRCodeSVG } from "qrcode.react"
 import { unlockReward, getMemberLoyaltyPrograms, getLoyaltyNotifications, markNotificationsAsRead } from "@/actions/loyalty"
 import { toast } from "sonner"
 import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar, Bell, QrCode } from "lucide-react"
+import { InstallPwa } from "@/components/pwa/InstallPwa"
 import { cn } from "@/lib/utils"
 import { useClerk, useUser } from "@clerk/nextjs"
 import Link from "next/link"
@@ -427,6 +428,9 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
 
                             {/* Content */}
                             <div className="flex-1 overflow-y-auto p-4 space-y-6">
+
+                                {/* PWA Install (New) */}
+                                <InstallPwa />
 
                                 {/* Profile Actions */}
                                 <div className="space-y-2">
