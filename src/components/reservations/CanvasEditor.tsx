@@ -145,25 +145,25 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     }
 
     const addTable = (type: string) => {
-        let width = 80
-        let height = 80
+        let width = 50
+        let height = 50
         let points = null
         let label = `Mesa ${tables.length + 1}`
 
         if (type === 'BAR') {
-            width = 150
-            height = 50
+            width = 120
+            height = 40
         } else if (type === 'L_SHAPE') {
-            width = 100
-            height = 100
+            width = 80
+            height = 80
             // L shape 0-100
             points = [
                 { x: 0, y: 0 }, { x: 40, y: 0 }, { x: 40, y: 60 },
                 { x: 100, y: 60 }, { x: 100, y: 100 }, { x: 0, y: 100 }
             ]
         } else if (type === 'T_SHAPE') {
-            width = 100
-            height = 100
+            width = 80
+            height = 80
             // T shape 0-100
             points = [
                 { x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 40 },
