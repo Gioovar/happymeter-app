@@ -659,6 +659,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                             onChange={(e) => setNewFloorName(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && confirmCreateFloor()}
                             autoFocus
+                            className="text-black placeholder:text-gray-500"
                         />
                     </div>
                     <DialogFooter>
