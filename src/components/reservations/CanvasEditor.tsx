@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles } from 'lucide-react'
+import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { saveFloorPlan } from '@/actions/reservations'
 import { supabase } from '@/lib/supabase'
@@ -178,6 +178,24 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         if (!selectedId) return
         setTables(prev => prev.filter(t => t.id !== selectedId))
         setSelectedId(null)
+    }
+
+    const duplicateSelected = () => {
+        if (!selectedId) return
+        const itemToDuplicate = tables.find(t => t.id === selectedId)
+        if (!itemToDuplicate) return
+
+        const newItem = {
+            ...itemToDuplicate,
+            id: `dup-${Date.now()}`,
+            label: `${itemToDuplicate.label} (Copia)`,
+            x: itemToDuplicate.x + 20,
+            y: itemToDuplicate.y + 20
+        }
+
+        setTables([...tables, newItem])
+        setSelectedId(newItem.id)
+        toast.success("Elemento duplicado")
     }
 
     const handleAIImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -581,7 +599,13 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                             </div>
                         </div>
 
-                        <div className="pt-4 mt-auto border-t border-white/10">
+                        <div className="pt-4 mt-auto border-t border-white/10 flex flex-col gap-2">
+                            <button
+                                onClick={duplicateSelected}
+                                className="w-full flex items-center justify-center gap-2 text-zinc-300 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors text-sm"
+                            >
+                                <Copy className="w-4 h-4" /> Duplicar
+                            </button>
                             <button
                                 onClick={deleteSelected}
                                 className="w-full flex items-center justify-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2 rounded-lg transition-colors text-sm"

@@ -4,6 +4,16 @@ import { auth } from "@clerk/nextjs/server"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
+export async function getFloorPlan() {
+    try {
+        const plans = await getFloorPlans()
+        return plans[0] || null
+    } catch (error) {
+        console.error("Error in getFloorPlan:", error)
+        return null
+    }
+}
+
 export async function getFloorPlans() {
     try {
         const { userId } = await auth()
