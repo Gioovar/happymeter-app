@@ -74,7 +74,7 @@ export async function getFloorPlans() {
 
 export async function createFloorPlan(name: string) {
     try {
-        const { userId } = auth()
+        const { userId } = await auth()
         if (!userId) throw new Error("Unauthorized")
 
         const newPlan = await prisma.floorPlan.create({

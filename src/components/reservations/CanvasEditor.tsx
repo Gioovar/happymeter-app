@@ -645,7 +645,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
 
             {/* Floor Creation Modal */}
             <Dialog open={isFloorModalOpen} onOpenChange={setIsFloorModalOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Nuevo Piso o Zona</DialogTitle>
                         <DialogDescription>
@@ -672,7 +672,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
 
             {/* AI Confirmation Modal */}
             <Dialog open={isAIModalOpen} onOpenChange={setIsAIModalOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-xl">
                     <DialogHeader>
                         <DialogTitle>Diseño AI Generado</DialogTitle>
                         <DialogDescription>
