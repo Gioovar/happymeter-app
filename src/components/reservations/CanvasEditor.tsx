@@ -217,9 +217,10 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                 toast.error("No se pudo generar el diseño. Intenta con una imagen más clara.", { id: toastId })
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("AI Import Error:", error)
-            toast.error("Error al procesar la imagen", { id: toastId })
+            const msg = error?.message || error?.error?.message || "Error al procesar la imagen"
+            toast.error(msg, { id: toastId, duration: 5000 })
         } finally {
             setIsProcessingAI(false)
             // Reset input
