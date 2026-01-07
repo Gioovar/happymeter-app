@@ -5,10 +5,12 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
 export async function getFloorPlan() {
-    const { userId } = auth()
-    if (!userId) throw new Error("Unauthorized")
-
     try {
+        const { userId } = auth()
+        if (!userId) {
+            console.error("getFloorPlan: No user session found")
+            return null
+        }
         // Find UserSettings id from userId
         let userSettings = await prisma.userSettings.findUnique({
             where: { userId },
