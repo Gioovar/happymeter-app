@@ -598,6 +598,10 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                         <div
                             ref={wrapperRef}
                             className="absolute inset-0 top-0 bottom-0 flex items-center justify-center bg-zinc-800 overflow-hidden"
+                            style={{
+                                // Card-like shading for the whole phone screen area
+                                background: 'radial-gradient(120% 120% at 50% 0%, #27272a 0%, #09090b 100%)',
+                            }}
                         >
                             {/* The actual Scale Wrapper */}
                             {containerSize.width > 0 && (
@@ -613,8 +617,10 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                         ...fitStyle,
                                         width: fitStyle.width,
                                         height: fitStyle.height,
-                                        // Visualization helpers
-                                        boxShadow: '0 0 0 1px rgba(255,255,255,0.1)',
+                                        // Visualization helpers (Matches Customer View Card Style)
+                                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+                                        borderRadius: '32px',
+                                        overflow: 'hidden'
                                     }}
                                     onClick={(e) => {
                                         if (isDrawing) {
@@ -624,6 +630,9 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                         }
                                     }}
                                 >
+                                    {/* Inner highlight for "3D" feel */}
+                                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+
                                     {/* Grid on the map itself */}
                                     <div className="absolute inset-0 opacity-20 pointer-events-none"
                                         style={{ backgroundImage: 'linear-gradient(rgba(99, 102, 241, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
