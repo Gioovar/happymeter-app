@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useMotionValue } from "framer-motion"
 import { Users, DollarSign, Calendar, ChevronLeft, Check } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -35,8 +35,15 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
 
-    // Zoom State
-    const [scale, setScale] = useState(1)
+    // Motion Values for performant drag/zoom
+    const x = useMotionValue(0)
+    const y = useMotionValue(0)
+    const scale = useMotionValue(1)
+
+    // We also keep a state for scale just to trigger re-renders if needed for UI updates (like zoom buttons disabled state), 
+    // but primarily we trust the motion value.
+    // Actually, for simple zoom buttons, we can just read/set the motion value.
+    // But to show "100%" or similar we might need state. Let's stick to motion values.
 
     // Pinch State
     const lastDist = useRef<number | null>(null)
@@ -48,13 +55,12 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
         const fitContent = () => {
             if (!containerRef.current) return
 
-            // 1. Calculate Bounding Box of Tables to know the content size
+            // 1. Calculate Bounding Box of Tables
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
             floorPlan.tables.forEach((t: Table) => {
                 minX = Math.min(minX, t.x)
                 minY = Math.min(minY, t.y)
                 maxX = Math.max(maxX, t.x + (t.width || 60))
-                maxY = Math.max(maxY, t.y + (t.height || 60))
             })
 
             const PADDING = 40
@@ -69,34 +75,84 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             const containerWidth = containerRef.current.clientWidth
             const containerHeight = containerRef.current.clientHeight
 
-            // 2. Calculate Scale to Fit Content
+            // 2. Calculate Scale
             const scaleX = containerWidth / contentWidth
             const scaleY = containerHeight / contentHeight
 
-            // Determine optimal scale
-            // On mobile (<768), we want a minimum legibility. 
-            // If the fit scale is too small, we force a minimum and let the user pan.
-            let fitScale = Math.min(scaleX, scaleY, 1.5)
-
             // Mobile adjustment: Ensure at least 0.6x zoom so text/icons are readable
+            let fitScale = Math.min(scaleX, scaleY, 1.5)
             if (containerWidth < 768) {
                 fitScale = Math.max(fitScale, 0.6)
             }
 
-            setScale(fitScale)
+            scale.set(fitScale)
 
-            // Note: We rely on the container's flex-center + drag to position the map.
-            // Ideally we'd set an initial offset position, but Framer Motion 'drag' without controlled 'x/y'
-            // is easier to handle for free movement. The flex-center aligns the global floor; 
-            // if tables are offset in the floor, they might be off-center initially.
-            // For now, assuming the Floor Plan 0,0 is somewhat relevant or tables are grouped near top-left.
+            // 3. Calculate Centering Offset
+            // We want the CENTER of the content to be at the CENTER of the container.
+            // Currently, the map is centered by flexbox (justify-center items-center) based on its WIDTH/HEIGHT.
+            // Map Center = (floorWidth/2, floorHeight/2).
+            // Content Center = (minX + contentWidth/2, minY + contentHeight/2).
+
+            const floorWidth = floorPlan.width || 800
+            const floorHeight = floorPlan.height || 600
+
+            const mapCenterX = floorWidth / 2
+            const mapCenterY = floorHeight / 2
+
+            const contentCenterX = minX + contentWidth / 2
+            const contentCenterY = minY + contentHeight / 2
+
+            // The vector to shift content to map center:
+            // Delta = MapCenter - ContentCenter
+            // If Content is at 100, Map is at 400. Delta = 300.
+            // We need to move the map +300 (Right) so that 100 aligns with 400? 
+            // Wait.
+            // Visual Position = OriginalPosition + Offset.
+            // We want VisualContentCenter = ScreenCenter.
+            // Flexbox aligns MapCenter = ScreenCenter.
+            // So we want VisualContentCenter = MapCenter (visually).
+            // VisualContentCenter = ContentCenter + Offset.
+            // MapCenter = ContentCenter + Offset
+            // Offset = MapCenter - ContentCenter.
+            // Correct.
+
+            // Note: Framer motion applies 'scale' from the center by default (50% 50%).
+            // So scaling doesn't shift the center point. We can safely calculate offset in unscaled coordinates?
+            // Yes, because x/y translation happens alongside scaling. 
+            // Wait, transform order matters. usually translate then scale or scale then translate.
+            // Framer Motion: translate varies.
+            // But usually 'x' and 'y' are pixels. Scaling happens around origin.
+            // If origin is center, then (MapCenter) stays fixed during scale.
+            // ContentCenter is (MapCenter - Delta).
+            // If we move by +Delta, ContentCenter becomes MapCenter.
+            // Scaling then happens around MapCenter (which is now ContentCenter). 
+            // Perfect.
+
+            // BUT: We need to scale the offset if the translation is applied *after* scale?
+            // Standard CSS: transform: translate(tx, ty) scale(s).
+            // If so, tx is in screen pixels (or element pixels?).
+            // Usually, if we just set x/y, it shifts the element.
+
+            // Let's assume x/y matches the coordinate system of the element BEFORE scale if using layout?
+            // No, 'x' is typically translate-x.
+            // Let's try applying (MapCenter - ContentCenter) * fitScale.
+            // Actually, if we scale the whole div, the coordinate space scales.
+            // Let's try raw delta first.
+
+            const offsetX = (mapCenterX - contentCenterX) * fitScale
+            const offsetY = (mapCenterY - contentCenterY) * fitScale
+
+            x.set(offsetX)
+            y.set(offsetY)
         }
 
         fitContent()
-        const observer = new ResizeObserver(fitContent)
-        observer.observe(containerRef.current)
-        return () => observer.disconnect()
-    }, [floorPlan])
+        // const observer = new ResizeObserver(fitContent) // Disable observer loops for now, just run on mount/floorPlan change
+        // observer.observe(containerRef.current)
+        // return () => observer.disconnect()
+        window.addEventListener('resize', fitContent)
+        return () => window.removeEventListener('resize', fitContent)
+    }, [floorPlan, x, y, scale])
 
     // Touch Handlers for Pinch Zoom
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -119,7 +175,9 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             const delta = dist / lastDist.current
 
             // Apply zoom with limits (0.3x to 4x)
-            setScale(prev => Math.min(Math.max(prev * delta, 0.3), 4))
+            const currentScale = scale.get()
+            const newScale = Math.min(Math.max(currentScale * delta, 0.3), 4)
+            scale.set(newScale)
             lastDist.current = dist
         }
     }
@@ -128,8 +186,8 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
         lastDist.current = null
     }
 
-    const zoomIn = () => setScale(s => Math.min(s * 1.2, 4))
-    const zoomOut = () => setScale(s => Math.max(s / 1.2, 0.3))
+    const zoomIn = () => scale.set(Math.min(scale.get() * 1.2, 4))
+    const zoomOut = () => scale.set(Math.max(scale.get() / 1.2, 0.3))
 
     const handleTableClick = (table: Table) => {
         // Red = Reserved = Blocked
@@ -196,9 +254,8 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                     style={{
                         width: floorPlan.width || 800,
                         height: floorPlan.height || 600,
-                        scale: scale,
+                        x, y, scale // Bind motion values
                     }}
-                    animate={{ scale }}
                 >
                     {/* Render Tables */}
                     {floorPlan.tables.map((table: Table) => {
