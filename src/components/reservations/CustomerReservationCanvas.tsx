@@ -56,7 +56,18 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
 
             const scaleX = availableWidth / floorWidth
             const scaleY = availableHeight / floorHeight
-            const newScale = Math.min(scaleX, scaleY, 1.2)
+
+            // Smart scaling:
+            // 1. Try to fit the whole map (min of X and Y)
+            // 2. But don't let it get tinier than 50% (0.5) to ensure readability on mobile
+            // 3. And don't auto-zoom more than 1.2x 
+
+            let optimalScale = Math.min(scaleX, scaleY)
+            if (availableWidth < 768) { // Mobile check
+                optimalScale = Math.max(optimalScale, 0.6) // Force at least 60% zoom
+            }
+
+            const newScale = Math.min(optimalScale, 1.5)
 
             setScale(newScale)
         })
