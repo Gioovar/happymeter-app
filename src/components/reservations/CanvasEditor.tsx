@@ -679,7 +679,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                         {/* Interactive Canvas Container */}
                         <div
                             ref={wrapperRef}
-                            className="absolute inset-0 top-0 bottom-0 flex items-center justify-center bg-zinc-900 overflow-hidden"
+                            className="absolute inset-0 top-0 bottom-0 flex items-center justify-center bg-zinc-800 overflow-hidden"
                         >
                             {/* The actual Scale Wrapper */}
                             {containerSize.width > 0 && (
@@ -708,7 +708,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                 >
                                     {/* Grid on the map itself */}
                                     <div className="absolute inset-0 opacity-20 pointer-events-none"
-                                        style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
+                                        style={{ backgroundImage: 'linear-gradient(rgba(99, 102, 241, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
                                     />
 
                                     {/* Render Shapes (Existing Logic) */}
