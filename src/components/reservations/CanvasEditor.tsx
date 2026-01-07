@@ -366,6 +366,21 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
                             {selectedTable.type === 'CUSTOM' ? 'Editar Zona' : 'Editar Mesa'}
                         </h3>
 
+                        <div className="bg-zinc-800 p-1 rounded-lg flex gap-1 mb-2">
+                            <button
+                                onClick={() => updateSelected('capacity', selectedTable.capacity === 0 ? 4 : selectedTable.capacity)}
+                                className={`flex-1 text-xs py-1.5 rounded-md transition-colors ${selectedTable.capacity > 0 ? 'bg-indigo-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-300'}`}
+                            >
+                                Mesa
+                            </button>
+                            <button
+                                onClick={() => updateSelected('capacity', 0)}
+                                className={`flex-1 text-xs py-1.5 rounded-md transition-colors ${selectedTable.capacity === 0 ? 'bg-indigo-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-300'}`}
+                            >
+                                Espacio
+                            </button>
+                        </div>
+
                         <div className="space-y-1">
                             <label className="text-xs text-zinc-400">Nombre</label>
                             <input
@@ -376,13 +391,14 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
                             />
                         </div>
 
-                        {selectedTable.type !== 'CUSTOM' && (
+                        {selectedTable.capacity > 0 && (
                             <div className="space-y-1">
-                                <label className="text-xs text-zinc-400">Capacidad</label>
+                                <label className="text-xs text-zinc-400">Capacidad (personas)</label>
                                 <input
                                     type="number"
+                                    min="1"
                                     value={selectedTable.capacity}
-                                    onChange={(e) => updateSelected('capacity', parseInt(e.target.value))}
+                                    onChange={(e) => updateSelected('capacity', Math.max(1, parseInt(e.target.value) || 1))}
                                     className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white"
                                 />
                             </div>
