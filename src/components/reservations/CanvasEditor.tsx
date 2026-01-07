@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool } from 'lucide-react'
