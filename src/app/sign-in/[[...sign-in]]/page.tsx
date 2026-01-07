@@ -87,8 +87,12 @@ export default function Page() {
                             </>
                         ) : (
                             <>
-                                Bienvenido <br />
-                                <span className="text-white">de Nuevo</span>
+                                <span className="block text-4xl font-semibold text-white mb-2">
+                                    Convierte opiniones en
+                                </span>
+                                <span className="block text-5xl md:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400 drop-shadow-[0_0_15px_rgba(167,139,250,0.3)]">
+                                    Crecimiento Real
+                                </span>
                             </>
                         )}
                     </h1>
