@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles, Copy, Layout, Settings } from 'lucide-react'
+import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles, Copy, Layout, Settings, DollarSign } from 'lucide-react'
 import { toast } from 'sonner'
 import { saveFloorPlan } from '@/actions/reservations'
 import { supabase } from '@/lib/supabase'
@@ -726,6 +726,37 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                 />
                             </div>
                         )}
+
+                        <div className="space-y-2 pt-2 border-t border-white/10">
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs text-zinc-400">¿Es reservación pagada?</label>
+                                <button
+                                    onClick={() => updateSelected('reservationPrice', (selectedTable.reservationPrice || 0) > 0 ? 0 : 100)}
+                                    className={`w-10 h-5 rounded-full relative transition-colors ${selectedTable.reservationPrice > 0 ? 'bg-indigo-600' : 'bg-zinc-700'}`}
+                                >
+                                    <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${selectedTable.reservationPrice > 0 ? 'left-6' : 'left-1'}`} />
+                                </button>
+                            </div>
+
+                            {selectedTable.reservationPrice > 0 && (
+                                <div className="space-y-1 animation-expand">
+                                    <label className="text-xs text-indigo-400 font-medium">Costo de Reservación (MXN)</label>
+                                    <div className="relative">
+                                        <DollarSign className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400" />
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={selectedTable.reservationPrice || 0}
+                                            onChange={(e) => updateSelected('reservationPrice', parseFloat(e.target.value) || 0)}
+                                            className="w-full bg-zinc-800 border border-indigo-500/50 rounded px-2 py-1 pl-7 text-sm text-white focus:outline-none focus:border-indigo-500"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-zinc-500 leading-tight">
+                                        El cliente deberá pagar este monto para confirmar su reserva.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
 
                         <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">

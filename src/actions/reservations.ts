@@ -187,7 +187,8 @@ export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
                             label: table.label,
                             type: table.type,
                             capacity: table.capacity,
-                            points: table.points
+                            points: table.points,
+                            reservationPrice: table.reservationPrice || 0
                         }
                     })
                     continue
@@ -206,7 +207,8 @@ export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
                     label: table.label,
                     type: table.type,
                     capacity: table.capacity,
-                    points: table.points
+                    points: table.points,
+                    reservationPrice: table.reservationPrice || 0
                 }
             })
 
