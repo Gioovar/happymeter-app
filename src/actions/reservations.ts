@@ -231,13 +231,18 @@ export async function generateLayoutFromImage(imageUrl: string) {
 
         const response = result.response
         const text = response.text()
+        console.log("AI Raw Response:", text)
 
-        // Clean markdown code blocks if present
-        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim()
+        // Robust JSON extraction
+        const start = text.indexOf('[')
+        const end = text.lastIndexOf(']')
 
-        console.log("AI Response:", cleanText)
+        if (start === -1 || end === -1) {
+            throw new Error("AI did not return a valid JSON array")
+        }
 
-        const tables = JSON.parse(cleanText)
+        const jsonStr = text.substring(start, end + 1)
+        const tables = JSON.parse(jsonStr)
 
         // Post-process to add IDs
         const processedTables = tables.map((t: any, i: number) => ({

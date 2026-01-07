@@ -216,7 +216,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                 }
                 toast.success("¡Diseño generado con éxito!", { id: toastId })
             } else {
-                toast.error("No se pudo generar el diseño. Intenta con una imagen más clara.", { id: toastId })
+                toast.error(aiResult.error || "No se pudo generar el diseño. Intenta con una imagen más clara.", { id: toastId })
             }
 
         } catch (error: any) {
