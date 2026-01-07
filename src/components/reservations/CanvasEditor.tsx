@@ -346,6 +346,29 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
                             </div>
                         </div>
 
+                        {selectedTable.type !== 'CUSTOM' && (
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-xs text-zinc-400">Ancho</label>
+                                    <input
+                                        type="number"
+                                        value={selectedTable.width}
+                                        onChange={(e) => updateSelected('width', parseInt(e.target.value))}
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-zinc-400">Largo</label>
+                                    <input
+                                        type="number"
+                                        value={selectedTable.height}
+                                        onChange={(e) => updateSelected('height', parseInt(e.target.value))}
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         <div className="pt-4 mt-auto border-t border-white/10">
                             <button
                                 onClick={deleteSelected}
