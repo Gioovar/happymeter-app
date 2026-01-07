@@ -4,7 +4,6 @@ import { ShieldCheck, Home } from "lucide-react" // Removed LogOut
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import OpsHeader from "./OpsHeader"
-import { prisma } from "@/lib/prisma"
 
 export default async function OpsLayout({
     children,
