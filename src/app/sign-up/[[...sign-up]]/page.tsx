@@ -162,22 +162,20 @@ export default function Page() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button
-                                        onClick={() => setView('form')}
-                                        className="h-14 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 hover:border-violet-500/50 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] group"
-                                    >
-                                        <Phone className="w-5 h-5 text-[#00FF00]" />
-                                        <span>Teléfono</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setView('form')}
-                                        className="h-14 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 hover:border-violet-500/50 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] group"
-                                    >
-                                        <Mail className="w-5 h-5 text-[#00FF00]" />
-                                        <span>Correo</span>
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={() => setView('form')}
+                                    className="w-full h-16 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 hover:border-violet-500/50 text-white font-bold text-lg rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group"
+                                >
+                                    <div className="flex -space-x-2">
+                                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-[#1a1a1a]">
+                                            <Mail className="w-4 h-4 text-[#00FF00]" />
+                                        </div>
+                                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-[#1a1a1a]">
+                                            <Phone className="w-4 h-4 text-[#00FF00]" />
+                                        </div>
+                                    </div>
+                                    <span>Usar correo o teléfono</span>
+                                </button>
                             </div>
 
                             <div className="mt-8 text-center">
