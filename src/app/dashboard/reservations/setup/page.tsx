@@ -3,6 +3,8 @@ import CanvasEditor from "@/components/reservations/CanvasEditor"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 
+export const dynamic = 'force-dynamic'
+
 export default async function ReservationSetupPage() {
     const floorPlan = await getFloorPlan()
 
