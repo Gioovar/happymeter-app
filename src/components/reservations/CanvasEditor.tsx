@@ -2,10 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles, Copy } from 'lucide-react'
+import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles, Copy, Layout } from 'lucide-react'
 import { toast } from 'sonner'
 import { saveFloorPlan } from '@/actions/reservations'
 import { supabase } from '@/lib/supabase'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     const [floorPlans, setFloorPlans] = useState<any[]>(initialData || [])
@@ -16,6 +19,13 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     const [isDrawing, setIsDrawing] = useState(false)
     const [isProcessingAI, setIsProcessingAI] = useState(false)
     const [drawingPoints, setDrawingPoints] = useState<{ x: number, y: number }[]>([])
+
+    // Modal States
+    const [isFloorModalOpen, setIsFloorModalOpen] = useState(false)
+    const [newFloorName, setNewFloorName] = useState("")
+    const [isAIModalOpen, setIsAIModalOpen] = useState(false)
+    const [pendingAIResults, setPendingAIResults] = useState<any[] | null>(null)
+
     const containerRef = useRef<HTMLDivElement>(null)
 
     // Sync tables when switching floors
@@ -226,12 +236,9 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
             const aiResult = await generateLayoutFromImage(publicUrl)
 
             if (aiResult.success && aiResult.tables) {
-                // 3. Merge or Replace
-                if (confirm("¿Quieres reemplazar las mesas existentes con el diseño de AI? (Cancelar para combinar)")) {
-                    setTables(aiResult.tables)
-                } else {
-                    setTables(prev => [...prev, ...aiResult.tables])
-                }
+                // 3. Store result and open confirmation modal
+                setPendingAIResults(aiResult.tables)
+                setIsAIModalOpen(true)
                 toast.success("¡Diseño generado con éxito!", { id: toastId })
             } else {
                 toast.error(aiResult.error || "No se pudo generar el diseño. Intenta con una imagen más clara.", { id: toastId })
@@ -248,10 +255,29 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         }
     }
 
-    const handleCreateFloor = async () => {
-        const name = prompt("Nombre del nuevo piso (ej. Piso 2):")
-        if (!name) return
+    const confirmAIImport = (replace: boolean) => {
+        if (!pendingAIResults) return
 
+        if (replace) {
+            setTables(pendingAIResults)
+        } else {
+            setTables(prev => [...prev, ...pendingAIResults])
+        }
+
+        setIsAIModalOpen(false)
+        setPendingAIResults(null)
+    }
+
+    const openCreateFloorModal = () => {
+        setNewFloorName("")
+        setIsFloorModalOpen(true)
+    }
+
+    const confirmCreateFloor = async () => {
+        if (!newFloorName.trim()) return
+        setIsFloorModalOpen(false)
+
+        const name = newFloorName
         try {
             // Optimistic update
             const tempId = `temp-${Date.now()}`
@@ -335,7 +361,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                             </button>
                         ))}
                         <button
-                            onClick={handleCreateFloor}
+                            onClick={openCreateFloorModal}
                             className="px-2 py-1.5 text-xs font-medium rounded-md text-zinc-400 hover:text-white hover:bg-zinc-700/50"
                             title="Agregar Piso"
                         >
@@ -616,6 +642,71 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                     </div>
                 )}
             </div>
+
+            {/* Floor Creation Modal */}
+            <Dialog open={isFloorModalOpen} onOpenChange={setIsFloorModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Nuevo Piso o Zona</DialogTitle>
+                        <DialogDescription>
+                            Asigna un nombre a este nuevo espacio (ej. Terraza, Piso 2, VIP).
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Input
+                            placeholder="Nombre del espacio..."
+                            value={newFloorName}
+                            onChange={(e) => setNewFloorName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && confirmCreateFloor()}
+                            autoFocus
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsFloorModalOpen(false)}>Cancelar</Button>
+                        <Button onClick={confirmCreateFloor} className="bg-indigo-600 hover:bg-indigo-700">
+                            Crear Espacio <Plus className="w-4 h-4 ml-2" />
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* AI Confirmation Modal */}
+            <Dialog open={isAIModalOpen} onOpenChange={setIsAIModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Diseño AI Generado</DialogTitle>
+                        <DialogDescription>
+                            Hemos detectado {pendingAIResults?.length || 0} elementos en tu plano. ¿Cómo deseas proceder?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid grid-cols-2 gap-4 py-4">
+                        <button
+                            onClick={() => confirmAIImport(true)}
+                            className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-zinc-700 hover:border-indigo-500 hover:bg-indigo-500/10 transition-all gap-2 group"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors text-indigo-400">
+                                <Layout className="w-5 h-5" />
+                            </div>
+                            <span className="font-medium text-white text-sm">Reemplazar Todo</span>
+                            <span className="text-[10px] text-zinc-400 text-center">Borra lo actual y usa solo lo nuevo</span>
+                        </button>
+
+                        <button
+                            onClick={() => confirmAIImport(false)}
+                            className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-zinc-700 hover:border-emerald-500 hover:bg-emerald-500/10 transition-all gap-2 group"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors text-emerald-400">
+                                <Plus className="w-5 h-5" />
+                            </div>
+                            <span className="font-medium text-white text-sm">Combinar</span>
+                            <span className="text-[10px] text-zinc-400 text-center">Agrega lo nuevo a lo existente</span>
+                        </button>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsAIModalOpen(false)}>Cancelar Operación</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
