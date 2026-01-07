@@ -24,7 +24,14 @@ export default function Page() {
             <div className="relative z-10 flex flex-col items-center">
                 <BrandLogo size="xl" className="mb-8 scale-110" />
                 <SignIn
+                    routing="path"
+                    path="/sign-in"
+                    signUpUrl={`/sign-up?redirect_url=${redirectUrl}`}
                     appearance={{
+                        variables: {
+                            colorPrimary: '#00FF00',
+                            colorTextSecondary: '#00FF00'
+                        },
                         elements: {
                             rootBox: "w-full",
                             card: "bg-[#111] border border-white/10 shadow-2xl shadow-violet-900/20 backdrop-blur-xl",
@@ -36,7 +43,10 @@ export default function Page() {
                             formFieldLabel: "text-gray-300",
                             formFieldInput: "bg-black/50 border-white/10 text-white focus:border-violet-500 transition-colors",
                             footerActionText: "text-gray-400",
-                            footerActionLink: "text-violet-400 hover:text-violet-300 font-bold"
+                            footerActionLink: "!text-[#00FF00] hover:!text-[#00DD00] font-bold",
+                            formFieldAction: "!text-[#00FF00] hover:!text-[#00DD00] font-bold",
+                            identityPreviewEditButton: "!text-[#00FF00] hover:!text-[#00DD00] font-bold",
+                            alternativeMethodsBlockButton: "!text-[#00FF00] hover:!text-[#00DD00] font-bold"
                         }
                     }}
                     forceRedirectUrl={redirectUrl}

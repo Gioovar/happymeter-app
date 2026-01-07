@@ -155,6 +155,8 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
 
                         <div className="w-full bg-white rounded-2xl overflow-hidden shadow-2xl">
                             <SignIn
+                                routing="path"
+                                path={`/loyalty/${params.programId}`}
                                 appearance={{
                                     variables: {
                                         colorPrimary: '#00FF00', // Force primary color to neon green for this instance
