@@ -15,7 +15,9 @@ export default function Page() {
     const programId = searchParams.get('program_id')
 
     const [programInfo, setProgramInfo] = useState<any>(null)
-    const [view, setView] = useState<'selection' | 'form'>('selection')
+    const [view, setView] = useState<'selection' | 'form' | 'phone_entry'>('selection')
+    const [formValues, setFormValues] = useState<{ phoneNumber?: string }>({})
+    const [tempPhone, setTempPhone] = useState('')
 
     useEffect(() => {
         if (programId) {
@@ -43,6 +45,12 @@ export default function Page() {
             console.error("Error signing in with Google", err);
         }
     };
+
+    const handlePhoneSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        setFormValues({ phoneNumber: tempPhone })
+        setView('form')
+    }
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] grid lg:grid-cols-2">
@@ -136,7 +144,7 @@ export default function Page() {
 
                                 <div className="space-y-3">
                                     <button
-                                        onClick={() => setView('form')}
+                                        onClick={() => setView('phone_entry')}
                                         className="w-full h-14 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group"
                                     >
                                         <Phone className="w-5 h-5 text-[#00FF00] group-hover:text-[#00DD00] transition-colors" />
@@ -160,6 +168,44 @@ export default function Page() {
                                 </p>
                             </div>
                         </div>
+                    ) : view === 'phone_entry' ? (
+                        <div className="w-full animate-in fade-in slide-in-from-right-8 duration-500">
+                            <button
+                                onClick={() => setView('selection')}
+                                className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors font-medium text-sm group"
+                            >
+                                <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
+                                    <ArrowLeft className="w-4 h-4" />
+                                </div>
+                                Volver
+                            </button>
+
+                            <div className="text-center lg:text-left mb-8">
+                                <h2 className="text-3xl font-bold text-white mb-2">Introduce tu número</h2>
+                                <p className="text-gray-400">Te enviaremos un código de seguridad</p>
+                            </div>
+
+                            <form onSubmit={handlePhoneSubmit} className="space-y-6">
+                                <div>
+                                    <label className="block text-gray-400 font-medium ml-1 mb-1.5 text-sm">Número de teléfono</label>
+                                    <input
+                                        type="tel"
+                                        placeholder="+52..."
+                                        value={tempPhone}
+                                        onChange={(e) => setTempPhone(e.target.value)}
+                                        className="w-full bg-[#111] border border-white/10 text-white focus:border-[#00FF00] focus:ring-1 focus:ring-[#00FF00]/50 h-12 rounded-xl px-4 text-lg outline-none transition-all"
+                                        autoFocus
+                                        required
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    className="w-full h-12 bg-[#00FF00] hover:bg-[#00DD00] text-black font-bold rounded-xl transition-colors"
+                                >
+                                    Continuar
+                                </button>
+                            </form>
+                        </div>
                     ) : (
                         <div className="w-full animate-in fade-in slide-in-from-right-8 duration-500">
                             <button
@@ -173,6 +219,7 @@ export default function Page() {
                             </button>
 
                             <SignIn
+                                initialValues={formValues}
                                 routing="path"
                                 path="/sign-in"
                                 signUpUrl={`/sign-up?redirect_url=${redirectUrl}`}
