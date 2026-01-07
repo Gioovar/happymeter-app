@@ -94,6 +94,50 @@ export async function createFloorPlan(name: string) {
     }
 }
 
+export async function deleteFloorPlan(floorPlanId: string) {
+    try {
+        const { userId } = await auth()
+        if (!userId) throw new Error("Unauthorized")
+
+        // Check if there are other floors
+        const count = await prisma.floorPlan.count({ where: { userId } })
+        if (count <= 1) {
+            return { success: false, error: "Cannot delete the last floor plan." }
+        }
+
+        await prisma.floorPlan.delete({
+            where: { id: floorPlanId, userId }
+        })
+
+        revalidatePath('/dashboard/reservations')
+        return { success: true }
+    } catch (error) {
+        console.error("Error deleting floor plan:", error)
+        return { success: false, error: "Failed to delete floor plan" }
+    }
+}
+
+export async function updateFloorMetadata(floorPlanId: string, data: { name: string, width: number, height: number }) {
+    try {
+        const { userId } = await auth()
+        if (!userId) throw new Error("Unauthorized")
+
+        const updated = await prisma.floorPlan.update({
+            where: { id: floorPlanId, userId },
+            data: {
+                name: data.name,
+                physicalWidth: data.width,
+                physicalHeight: data.height
+            }
+        })
+        revalidatePath('/dashboard/reservations')
+        return { success: true, floorPlan: JSON.parse(JSON.stringify(updated)) }
+    } catch (error) {
+        console.error("Error updating floor metadata:", error)
+        return { success: false, error: "Failed to update floor metadata" }
+    }
+}
+
 export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
     const { userId } = await auth()
     if (!userId) throw new Error("Unauthorized")

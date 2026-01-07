@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles, Copy, Layout } from 'lucide-react'
+import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles, Copy, Layout, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import { saveFloorPlan } from '@/actions/reservations'
 import { supabase } from '@/lib/supabase'
@@ -11,8 +11,15 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 export default function CanvasEditor({ initialData }: { initialData: any[] }) {
-    const [floorPlans, setFloorPlans] = useState<any[]>(initialData || [])
-    const [activeFloorId, setActiveFloorId] = useState<string>(initialData?.[0]?.id || "")
+
+    const [floorPlans, setFloorPlans] = useState<any[]>(initialData)
+    const [activeFloorId, setActiveFloorId] = useState<string>(initialData[0]?.id || "")
+
+    // Edit Floor State
+    const [isEditFloorModalOpen, setIsEditFloorModalOpen] = useState(false)
+    const [editFloorData, setEditFloorData] = useState({ name: '', width: 10, height: 10 })
+
+    // AI Import State
     const [tables, setTables] = useState<any[]>(initialData?.[0]?.tables || [])
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
@@ -341,6 +348,55 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         }
     }
 
+    const openEditFloorModal = () => {
+        const floor = floorPlans.find(f => f.id === activeFloorId)
+        if (!floor) return
+        setEditFloorData({
+            name: floor.name,
+            width: floor.physicalWidth || 10,
+            height: floor.physicalHeight || 10
+        })
+        setIsEditFloorModalOpen(true)
+    }
+
+    const handleUpdateFloor = async () => {
+        try {
+            const { updateFloorMetadata } = await import("@/actions/reservations")
+            const result = await updateFloorMetadata(activeFloorId, editFloorData)
+            if (result.success) {
+                setFloorPlans(prev => prev.map(p => p.id === activeFloorId ? { ...p, ...result.floorPlan } : p))
+                setIsEditFloorModalOpen(false)
+                toast.success("Espacio actualizado")
+            } else {
+                toast.error("Error al actualizar")
+            }
+        } catch (e) {
+            console.error(e)
+            toast.error("Error al actualizar")
+        }
+    }
+
+    const handleDeleteFloor = async () => {
+        if (!confirm("¿Estás seguro de eliminar este piso? Esta acción no se puede deshacer.")) return
+
+        try {
+            const { deleteFloorPlan } = await import("@/actions/reservations")
+            const result = await deleteFloorPlan(activeFloorId)
+            if (result.success) {
+                const remaining = floorPlans.filter(p => p.id !== activeFloorId)
+                setFloorPlans(remaining)
+                setActiveFloorId(remaining[0]?.id || "")
+                setIsEditFloorModalOpen(false)
+                toast.success("Piso eliminado")
+            } else {
+                toast.error(result.error || "No se pudo eliminar")
+            }
+        } catch (e) {
+            console.error(e)
+            toast.error("Error al eliminar")
+        }
+    }
+
     const activeFloorIndex = floorPlans.findIndex(p => p.id === activeFloorId)
     const TINT_COLORS = [
         'from-indigo-500/10',
@@ -371,6 +427,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                 {floor.name}
                             </button>
                         ))}
+
                         <button
                             onClick={openCreateFloorModal}
                             className="px-2 py-1.5 text-xs font-medium rounded-md text-zinc-400 hover:text-white hover:bg-zinc-700/50"
@@ -379,6 +436,15 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                             <Plus className="w-4 h-4" />
                         </button>
                     </div>
+
+                    {/* Edit Current Floor Button */}
+                    <button
+                        onClick={openEditFloorModal}
+                        className="p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-colors mr-2"
+                        title="Configurar Espacio"
+                    >
+                        <Settings className="w-4 h-4" />
+                    </button>
 
                     <div className="w-px h-8 bg-white/10 mx-2" />
 
@@ -455,11 +521,16 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                     {/* Dynamic Background Tint */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${currentTint} via-transparent to-transparent opacity-40 pointer-events-none`} />
 
-                    {/* Watermark Name */}
+                    {/* Watermark Name & Dimensions */}
                     <div className="absolute top-8 left-8 pointer-events-none select-none z-0">
                         <h1 className="text-6xl font-black text-white/5 uppercase tracking-tighter">
                             {floorPlans.find(f => f.id === activeFloorId)?.name || 'Sin Nombre'}
                         </h1>
+                        <div className="mt-2 flex items-center gap-2 text-white/10 pl-2">
+                            <span className="text-sm font-medium tracking-widest border border-white/10 px-2 py-0.5 rounded">
+                                AREA: {floorPlans.find(f => f.id === activeFloorId)?.physicalWidth || 10}m x {floorPlans.find(f => f.id === activeFloorId)?.physicalHeight || 10}m
+                            </span>
+                        </div>
                     </div>
 
                     {/* Render Shapes & Tables */}
@@ -729,6 +800,66 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+
+            {/* Edit Floor Modal */}
+            <Dialog open={isEditFloorModalOpen} onOpenChange={setIsEditFloorModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Configuración del Espacio</DialogTitle>
+                        <DialogDescription>
+                            Ajusta el nombre y las dimensiones físicas reales para una escala precisa.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-xs text-zinc-400">Nombre del Piso/Zona</label>
+                            <Input
+                                value={editFloorData.name}
+                                onChange={(e) => setEditFloorData({ ...editFloorData, name: e.target.value })}
+                                className="text-black"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs text-zinc-400">Ancho (metros)</label>
+                                <Input
+                                    type="number"
+                                    value={editFloorData.width}
+                                    onChange={(e) => setEditFloorData({ ...editFloorData, width: parseFloat(e.target.value) || 0 })}
+                                    className="text-black"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-zinc-400">Largo/Fondo (metros)</label>
+                                <Input
+                                    type="number"
+                                    value={editFloorData.height}
+                                    onChange={(e) => setEditFloorData({ ...editFloorData, height: parseFloat(e.target.value) || 0 })}
+                                    className="text-black"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-white/10">
+                            <button
+                                onClick={handleDeleteFloor}
+                                className="text-red-400 text-xs hover:text-red-300 flex items-center gap-1"
+                            >
+                                <Trash2 className="w-3 h-3" /> Eliminar este piso permanentemente
+                            </button>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsEditFloorModalOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleUpdateFloor} className="bg-indigo-600 hover:bg-indigo-700">
+                            Guardar Cambios
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div >
     )
 }
