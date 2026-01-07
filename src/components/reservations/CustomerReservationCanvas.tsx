@@ -250,13 +250,18 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                     drag
                     dragElastic={0.1}
                     dragMomentum={false}
-                    className="relative bg-zinc-900/50 rounded-3xl border border-white/5 shadow-2xl"
+                    className="relative rounded-[32px] overflow-hidden" // Card Shape
                     style={{
                         width: floorPlan.width || 800,
                         height: floorPlan.height || 600,
-                        x, y, scale // Bind motion values
+                        x, y, scale, // Bind motion values
+                        // Shading/Gradient Effect (Image 1 style)
+                        background: 'radial-gradient(120% 120% at 50% 0%, #27272a 0%, #09090b 100%)', // Zinc-800 to Zinc-950
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1)', // Deep shadow + Subtle border (Image 2 frame)
                     }}
                 >
+                    {/* Inner highlight for "3D" feel */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
                     {/* Render Tables */}
                     {floorPlan.tables.map((table: Table) => {
                         const isReserved = (table.reservations?.length || 0) > 0
