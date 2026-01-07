@@ -156,6 +156,10 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                         <div className="w-full bg-white rounded-2xl overflow-hidden shadow-2xl">
                             <SignIn
                                 appearance={{
+                                    variables: {
+                                        colorPrimary: '#00FF00', // Force primary color to neon green for this instance
+                                        colorTextSecondary: '#00FF00'
+                                    },
                                     elements: {
                                         rootBox: "w-full",
                                         card: "w-full shadow-none border-none",
@@ -163,9 +167,11 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                                         headerSubtitle: "hidden",
                                         socialButtonsBlockButton: "text-black border-gray-200 hover:bg-gray-50",
                                         formButtonPrimary: "bg-violet-600 hover:bg-violet-700",
-                                        footerActionLink: "text-lime-400 hover:text-lime-300 font-bold",
-                                        formFieldAction: "text-lime-400 hover:text-lime-300 font-bold",
-                                        identityPreviewEditButton: "text-lime-400 hover:text-lime-300 font-bold"
+                                        // Force green on all possible link types
+                                        footerActionLink: "!text-[#00FF00] hover:!text-[#00DD00] font-bold",
+                                        formFieldAction: "!text-[#00FF00] hover:!text-[#00DD00] font-bold",
+                                        identityPreviewEditButton: "!text-[#00FF00] hover:!text-[#00DD00] font-bold",
+                                        alternativeMethodsBlockButton: "!text-[#00FF00] hover:!text-[#00DD00] font-bold"
                                     }
                                 }}
                                 signUpUrl={`/sign-up?redirect_url=/loyalty/${params.programId}&program_id=${params.programId}`}
