@@ -18,6 +18,11 @@ export default clerkMiddleware((auth, req) => {
         req.nextUrl.pathname === '/sitemap.xml' ||
         req.nextUrl.pathname === '/manifest.json'
     ) {
+        // [NEW] Redirect authenticated users trying to access sign-in/sign-up
+        const { userId } = auth();
+        if (userId && (req.nextUrl.pathname.startsWith('/sign-in') || req.nextUrl.pathname.startsWith('/sign-up'))) {
+            return NextResponse.redirect(new URL('/dashboard', req.url));
+        }
         return // return void to allow access without auth
     }
 
