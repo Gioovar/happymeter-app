@@ -52,10 +52,10 @@ export async function getFloorPlans() {
                 },
                 include: { tables: true }
             })
-            return [defaultPlan]
+            return JSON.parse(JSON.stringify([defaultPlan]))
         }
 
-        return floorPlans
+        return JSON.parse(JSON.stringify(floorPlans))
     } catch (error) {
         console.error("🔥 Error in getFloorPlans:", error)
         return []
@@ -77,7 +77,7 @@ export async function createFloorPlan(name: string) {
         })
 
         revalidatePath('/dashboard/reservations')
-        return { success: true, floorPlan: newPlan }
+        return { success: true, floorPlan: JSON.parse(JSON.stringify(newPlan)) }
     } catch (error) {
         console.error("Error creating floor plan:", error)
         return { success: false, error: "Failed to create floor plan" }
