@@ -9,7 +9,7 @@ import {
 import Link from 'next/link';
 import { getFloorPlan } from "@/actions/reservations"
 
-export default function ReservationsPage() {
+export default async function ReservationsPage() {
     // Check if floor plan is configured
     const floorPlan = await getFloorPlan()
 
