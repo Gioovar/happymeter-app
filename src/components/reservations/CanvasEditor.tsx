@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { saveFloorPlan } from '@/actions/reservations'
 
 export default function CanvasEditor({ initialData }: { initialData: any }) {
-    const [tables, setTables] = useState<any[]>(initialData.tables)
+    const [tables, setTables] = useState<any[]>(initialData?.tables || [])
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -59,6 +59,11 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
     }
 
     const handleSave = async () => {
+        if (!initialData?.id) {
+            toast.error("Error: No se pudo cargar el plano. Recarga la página.")
+            return
+        }
+
         setIsSaving(true)
         try {
             await saveFloorPlan(initialData.id, tables)
