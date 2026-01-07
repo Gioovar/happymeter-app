@@ -8,38 +8,53 @@ export async function getFloorPlan() {
     const { userId } = auth()
     if (!userId) throw new Error("Unauthorized")
 
-    // Find UserSettings id from userId
-    const userSettings = await prisma.userSettings.findUnique({
-        where: { userId },
-        select: { userId: true } // Just ensuring user exists
-    })
+    try {
+        // Find UserSettings id from userId
+        let userSettings = await prisma.userSettings.findUnique({
+            where: { userId },
+            select: { userId: true }
+        })
 
-    if (!userSettings) throw new Error("User settings not found")
-
-    // Fetch or create Main Floor Plan
-    let floorPlan = await prisma.floorPlan.findFirst({
-        where: { userId },
-        include: { tables: true }
-    })
-
-    if (!floorPlan) {
-        floorPlan = await prisma.floorPlan.create({
-            data: {
-                userId,
-                name: "Distribución Principal",
-                tables: {
-                    create: [
-                        { label: "Mesa 1", x: 100, y: 100, type: "RECT", capacity: 4 },
-                        { label: "Mesa 2", x: 300, y: 100, type: "RECT", capacity: 4 },
-                        { label: "Barra", x: 100, y: 300, width: 200, height: 60, type: "BAR", capacity: 5 },
-                    ]
+        // [AUTO-HEAL] If user settings missing, create default to avoid blocking
+        if (!userSettings) {
+            console.log("⚠️ UserSettings missing for reservations, auto-creating...")
+            userSettings = await prisma.userSettings.create({
+                data: {
+                    userId,
+                    plan: 'FREE',
                 }
-            },
+            })
+        }
+
+        // Fetch or create Main Floor Plan
+        let floorPlan = await prisma.floorPlan.findFirst({
+            where: { userId },
             include: { tables: true }
         })
-    }
 
-    return floorPlan
+        if (!floorPlan) {
+            console.log("Creating new default floor plan...")
+            floorPlan = await prisma.floorPlan.create({
+                data: {
+                    userId,
+                    name: "Distribución Principal",
+                    tables: {
+                        create: [
+                            { label: "Mesa 1", x: 100, y: 100, type: "RECT", capacity: 4 },
+                            { label: "Mesa 2", x: 300, y: 100, type: "RECT", capacity: 4 },
+                            { label: "Barra", x: 100, y: 300, width: 200, height: 60, type: "BAR", capacity: 5 },
+                        ]
+                    }
+                },
+                include: { tables: true }
+            })
+        }
+
+        return floorPlan
+    } catch (error) {
+        console.error("🔥 Error in getFloorPlan:", error)
+        throw new Error("Failed to load floor plan")
+    }
 }
 
 export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
@@ -107,6 +122,12 @@ export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
                 })
             }
         }
+    })
+
+    // 3. Mark as configured
+    await prisma.floorPlan.update({
+        where: { id: floorPlanId },
+        data: { isConfigured: true }
     })
 
     revalidatePath('/dashboard/reservations')
