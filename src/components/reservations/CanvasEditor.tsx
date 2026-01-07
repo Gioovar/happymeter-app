@@ -60,6 +60,14 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
         setDrawingPoints([...drawingPoints, { x, y }])
     }
 
+    // Helper to normalize points to 0-100 range
+    const normalizePoints = (points: { x: number, y: number }[], width: number, height: number) => {
+        return points.map(p => ({
+            x: (p.x / width) * 100,
+            y: (p.y / height) * 100
+        }))
+    }
+
     const finishShape = () => {
         if (drawingPoints.length < 3) return
 
@@ -72,11 +80,14 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
         const width = maxX - minX
         const height = maxY - minY
 
-        // Normalize points relative to new x,y (top-left)
-        const normalizedPoints = drawingPoints.map(p => ({
+        // Relativize points to 0,0 top-left
+        const relativePoints = drawingPoints.map(p => ({
             x: p.x - minX,
             y: p.y - minY
         }))
+
+        // Normalize to 0-100 for scalable SVG
+        const normalizedPoints = normalizePoints(relativePoints, width, height)
 
         const newShape = {
             id: `shape-${Date.now()}`,
@@ -86,7 +97,7 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
             width,
             height,
             type: 'CUSTOM',
-            points: JSON.stringify(normalizedPoints), // Save as stringified JSON
+            points: JSON.stringify(normalizedPoints),
             capacity: 0,
             rotation: 0
         }
@@ -98,16 +109,43 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
     }
 
     const addTable = (type: string) => {
+        let width = 80
+        let height = 80
+        let points = null
+        let label = `Mesa ${tables.length + 1}`
+
+        if (type === 'BAR') {
+            width = 150
+            height = 50
+        } else if (type === 'L_SHAPE') {
+            width = 100
+            height = 100
+            // L shape 0-100
+            points = [
+                { x: 0, y: 0 }, { x: 40, y: 0 }, { x: 40, y: 60 },
+                { x: 100, y: 60 }, { x: 100, y: 100 }, { x: 0, y: 100 }
+            ]
+        } else if (type === 'T_SHAPE') {
+            width = 100
+            height = 100
+            // T shape 0-100
+            points = [
+                { x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 40 },
+                { x: 70, y: 40 }, { x: 70, y: 100 }, { x: 30, y: 100 }, { x: 30, y: 40 }, { x: 0, y: 40 }
+            ]
+        }
+
         const newTable = {
             id: `temp-${Date.now()}`,
-            label: `Mesa ${tables.length + 1}`,
+            label,
             x: 50,
             y: 50,
-            width: type === 'BAR' ? 150 : 80,
-            height: type === 'BAR' ? 50 : 80,
+            width,
+            height,
             type,
             capacity: 4,
-            rotation: 0
+            rotation: 0,
+            points: points ? JSON.stringify(points) : null
         }
         setTables([...tables, newTable])
     }
@@ -144,7 +182,7 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
     const selectedTable = tables.find(t => t.id === selectedId)
 
     // Helper to generate SVG path from points
-    const getPathFromPoints = (pointsStr: any, width: number, height: number) => {
+    const getPathFromPoints = (pointsStr: any) => {
         try {
             const points = typeof pointsStr === 'string' ? JSON.parse(pointsStr) : pointsStr
             if (!Array.isArray(points)) return ''
@@ -171,6 +209,12 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
                     </button>
                     <button onClick={() => addTable('BAR')} className="p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
                         <div className="w-5 h-3 border border-current rounded-sm mt-1" /> Barra
+                    </button>
+                    <button onClick={() => addTable('L_SHAPE')} className="p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
+                        <div className="font-bold text-lg leading-4">L</div> Forma L
+                    </button>
+                    <button onClick={() => addTable('T_SHAPE')} className="p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
+                        <div className="font-bold text-lg leading-4">T</div> Forma T
                     </button>
                     <div className="w-px h-8 bg-white/10 mx-2" />
                     <button
@@ -212,62 +256,74 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
                     }}
                 >
                     {/* Render Shapes & Tables */}
-                    {tables.map((table) => (
-                        <motion.div
-                            key={table.id}
-                            drag={!isDrawing}
-                            dragMomentum={false}
-                            initial={{ x: table.x, y: table.y }}
-                            onDragEnd={(e, info) => {
-                                const newX = table.x + info.offset.x
-                                const newY = table.y + info.offset.y
-                                setTables(prev => prev.map(t =>
-                                    t.id === table.id ? { ...t, x: newX, y: newY } : t
-                                ))
-                            }}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                if (!isDrawing) setSelectedId(table.id)
-                            }}
-                            className={`absolute flex items-center justify-center cursor-move group
-                                ${selectedId === table.id ? 'ring-2 ring-indigo-500 z-10' : 'hover:ring-1 hover:ring-white/30'}
-                            `}
-                            style={{
-                                width: table.width,
-                                height: table.height,
-                                rotate: table.rotation,
-                                borderRadius: table.type === 'ROUND' ? '50%' : '4px',
-                                backgroundColor: table.type === 'CUSTOM' ? 'rgba(79, 70, 229, 0.2)' : (table.type === 'BAR' ? '#333' : '#444'),
-                                border: table.type === 'CUSTOM' ? 'none' : '1px solid #666',
-                            }}
-                        >
-                            {table.type === 'CUSTOM' ? (
-                                <svg
-                                    width="100%"
-                                    height="100%"
-                                    viewBox={`0 0 ${table.width} ${table.height}`}
-                                    className="overflow-visible pointer-events-none"
-                                >
-                                    <path
-                                        d={getPathFromPoints(table.points, table.width, table.height)}
-                                        fill="rgba(79, 70, 229, 0.3)"
-                                        stroke="#4f46e5"
-                                        strokeWidth="2"
-                                    />
-                                </svg>
-                            ) : (
-                                <>
-                                    <span className="text-xs text-white font-medium select-none pointer-events-none">
+                    {tables.map((table) => {
+                        const isCustomShape = ['CUSTOM', 'L_SHAPE', 'T_SHAPE'].includes(table.type)
+                        return (
+                            <motion.div
+                                key={table.id}
+                                drag={!isDrawing}
+                                dragMomentum={false}
+                                initial={{ x: table.x, y: table.y }}
+                                onDragEnd={(e, info) => {
+                                    const newX = table.x + info.offset.x
+                                    const newY = table.y + info.offset.y
+                                    setTables(prev => prev.map(t =>
+                                        t.id === table.id ? { ...t, x: newX, y: newY } : t
+                                    ))
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (!isDrawing) setSelectedId(table.id)
+                                }}
+                                className={`absolute flex items-center justify-center cursor-move group
+                                    ${selectedId === table.id ? 'ring-2 ring-indigo-500 z-10' : 'hover:ring-1 hover:ring-white/30'}
+                                `}
+                                style={{
+                                    width: table.width,
+                                    height: table.height,
+                                    rotate: table.rotation,
+                                    borderRadius: table.type === 'ROUND' ? '50%' : '4px',
+                                    backgroundColor: isCustomShape ? 'rgba(79, 70, 229, 0.2)' : (table.type === 'BAR' ? '#333' : '#444'),
+                                    border: isCustomShape ? 'none' : '1px solid #666',
+                                }}
+                            >
+                                {isCustomShape ? (
+                                    <svg
+                                        width="100%"
+                                        height="100%"
+                                        viewBox="0 0 100 100"
+                                        preserveAspectRatio="none"
+                                        className="overflow-visible pointer-events-none"
+                                    >
+                                        <path
+                                            d={getPathFromPoints(table.points)}
+                                            fill={table.type === 'CUSTOM' ? "rgba(79, 70, 229, 0.3)" : "#444"}
+                                            stroke={table.type === 'CUSTOM' ? "#4f46e5" : "#666"}
+                                            strokeWidth="2"
+                                            vectorEffect="non-scaling-stroke"
+                                        />
+                                    </svg>
+                                ) : (
+                                    <>
+                                        <span className="text-xs text-white font-medium select-none pointer-events-none">
+                                            {table.label}
+                                        </span>
+                                        {/* Capacity dot */}
+                                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-zinc-500 whitespace-nowrap">
+                                            {table.capacity} pax
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Label for L/T shapes inside */}
+                                {['L_SHAPE', 'T_SHAPE'].includes(table.type) && (
+                                    <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-medium select-none pointer-events-none">
                                         {table.label}
                                     </span>
-                                    {/* Capacity dot */}
-                                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-zinc-500 whitespace-nowrap">
-                                        {table.capacity} pax
-                                    </div>
-                                </>
-                            )}
-                        </motion.div>
-                    ))}
+                                )}
+                            </motion.div>
+                        )
+                    })}
 
                     {/* Active Drawing Layer */}
                     {isDrawing && (
@@ -346,28 +402,26 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
                             </div>
                         </div>
 
-                        {selectedTable.type !== 'CUSTOM' && (
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="space-y-1">
-                                    <label className="text-xs text-zinc-400">Ancho</label>
-                                    <input
-                                        type="number"
-                                        value={selectedTable.width}
-                                        onChange={(e) => updateSelected('width', parseInt(e.target.value))}
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs text-zinc-400">Largo</label>
-                                    <input
-                                        type="number"
-                                        value={selectedTable.height}
-                                        onChange={(e) => updateSelected('height', parseInt(e.target.value))}
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white"
-                                    />
-                                </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                                <label className="text-xs text-zinc-400">Ancho</label>
+                                <input
+                                    type="number"
+                                    value={selectedTable.width}
+                                    onChange={(e) => updateSelected('width', parseInt(e.target.value))}
+                                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white"
+                                />
                             </div>
-                        )}
+                            <div className="space-y-1">
+                                <label className="text-xs text-zinc-400">Largo</label>
+                                <input
+                                    type="number"
+                                    value={selectedTable.height}
+                                    onChange={(e) => updateSelected('height', parseInt(e.target.value))}
+                                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white"
+                                />
+                            </div>
+                        </div>
 
                         <div className="pt-4 mt-auto border-t border-white/10">
                             <button
