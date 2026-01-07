@@ -212,7 +212,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
     }
 
     return (
-        <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-950 touch-none">
+        <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-800 touch-none">
             {/* Header */}
             <div className="absolute top-0 left-0 right-0 p-4 z-50 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
                 <button
@@ -237,10 +237,10 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             {/* Canvas Container */}
             <div
                 ref={containerRef}
-                className="flex-1 flex items-center justify-center relative overflow-hidden cursor-move touch-none bg-[#101014]"
+                className="flex-1 flex items-center justify-center relative overflow-hidden cursor-move touch-none bg-zinc-800"
                 style={{
-                    backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)',
-                    backgroundSize: '20px 20px'
+                    backgroundImage: 'linear-gradient(rgba(99, 102, 241, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.5) 1px, transparent 1px)',
+                    backgroundSize: '40px 40px'
                 }}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
