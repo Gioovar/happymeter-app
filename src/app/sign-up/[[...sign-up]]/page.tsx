@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getPublicLoyaltyProgramInfo } from "@/actions/loyalty";
 import { Sparkles, Mail, Phone, ArrowLeft, Loader2 } from "lucide-react";
+import { dark } from "@clerk/themes";
+import { esES } from "@clerk/localizations";
 
 export default function Page() {
     const searchParams = useSearchParams()
@@ -142,6 +144,7 @@ export default function Page() {
 
                         <SignUp
                             appearance={{
+                                baseTheme: dark,
                                 variables: {
                                     colorPrimary: '#00FF00',
                                     colorTextSecondary: '#00FF00'
