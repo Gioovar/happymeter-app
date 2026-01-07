@@ -248,16 +248,39 @@ export async function generateLayoutFromImage(imageUrl: string) {
         const jsonStr = text.substring(start, end + 1)
         const tables = JSON.parse(jsonStr)
 
-        // Post-process: Add IDs and Scale from % to 800x800 Canvas
-        const processedTables = tables.map((t: any, i: number) => ({
-            ...t,
-            id: `ai-${Date.now()}-${i}`,
-            x: (t.x / 100) * 800,
-            y: (t.y / 100) * 800,
-            width: (t.width / 100) * 800,
-            height: (t.height / 100) * 800,
-            rotation: t.rotation || 0
-        }))
+        // Post-process: Add IDs, Scale, and Generate Points for Shapes
+        const processedTables = tables.map((t: any, i: number) => {
+            const extraProps: any = {
+                id: `ai-${Date.now()}-${i}`,
+                x: (t.x / 100) * 800,
+                y: (t.y / 100) * 800,
+                width: (t.width / 100) * 800,
+                height: (t.height / 100) * 800,
+                rotation: t.rotation || 0,
+            }
+
+            // Generate points for complex shapes (0-100 relative coordinate space)
+            if (t.type === 'L_SHAPE') {
+                extraProps.points = JSON.stringify([
+                    { x: 0, y: 0 }, { x: 40, y: 0 }, { x: 40, y: 60 },
+                    { x: 100, y: 60 }, { x: 100, y: 100 }, { x: 0, y: 100 }
+                ])
+            } else if (t.type === 'U_SHAPE') {
+                extraProps.points = JSON.stringify([
+                    { x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 },
+                    { x: 75, y: 100 }, { x: 75, y: 35 }, { x: 25, y: 35 },
+                    { x: 25, y: 100 }, { x: 0, y: 100 }
+                ])
+            } else if (t.type === 'T_SHAPE') {
+                extraProps.points = JSON.stringify([
+                    { x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 35 },
+                    { x: 65, y: 35 }, { x: 65, y: 100 }, { x: 35, y: 100 },
+                    { x: 35, y: 35 }, { x: 0, y: 35 }
+                ])
+            }
+
+            return { ...t, ...extraProps }
+        })
 
         return { success: true, tables: processedTables }
 

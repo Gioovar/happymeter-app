@@ -399,7 +399,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                 >
                     {/* Render Shapes & Tables */}
                     {tables.map((table) => {
-                        const isCustomShape = ['CUSTOM', 'L_SHAPE', 'T_SHAPE'].includes(table.type)
+                        const isCustomShape = ['CUSTOM', 'L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type)
                         return (
                             <motion.div
                                 key={table.id}
@@ -457,8 +457,8 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                     </>
                                 )}
 
-                                {/* Label for L/T shapes inside */}
-                                {['L_SHAPE', 'T_SHAPE'].includes(table.type) && (
+                                {/* Label for L/T/U shapes inside */}
+                                {['L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type) && (
                                     <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-medium select-none pointer-events-none">
                                         {table.label}
                                     </span>
