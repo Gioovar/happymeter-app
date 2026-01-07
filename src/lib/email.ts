@@ -4,7 +4,7 @@ import { NewResponseEmail } from '@/emails/NewResponseEmail'
 import { InvitationEmail } from '@/emails/InvitationEmail'
 
 // Default sender
-const SENDER = 'HappyMeter <onboarding@resend.dev>'
+const SENDER = 'HappyMeter <notificaciones@happymeters.com>'
 
 // In Production, this should be 'HappyMeter <alerts@tudominio.com>'
 
@@ -127,5 +127,71 @@ export async function sendInvitationEmail(
     } catch (error) {
         console.error('Failed to send invitation email', error)
         throw error // Rethrow so the UI knows it failed? Or suppress? Better to suppress usually but log.
+    }
+}
+
+export async function sendStaffAssignmentEmail(
+    to: string,
+    staffName: string,
+    zoneName: string,
+    managerName: string
+) {
+    if (!to) return
+
+    try {
+        await resend.emails.send({
+            from: SENDER,
+            to: [to],
+            subject: `📋 Nueva Asignación: Responsable de ${zoneName}`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h1 style="color: #4f46e5;">Nueva Zona Asignada</h1>
+                    <p>Hola <strong>${staffName}</strong>,</p>
+                    <p><strong>${managerName}</strong> te ha asignado como responsable de la zona operativa: <strong>${zoneName}</strong>.</p>
+                    <p>Ahora verás las tareas correspondientes a esta zona en tu panel de operaciones.</p>
+                    <div style="margin: 30px 0;">
+                        <a href="${process.env.NEXT_PUBLIC_APP_URL}/ops/tasks" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                            Ver Mis Tareas
+                        </a>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">Si crees que esto es un error, contacta a tu administrador.</p>
+                </div>
+            `
+        })
+        console.log(`📧 Assignment email sent to ${to}`)
+    } catch (error) {
+        console.error('Failed to send assignment email', error)
+    }
+}
+export async function sendTeamAddedEmail(
+    to: string,
+    teamName: string,
+    role: string,
+    managerName: string
+) {
+    if (!to) return
+
+    try {
+        await resend.emails.send({
+            from: SENDER,
+            to: [to],
+            subject: `🚀 Has sido unido al equipo de ${teamName}`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h1 style="color: #4f46e5;">¡Bienvenido al Equipo!</h1>
+                    <p>Hola,</p>
+                    <p><strong>${managerName}</strong> te ha agregado directamente al equipo <strong>${teamName}</strong> con el rol de <strong>${role}</strong>.</p>
+                    <p>Ya puedes acceder a tu panel con tu cuenta existente.</p>
+                    <div style="margin: 30px 0;">
+                        <a href="${process.env.NEXT_PUBLIC_APP_URL}/ops/login" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                            Acceder al Portal
+                        </a>
+                    </div>
+                </div>
+            `
+        })
+        console.log(`📧 Team add email sent to ${to}`)
+    } catch (error) {
+        console.error('Failed to send team add email', error)
     }
 }

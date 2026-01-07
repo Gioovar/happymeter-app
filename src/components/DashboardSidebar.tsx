@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { LayoutDashboard, PlusCircle, HelpCircle, Settings, LogOut, Home, PieChart, Megaphone, Menu, X, FileText, Gamepad2, MessageSquare, Trophy, Shield, Store, Calendar, Users, GraduationCap, ScanLine } from 'lucide-react'
+import { Menu, X, Home, LogOut, Settings, LayoutDashboard, Shield, Store, Calendar, HelpCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
@@ -12,121 +12,84 @@ import NotificationsBell from '@/components/notifications/NotificationsBell'
 import CommandCenter from '@/components/CommandCenter'
 import PWAInstallButton from '@/components/PWAInstallButton'
 
-const menuItems = [
-    {
-        title: 'Mis Encuestas',
-        href: '/dashboard',
-        icon: LayoutDashboard
-    },
-    {
-        title: 'Crear Nueva',
-        href: '/dashboard/create',
-        icon: PlusCircle
-    },
-    {
-        title: 'Buzón Staff',
-        href: '/dashboard/create?mode=anonymous',
-        icon: Shield
-    },
-    {
-        title: 'Respuestas',
-        href: '/dashboard/responses',
-        icon: MessageSquare
-    },
-    {
-        title: 'Equipo',
-        href: '/dashboard/team',
-        icon: Users
-    },
-    {
-        title: 'Configuración',
-        href: '/dashboard/settings',
-        icon: Settings
-    },
-    {
-        title: 'Estadísticas',
-        href: '/dashboard/analytics',
-        icon: PieChart
-    },
-    {
-        title: 'Reportes',
-        href: '/dashboard/reports',
-        icon: FileText
-    },
-    {
-        title: 'Campañas',
-        href: '/dashboard/campaigns',
-        icon: Megaphone
-    },
-    {
-        title: 'Lealtad',
-        href: '/dashboard/loyalty',
-        icon: ScanLine
-    },
-    {
-        title: 'Clientes',
-        href: '/dashboard/loyalty?tab=clients',
-        icon: Users
-    },
-    {
-        title: 'Juegos',
-        href: '/dashboard/games',
-        icon: Gamepad2
-    },
-    {
-        title: 'Logros',
-        href: '/dashboard/achievements',
-        icon: Trophy
-    },
-    {
-        title: 'Academy',
-        href: '/dashboard/academy',
-        icon: GraduationCap
-    },
-    {
-        title: 'Ayuda y Soporte',
-        href: '/dashboard/help',
-        icon: HelpCircle
-    }
-]
+import { GLOBAL_NAV_ITEMS, NAVIGATION_CONFIG, NavigationMode } from '@/config/navigation'
+
+// Helper to determine mode from pathname (Shared logic, could be extracted but fine here)
+const getActiveMode = (pathname: string | null): NavigationMode => {
+    if (pathname?.includes('/dashboard/loyalty') || pathname?.includes('/dashboard/games') || pathname?.includes('/dashboard/achievements')) return 'loyalty';
+    if (pathname?.includes('/dashboard/processes')) return 'processes';
+    if (pathname?.includes('/dashboard/reservations')) return 'reservations';
+    return 'surveys';
+};
 
 // Navigation Component that uses searchParams (Must be wrapped in Suspense)
 function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => void }) {
     const pathname = usePathname()
     const searchParams = useSearchParams()
 
+    // Get items for current mode
+    const activeMode = getActiveMode(pathname)
+    const currentModeItems = NAVIGATION_CONFIG[activeMode] || []
+
+    // Combine mode items + separator + global items if needed, or just render them
+    // For now, let's render Mode Items primarily. Global items might go at bottom or shared.
+    // The design often puts Global items at the bottom separate section.
+    // Let's check the original design. It had "Ayuda" at bottom.
+    // We will render ONLY the mode specific items here in the main nav.
+
+    // Actually, looking at the layout, there is a separate section at the bottom key 299 for "Global" things.
+    // So we just iterate currentModeItems here.
+
     return (
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-            {menuItems.map((item) => {
+            {/* Mode Specific Items */}
+            {currentModeItems.map((item) => {
                 const Icon = item.icon
                 // Logic to check if active considering query params
                 const isActive = (() => {
                     const [itemPath, itemQuery] = item.href.split('?')
 
-                    // 1. Path must match
-                    if (pathname !== itemPath) return false
+                    // 1. Path must match (Exact match if specified, otherwise startsWith for sub-pages usually, but here we used exact checks mostly)
+                    if (item.matchExact) {
+                        if (pathname !== itemPath) return false
+                    } else {
+                        // Default Next.js link behavior is usually exact, but for sections we might want fuzzy.
+                        // But our config paths are specific. Let's stick to exact path match unless it's a sub-route 
+                        // which is handled by the fact that we are in that mode. 
+                        if (pathname !== itemPath) return false;
+                    }
 
                     // 2. If item has query params, they must match current params
-                    if (itemQuery) {
-                        const params = new URLSearchParams(itemQuery)
-                        for (const [key, value] of Array.from(params.entries())) {
+                    if (item.query || itemQuery) {
+                        const targetParams = item.query || Object.fromEntries(new URLSearchParams(itemQuery));
+                        for (const [key, value] of Object.entries(targetParams)) {
                             if (searchParams?.get(key) !== value) return false
                         }
+                        // If we are looking for specific params, and we found them, great.
+                        // But what if the URL has MORE params? Usually fine.
                         return true
                     }
 
-                    // 3. If item has NO query params (e.g. /create), but current URL DOES (e.g. /create?mode=anonymous),
-                    // we must ensure we don't accidentally highlight the generic one.
-                    if (itemPath === '/dashboard/create' && searchParams?.get('mode') === 'anonymous') return false
+                    // 3. Special case: If item has NO query params, but URL DOES, we might NOT want to highlight it
+                    // if there is ANOTHER item that requires those params.
+                    // For example: /create vs /create?mode=anonymous.
+                    // If we are at /create?mode=anonymous, the /create item should NOT be active.
+                    // We check if any sibling item has a query param that matches the current URL.
+                    const siblingWithParams = currentModeItems.find(sibling =>
+                        sibling.href === itemPath &&
+                        sibling.query &&
+                        Object.entries(sibling.query).every(([k, v]) => searchParams?.get(k) === v)
+                    );
 
-                    return true
+                    if (siblingWithParams && siblingWithParams !== item) return false;
+
+                    return true;
                 })()
 
                 return (
                     <Link
-                        key={item.href}
-                        id={`nav-item-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                        href={item.href}
+                        key={item.title} // Use title as key since href might be duplicated with diff queries
+                        href={item.query ? `${item.href}?${new URLSearchParams(item.query)}` : item.href}
                         onClick={() => setIsMobileOpen(false)}
                         className={cn(
                             "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",

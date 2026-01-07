@@ -97,6 +97,7 @@ model UserSettings {
   notificationPreferences Json?   // Stores { whatsapp: boolean, email: boolean, surveyAlerts: boolean }
   hasSeenTour         Boolean   @default(false)
   industry            String?   @default("restaurant")
+  jobTitle            String?   // User's position/role description
   gameConfig          Json?     // Stores personalization for games (roulette, bottle, etc.)
   
   // Stripe & Subscription
@@ -120,6 +121,7 @@ model UserSettings {
 
   // Loyalty
   loyaltyProgram      LoyaltyProgram?
+  processZones        ProcessZone[]
 }
 
 model TeamMember {
@@ -132,6 +134,8 @@ model TeamMember {
   
   user      UserSettings @relation("MemberOf", fields: [userId], references: [userId], onDelete: Cascade)
   owner     UserSettings @relation("OwnerOf", fields: [ownerId], references: [userId], onDelete: Cascade)
+
+  assignedZones ProcessZone[] // Relation to ProcessZone
 
   @@unique([userId, ownerId])
   @@index([ownerId])
@@ -857,4 +861,68 @@ model LoyaltyEvent {
 
   @@index([programId])
   @@index([customerId])
+}
+
+// --- Processes & Operations System ---
+
+model ProcessZone {
+  id          String   @id @default(uuid())
+  userId      String   // Owner / Business ID
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tasks       ProcessTask[]
+  user        UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  assignedStaffId String?
+  assignedStaff   TeamMember? @relation(fields: [assignedStaffId], references: [id])
+
+  @@index([userId])
+  @@index([assignedStaffId])
+}
+
+model ProcessTask {
+  id           String              @id @default(uuid())
+  zoneId       String
+  title        String
+  description  String?
+  limitTime    String?             // "HH:MM" format for recurring daily deadlines
+  evidenceType ProcessEvidenceType
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  zone        ProcessZone       @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  evidences   ProcessEvidence[]
+
+  @@index([zoneId])
+}
+
+model ProcessEvidence {
+  id          String                @id @default(uuid())
+  taskId      String
+  staffId     String?               // Clerk User ID or TeamMember ID of who completed it
+  fileUrl     String
+  capturedAt  DateTime              // Device timestamp
+  submittedAt DateTime              @default(now())
+  status      ProcessEvidenceStatus @default(ON_TIME)
+  comments    String?
+
+  task        ProcessTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([staffId])
+  @@index([status])
+}
+
+enum ProcessEvidenceType {
+  PHOTO
+  VIDEO
+  BOTH
+}
+
+enum ProcessEvidenceStatus {
+  ON_TIME
+  DELAYED
 }

@@ -1,6 +1,6 @@
 'use server'
 
-import { auth } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
@@ -75,7 +75,7 @@ export async function inviteMember(formData: FormData) {
     const pendingInvites = await prisma.teamInvitation.count({ where: { inviterId: userId } })
 
     if ((currentMembers + pendingInvites) >= maxMembers) {
-        throw new Error(`Has alcanzado el límite de ${maxMembers} colaboradores para tu plan ${currentPlan.name}.`)
+        throw new Error(`Has alcanzado el límite de ${maxMembers} empleados para tu plan ${currentPlan.name}.`)
     }
 
     // Check existing invite
@@ -85,6 +85,59 @@ export async function inviteMember(formData: FormData) {
 
     if (existingInvite) {
         throw new Error('Ya existe una invitación pendiente para este correo.')
+    }
+
+    // NEW LOGIC: Check if user already exists in Clerk
+    try {
+        const client = await clerkClient()
+        const users = await client.users.getUserList({ emailAddress: [email] });
+
+        if (users.data.length > 0) {
+            const existingUser = users.data[0];
+
+            // Check if already in the team
+            const existingMember = await prisma.teamMember.findUnique({
+                where: {
+                    userId_ownerId: {
+                        userId: existingUser.id,
+                        ownerId: userId
+                    }
+                }
+            });
+
+            if (existingMember) {
+                // Determine if we should throw error or update role. For now, error.
+                throw new Error('Este usuario ya es miembro del equipo.');
+            }
+
+            // Direct Add
+            await prisma.teamMember.create({
+                data: {
+                    userId: existingUser.id,
+                    ownerId: userId,
+                    role: role
+                }
+            });
+
+            // Send "Added" Email
+            const inviterName = userSettings?.businessName || 'El Administrador'
+            const teamName = userSettings?.businessName || 'HappyMeter Team'
+
+            // We import this dynamically to avoid circular deps if any, or just use the imported one
+            const { sendTeamAddedEmail } = await import('@/lib/email');
+
+            await sendTeamAddedEmail(email, teamName, role, inviterName);
+
+            revalidatePath('/dashboard/team');
+            return { success: true, message: 'Usuario agregado directamente (ya tenía cuenta).' };
+        }
+    } catch (error: any) {
+        console.error('Error checking existing user:', error);
+        // Continue to normal invitation flow if check fails or user not found
+        // However if the error was "Already member", rethrow it.
+        if (error.message === 'Este usuario ya es miembro del equipo.') {
+            throw error;
+        }
     }
 
     // Generate token
@@ -102,6 +155,8 @@ export async function inviteMember(formData: FormData) {
     const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/join-team?token=${token}`
     const inviterName = userSettings?.businessName || 'El Administrador'
     const teamName = userSettings?.businessName || 'HappyMeter Team'
+
+    const { sendInvitationEmail } = await import('@/lib/email'); // Ensure import
 
     await sendInvitationEmail(
         email,

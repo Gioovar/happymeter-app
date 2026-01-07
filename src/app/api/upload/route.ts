@@ -1,38 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { v4 as uuidv4 } from 'uuid'
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
+import { NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request): Promise<NextResponse> {
+    const body = (await request.json()) as HandleUploadBody;
+
     try {
-        const formData = await request.formData()
-        const file = formData.get('file') as File
+        const jsonResponse = await handleUpload({
+            body,
+            request,
+            onBeforeGenerateToken: async (pathname, clientPayload) => {
+                // Authenticate user here if needed
+                // const { userId } = await auth();
+                // if (!userId) throw new Error('Unauthorized');
 
-        if (!file) {
-            return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
-        }
+                return {
+                    allowedContentTypes: ['image/jpeg', 'image/png', 'video/mp4'],
+                    tokenPayload: JSON.stringify({
+                        // optional payload
+                    }),
+                };
+            },
+            onUploadCompleted: async ({ blob, tokenPayload }) => {
+                // Callback when upload effectively finishes
+                console.log('blob uploaded', blob.url);
+            },
+        });
 
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-
-        // Ensure directory exists
-        const uploadDir = join(process.cwd(), 'public', 'uploads')
-        await mkdir(uploadDir, { recursive: true })
-
-        // Generate unique filename
-        const ext = file.name.split('.').pop()
-        const filename = `${uuidv4()}.${ext}`
-        const filepath = join(uploadDir, filename)
-
-        // Write file
-        await writeFile(filepath, buffer)
-
-        // Return public URL
-        const url = `/uploads/${filename}`
-        return NextResponse.json({ url })
-
-    } catch (error: any) {
-        console.error('Upload error:', error)
-        return NextResponse.json({ error: error.message || 'Error uploading file' }, { status: 500 })
+        return NextResponse.json(jsonResponse);
+    } catch (error) {
+        return NextResponse.json(
+            { error: (error as Error).message },
+            { status: 400 }, // The webhook will retry 5 times automatically if the status code is 5xx
+        );
     }
 }

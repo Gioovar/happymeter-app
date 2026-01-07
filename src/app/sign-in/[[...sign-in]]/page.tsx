@@ -44,6 +44,8 @@ export default function Page() {
             });
         } catch (err) {
             console.error("Error signing in with Google", err);
+            // Simple alert for debugging if toast is not available in context or just to be sure
+            alert("Error al iniciar con Google: " + JSON.stringify(err));
         }
     };
 

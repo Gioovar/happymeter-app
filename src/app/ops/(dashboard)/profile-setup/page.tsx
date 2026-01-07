@@ -11,6 +11,8 @@ export default function ProfileSetupPage() {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const [phone, setPhone] = useState("")
+    const [name, setName] = useState("")
+    const [jobTitle, setJobTitle] = useState("")
     const [photoPreview, setPhotoPreview] = useState<string | null>(null)
     const [photoBase64, setPhotoBase64] = useState<string | null>(null)
 
@@ -34,7 +36,7 @@ export default function ProfileSetupPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!phone || !photoBase64) {
+        if (!phone || !photoBase64 || !name || !jobTitle) {
             toast.error("Por favor completa todos los campos")
             return
         }
@@ -43,12 +45,14 @@ export default function ProfileSetupPage() {
         try {
             const res = await updateUserProfile({
                 phone,
-                photoUrl: photoBase64
+                photoUrl: photoBase64,
+                name,
+                jobTitle
             })
 
             if (res.success) {
                 toast.success("Perfil completado")
-                router.push("/ops")
+                router.push("/ops/tasks")
                 router.refresh()
             } else {
                 toast.error("Error al guardar perfil")
@@ -89,6 +93,36 @@ export default function ProfileSetupPage() {
                     <p className="text-xs text-slate-500">Toca para cambiar tu foto</p>
                 </div>
 
+                {/* Name Input */}
+                <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-slate-500 flex items-center gap-2">
+                        <User className="w-4 h-4" /> Nombre Completo
+                    </label>
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Ej. Juan Pérez"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500 transition-colors"
+                        required
+                    />
+                </div>
+
+                {/* Job Title Input */}
+                <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-slate-500 flex items-center gap-2">
+                        <User className="w-4 h-4" /> Puesto / Cargo
+                    </label>
+                    <input
+                        type="text"
+                        value={jobTitle}
+                        onChange={(e) => setJobTitle(e.target.value)}
+                        placeholder="Ej. Gerente de Sucursal"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500 transition-colors"
+                        required
+                    />
+                </div>
+
                 {/* Phone Input */}
                 <div className="space-y-2">
                     <label className="text-xs uppercase font-bold text-slate-500 flex items-center gap-2">
@@ -106,7 +140,7 @@ export default function ProfileSetupPage() {
 
                 <button
                     type="submit"
-                    disabled={isLoading || !photoBase64 || !phone}
+                    disabled={isLoading || !photoBase64 || !phone || !name || !jobTitle}
                     className="w-full py-4 bg-indigo-600 rounded-xl text-white font-bold hover:bg-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <User className="w-5 h-5" />}

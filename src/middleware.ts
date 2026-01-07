@@ -10,6 +10,9 @@ export default clerkMiddleware((auth, req) => {
         req.nextUrl.pathname.startsWith('/report') ||
         req.nextUrl.pathname.startsWith('/install') ||
         req.nextUrl.pathname.startsWith('/sign-up') ||
+        req.nextUrl.pathname.startsWith('/sign-in') ||
+        req.nextUrl.pathname.startsWith('/sso-callback') ||
+        req.nextUrl.pathname.startsWith('/ops') || // Manage Ops auth manually for custom login
         req.nextUrl.pathname.startsWith('/api/setup-admin') ||
         req.nextUrl.pathname === '/robots.txt' ||
         req.nextUrl.pathname === '/sitemap.xml' ||

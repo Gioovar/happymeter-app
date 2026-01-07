@@ -21,7 +21,7 @@ export async function completeTour() {
     revalidatePath('/dashboard')
 }
 
-export async function updateUserProfile(data: { phone: string, photoUrl: string }) {
+export async function updateUserProfile(data: { phone: string, photoUrl: string, name: string, jobTitle: string }) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
@@ -30,12 +30,16 @@ export async function updateUserProfile(data: { phone: string, photoUrl: string 
         update: {
             phone: data.phone,
             photoUrl: data.photoUrl,
-            isOnboarded: true // Assuming this completes basic onboarding
+            businessName: data.name, // Mapping "Name" to businessName for now
+            jobTitle: data.jobTitle,
+            isOnboarded: true
         },
         create: {
             userId,
             phone: data.phone,
             photoUrl: data.photoUrl,
+            businessName: data.name,
+            jobTitle: data.jobTitle,
             isOnboarded: true
         }
     })

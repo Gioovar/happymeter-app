@@ -90,3 +90,15 @@ export const DialogTrigger: React.FC<{ children: React.ReactNode, asChild?: bool
         </div>
     )
 }
+
+export const DialogDescription: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => (
+    <p className={cn("text-gray-400 text-sm", className)}>
+        {children}
+    </p>
+)
+
+export const DialogFooter: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => (
+    <div className={cn("flex justify-end gap-2 mt-4", className)}>
+        {children}
+    </div>
+)

@@ -175,7 +175,7 @@ export default function Page() {
                                         <span className="w-full border-t border-white/10"></span>
                                     </div>
                                     <div className="relative flex justify-center text-xs uppercase tracking-widest">
-                                        <span className="bg-[#0a0a0a] px-4 text-gray-500 font-semibold">O continuúa con</span>
+                                        <span className="bg-[#0a0a0a] px-4 text-gray-500 font-semibold">O continúa con</span>
                                     </div>
                                 </div>
 
@@ -201,7 +201,7 @@ export default function Page() {
                             <div className="mt-8 text-center">
                                 <p className="text-gray-500">
                                     ¿Ya tienes cuenta?{' '}
-                                    <a href="/sign-in" className="text-white hover:underline decoration-[#00FF00] font-medium">Inicia sesión</a>
+                                    <a href={`/sign-in?intent=${intent || ''}&program_id=${programId || ''}&redirect_url=${finalRedirect || ''}`} className="text-white hover:underline decoration-[#00FF00] font-medium">Inicia sesión</a>
                                 </p>
                             </div>
                         </div>

@@ -7,7 +7,7 @@ export const PLAN_LIMITS = {
             satisfactionSurveys: 1,
             staffSurveys: 1,
             games: 2,
-            teamMembers: 2
+            teamMembers: 20
         },
         features: {
             branding: true,
