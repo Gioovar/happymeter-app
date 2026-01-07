@@ -189,7 +189,9 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
 
         try {
             // 1. Upload to Supabase
-            const filename = `floor-plans/${Date.now()}-${file.name}`
+            // Sanitize filename: remove accents, spaces, special chars
+            const cleanName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.-]/g, "_")
+            const filename = `floor-plans/${Date.now()}-${cleanName}`
             const { data, error } = await supabase.storage
                 .from('evidence') // Using evidence bucket for now as it's public
                 .upload(filename, file)
