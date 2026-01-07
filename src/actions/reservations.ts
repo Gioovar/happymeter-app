@@ -192,12 +192,19 @@ export async function generateLayoutFromImage(imageUrl: string) {
         const base64Image = Buffer.from(imageBuffer).toString('base64')
 
         const prompt = `
-        You are an expert architect AI. Analyze this floor plan image and extract the furniture layout with high precision.
+        You are an expert architect AI. Analyze this floor plan image and generate a JSON layout.
         
         Coordinate System: 
         - Use a percentage-based system (0-100) for both X and Y.
         - X=0 is left, X=100 is right.
         - Y=0 is top, Y=100 is bottom.
+        
+        Detailed Objects to Identify:
+        1. "U_SHAPE": The curved booths at the top LEFT and RIGHT.
+           - IMPORTANT: Each booth is ONE object. Do not split a single booth into multiple parts.
+           - Check rotation: If opening faces down, rotation is 180 (or 0 depending on base).
+        2. "ROUND": Circular tables in the center.
+        3. "RECT": Rectangular tables.
         
         Output format (JSON Array only):
         [
@@ -208,17 +215,15 @@ export async function generateLayoutFromImage(imageUrl: string) {
             "y": number, // center y (0-100)
             "width": number, // width in % (0-100)
             "height": number, // height in % (0-100)
-            "rotation": number, // degrees (0-360)
-            "capacity": number // estimate based on chairs
+            "rotation": number, // degrees (0-360) clockwise
+            "capacity": number
           }
         ]
 
         Rules:
-        1. Identify ALL tables, booths, and bars.
-        2. "ROUND" for circular tables.
-        3. "U_SHAPE" or "L_SHAPE" for booths/sofas.
-        4. Detect rotation carefully (e.g. 45, 90 degrees).
-        5. Group nearby chairs into the table capacity.
+        - Avoid overlapping objects. If you detect two items sharing the same space, merge them or pick the larger one.
+        - Align tables in grids if they appear aligned.
+        - Detect exact capacity (chairs around table).
         
         Return ONLY the JSON.
         `
@@ -266,10 +271,14 @@ export async function generateLayoutFromImage(imageUrl: string) {
                     { x: 100, y: 60 }, { x: 100, y: 100 }, { x: 0, y: 100 }
                 ])
             } else if (t.type === 'U_SHAPE') {
+                // More rounded U shape approximation
                 extraProps.points = JSON.stringify([
-                    { x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 },
-                    { x: 75, y: 100 }, { x: 75, y: 35 }, { x: 25, y: 35 },
-                    { x: 25, y: 100 }, { x: 0, y: 100 }
+                    { x: 0, y: 0 }, { x: 30, y: 0 }, { x: 50, y: 10 }, { x: 70, y: 0 }, { x: 100, y: 0 }, // Top edge with slight curve hint (flat for now)
+                    { x: 100, y: 100 },
+                    { x: 80, y: 100 }, { x: 80, y: 40 }, // Right arm inner
+                    { x: 60, y: 30 }, { x: 40, y: 30 }, // Inner curve base
+                    { x: 20, y: 40 }, { x: 20, y: 100 }, // Left arm inner
+                    { x: 0, y: 100 }
                 ])
             } else if (t.type === 'T_SHAPE') {
                 extraProps.points = JSON.stringify([
