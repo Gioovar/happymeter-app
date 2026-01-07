@@ -53,7 +53,7 @@ export async function getFloorPlan() {
         return floorPlan
     } catch (error) {
         console.error("🔥 Error in getFloorPlan:", error)
-        throw new Error("Failed to load floor plan")
+        return null
     }
 }
 
