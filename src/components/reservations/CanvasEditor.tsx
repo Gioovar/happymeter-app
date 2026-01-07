@@ -664,7 +664,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
 
                     {/* PHONE FRAME */}
                     <div
-                        className="relative bg-black rounded-[40px] border-[8px] border-zinc-800 shadow-2xl overflow-hidden ring-1 ring-white/10"
+                        className="relative bg-black rounded-[40px] border-[8px] border-zinc-700 shadow-2xl overflow-hidden ring-1 ring-white/20"
                         style={{ width: PHONE_WIDTH, height: PHONE_HEIGHT }}
                     >
                         {/* Status Bar Fake */}
@@ -679,7 +679,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                         {/* Interactive Canvas Container */}
                         <div
                             ref={wrapperRef}
-                            className="absolute inset-0 top-0 bottom-0 flex items-center justify-center bg-zinc-950 overflow-hidden"
+                            className="absolute inset-0 top-0 bottom-0 flex items-center justify-center bg-zinc-900 overflow-hidden"
                         >
                             {/* The actual Scale Wrapper */}
                             {containerSize.width > 0 && (
