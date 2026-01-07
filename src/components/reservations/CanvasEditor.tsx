@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool } from 'lucide-react'
+import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { saveFloorPlan } from '@/actions/reservations'
+import { supabase } from '@/lib/supabase'
 
 export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     const [floorPlans, setFloorPlans] = useState<any[]>(initialData || [])
@@ -13,6 +14,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
     const [isDrawing, setIsDrawing] = useState(false)
+    const [isProcessingAI, setIsProcessingAI] = useState(false)
     const [drawingPoints, setDrawingPoints] = useState<{ x: number, y: number }[]>([])
     const containerRef = useRef<HTMLDivElement>(null)
 
@@ -178,6 +180,53 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         setSelectedId(null)
     }
 
+    const handleAIImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setIsProcessingAI(true)
+        const toastId = toast.loading("Subiendo imagen y analizando con AI...")
+
+        try {
+            // 1. Upload to Supabase
+            const filename = `floor-plans/${Date.now()}-${file.name}`
+            const { data, error } = await supabase.storage
+                .from('evidence') // Using evidence bucket for now as it's public
+                .upload(filename, file)
+
+            if (error) throw error
+
+            const publicUrl = supabase.storage
+                .from('evidence')
+                .getPublicUrl(filename).data.publicUrl
+
+            // 2. Process with AI
+            toast.loading("Generando distribución...", { id: toastId })
+            const { generateLayoutFromImage } = await import("@/actions/reservations")
+            const aiResult = await generateLayoutFromImage(publicUrl)
+
+            if (aiResult.success && aiResult.tables) {
+                // 3. Merge or Replace
+                if (confirm("¿Quieres reemplazar las mesas existentes con el diseño de AI? (Cancelar para combinar)")) {
+                    setTables(aiResult.tables)
+                } else {
+                    setTables(prev => [...prev, ...aiResult.tables])
+                }
+                toast.success("¡Diseño generado con éxito!", { id: toastId })
+            } else {
+                toast.error("No se pudo generar el diseño. Intenta con una imagen más clara.", { id: toastId })
+            }
+
+        } catch (error) {
+            console.error("AI Import Error:", error)
+            toast.error("Error al procesar la imagen", { id: toastId })
+        } finally {
+            setIsProcessingAI(false)
+            // Reset input
+            e.target.value = ''
+        }
+    }
+
     const handleCreateFloor = async () => {
         const name = prompt("Nombre del nuevo piso (ej. Piso 2):")
         if (!name) return
@@ -257,8 +306,8 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                 key={floor.id}
                                 onClick={() => setActiveFloorId(floor.id)}
                                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeFloorId === floor.id
-                                        ? 'bg-zinc-700 text-white shadow-sm'
-                                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50'
+                                    ? 'bg-zinc-700 text-white shadow-sm'
+                                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50'
                                     }`}
                             >
                                 {floor.name}
@@ -290,7 +339,23 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                     <button onClick={() => addTable('T_SHAPE')} className="p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
                         <div className="font-bold text-lg leading-4">T</div> Forma T
                     </button>
+
                     <div className="w-px h-8 bg-white/10 mx-2" />
+
+                    <label className="cursor-pointer p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
+                        <Sparkles className="w-5 h-5" />
+                        <span className="text-[10px]">AI Import</span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleAIImport}
+                            disabled={isProcessingAI}
+                        />
+                    </label>
+
+                    <div className="w-px h-8 bg-white/10 mx-2" />
+
                     <button
                         onClick={isDrawing ? cancelDrawing : startDrawing}
                         className={`p-2 rounded-lg flex flex-col items-center gap-1 text-xs transition-colors ${isDrawing ? 'bg-indigo-600 text-white' : 'hover:bg-white/10 text-zinc-400 hover:text-white'}`}

@@ -117,39 +117,45 @@ export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
 
         // 2. Upsert (Create or Update)
         for (const table of tables) {
-            if (table.id) {
-                // Update
-                await tx.table.update({
-                    where: { id: table.id },
-                    data: {
-                        x: table.x,
-                        y: table.y,
-                        width: table.width,
-                        height: table.height,
-                        rotation: table.rotation,
-                        label: table.label,
-                        type: table.type,
-                        capacity: table.capacity,
-                        points: table.points // Save points for custom shapes
-                    }
-                })
-            } else {
-                // Create
-                await tx.table.create({
-                    data: {
-                        floorPlanId,
-                        x: table.x,
-                        y: table.y,
-                        width: table.width,
-                        height: table.height,
-                        rotation: table.rotation,
-                        label: table.label,
-                        type: table.type,
-                        capacity: table.capacity,
-                        points: table.points // Save points for custom shapes
-                    }
-                })
+            if (table.id && !table.id.startsWith('temp-') && !table.id.startsWith('shape-')) {
+                // Check if it exists to be safe
+                const exists = currentIds.includes(table.id)
+                if (exists) {
+                    // Update
+                    await tx.table.update({
+                        where: { id: table.id },
+                        data: {
+                            x: table.x,
+                            y: table.y,
+                            width: table.width,
+                            height: table.height,
+                            rotation: table.rotation,
+                            label: table.label,
+                            type: table.type,
+                            capacity: table.capacity,
+                            points: table.points
+                        }
+                    })
+                    continue
+                }
             }
+
+            // Create (new or temp id)
+            await tx.table.create({
+                data: {
+                    floorPlanId,
+                    x: table.x,
+                    y: table.y,
+                    width: table.width,
+                    height: table.height,
+                    rotation: table.rotation,
+                    label: table.label,
+                    type: table.type,
+                    capacity: table.capacity,
+                    points: table.points
+                }
+            })
+
         }
     })
 
@@ -161,4 +167,83 @@ export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
 
     revalidatePath('/dashboard/reservations')
     return { success: true }
+}
+
+import { GoogleGenerativeAI } from "@google/generative-ai"
+
+export async function generateLayoutFromImage(imageUrl: string) {
+    try {
+        const { userId } = await auth()
+        if (!userId) throw new Error("Unauthorized")
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+
+        // Fetch image and convert to base64
+        const imageResp = await fetch(imageUrl)
+        const imageBuffer = await imageResp.arrayBuffer()
+        const base64Image = Buffer.from(imageBuffer).toString('base64')
+
+        const prompt = `
+        Analyze this floor plan image and extract the furniture layout.
+        Return a JSON array of objects representing tables and zones.
+        
+        The coordinate system is 0 to 800 for both X and Y.
+        
+        Output format:
+        [
+          {
+            "label": "Mesa 1",
+            "type": "RECT" | "ROUND" | "BAR" | "L_SHAPE" | "T_SHAPE",
+            "x": number, // center x (0-800)
+            "y": number, // center y (0-800)
+            "width": number,
+            "height": number,
+            "capacity": number // estimate based on size/chairs
+          }
+        ]
+
+        Rules:
+        1. "RECT" for rectangular tables.
+        2. "ROUND" for circular tables.
+        3. "BAR" for long counters or bars.
+        4. "L_SHAPE" for L-shaped sofas or booths.
+        5. "T_SHAPE" for T-shaped arrangements.
+        
+        Only return the JSON array, no markdown, no other text.
+        `
+
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64Image,
+                    mimeType: "image/jpeg"
+                }
+            }
+        ])
+
+        const response = result.response
+        const text = response.text()
+
+        // Clean markdown code blocks if present
+        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim()
+
+        console.log("AI Response:", cleanText)
+
+        const tables = JSON.parse(cleanText)
+
+        // Post-process to add IDs
+        const processedTables = tables.map((t: any, i: number) => ({
+            ...t,
+            id: `ai-${Date.now()}-${i}`,
+            rotation: 0
+        }))
+
+        return { success: true, tables: processedTables }
+
+    } catch (error) {
+        console.error("AI Generation Error:", error)
+        return { success: false, error: "Failed to generate layout" }
+    }
 }
