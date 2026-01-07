@@ -501,12 +501,18 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                 </div>
             </div>
 
-            <div className="flex-1 flex gap-4 overflow-hidden">
-                {/* Canvas Area */}
+            <div className="flex-1 flex gap-4 overflow-hidden bg-zinc-950/30 rounded-xl p-8 items-center justify-center relative">
+                {/* Canvas Area - Centered & Scaled */}
                 <div
                     ref={containerRef}
-                    className={`flex-1 bg-[#09090b] rounded-xl border border-white/5 relative overflow-hidden shadow-inner ${isDrawing ? 'cursor-crosshair' : ''}`}
+                    className={`bg-[#09090b] rounded-xl border border-white/5 relative overflow-hidden shadow-2xl transition-all duration-500 ${isDrawing ? 'cursor-crosshair' : ''}`}
                     style={{
+                        aspectRatio: `${(floorPlans.find(f => f.id === activeFloorId)?.physicalWidth || 10) / (floorPlans.find(f => f.id === activeFloorId)?.physicalHeight || 10)}`,
+                        minHeight: '400px', // Prevent too small
+                        maxHeight: '100%',
+                        maxWidth: '100%',
+                        width: (floorPlans.find(f => f.id === activeFloorId)?.physicalWidth || 10) >= (floorPlans.find(f => f.id === activeFloorId)?.physicalHeight || 10) ? '100%' : 'auto',
+                        height: (floorPlans.find(f => f.id === activeFloorId)?.physicalWidth || 10) < (floorPlans.find(f => f.id === activeFloorId)?.physicalHeight || 10) ? '100%' : 'auto',
                         backgroundImage: 'radial-gradient(circle, #333 1px, transparent 1px)',
                         backgroundSize: '20px 20px'
                     }}
