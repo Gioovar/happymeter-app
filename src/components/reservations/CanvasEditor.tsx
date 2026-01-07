@@ -446,67 +446,88 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         ? { width: '100%', height: 'auto', aspectRatio: `${physWidth}/${physHeight}` }
         : { height: '100%', width: 'auto', aspectRatio: `${physWidth}/${physHeight}` }
 
-    return (
-        <div className="flex flex-col h-[calc(100vh-120px)] gap-4">
-            {/* Toolbar */}
-            <div className="flex items-center justify-between bg-zinc-900 p-4 rounded-xl border border-white/10">
-                <div className="flex gap-2 items-center">
-                    {/* Floor Selector */}
-                    <div className="flex items-center gap-1 bg-zinc-800 rounded-lg p-1 mr-4">
-                        {floorPlans.map(floor => (
-                            <button
-                                key={floor.id}
-                                onClick={() => setActiveFloorId(floor.id)}
-                                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeFloorId === floor.id
-                                    ? 'bg-zinc-700 text-white shadow-sm'
-                                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50'
-                                    }`}
-                            >
-                                {floor.name}
-                            </button>
-                        ))}
+    // Layout constants
+    const PHONE_WIDTH = 390
+    const PHONE_HEIGHT = 844
 
-                        <button
-                            onClick={openCreateFloorModal}
-                            className="px-2 py-1.5 text-xs font-medium rounded-md text-zinc-400 hover:text-white hover:bg-zinc-700/50"
-                            title="Agregar Piso"
-                        >
-                            <Plus className="w-4 h-4" />
-                        </button>
+    return (
+        <div className="flex h-[calc(100vh-80px)] bg-zinc-950 overflow-hidden">
+            {/* LEFT PANEL: Tools & Properties */}
+            <div className="w-[400px] flex flex-col border-r border-white/10 bg-zinc-900/50">
+                <div className="p-6 border-b border-white/10">
+                    <h2 className="text-xl font-bold text-white mb-2">Editor de Mapa</h2>
+                    <p className="text-sm text-zinc-400">
+                        Diseña tu espacio pensando en móvil.
+                        Tus clientes verán esto en su celular.
+                    </p>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    {/* Floor Selection */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Pisos / Áreas</label>
+                            <button
+                                onClick={openCreateFloorModal}
+                                className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white"
+                            >
+                                <Plus className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            {floorPlans.map(floor => (
+                                <button
+                                    key={floor.id}
+                                    onClick={() => setActiveFloorId(floor.id)}
+                                    className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-all ${activeFloorId === floor.id
+                                        ? 'bg-indigo-600 text-white shadow-md'
+                                        : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                                        }`}
+                                >
+                                    <span className="font-medium">{floor.name}</span>
+                                    {activeFloorId === floor.id && <Settings onClick={(e) => { e.stopPropagation(); openEditFloorModal() }} className="w-4 h-4 opacity-70 hover:opacity-100" />}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Edit Current Floor Button */}
-                    <button
-                        onClick={openEditFloorModal}
-                        className="p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-colors mr-2"
-                        title="Configurar Espacio"
-                    >
-                        <Settings className="w-4 h-4" />
-                    </button>
+                    <div className="h-px bg-white/10" />
 
-                    <div className="w-px h-8 bg-white/10 mx-2" />
+                    {/* Palette */}
+                    <div className="space-y-3">
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Agregar Elementos</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button onClick={() => addTable('RECT')} className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center gap-2 text-zinc-300 transition-all border border-transparent hover:border-white/10">
+                                <Square className="w-6 h-6" /> <span className="text-xs">Rectangular</span>
+                            </button>
+                            <button onClick={() => addTable('ROUND')} className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center gap-2 text-zinc-300 transition-all border border-transparent hover:border-white/10">
+                                <Circle className="w-6 h-6" /> <span className="text-xs">Redonda</span>
+                            </button>
+                            <button onClick={() => addTable('BAR')} className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center gap-2 text-zinc-300 transition-all border border-transparent hover:border-white/10">
+                                <div className="w-6 h-4 border-2 border-current rounded-sm mt-1" /> <span className="text-xs">Barra</span>
+                            </button>
+                            <button onClick={() => addTable('L_SHAPE')} className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center gap-2 text-zinc-300 transition-all border border-transparent hover:border-white/10">
+                                <span className="font-bold text-xl leading-5">L</span> <span className="text-xs">Forma L</span>
+                            </button>
+                            <button onClick={() => addTable('T_SHAPE')} className="p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center gap-2 text-zinc-300 transition-all border border-transparent hover:border-white/10">
+                                <span className="font-bold text-xl leading-5">T</span> <span className="text-xs">Forma T</span>
+                            </button>
+                            <button
+                                onClick={isDrawing ? cancelDrawing : startDrawing}
+                                className={`p-3 rounded-xl flex flex-col items-center gap-2 transition-all border border-transparent ${isDrawing ? 'bg-indigo-600 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:border-white/10'}`}
+                            >
+                                <PenTool className="w-6 h-6" />
+                                <span className="text-xs">{isDrawing ? 'Cancel' : 'Dibujar'}</span>
+                            </button>
+                        </div>
+                    </div>
 
-                    <button onClick={() => addTable('RECT')} className="p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
-                        <Square className="w-5 h-5" /> Rect
-                    </button>
-                    <button onClick={() => addTable('ROUND')} className="p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
-                        <Circle className="w-5 h-5" /> Redonda
-                    </button>
-                    <button onClick={() => addTable('BAR')} className="p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
-                        <div className="w-5 h-3 border border-current rounded-sm mt-1" /> Barra
-                    </button>
-                    <button onClick={() => addTable('L_SHAPE')} className="p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
-                        <div className="font-bold text-lg leading-4">L</div> Forma L
-                    </button>
-                    <button onClick={() => addTable('T_SHAPE')} className="p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
-                        <div className="font-bold text-lg leading-4">T</div> Forma T
-                    </button>
+                    <div className="h-px bg-white/10" />
 
-                    <div className="w-px h-8 bg-white/10 mx-2" />
-
-                    <label className="cursor-pointer p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
-                        <Sparkles className="w-5 h-5" />
-                        <span className="text-[10px]">AI Import</span>
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Importar con AI</label>
+                    <label className="cursor-pointer p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center gap-2 text-indigo-400 transition-all border border-transparent hover:border-white/10">
+                        <Sparkles className="w-6 h-6" />
+                        <span className="text-xs">Subir Imagen</span>
                         <input
                             type="file"
                             accept="image/*"
@@ -516,325 +537,308 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                         />
                     </label>
 
-                    <div className="w-px h-8 bg-white/10 mx-2" />
+                    {/* Properties (Moved from floating right panel to here) */}
+                    {selectedId && selectedTable && (
+                        <>
+                            <div className="h-px bg-white/10" />
+                            <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
+                                        Editar: {selectedTable.label}
+                                    </label>
+                                    <button onClick={() => deleteSelected()} className="text-red-400 hover:text-red-300 p-1">
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
 
-                    <button
-                        onClick={isDrawing ? cancelDrawing : startDrawing}
-                        className={`p-2 rounded-lg flex flex-col items-center gap-1 text-xs transition-colors ${isDrawing ? 'bg-indigo-600 text-white' : 'hover:bg-white/10 text-zinc-400 hover:text-white'}`}
-                    >
-                        <PenTool className="w-5 h-5" />
-                        {isDrawing ? 'Cancelar' : 'Dibujar Zona'}
-                    </button>
+                                <div className="space-y-3 bg-zinc-800/50 p-4 rounded-xl border border-white/5">
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-zinc-400">Nombre / Etiqueta</label>
+                                        <Input
+                                            value={selectedTable.label}
+                                            onChange={(e) => updateSelected('label', e.target.value)}
+                                            className="h-8 bg-zinc-900 border-zinc-700"
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <div className="flex-1 space-y-1">
+                                            <label className="text-xs text-zinc-400">Color/Tipo</label>
+                                            <div className="flex bg-zinc-900 rounded-lg p-1">
+                                                <button onClick={() => updateSelected('capacity', 4)} className={`flex-1 py-1 text-[10px] rounded ${selectedTable.capacity > 0 ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}>Mesa</button>
+                                                <button onClick={() => updateSelected('capacity', 0)} className={`flex-1 py-1 text-[10px] rounded ${selectedTable.capacity === 0 ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}>Deco</button>
+                                            </div>
+                                        </div>
+                                        {selectedTable.capacity > 0 && (
+                                            <div className="w-20 space-y-1">
+                                                <label className="text-xs text-zinc-400">Pax</label>
+                                                <Input
+                                                    type="number"
+                                                    value={selectedTable.capacity}
+                                                    onChange={(e) => updateSelected('capacity', parseInt(e.target.value))}
+                                                    className="h-8 bg-zinc-900 border-zinc-700"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Paid Reservation Toggle */}
+                                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                                        <span className="text-xs text-zinc-300">¿Requiere Pago?</span>
+                                        <div
+                                            onClick={() => updateSelected('reservationPrice', (selectedTable.reservationPrice || 0) > 0 ? 0 : 100)}
+                                            className={`w-8 h-4 rounded-full relative cursor-pointer transition-colors ${selectedTable.reservationPrice > 0 ? 'bg-indigo-500' : 'bg-zinc-700'}`}
+                                        >
+                                            <div className={`w-2 h-2 bg-white rounded-full absolute top-1 transition-all ${selectedTable.reservationPrice > 0 ? 'left-5' : 'left-1'}`} />
+                                        </div>
+                                    </div>
+                                    {selectedTable.reservationPrice > 0 && (
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-zinc-400">Precio (MXN)</label>
+                                            <div className="relative">
+                                                <DollarSign className="w-3 h-3 absolute left-2 top-2.5 text-zinc-500" />
+                                                <Input
+                                                    type="number"
+                                                    value={selectedTable.reservationPrice}
+                                                    onChange={(e) => updateSelected('reservationPrice', parseFloat(e.target.value))}
+                                                    className="h-8 pl-7 bg-zinc-900 border-zinc-700"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Rotation & Size */}
+                                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] text-zinc-500">Rotar</label>
+                                            <button onClick={() => updateSelected('rotation', (selectedTable.rotation || 0) + 45)} className="w-full h-8 bg-zinc-900 rounded border border-zinc-700 flex items-center justify-center hover:bg-zinc-800">
+                                                <RotateCw className="w-4 h-4 text-zinc-400" />
+                                            </button>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] text-zinc-500">W</label>
+                                            <Input type="number" value={selectedTable.width} onChange={(e) => updateSelected('width', parseInt(e.target.value))} className="h-8 bg-zinc-900 border-zinc-700 text-center px-1" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] text-zinc-500">H</label>
+                                            <Input type="number" value={selectedTable.height} onChange={(e) => updateSelected('height', parseInt(e.target.value))} className="h-8 bg-zinc-900 border-zinc-700 text-center px-1" />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button onClick={duplicateSelected} className="flex-1 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded text-xs text-white transition-colors flex items-center justify-center gap-1">
+                                            <Copy className="w-3 h-3" /> Duplicar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="p-4 border-t border-white/10 bg-zinc-900">
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white h-12 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
-                        <Save className="w-4 h-4" />
-                        {isSaving ? 'Guardando...' : 'Guardar Distribución'}
+                        {isSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+                        {isSaving ? 'Guardando...' : 'Guardar Cambios'}
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 flex gap-4 overflow-hidden">
+            {/* CENTER PANEL: Mobile Preview */}
+            <div className="flex-1 bg-[#09090b] relative flex items-center justify-center p-8 overflow-hidden">
+
+                {/* Dotted Grid Background */}
                 <div
-                    ref={wrapperRef}
-                    className="flex-1 bg-zinc-950/30 rounded-xl p-8 flex items-center justify-center relative overflow-hidden"
-                >
-                    {/* Canvas Area - Centered & Scaled */}
-                    {containerSize.width > 0 && (
+                    className="absolute inset-0 opacity-20 pointer-events-none"
+                    style={{ backgroundImage: 'radial-gradient(circle, #444 1px, transparent 1px)', backgroundSize: '24px 24px' }}
+                />
+
+                <div className="flex flex-col items-center gap-4 animate-in zoom-in-95 duration-500">
+                    <span className="text-xs font-medium text-zinc-500 uppercase tracking-widest bg-zinc-900/80 px-3 py-1 rounded-full border border-white/5 backdrop-blur-sm">
+                        Vista Previa del Cliente (Móvil)
+                    </span>
+
+                    {/* PHONE FRAME */}
+                    <div
+                        className="relative bg-black rounded-[40px] border-[8px] border-zinc-800 shadow-2xl overflow-hidden ring-1 ring-white/10"
+                        style={{ width: PHONE_WIDTH, height: PHONE_HEIGHT }}
+                    >
+                        {/* Status Bar Fake */}
+                        <div className="h-6 w-full flex items-center justify-between px-6 pt-2 z-20 relative select-none pointer-events-none">
+                            <span className="text-[10px] font-medium text-white">9:41</span>
+                            <div className="flex gap-1">
+                                <div className="w-3 h-3 rounded-full border border-white/20" />
+                                <div className="w-3 h-3 rounded-full border border-white/20" />
+                            </div>
+                        </div>
+
+                        {/* Interactive Canvas Container */}
                         <div
-                            ref={containerRef}
-                            className={`bg-[#09090b] rounded-xl border border-white/5 relative overflow-hidden shadow-2xl transition-all duration-500 ${isDrawing ? 'cursor-crosshair' : ''}`}
-                            style={{
-                                ...fitStyle,
-                                backgroundImage: 'radial-gradient(circle, #333 1px, transparent 1px)',
-                                backgroundSize: '20px 20px'
-                            }}
-                            onClick={(e) => {
-                                if (isDrawing) {
-                                    handleCanvasClick(e)
-                                } else {
-                                    if (e.target === containerRef.current) setSelectedId(null)
-                                }
-                            }}
+                            ref={wrapperRef}
+                            className="absolute inset-0 top-0 bottom-0 flex items-center justify-center bg-zinc-950 overflow-hidden"
                         >
-                            {/* Dynamic Background Tint */}
-                            <div className={`absolute inset-0 bg-gradient-to-br ${currentTint} via-transparent to-transparent opacity-40 pointer-events-none`} />
-
-                            {/* Watermark Name & Dimensions */}
-                            <div className="absolute top-8 left-8 pointer-events-none select-none z-0">
-                                <h1 className="text-6xl font-black text-white/5 uppercase tracking-tighter">
-                                    {floorPlans.find(f => f.id === activeFloorId)?.name || 'Sin Nombre'}
-                                </h1>
-                                <div className="mt-2 flex items-center gap-2 text-white/10 pl-2">
-                                    <span className="text-sm font-medium tracking-widest border border-white/10 px-2 py-0.5 rounded">
-                                        AREA: {floorPlans.find(f => f.id === activeFloorId)?.physicalWidth || 10}m x {floorPlans.find(f => f.id === activeFloorId)?.physicalHeight || 10}m
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Render Shapes & Tables */}
-                            {tables.map((table) => {
-                                const isCustomShape = ['CUSTOM', 'L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type)
-                                return (
-                                    <motion.div
-                                        key={table.id}
-                                        drag={!isDrawing}
-                                        dragMomentum={false}
-                                        initial={{ x: table.x, y: table.y }}
-                                        onDragEnd={(e, info) => {
-                                            const newX = table.x + info.offset.x
-                                            const newY = table.y + info.offset.y
-                                            setTables(prev => prev.map(t =>
-                                                t.id === table.id ? { ...t, x: newX, y: newY } : t
-                                            ))
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            if (!isDrawing) setSelectedId(table.id)
-                                        }}
-                                        className={`absolute flex items-center justify-center cursor-move group
-                                        ${selectedId === table.id ? 'ring-2 ring-indigo-500 z-10' : 'hover:ring-1 hover:ring-white/30'}
-                                    `}
-                                        style={{
-                                            width: table.width,
-                                            height: table.height,
-                                            rotate: table.rotation,
-                                            borderRadius: table.type === 'ROUND' ? '50%' : '4px',
-                                            backgroundColor: isCustomShape ? 'rgba(79, 70, 229, 0.2)' : (table.type === 'BAR' ? '#333' : '#444'),
-                                            border: isCustomShape ? 'none' : '1px solid #666',
-                                        }}
-                                    >
-                                        {isCustomShape ? (
-                                            <svg
-                                                width="100%"
-                                                height="100%"
-                                                viewBox="0 0 100 100"
-                                                preserveAspectRatio="none"
-                                                className="overflow-visible pointer-events-none"
-                                            >
-                                                <path
-                                                    d={getPathFromPoints(table.points)}
-                                                    fill={table.type === 'CUSTOM' ? "rgba(79, 70, 229, 0.3)" : "#444"}
-                                                    stroke={table.type === 'CUSTOM' ? "#4f46e5" : "#666"}
-                                                    strokeWidth="2"
-                                                    vectorEffect="non-scaling-stroke"
-                                                />
-                                            </svg>
-                                        ) : (
-                                            <>
-                                                <span className="text-xs text-white font-medium select-none pointer-events-none">
-                                                    {table.label}
-                                                </span>
-                                                {/* Capacity dot */}
-                                                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-zinc-500 whitespace-nowrap">
-                                                    {table.capacity} pax
-                                                </div>
-                                            </>
-                                        )}
-
-                                        {/* Label for L/T/U shapes inside */}
-                                        {['L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type) && (
-                                            <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-medium select-none pointer-events-none">
-                                                {table.label}
-                                            </span>
-                                        )}
-                                    </motion.div>
-                                )
-                            })}
-
-                            {/* Active Drawing Layer */}
-                            {isDrawing && (
-                                <svg className="absolute inset-0 pointer-events-none w-full h-full">
-                                    {drawingPoints.length > 0 && (
-                                        <>
-                                            <polyline
-                                                points={drawingPoints.map(p => `${p.x},${p.y}`).join(' ')}
-                                                fill="none"
-                                                stroke="#4f46e5"
-                                                strokeWidth="2"
-                                                strokeDasharray="4"
-                                            />
-                                            {drawingPoints.map((p, i) => (
-                                                <circle key={i} cx={p.x} cy={p.y} r="3" fill="#fff" />
-                                            ))}
-                                            {/* Close loop hint */}
-                                            {drawingPoints.length > 2 && (
-                                                <line
-                                                    x1={drawingPoints[drawingPoints.length - 1].x}
-                                                    y1={drawingPoints[drawingPoints.length - 1].y}
-                                                    x2={drawingPoints[0].x}
-                                                    y2={drawingPoints[0].y}
-                                                    stroke="#4f46e5"
-                                                    strokeOpacity="0.5"
-                                                    strokeWidth="1"
-                                                    strokeDasharray="4"
-                                                />
-                                            )}
-                                        </>
-                                    )}
-                                </svg>
-                            )}
-                        </div>
-                    )}
-                </div>
-                {/* Properties Panel */}
-                {selectedId && selectedTable && (
-                    <div className="w-64 bg-zinc-900 border border-white/10 rounded-xl p-4 flex flex-col gap-4">
-                        <h3 className="text-sm font-bold text-white mb-2">
-                            {selectedTable.type === 'CUSTOM' ? 'Editar Zona' : 'Editar Mesa'}
-                        </h3>
-
-                        <div className="bg-zinc-800 p-1 rounded-lg flex gap-1 mb-2">
-                            <button
-                                onClick={() => updateSelected('capacity', selectedTable.capacity === 0 ? 4 : selectedTable.capacity)}
-                                className={`flex-1 text-xs py-1.5 rounded-md transition-colors ${selectedTable.capacity > 0 ? 'bg-indigo-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-300'}`}
-                            >
-                                Mesa
-                            </button>
-                            <button
-                                onClick={() => updateSelected('capacity', 0)}
-                                className={`flex-1 text-xs py-1.5 rounded-md transition-colors ${selectedTable.capacity === 0 ? 'bg-indigo-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-300'}`}
-                            >
-                                Espacio
-                            </button>
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-xs text-zinc-400">Nombre</label>
-                            <input
-                                type="text"
-                                value={selectedTable.label}
-                                onChange={(e) => updateSelected('label', e.target.value)}
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-indigo-500"
-                            />
-                        </div>
-
-                        {selectedTable.capacity > 0 && (
-                            <div className="space-y-1">
-                                <label className="text-xs text-zinc-400">Capacidad (personas)</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={selectedTable.capacity}
-                                    onChange={(e) => updateSelected('capacity', Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white"
-                                />
-                            </div>
-                        )}
-
-                        <div className="space-y-2 pt-2 border-t border-white/10">
-                            <div className="flex items-center justify-between">
-                                <label className="text-xs text-zinc-400">¿Es reservación pagada?</label>
-                                <button
-                                    onClick={() => updateSelected('reservationPrice', (selectedTable.reservationPrice || 0) > 0 ? 0 : 100)}
-                                    className={`w-10 h-5 rounded-full relative transition-colors ${selectedTable.reservationPrice > 0 ? 'bg-indigo-600' : 'bg-zinc-700'}`}
+                            {/* The actual Scale Wrapper */}
+                            {containerSize.width > 0 && (
+                                <div
+                                    ref={containerRef}
+                                    className={`relative transition-colors duration-300 ${isDrawing ? 'cursor-crosshair' : 'cursor-default'}`}
+                                    style={{
+                                        // We fit the floor plan into the phone screen width/height based on aspect ratio
+                                        // But wait, we want the user to be able to PAN around if it's large?
+                                        // No, for "Map Editor" usually we want to see the whole thing or zoom.
+                                        // Let's stick to the existing "fitStyle" logic but applied to the phone dimensions.
+                                        // containerSize is now the phone screen size.
+                                        ...fitStyle,
+                                        width: fitStyle.width,
+                                        height: fitStyle.height,
+                                        // Visualization helpers
+                                        boxShadow: '0 0 0 1px rgba(255,255,255,0.1)',
+                                    }}
+                                    onClick={(e) => {
+                                        if (isDrawing) {
+                                            handleCanvasClick(e)
+                                        } else {
+                                            if (e.target === containerRef.current) setSelectedId(null)
+                                        }
+                                    }}
                                 >
-                                    <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${selectedTable.reservationPrice > 0 ? 'left-6' : 'left-1'}`} />
-                                </button>
-                            </div>
+                                    {/* Grid on the map itself */}
+                                    <div className="absolute inset-0 opacity-20 pointer-events-none"
+                                        style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
+                                    />
 
-                            {selectedTable.reservationPrice > 0 && (
-                                <div className="space-y-1 animation-expand">
-                                    <label className="text-xs text-indigo-400 font-medium">Costo de Reservación (MXN)</label>
-                                    <div className="relative">
-                                        <DollarSign className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400" />
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={selectedTable.reservationPrice || 0}
-                                            onChange={(e) => updateSelected('reservationPrice', parseFloat(e.target.value) || 0)}
-                                            className="w-full bg-zinc-800 border border-indigo-500/50 rounded px-2 py-1 pl-7 text-sm text-white focus:outline-none focus:border-indigo-500"
-                                        />
-                                    </div>
-                                    <p className="text-[10px] text-zinc-500 leading-tight">
-                                        El cliente deberá pagar este monto para confirmar su reserva.
-                                    </p>
+                                    {/* Render Shapes (Existing Logic) */}
+                                    {tables.map((table) => {
+                                        const isCustomShape = ['CUSTOM', 'L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type)
+                                        return (
+                                            <motion.div
+                                                key={table.id}
+                                                drag={!isDrawing}
+                                                dragMomentum={false}
+                                                // Constrain drag to parent? Maybe not, allow dragging out slightly to rearrange
+                                                // dragConstraints={containerRef}
+                                                initial={{ x: table.x, y: table.y }}
+                                                onDragEnd={(e, info) => {
+                                                    // Note: frame-motion drag adds translation to the element transform style.
+                                                    // We need to sync back to state.
+                                                    // BUT: The existing logic uses info.offset which is delta.
+                                                    // If we render with absolute x/y, we should update x/y.
+
+                                                    // Important: Framer Motion 'drag' modifies the visual transform.
+                                                    // If we update state 'x' and 'y', React re-renders.
+                                                    // If we just use 'offset', we are assuming previous position.
+
+                                                    // The original code:
+                                                    // x: t.x + info.offset.x
+                                                    // This is correct for delta updates.
+
+                                                    const newX = table.x + info.offset.x
+                                                    const newY = table.y + info.offset.y
+                                                    setTables(prev => prev.map(t =>
+                                                        t.id === table.id ? { ...t, x: newX, y: newY } : t
+                                                    ))
+                                                }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    if (!isDrawing) setSelectedId(table.id)
+                                                }}
+                                                className={`absolute flex items-center justify-center cursor-move group touch-none
+                                                    ${selectedId === table.id ? 'ring-2 ring-indigo-500 z-20 shadow-lg shadow-indigo-500/20' : 'hover:ring-1 hover:ring-white/30'}
+                                                `}
+                                                style={{
+                                                    width: table.width,
+                                                    height: table.height,
+                                                    rotate: table.rotation,
+                                                    borderRadius: table.type === 'ROUND' ? '50%' : '8px',
+                                                    backgroundColor: isCustomShape ? 'rgba(79, 70, 229, 0.2)' : '#27272a', // Zinc 800
+                                                    border: isCustomShape ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                                }}
+                                            >
+                                                {/* Content similar to before... */}
+                                                {isCustomShape ? (
+                                                    <svg
+                                                        width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"
+                                                        className="overflow-visible pointer-events-none"
+                                                    >
+                                                        <path
+                                                            d={getPathFromPoints(table.points)}
+                                                            fill={table.type === 'CUSTOM' ? "rgba(99, 102, 241, 0.3)" : "#27272a"}
+                                                            stroke={table.type === 'CUSTOM' ? "#6366f1" : "#52525b"}
+                                                            strokeWidth="2"
+                                                            vectorEffect="non-scaling-stroke"
+                                                        />
+                                                    </svg>
+                                                ) : (
+                                                    <>
+                                                        <span className="text-[10px] text-white/90 font-bold select-none pointer-events-none truncate max-w-full px-1">
+                                                            {table.label}
+                                                        </span>
+                                                        {table.capacity > 0 && (
+                                                            <div className="absolute -bottom-4 bg-black/50 px-1 rounded text-[8px] text-zinc-400 whitespace-nowrap">
+                                                                {table.capacity}p
+                                                            </div>
+                                                        )}
+                                                        {/* Price Indicator */}
+                                                        {(table.reservationPrice || 0) > 0 && (
+                                                            <div className="absolute -top-2 -right-2 bg-green-500 text-black text-[8px] font-bold px-1 rounded-full shadow-sm">
+                                                                $
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+
+                                                {/* L/T/U Label */}
+                                                {['L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type) && (
+                                                    <span className="absolute inset-0 flex items-center justify-center text-xs text-white/50 font-bold select-none pointer-events-none">
+                                                        {table.label}
+                                                    </span>
+                                                )}
+                                            </motion.div>
+                                        )
+                                    })}
+
+                                    {/* Drawing Layer */}
+                                    {isDrawing && (
+                                        <svg className="absolute inset-0 pointer-events-none w-full h-full z-50">
+                                            <polyline points={drawingPoints.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="#6366f1" strokeWidth="2" strokeDasharray="4" />
+                                            {drawingPoints.map((p, i) => (
+                                                <circle key={i} cx={p.x} cy={p.y} r="3" fill="#fff" stroke="#6366f1" />
+                                            ))}
+                                        </svg>
+                                    )}
                                 </div>
                             )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                                <label className="text-xs text-zinc-400">Rotación</label>
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        onClick={() => updateSelected('rotation', (selectedTable.rotation || 0) + 45)}
-                                        className="p-1 bg-zinc-800 rounded hover:bg-zinc-700"
-                                    >
-                                        <RotateCw className="w-4 h-4 text-zinc-400" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                                <label className="text-xs text-zinc-400">Ancho</label>
-                                <input
-                                    type="number"
-                                    value={selectedTable.width}
-                                    onChange={(e) => updateSelected('width', parseInt(e.target.value))}
-                                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs text-zinc-400">Largo</label>
-                                <input
-                                    type="number"
-                                    value={selectedTable.height}
-                                    onChange={(e) => updateSelected('height', parseInt(e.target.value))}
-                                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="pt-4 mt-auto border-t border-white/10 flex flex-col gap-2">
-                            <button
-                                onClick={duplicateSelected}
-                                className="w-full flex items-center justify-center gap-2 text-zinc-300 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors text-sm"
-                            >
-                                <Copy className="w-4 h-4" /> Duplicar
-                            </button>
-                            <button
-                                onClick={deleteSelected}
-                                className="w-full flex items-center justify-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2 rounded-lg transition-colors text-sm"
-                            >
-                                <Trash2 className="w-4 h-4" /> Eliminar
-                            </button>
+                        {/* Interactive Hint */}
+                        <div className="absolute bottom-8 left-0 right-0 text-center pointer-events-none z-20">
+                            <p className="text-[10px] text-white/20">Interactúa aquí como si fuera tu celular</p>
                         </div>
                     </div>
-                )}
+                </div>
+
             </div>
 
-            {/* Floor Creation Modal */}
+            {/* Modals */}
             <Dialog open={isFloorModalOpen} onOpenChange={setIsFloorModalOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 text-white">
                     <DialogHeader>
-                        <DialogTitle>Nuevo Piso o Zona</DialogTitle>
-                        <DialogDescription>
-                            Asigna un nombre a este nuevo espacio (ej. Terraza, Piso 2, VIP).
-                        </DialogDescription>
+                        <DialogTitle>Crear Nuevo Piso</DialogTitle>
+                        <DialogDescription>Define el nombre y dimensiones aproximadas.</DialogDescription>
                     </DialogHeader>
-                    <div className="py-4">
-                        <Input
-                            placeholder="Nombre del espacio..."
-                            value={newFloorName}
-                            onChange={(e) => setNewFloorName(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && confirmCreateFloor()}
-                            autoFocus
-                            className="text-black placeholder:text-gray-500"
-                        />
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Nombre del Piso</label>
+                            <Input value={newFloorName} onChange={(e) => setNewFloorName(e.target.value)} placeholder="Ej. Terraza, Planta Baja" className="bg-black border-zinc-800" />
+                        </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsFloorModalOpen(false)}>Cancelar</Button>
-                        <Button onClick={confirmCreateFloor} className="bg-indigo-600 hover:bg-indigo-700">
-                            Crear Espacio <Plus className="w-4 h-4 ml-2" />
-                        </Button>
+                        <Button variant="outline" onClick={() => setIsFloorModalOpen(false)} className="border-zinc-700 hover:bg-zinc-800 hover:text-white">Cancelar</Button>
+                        <Button onClick={confirmCreateFloor} className="bg-indigo-600 hover:bg-indigo-700 text-white">Crear Piso</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -878,71 +882,44 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
             </Dialog>
 
             {/* Edit Floor Modal */}
+            {/* Edit Floor Modal */}
             <Dialog open={isEditFloorModalOpen} onOpenChange={setIsEditFloorModalOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 text-white">
                     <DialogHeader>
-                        <DialogTitle>Configuración del Espacio</DialogTitle>
-                        <DialogDescription>
-                            Ajusta el nombre y las dimensiones físicas reales para una escala precisa.
-                        </DialogDescription>
+                        <DialogTitle>Editar Piso Actual</DialogTitle>
+                        <DialogDescription>Modifica las dimensiones físicas para calibrar el mapa.</DialogDescription>
                     </DialogHeader>
-
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <label className="text-xs text-zinc-400">Nombre del Piso/Zona</label>
-                            <Input
-                                value={editFloorData.name}
-                                onChange={(e) => setEditFloorData({ ...editFloorData, name: e.target.value })}
-                                className="text-black"
-                            />
+                            <label className="text-sm font-medium">Nombre</label>
+                            <Input value={editFloorData.name} onChange={(e) => setEditFloorData({ ...editFloorData, name: e.target.value })} className="bg-black border-zinc-800" />
                         </div>
-
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-xs text-zinc-400">Ancho (metros)</label>
-                                <Input
-                                    type="number"
-                                    value={editFloorData.width}
-                                    onChange={(e) => setEditFloorData({ ...editFloorData, width: parseFloat(e.target.value) || 0 })}
-                                    className="text-black"
-                                />
+                                <label className="text-sm font-medium">Ancho (metros)</label>
+                                <Input type="number" value={editFloorData.width} onChange={(e) => setEditFloorData({ ...editFloorData, width: parseFloat(e.target.value) })} className="bg-black border-zinc-800" />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs text-zinc-400">Largo/Fondo (metros)</label>
-                                <Input
-                                    type="number"
-                                    value={editFloorData.height}
-                                    onChange={(e) => setEditFloorData({ ...editFloorData, height: parseFloat(e.target.value) || 0 })}
-                                    className="text-black"
-                                />
+                                <label className="text-sm font-medium">Largo (metros)</label>
+                                <Input type="number" value={editFloorData.height} onChange={(e) => setEditFloorData({ ...editFloorData, height: parseFloat(e.target.value) })} className="bg-black border-zinc-800" />
                             </div>
                         </div>
-
-                        <div className="pt-4 border-t border-white/10">
-                            <button
-                                onClick={handleDeleteFloor}
-                                className="text-red-400 text-xs hover:text-red-300 flex items-center gap-1"
-                            >
-                                <Trash2 className="w-3 h-3" /> Eliminar este piso permanentemente
-                            </button>
-                        </div>
                     </div>
-
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsEditFloorModalOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleUpdateFloor} disabled={isUpdating} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                            {isUpdating ? (
-                                <>
-                                    <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
-                                    Guardando...
-                                </>
-                            ) : (
-                                'Guardar Cambios'
-                            )}
-                        </Button>
+                        <div className="flex justify-between w-full">
+                            <Button variant="destructive" onClick={handleDeleteFloor} className="px-3 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-900/50">
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={() => setIsEditFloorModalOpen(false)} className="border-zinc-700 hover:bg-zinc-800 hover:text-white">Cancelar</Button>
+                                <Button onClick={handleUpdateFloor} disabled={isUpdating} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                                    {isUpdating ? 'Guardando...' : 'Guardar Cambios'}
+                                </Button>
+                            </div>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div >
+        </div>
     )
 }
