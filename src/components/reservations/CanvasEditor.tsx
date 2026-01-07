@@ -18,6 +18,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     // Edit Floor State
     const [isEditFloorModalOpen, setIsEditFloorModalOpen] = useState(false)
     const [editFloorData, setEditFloorData] = useState({ name: '', width: 10, height: 10 })
+    const [isPropertiesModalOpen, setIsPropertiesModalOpen] = useState(false)
 
     // AI Import State
     const [tables, setTables] = useState<any[]>(initialData?.[0]?.tables || [])
@@ -538,101 +539,18 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                     </label>
 
                     {/* Properties (Moved from floating right panel to here) */}
+                    {/* Properties (Moved to Modal) */}
                     {selectedId && selectedTable && (
-                        <>
-                            <div className="h-px bg-white/10" />
-                            <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
-                                        Editar: {selectedTable.label}
-                                    </label>
-                                    <button onClick={() => deleteSelected()} className="text-red-400 hover:text-red-300 p-1">
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                <div className="space-y-3 bg-zinc-800/50 p-4 rounded-xl border border-white/5">
-                                    <div className="space-y-1">
-                                        <label className="text-xs text-zinc-400">Nombre / Etiqueta</label>
-                                        <Input
-                                            value={selectedTable.label}
-                                            onChange={(e) => updateSelected('label', e.target.value)}
-                                            className="h-8 bg-zinc-900 border-zinc-700"
-                                        />
-                                    </div>
-
-                                    <div className="flex gap-2">
-                                        <div className="flex-1 space-y-1">
-                                            <label className="text-xs text-zinc-400">Color/Tipo</label>
-                                            <div className="flex bg-zinc-900 rounded-lg p-1">
-                                                <button onClick={() => updateSelected('capacity', 4)} className={`flex-1 py-1 text-[10px] rounded ${selectedTable.capacity > 0 ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}>Mesa</button>
-                                                <button onClick={() => updateSelected('capacity', 0)} className={`flex-1 py-1 text-[10px] rounded ${selectedTable.capacity === 0 ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}>Deco</button>
-                                            </div>
-                                        </div>
-                                        {selectedTable.capacity > 0 && (
-                                            <div className="w-20 space-y-1">
-                                                <label className="text-xs text-zinc-400">Pax</label>
-                                                <Input
-                                                    type="number"
-                                                    value={selectedTable.capacity}
-                                                    onChange={(e) => updateSelected('capacity', parseInt(e.target.value))}
-                                                    className="h-8 bg-zinc-900 border-zinc-700"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Paid Reservation Toggle */}
-                                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                                        <span className="text-xs text-zinc-300">¿Requiere Pago?</span>
-                                        <div
-                                            onClick={() => updateSelected('reservationPrice', (selectedTable.reservationPrice || 0) > 0 ? 0 : 100)}
-                                            className={`w-8 h-4 rounded-full relative cursor-pointer transition-colors ${selectedTable.reservationPrice > 0 ? 'bg-indigo-500' : 'bg-zinc-700'}`}
-                                        >
-                                            <div className={`w-2 h-2 bg-white rounded-full absolute top-1 transition-all ${selectedTable.reservationPrice > 0 ? 'left-5' : 'left-1'}`} />
-                                        </div>
-                                    </div>
-                                    {selectedTable.reservationPrice > 0 && (
-                                        <div className="space-y-1">
-                                            <label className="text-xs text-zinc-400">Precio (MXN)</label>
-                                            <div className="relative">
-                                                <DollarSign className="w-3 h-3 absolute left-2 top-2.5 text-zinc-500" />
-                                                <Input
-                                                    type="number"
-                                                    value={selectedTable.reservationPrice}
-                                                    onChange={(e) => updateSelected('reservationPrice', parseFloat(e.target.value))}
-                                                    className="h-8 pl-7 bg-zinc-900 border-zinc-700"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Rotation & Size */}
-                                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5">
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] text-zinc-500">Rotar</label>
-                                            <button onClick={() => updateSelected('rotation', (selectedTable.rotation || 0) + 45)} className="w-full h-8 bg-zinc-900 rounded border border-zinc-700 flex items-center justify-center hover:bg-zinc-800">
-                                                <RotateCw className="w-4 h-4 text-zinc-400" />
-                                            </button>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] text-zinc-500">W</label>
-                                            <Input type="number" value={selectedTable.width} onChange={(e) => updateSelected('width', parseInt(e.target.value))} className="h-8 bg-zinc-900 border-zinc-700 text-center px-1" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] text-zinc-500">H</label>
-                                            <Input type="number" value={selectedTable.height} onChange={(e) => updateSelected('height', parseInt(e.target.value))} className="h-8 bg-zinc-900 border-zinc-700 text-center px-1" />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2">
-                                        <button onClick={duplicateSelected} className="flex-1 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded text-xs text-white transition-colors flex items-center justify-center gap-1">
-                                            <Copy className="w-3 h-3" /> Duplicar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </>
+                        <div className="mt-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-center">
+                            <p className="text-sm text-indigo-300 font-medium mb-2">Elemento Seleccionado</p>
+                            <p className="text-xs text-zinc-400 mb-3">Haz doble clic en la mesa o usa el botón de editar para modificar propiedades.</p>
+                            <button
+                                onClick={() => setIsPropertiesModalOpen(true)}
+                                className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+                            >
+                                <Settings className="w-4 h-4" /> Editar Propiedades
+                            </button>
+                        </div>
                     )}
                 </div>
 
@@ -744,7 +662,17 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                                 }}
                                                 onClick={(e) => {
                                                     e.stopPropagation()
-                                                    if (!isDrawing) setSelectedId(table.id)
+                                                    if (!isDrawing) {
+                                                        setSelectedId(table.id)
+                                                        // Optional: Auto open on double click or just select
+                                                    }
+                                                }}
+                                                onDoubleClick={(e) => {
+                                                    e.stopPropagation()
+                                                    if (!isDrawing) {
+                                                        setSelectedId(table.id)
+                                                        setIsPropertiesModalOpen(true)
+                                                    }
                                                 }}
                                                 className={`absolute flex items-center justify-center cursor-move group touch-none
                                                     ${selectedId === table.id ? 'ring-2 ring-indigo-500 z-20 shadow-lg shadow-indigo-500/20' : 'hover:ring-1 hover:ring-white/30'}
@@ -790,6 +718,20 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                                         )}
                                                     </>
                                                 )}
+
+                                                {/* Edit Button Overlay */}
+                                                {selectedId === table.id && !isDrawing && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setIsPropertiesModalOpen(true)
+                                                        }}
+                                                        className="absolute -top-8 left-1/2 -translate-x-1/2 bg-indigo-600 text-white p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform z-30"
+                                                    >
+                                                        <PenTool className="w-3 h-3" />
+                                                    </button>
+                                                )}
+
 
                                                 {/* L/T/U Label */}
                                                 {['L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type) && (
@@ -917,6 +859,117 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                 </Button>
                             </div>
                         </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Table Properties Modal (New Pop-up) */}
+            <Dialog open={isPropertiesModalOpen} onOpenChange={setIsPropertiesModalOpen}>
+                <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 text-white">
+                    <DialogHeader className="flex flex-row items-center justify-between">
+                        <DialogTitle>Editar {selectedTable?.label || 'Elemento'}</DialogTitle>
+                        {selectedTable && (
+                            <Button variant="ghost" size="icon" onClick={() => { deleteSelected(); setIsPropertiesModalOpen(false) }} className="text-red-400 hover:text-red-300 hover:bg-red-900/20">
+                                <Trash2 className="w-5 h-5" />
+                            </Button>
+                        )}
+                    </DialogHeader>
+
+                    {selectedId && selectedTable ? (
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-1">
+                                <label className="text-xs text-zinc-400">Nombre / Etiqueta</label>
+                                <Input
+                                    value={selectedTable.label}
+                                    onChange={(e) => updateSelected('label', e.target.value)}
+                                    className="bg-black border-zinc-700 focus-visible:ring-indigo-500"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs text-zinc-400">Tipo</label>
+                                    <div className="flex bg-black rounded-lg p-1 border border-zinc-800">
+                                        <button onClick={() => updateSelected('capacity', 4)} className={`flex-1 py-1 text-xs rounded ${selectedTable.capacity > 0 ? 'bg-zinc-800 text-white border border-zinc-700' : 'text-zinc-500'}`}>Mesa</button>
+                                        <button onClick={() => updateSelected('capacity', 0)} className={`flex-1 py-1 text-xs rounded ${selectedTable.capacity === 0 ? 'bg-zinc-800 text-white border border-zinc-700' : 'text-zinc-500'}`}>Deco</button>
+                                    </div>
+                                </div>
+                                {selectedTable.capacity > 0 && (
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-zinc-400">Personas (Pax)</label>
+                                        <Input
+                                            type="number"
+                                            value={selectedTable.capacity}
+                                            onChange={(e) => updateSelected('capacity', parseInt(e.target.value))}
+                                            className="bg-black border-zinc-700 text-center"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Paid Reservation Toggle */}
+                            <div className="bg-black/50 p-3 rounded-lg border border-zinc-800 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <DollarSign className={`w-4 h-4 ${selectedTable.reservationPrice > 0 ? 'text-green-500' : 'text-zinc-500'}`} />
+                                        <span className="text-sm font-medium text-zinc-300">Reserva Pagada</span>
+                                    </div>
+                                    <div
+                                        onClick={() => updateSelected('reservationPrice', (selectedTable.reservationPrice || 0) > 0 ? 0 : 100)}
+                                        className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${selectedTable.reservationPrice > 0 ? 'bg-indigo-500' : 'bg-zinc-700'}`}
+                                    >
+                                        <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${selectedTable.reservationPrice > 0 ? 'left-6' : 'left-1'}`} />
+                                    </div>
+                                </div>
+
+                                {selectedTable.reservationPrice > 0 && (
+                                    <div className="animate-in slide-in-from-top-2">
+                                        <label className="text-xs text-zinc-400 mb-1 block">Precio de Reserva (MXN)</label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2.5 text-zinc-500">$</span>
+                                            <Input
+                                                type="number"
+                                                value={selectedTable.reservationPrice}
+                                                onChange={(e) => updateSelected('reservationPrice', parseFloat(e.target.value))}
+                                                className="pl-7 bg-zinc-900 border-zinc-700 border-indigo-500/50"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Dimensions & Rotation */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-zinc-500 uppercase">Rotación</label>
+                                    <div className="flex items-center gap-1">
+                                        <Button variant="outline" size="icon" onClick={() => updateSelected('rotation', (selectedTable.rotation || 0) - 45)} className="h-8 w-8 border-zinc-700 bg-black hover:bg-zinc-900"><RotateCw className="w-3 h-3 -scale-x-100" /></Button>
+                                        <div className="text-xs text-center flex-1">{selectedTable.rotation}°</div>
+                                        <Button variant="outline" size="icon" onClick={() => updateSelected('rotation', (selectedTable.rotation || 0) + 45)} className="h-8 w-8 border-zinc-700 bg-black hover:bg-zinc-900"><RotateCw className="w-3 h-3" /></Button>
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-zinc-500 uppercase">Ancho</label>
+                                    <Input type="number" value={selectedTable.width} onChange={(e) => updateSelected('width', parseInt(e.target.value))} className="h-8 bg-black border-zinc-700 text-center" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-zinc-500 uppercase">Alto</label>
+                                    <Input type="number" value={selectedTable.height} onChange={(e) => updateSelected('height', parseInt(e.target.value))} className="h-8 bg-black border-zinc-700 text-center" />
+                                </div>
+                            </div>
+
+                        </div>
+                    ) : (
+                        <div className="py-8 text-center text-zinc-500">No hay elemento seleccionado</div>
+                    )}
+
+                    <DialogFooter className="flex-row gap-2 justify-end sm:justify-end">
+                        <Button variant="outline" onClick={duplicateSelected} className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800">
+                            <Copy className="w-4 h-4 mr-2" /> Duplicar
+                        </Button>
+                        <Button onClick={() => setIsPropertiesModalOpen(false)} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                            Listo
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
