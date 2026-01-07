@@ -397,6 +397,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         }
     }
 
+
     const activeFloorIndex = floorPlans.findIndex(p => p.id === activeFloorId)
     const TINT_COLORS = [
         'from-indigo-500/10',
@@ -407,6 +408,39 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         'from-rose-500/10',
     ]
     const currentTint = activeFloorIndex >= 0 ? TINT_COLORS[activeFloorIndex % TINT_COLORS.length] : TINT_COLORS[0]
+
+    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+    const wrapperRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (!wrapperRef.current) return
+
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0]
+            if (entry) {
+                setContainerSize({
+                    width: entry.contentRect.width,
+                    height: entry.contentRect.height
+                })
+            }
+        })
+
+        observer.observe(wrapperRef.current)
+        return () => observer.disconnect()
+    }, [])
+
+
+    const activeFloor = floorPlans.find(f => f.id === activeFloorId)
+    const physWidth = activeFloor?.physicalWidth || 10
+    const physHeight = activeFloor?.physicalHeight || 10
+    const floorRatio = physWidth / physHeight
+    const containerRatio = containerSize.width / containerSize.height || 1
+
+    // Determine fit sizing
+    // If floor is "wider" relative to container, constrain width. Else constrain height.
+    const fitStyle = floorRatio > containerRatio
+        ? { width: '100%', height: 'auto', aspectRatio: `${physWidth}/${physHeight}` }
+        : { height: '100%', width: 'auto', aspectRatio: `${physWidth}/${physHeight}` }
 
     return (
         <div className="flex flex-col h-[calc(100vh-120px)] gap-4">
@@ -501,148 +535,149 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                 </div>
             </div>
 
-            <div className="flex-1 flex gap-4 overflow-hidden bg-zinc-950/30 rounded-xl p-8 items-center justify-center relative">
-                {/* Canvas Area - Centered & Scaled */}
+            <div className="flex-1 flex gap-4 overflow-hidden">
                 <div
-                    ref={containerRef}
-                    className={`bg-[#09090b] rounded-xl border border-white/5 relative overflow-hidden shadow-2xl transition-all duration-500 ${isDrawing ? 'cursor-crosshair' : ''}`}
-                    style={{
-                        aspectRatio: `${(floorPlans.find(f => f.id === activeFloorId)?.physicalWidth || 10) / (floorPlans.find(f => f.id === activeFloorId)?.physicalHeight || 10)}`,
-                        minHeight: '400px', // Prevent too small
-                        maxHeight: '100%',
-                        maxWidth: '100%',
-                        width: (floorPlans.find(f => f.id === activeFloorId)?.physicalWidth || 10) >= (floorPlans.find(f => f.id === activeFloorId)?.physicalHeight || 10) ? '100%' : 'auto',
-                        height: (floorPlans.find(f => f.id === activeFloorId)?.physicalWidth || 10) < (floorPlans.find(f => f.id === activeFloorId)?.physicalHeight || 10) ? '100%' : 'auto',
-                        backgroundImage: 'radial-gradient(circle, #333 1px, transparent 1px)',
-                        backgroundSize: '20px 20px'
-                    }}
-                    onClick={(e) => {
-                        if (isDrawing) {
-                            handleCanvasClick(e)
-                        } else {
-                            if (e.target === containerRef.current) setSelectedId(null)
-                        }
-                    }}
+                    ref={wrapperRef}
+                    className="flex-1 bg-zinc-950/30 rounded-xl p-8 flex items-center justify-center relative overflow-hidden"
                 >
-                    {/* Dynamic Background Tint */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${currentTint} via-transparent to-transparent opacity-40 pointer-events-none`} />
+                    {/* Canvas Area - Centered & Scaled */}
+                    {containerSize.width > 0 && (
+                        <div
+                            ref={containerRef}
+                            className={`bg-[#09090b] rounded-xl border border-white/5 relative overflow-hidden shadow-2xl transition-all duration-500 ${isDrawing ? 'cursor-crosshair' : ''}`}
+                            style={{
+                                ...fitStyle,
+                                backgroundImage: 'radial-gradient(circle, #333 1px, transparent 1px)',
+                                backgroundSize: '20px 20px'
+                            }}
+                            onClick={(e) => {
+                                if (isDrawing) {
+                                    handleCanvasClick(e)
+                                } else {
+                                    if (e.target === containerRef.current) setSelectedId(null)
+                                }
+                            }}
+                        >
+                            {/* Dynamic Background Tint */}
+                            <div className={`absolute inset-0 bg-gradient-to-br ${currentTint} via-transparent to-transparent opacity-40 pointer-events-none`} />
 
-                    {/* Watermark Name & Dimensions */}
-                    <div className="absolute top-8 left-8 pointer-events-none select-none z-0">
-                        <h1 className="text-6xl font-black text-white/5 uppercase tracking-tighter">
-                            {floorPlans.find(f => f.id === activeFloorId)?.name || 'Sin Nombre'}
-                        </h1>
-                        <div className="mt-2 flex items-center gap-2 text-white/10 pl-2">
-                            <span className="text-sm font-medium tracking-widest border border-white/10 px-2 py-0.5 rounded">
-                                AREA: {floorPlans.find(f => f.id === activeFloorId)?.physicalWidth || 10}m x {floorPlans.find(f => f.id === activeFloorId)?.physicalHeight || 10}m
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Render Shapes & Tables */}
-                    {tables.map((table) => {
-                        const isCustomShape = ['CUSTOM', 'L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type)
-                        return (
-                            <motion.div
-                                key={table.id}
-                                drag={!isDrawing}
-                                dragMomentum={false}
-                                initial={{ x: table.x, y: table.y }}
-                                onDragEnd={(e, info) => {
-                                    const newX = table.x + info.offset.x
-                                    const newY = table.y + info.offset.y
-                                    setTables(prev => prev.map(t =>
-                                        t.id === table.id ? { ...t, x: newX, y: newY } : t
-                                    ))
-                                }}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (!isDrawing) setSelectedId(table.id)
-                                }}
-                                className={`absolute flex items-center justify-center cursor-move group
-                                    ${selectedId === table.id ? 'ring-2 ring-indigo-500 z-10' : 'hover:ring-1 hover:ring-white/30'}
-                                `}
-                                style={{
-                                    width: table.width,
-                                    height: table.height,
-                                    rotate: table.rotation,
-                                    borderRadius: table.type === 'ROUND' ? '50%' : '4px',
-                                    backgroundColor: isCustomShape ? 'rgba(79, 70, 229, 0.2)' : (table.type === 'BAR' ? '#333' : '#444'),
-                                    border: isCustomShape ? 'none' : '1px solid #666',
-                                }}
-                            >
-                                {isCustomShape ? (
-                                    <svg
-                                        width="100%"
-                                        height="100%"
-                                        viewBox="0 0 100 100"
-                                        preserveAspectRatio="none"
-                                        className="overflow-visible pointer-events-none"
-                                    >
-                                        <path
-                                            d={getPathFromPoints(table.points)}
-                                            fill={table.type === 'CUSTOM' ? "rgba(79, 70, 229, 0.3)" : "#444"}
-                                            stroke={table.type === 'CUSTOM' ? "#4f46e5" : "#666"}
-                                            strokeWidth="2"
-                                            vectorEffect="non-scaling-stroke"
-                                        />
-                                    </svg>
-                                ) : (
-                                    <>
-                                        <span className="text-xs text-white font-medium select-none pointer-events-none">
-                                            {table.label}
-                                        </span>
-                                        {/* Capacity dot */}
-                                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-zinc-500 whitespace-nowrap">
-                                            {table.capacity} pax
-                                        </div>
-                                    </>
-                                )}
-
-                                {/* Label for L/T/U shapes inside */}
-                                {['L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type) && (
-                                    <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-medium select-none pointer-events-none">
-                                        {table.label}
+                            {/* Watermark Name & Dimensions */}
+                            <div className="absolute top-8 left-8 pointer-events-none select-none z-0">
+                                <h1 className="text-6xl font-black text-white/5 uppercase tracking-tighter">
+                                    {floorPlans.find(f => f.id === activeFloorId)?.name || 'Sin Nombre'}
+                                </h1>
+                                <div className="mt-2 flex items-center gap-2 text-white/10 pl-2">
+                                    <span className="text-sm font-medium tracking-widest border border-white/10 px-2 py-0.5 rounded">
+                                        AREA: {floorPlans.find(f => f.id === activeFloorId)?.physicalWidth || 10}m x {floorPlans.find(f => f.id === activeFloorId)?.physicalHeight || 10}m
                                     </span>
-                                )}
-                            </motion.div>
-                        )
-                    })}
+                                </div>
+                            </div>
 
-                    {/* Active Drawing Layer */}
-                    {isDrawing && (
-                        <svg className="absolute inset-0 pointer-events-none w-full h-full">
-                            {drawingPoints.length > 0 && (
-                                <>
-                                    <polyline
-                                        points={drawingPoints.map(p => `${p.x},${p.y}`).join(' ')}
-                                        fill="none"
-                                        stroke="#4f46e5"
-                                        strokeWidth="2"
-                                        strokeDasharray="4"
-                                    />
-                                    {drawingPoints.map((p, i) => (
-                                        <circle key={i} cx={p.x} cy={p.y} r="3" fill="#fff" />
-                                    ))}
-                                    {/* Close loop hint */}
-                                    {drawingPoints.length > 2 && (
-                                        <line
-                                            x1={drawingPoints[drawingPoints.length - 1].x}
-                                            y1={drawingPoints[drawingPoints.length - 1].y}
-                                            x2={drawingPoints[0].x}
-                                            y2={drawingPoints[0].y}
-                                            stroke="#4f46e5"
-                                            strokeOpacity="0.5"
-                                            strokeWidth="1"
-                                            strokeDasharray="4"
-                                        />
+                            {/* Render Shapes & Tables */}
+                            {tables.map((table) => {
+                                const isCustomShape = ['CUSTOM', 'L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type)
+                                return (
+                                    <motion.div
+                                        key={table.id}
+                                        drag={!isDrawing}
+                                        dragMomentum={false}
+                                        initial={{ x: table.x, y: table.y }}
+                                        onDragEnd={(e, info) => {
+                                            const newX = table.x + info.offset.x
+                                            const newY = table.y + info.offset.y
+                                            setTables(prev => prev.map(t =>
+                                                t.id === table.id ? { ...t, x: newX, y: newY } : t
+                                            ))
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            if (!isDrawing) setSelectedId(table.id)
+                                        }}
+                                        className={`absolute flex items-center justify-center cursor-move group
+                                        ${selectedId === table.id ? 'ring-2 ring-indigo-500 z-10' : 'hover:ring-1 hover:ring-white/30'}
+                                    `}
+                                        style={{
+                                            width: table.width,
+                                            height: table.height,
+                                            rotate: table.rotation,
+                                            borderRadius: table.type === 'ROUND' ? '50%' : '4px',
+                                            backgroundColor: isCustomShape ? 'rgba(79, 70, 229, 0.2)' : (table.type === 'BAR' ? '#333' : '#444'),
+                                            border: isCustomShape ? 'none' : '1px solid #666',
+                                        }}
+                                    >
+                                        {isCustomShape ? (
+                                            <svg
+                                                width="100%"
+                                                height="100%"
+                                                viewBox="0 0 100 100"
+                                                preserveAspectRatio="none"
+                                                className="overflow-visible pointer-events-none"
+                                            >
+                                                <path
+                                                    d={getPathFromPoints(table.points)}
+                                                    fill={table.type === 'CUSTOM' ? "rgba(79, 70, 229, 0.3)" : "#444"}
+                                                    stroke={table.type === 'CUSTOM' ? "#4f46e5" : "#666"}
+                                                    strokeWidth="2"
+                                                    vectorEffect="non-scaling-stroke"
+                                                />
+                                            </svg>
+                                        ) : (
+                                            <>
+                                                <span className="text-xs text-white font-medium select-none pointer-events-none">
+                                                    {table.label}
+                                                </span>
+                                                {/* Capacity dot */}
+                                                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-zinc-500 whitespace-nowrap">
+                                                    {table.capacity} pax
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {/* Label for L/T/U shapes inside */}
+                                        {['L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type) && (
+                                            <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-medium select-none pointer-events-none">
+                                                {table.label}
+                                            </span>
+                                        )}
+                                    </motion.div>
+                                )
+                            })}
+
+                            {/* Active Drawing Layer */}
+                            {isDrawing && (
+                                <svg className="absolute inset-0 pointer-events-none w-full h-full">
+                                    {drawingPoints.length > 0 && (
+                                        <>
+                                            <polyline
+                                                points={drawingPoints.map(p => `${p.x},${p.y}`).join(' ')}
+                                                fill="none"
+                                                stroke="#4f46e5"
+                                                strokeWidth="2"
+                                                strokeDasharray="4"
+                                            />
+                                            {drawingPoints.map((p, i) => (
+                                                <circle key={i} cx={p.x} cy={p.y} r="3" fill="#fff" />
+                                            ))}
+                                            {/* Close loop hint */}
+                                            {drawingPoints.length > 2 && (
+                                                <line
+                                                    x1={drawingPoints[drawingPoints.length - 1].x}
+                                                    y1={drawingPoints[drawingPoints.length - 1].y}
+                                                    x2={drawingPoints[0].x}
+                                                    y2={drawingPoints[0].y}
+                                                    stroke="#4f46e5"
+                                                    strokeOpacity="0.5"
+                                                    strokeWidth="1"
+                                                    strokeDasharray="4"
+                                                />
+                                            )}
+                                        </>
                                     )}
-                                </>
+                                </svg>
                             )}
-                        </svg>
+                        </div>
                     )}
                 </div>
-
                 {/* Properties Panel */}
                 {selectedId && selectedTable && (
                     <div className="w-64 bg-zinc-900 border border-white/10 rounded-xl p-4 flex flex-col gap-4">
