@@ -3,11 +3,25 @@
 import { SignIn } from "@clerk/nextjs";
 import BrandLogo from "@/components/BrandLogo";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getPublicLoyaltyProgramInfo } from "@/actions/loyalty";
+import { Sparkles } from "lucide-react";
 
 export default function Page() {
     const searchParams = useSearchParams()
     const intent = searchParams.get('intent')
-    let redirectUrl = '/api/auth-callback'
+    const finalRedirect = searchParams.get('redirect_url')
+    const programId = searchParams.get('program_id')
+
+    const [programInfo, setProgramInfo] = useState<any>(null)
+
+    useEffect(() => {
+        if (programId) {
+            getPublicLoyaltyProgramInfo(programId).then(setProgramInfo)
+        }
+    }, [programId])
+
+    let redirectUrl = finalRedirect || '/api/auth-callback'
 
     if (intent === 'creator') {
         redirectUrl = '/api/auth-callback?signup_intent=creator'
@@ -32,10 +46,25 @@ export default function Page() {
                 {/* Center Content */}
                 <div className="relative z-10 max-w-lg">
                     <h1 className="text-5xl font-bold text-white mb-6 leading-tight">
-                        Bienvenido de Nuevo
+                        {programInfo ? (
+                            <>
+                                Bienvenido a <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
+                                    {programInfo.businessName}
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                Bienvenido <br />
+                                <span className="text-white">de Nuevo</span>
+                            </>
+                        )}
                     </h1>
                     <p className="text-xl text-gray-400 leading-relaxed text-balance">
-                        Accede a tu panel de control, revisa tus puntos y gestiona tus recompensas en un solo lugar.
+                        {programInfo
+                            ? "Inicia sesión para ver tus puntos disponibles, canjear recompensas y descubrir nuevas promociones exclusivas."
+                            : "Accede a tu panel de administración para monitorizar el feedback de tus clientes y gestionar tus campañas de lealtad."
+                        }
                     </p>
                 </div>
 
