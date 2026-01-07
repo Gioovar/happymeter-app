@@ -39,29 +39,34 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
     // Fit canvas to screen logic
     useEffect(() => {
         if (!containerRef.current) return
-        const updateScale = () => {
-            if (!containerRef.current) return
-            const containerWidth = containerRef.current.clientWidth
-            const containerHeight = containerRef.current.clientHeight
+
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0]
+            if (!entry) return
+
+            const containerWidth = entry.contentRect.width
+            const containerHeight = entry.contentRect.height
 
             // Allow some padding
             const availableWidth = containerWidth - 32
-            const availableHeight = containerHeight - 160 // Reserve space for header/footer
+            const availableHeight = containerHeight - 160
 
             const floorWidth = floorPlan.width || 800
             const floorHeight = floorPlan.height || 600
 
             const scaleX = availableWidth / floorWidth
             const scaleY = availableHeight / floorHeight
-            const newScale = Math.min(scaleX, scaleY, 1.2) // Cap at 1.2x
+            const newScale = Math.min(scaleX, scaleY, 1.2)
 
             setScale(newScale)
-        }
+        })
 
-        updateScale()
-        window.addEventListener('resize', updateScale)
-        return () => window.removeEventListener('resize', updateScale)
+        observer.observe(containerRef.current)
+        return () => observer.disconnect()
     }, [floorPlan])
+
+    const zoomIn = () => setScale(s => Math.min(s * 1.2, 3))
+    const zoomOut = () => setScale(s => Math.max(s / 1.2, 0.2))
 
     const handleTableClick = (table: Table) => {
         // Simple logic: if has paid price or not, just select
@@ -78,7 +83,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
     }
 
     return (
-        <div className="h-screen flex flex-col relative overflow-hidden bg-zinc-950">
+        <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-950">
             {/* Header */}
             <div className="absolute top-0 left-0 right-0 p-4 z-50 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
                 <button
@@ -94,19 +99,32 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                 <div className="w-10" /> {/* Spacer */}
             </div>
 
+            {/* Zoom Controls */}
+            <div className="absolute bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-auto">
+                <button onClick={zoomIn} className="p-3 bg-zinc-800 text-white rounded-full shadow-lg border border-white/10 hover:bg-zinc-700">+</button>
+                <button onClick={zoomOut} className="p-3 bg-zinc-800 text-white rounded-full shadow-lg border border-white/10 hover:bg-zinc-700">-</button>
+            </div>
+
             {/* Canvas Container */}
             <div
                 ref={containerRef}
-                className="flex-1 flex items-center justify-center relative overflow-hidden cursor-move touch-none"
+                className="flex-1 flex items-center justify-center relative overflow-hidden cursor-move touch-none bg-[#101014]"
+                style={{
+                    backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)',
+                    backgroundSize: '20px 20px'
+                }}
             >
                 <motion.div
+                    drag
+                    dragElastic={0.1}
+                    dragMomentum={false}
                     className="relative bg-zinc-900/50 rounded-3xl border border-white/5 shadow-2xl"
                     style={{
                         width: floorPlan.width || 800,
                         height: floorPlan.height || 600,
                         scale: scale,
-                        transformOrigin: 'center center'
                     }}
+                    animate={{ scale }}
                 >
                     {/* Render Tables */}
                     {floorPlan.tables.map((table: Table) => {
