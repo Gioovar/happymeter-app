@@ -192,32 +192,35 @@ export async function generateLayoutFromImage(imageUrl: string) {
         const base64Image = Buffer.from(imageBuffer).toString('base64')
 
         const prompt = `
-        Analyze this floor plan image and extract the furniture layout.
-        Return a JSON array of objects representing tables and zones.
+        You are an expert architect AI. Analyze this floor plan image and extract the furniture layout with high precision.
         
-        The coordinate system is 0 to 800 for both X and Y.
+        Coordinate System: 
+        - Use a percentage-based system (0-100) for both X and Y.
+        - X=0 is left, X=100 is right.
+        - Y=0 is top, Y=100 is bottom.
         
-        Output format:
+        Output format (JSON Array only):
         [
           {
-            "label": "Mesa 1",
-            "type": "RECT" | "ROUND" | "BAR" | "L_SHAPE" | "T_SHAPE",
-            "x": number, // center x (0-800)
-            "y": number, // center y (0-800)
-            "width": number,
-            "height": number,
-            "capacity": number // estimate based on size/chairs
+            "label": "Mesa 1", 
+            "type": "RECT" | "ROUND" | "BAR" | "L_SHAPE" | "U_SHAPE",
+            "x": number, // center x (0-100)
+            "y": number, // center y (0-100)
+            "width": number, // width in % (0-100)
+            "height": number, // height in % (0-100)
+            "rotation": number, // degrees (0-360)
+            "capacity": number // estimate based on chairs
           }
         ]
 
         Rules:
-        1. "RECT" for rectangular tables.
+        1. Identify ALL tables, booths, and bars.
         2. "ROUND" for circular tables.
-        3. "BAR" for long counters or bars.
-        4. "L_SHAPE" for L-shaped sofas or booths.
-        5. "T_SHAPE" for T-shaped arrangements.
+        3. "U_SHAPE" or "L_SHAPE" for booths/sofas.
+        4. Detect rotation carefully (e.g. 45, 90 degrees).
+        5. Group nearby chairs into the table capacity.
         
-        Only return the JSON array, no markdown, no other text.
+        Return ONLY the JSON.
         `
 
         const result = await model.generateContent([
@@ -245,11 +248,15 @@ export async function generateLayoutFromImage(imageUrl: string) {
         const jsonStr = text.substring(start, end + 1)
         const tables = JSON.parse(jsonStr)
 
-        // Post-process to add IDs
+        // Post-process: Add IDs and Scale from % to 800x800 Canvas
         const processedTables = tables.map((t: any, i: number) => ({
             ...t,
             id: `ai-${Date.now()}-${i}`,
-            rotation: 0
+            x: (t.x / 100) * 800,
+            y: (t.y / 100) * 800,
+            width: (t.width / 100) * 800,
+            height: (t.height / 100) * 800,
+            rotation: t.rotation || 0
         }))
 
         return { success: true, tables: processedTables }
