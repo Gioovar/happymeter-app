@@ -341,6 +341,17 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         }
     }
 
+    const activeFloorIndex = floorPlans.findIndex(p => p.id === activeFloorId)
+    const TINT_COLORS = [
+        'from-indigo-500/10',
+        'from-purple-500/10',
+        'from-blue-500/10',
+        'from-orange-500/10',
+        'from-emerald-500/10',
+        'from-rose-500/10',
+    ]
+    const currentTint = activeFloorIndex >= 0 ? TINT_COLORS[activeFloorIndex % TINT_COLORS.length] : TINT_COLORS[0]
+
     return (
         <div className="flex flex-col h-[calc(100vh-120px)] gap-4">
             {/* Toolbar */}
@@ -428,7 +439,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                 {/* Canvas Area */}
                 <div
                     ref={containerRef}
-                    className={`flex-1 bg-[#1a1a1a] rounded-xl border border-white/5 relative overflow-hidden shadow-inner ${isDrawing ? 'cursor-crosshair' : ''}`}
+                    className={`flex-1 bg-[#09090b] rounded-xl border border-white/5 relative overflow-hidden shadow-inner ${isDrawing ? 'cursor-crosshair' : ''}`}
                     style={{
                         backgroundImage: 'radial-gradient(circle, #333 1px, transparent 1px)',
                         backgroundSize: '20px 20px'
@@ -441,6 +452,16 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                         }
                     }}
                 >
+                    {/* Dynamic Background Tint */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${currentTint} via-transparent to-transparent opacity-40 pointer-events-none`} />
+
+                    {/* Watermark Name */}
+                    <div className="absolute top-8 left-8 pointer-events-none select-none z-0">
+                        <h1 className="text-6xl font-black text-white/5 uppercase tracking-tighter">
+                            {floorPlans.find(f => f.id === activeFloorId)?.name || 'Sin Nombre'}
+                        </h1>
+                    </div>
+
                     {/* Render Shapes & Tables */}
                     {tables.map((table) => {
                         const isCustomShape = ['CUSTOM', 'L_SHAPE', 'T_SHAPE', 'U_SHAPE'].includes(table.type)
