@@ -2,7 +2,7 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 // Configure public routes
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
     // Allow public access to /play/*, /s/* (surveys), /install, and SEO files
     if (
         req.nextUrl.pathname.startsWith('/play') ||
@@ -19,7 +19,7 @@ export default clerkMiddleware((auth, req) => {
         req.nextUrl.pathname === '/manifest.json'
     ) {
         // [NEW] Redirect authenticated users trying to access sign-in/sign-up
-        const { userId } = auth();
+        const { userId } = await auth();
         if (userId && (req.nextUrl.pathname.startsWith('/sign-in') || req.nextUrl.pathname.startsWith('/sign-up'))) {
             return NextResponse.redirect(new URL('/dashboard', req.url));
         }
