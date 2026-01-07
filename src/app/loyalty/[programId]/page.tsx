@@ -163,7 +163,9 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                                         headerSubtitle: "hidden",
                                         socialButtonsBlockButton: "text-black border-gray-200 hover:bg-gray-50",
                                         formButtonPrimary: "bg-violet-600 hover:bg-violet-700",
-                                        footerActionLink: "text-violet-600 hover:text-violet-700"
+                                        footerActionLink: "text-lime-400 hover:text-lime-300 font-bold",
+                                        formFieldAction: "text-lime-400 hover:text-lime-300 font-bold",
+                                        identityPreviewEditButton: "text-lime-400 hover:text-lime-300 font-bold"
                                     }
                                 }}
                                 signUpUrl={`/sign-up?redirect_url=/loyalty/${params.programId}&program_id=${params.programId}`}
