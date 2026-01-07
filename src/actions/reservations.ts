@@ -225,6 +225,39 @@ export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
     return { success: true }
 }
 
+// Public: Open reservation page data
+export async function getProgramFloorPlan(programId: string) {
+    try {
+        const program = await prisma.loyaltyProgram.findUnique({
+            where: { id: programId },
+            select: { userId: true, businessName: true }
+        })
+
+        if (!program) return { success: false, error: "Negocio no encontrado" }
+
+        const floorPlan = await prisma.floorPlan.findFirst({
+            where: { userId: program.userId },
+            include: {
+                tables: {
+                    include: {
+                        reservations: {
+                            where: { date: { gte: new Date() } } // Future reservations only to check availability
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'asc' }
+        })
+
+        if (!floorPlan) return { success: false, error: "No hay mapa configurado" }
+
+        return { success: true, floorPlan: JSON.parse(JSON.stringify(floorPlan)), businessName: program.businessName }
+    } catch (error) {
+        console.error("Error fetching program floor plan:", error)
+        return { success: false, error: "Error al cargar el mapa" }
+    }
+}
+
 import { GoogleGenerativeAI } from "@google/generative-ai"
 
 export async function generateLayoutFromImage(imageUrl: string) {
