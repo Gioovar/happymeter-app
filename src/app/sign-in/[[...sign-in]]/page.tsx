@@ -89,7 +89,7 @@ export default function Page() {
                     </div>
 
                     <div className="mb-8 text-center lg:text-left">
-                        <h2 className="text-3xl font-bold text-white mb-2">Iniciar Sesión</h2>
+                        <h2 className="text-3xl font-bold text-white mb-2">Iniciar sesión o registrarse</h2>
                         <p className="text-gray-400">Introduce tus credenciales para continuar</p>
                     </div>
 
