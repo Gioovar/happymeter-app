@@ -176,7 +176,13 @@ export async function generateLayoutFromImage(imageUrl: string) {
         const { userId } = await auth()
         if (!userId) throw new Error("Unauthorized")
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")
+        const apiKey = process.env.GEMINI_API_KEY
+        if (!apiKey) {
+            console.error("Missing GEMINI_API_KEY")
+            return { success: false, error: "Server missing GEMINI_API_KEY" }
+        }
+
+        const genAI = new GoogleGenerativeAI(apiKey)
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
         // Fetch image and convert to base64
@@ -242,8 +248,8 @@ export async function generateLayoutFromImage(imageUrl: string) {
 
         return { success: true, tables: processedTables }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("AI Generation Error:", error)
-        return { success: false, error: "Failed to generate layout" }
+        return { success: false, error: error.message || "Failed to generate layout" }
     }
 }
