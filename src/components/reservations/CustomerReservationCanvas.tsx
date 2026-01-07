@@ -34,53 +34,113 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
     const [selectedTable, setSelectedTable] = useState<Table | null>(null)
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
+
+    // Zoom State
     const [scale, setScale] = useState(1)
 
-    // Fit canvas to screen logic
+    // Pinch State
+    const lastDist = useRef<number | null>(null)
+
+    // Fit content logic
     useEffect(() => {
-        if (!containerRef.current) return
+        if (!containerRef.current || !floorPlan.tables || floorPlan.tables.length === 0) return
 
-        const observer = new ResizeObserver((entries) => {
-            const entry = entries[0]
-            if (!entry) return
+        const fitContent = () => {
+            if (!containerRef.current) return
 
-            const containerWidth = entry.contentRect.width
-            const containerHeight = entry.contentRect.height
+            // 1. Calculate Bounding Box of Tables to know the content size
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+            floorPlan.tables.forEach((t: Table) => {
+                minX = Math.min(minX, t.x)
+                minY = Math.min(minY, t.y)
+                maxX = Math.max(maxX, t.x + (t.width || 60))
+                maxY = Math.max(maxY, t.y + (t.height || 60))
+            })
 
-            // Allow some padding
-            const availableWidth = containerWidth - 32
-            const availableHeight = containerHeight - 160
+            const PADDING = 40
+            minX -= PADDING
+            minY -= PADDING
+            maxX += PADDING
+            maxY += PADDING
 
-            const floorWidth = floorPlan.width || 800
-            const floorHeight = floorPlan.height || 600
+            const contentWidth = maxX - minX
+            const contentHeight = maxY - minY
 
-            const scaleX = availableWidth / floorWidth
-            const scaleY = availableHeight / floorHeight
+            const containerWidth = containerRef.current.clientWidth
+            const containerHeight = containerRef.current.clientHeight
 
-            // Smart scaling:
-            // 1. Try to fit the whole map (min of X and Y)
-            // 2. But don't let it get tinier than 50% (0.5) to ensure readability on mobile
-            // 3. And don't auto-zoom more than 1.2x 
+            // 2. Calculate Scale to Fit Content
+            const scaleX = containerWidth / contentWidth
+            const scaleY = containerHeight / contentHeight
 
-            let optimalScale = Math.min(scaleX, scaleY)
-            if (availableWidth < 768) { // Mobile check
-                optimalScale = Math.max(optimalScale, 0.6) // Force at least 60% zoom
+            // Determine optimal scale
+            // On mobile (<768), we want a minimum legibility. 
+            // If the fit scale is too small, we force a minimum and let the user pan.
+            let fitScale = Math.min(scaleX, scaleY, 1.5)
+
+            // Mobile adjustment: Ensure at least 0.6x zoom so text/icons are readable
+            if (containerWidth < 768) {
+                fitScale = Math.max(fitScale, 0.6)
             }
 
-            const newScale = Math.min(optimalScale, 1.5)
+            setScale(fitScale)
 
-            setScale(newScale)
-        })
+            // Note: We rely on the container's flex-center + drag to position the map.
+            // Ideally we'd set an initial offset position, but Framer Motion 'drag' without controlled 'x/y'
+            // is easier to handle for free movement. The flex-center aligns the global floor; 
+            // if tables are offset in the floor, they might be off-center initially.
+            // For now, assuming the Floor Plan 0,0 is somewhat relevant or tables are grouped near top-left.
+        }
 
+        fitContent()
+        const observer = new ResizeObserver(fitContent)
         observer.observe(containerRef.current)
         return () => observer.disconnect()
     }, [floorPlan])
 
-    const zoomIn = () => setScale(s => Math.min(s * 1.2, 3))
-    const zoomOut = () => setScale(s => Math.max(s / 1.2, 0.2))
+    // Touch Handlers for Pinch Zoom
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (e.touches.length === 2) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            )
+            lastDist.current = dist
+        }
+    }
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (e.touches.length === 2 && lastDist.current !== null) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            )
+            // Calculate scale change
+            const delta = dist / lastDist.current
+
+            // Apply zoom with limits (0.3x to 4x)
+            setScale(prev => Math.min(Math.max(prev * delta, 0.3), 4))
+            lastDist.current = dist
+        }
+    }
+
+    const handleTouchEnd = () => {
+        lastDist.current = null
+    }
+
+    const zoomIn = () => setScale(s => Math.min(s * 1.2, 4))
+    const zoomOut = () => setScale(s => Math.max(s / 1.2, 0.3))
 
     const handleTableClick = (table: Table) => {
-        // Simple logic: if has paid price or not, just select
+        // Red = Reserved = Blocked
+        if ((table.reservations?.length || 0) > 0) {
+            toast.error("Mesa Ocupada", {
+                description: "Esta mesa ya tiene una reservación para hoy.",
+                duration: 2000
+            })
+            return
+        }
+
         setSelectedTable(table)
         setIsConfirmOpen(true)
     }
@@ -94,7 +154,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
     }
 
     return (
-        <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-950">
+        <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-950 touch-none">
             {/* Header */}
             <div className="absolute top-0 left-0 right-0 p-4 z-50 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
                 <button
@@ -107,13 +167,13 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                     <h1 className="text-lg font-bold text-white shadow-sm">{businessName}</h1>
                     <p className="text-xs text-zinc-400">Selecciona tu mesa</p>
                 </div>
-                <div className="w-10" /> {/* Spacer */}
+                <div className="w-10" />
             </div>
 
-            {/* Zoom Controls */}
+            {/* Zoom Controls (Optional, user asked for pinch but buttons are good fallback) */}
             <div className="absolute bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-auto">
-                <button onClick={zoomIn} className="p-3 bg-zinc-800 text-white rounded-full shadow-lg border border-white/10 hover:bg-zinc-700">+</button>
-                <button onClick={zoomOut} className="p-3 bg-zinc-800 text-white rounded-full shadow-lg border border-white/10 hover:bg-zinc-700">-</button>
+                <button onClick={zoomIn} className="p-3 bg-zinc-800 text-white rounded-full shadow-lg border border-white/10 hover:bg-zinc-700 active:scale-90 transition-transform">+</button>
+                <button onClick={zoomOut} className="p-3 bg-zinc-800 text-white rounded-full shadow-lg border border-white/10 hover:bg-zinc-700 active:scale-90 transition-transform">-</button>
             </div>
 
             {/* Canvas Container */}
@@ -124,6 +184,9 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                     backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)',
                     backgroundSize: '20px 20px'
                 }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
             >
                 <motion.div
                     drag
@@ -139,16 +202,17 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                 >
                     {/* Render Tables */}
                     {floorPlan.tables.map((table: Table) => {
-                        const isPaid = (table.reservationPrice || 0) > 0
+                        const isReserved = (table.reservations?.length || 0) > 0
+                        const isPaid = (table.reservationPrice || 0) > 0 && !isReserved
 
                         return (
                             <div
                                 key={table.id}
                                 onClick={() => handleTableClick(table)}
-                                className={`absolute flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95
+                                className={`absolute flex items-center justify-center transition-all duration-300 cursor-pointer 
                                     ${selectedTable?.id === table.id
                                         ? 'ring-4 ring-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.5)] z-20'
-                                        : 'hover:ring-2 hover:ring-white/50'
+                                        : isReserved ? '' : 'hover:scale-105 active:scale-95 hover:ring-2 hover:ring-white/50'
                                     }
                                 `}
                                 style={{
@@ -158,7 +222,11 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                                     height: table.height || 60,
                                     transform: `rotate(${table.rotation || 0}deg)`,
                                     borderRadius: table.type === 'ROUND' ? '50%' : '12px',
-                                    backgroundColor: isPaid ? '#4f46e5' : '#27272a', // Indigo for paid, Zinc for free
+                                    // Visual Status: Red (Reserved) > Indigo (Paid) > Zinc (Free)
+                                    backgroundColor: isReserved
+                                        ? 'rgba(127, 29, 29, 0.8)' // Red 900
+                                        : isPaid ? '#4f46e5' : '#27272a',
+                                    border: isReserved ? '1px solid rgba(248, 113, 113, 0.3)' : 'none',
                                     color: 'white'
                                 }}
                             >
@@ -166,17 +234,25 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                                     <span className="text-[10px] font-bold opacity-80 truncate px-1 max-w-full">
                                         {table.label}
                                     </span>
-                                    {table.capacity && (
-                                        <div className="flex items-center gap-0.5 text-[8px] opacity-60">
-                                            <Users className="w-2.5 h-2.5" />
-                                            {table.capacity}
+                                    {isReserved ? (
+                                        <div className="flex flex-col items-center mt-0.5">
+                                            <span className="text-[7px] font-bold uppercase tracking-wider text-red-200 bg-red-950/80 px-1.5 py-0.5 rounded border border-red-500/20">Ocupada</span>
                                         </div>
-                                    )}
-                                    {isPaid && (
-                                        <div className="absolute -top-3 -right-3 bg-green-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm flex items-center gap-0.5 border border-white/20">
-                                            <DollarSign className="w-2 h-2" />
-                                            {table.reservationPrice}
-                                        </div>
+                                    ) : (
+                                        <>
+                                            {table.capacity && (
+                                                <div className="flex items-center gap-0.5 text-[8px] opacity-60">
+                                                    <Users className="w-2.5 h-2.5" />
+                                                    {table.capacity}
+                                                </div>
+                                            )}
+                                            {isPaid && (
+                                                <div className="absolute -top-3 -right-3 bg-green-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm flex items-center gap-0.5 border border-white/20">
+                                                    <DollarSign className="w-2 h-2" />
+                                                    {table.reservationPrice}
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             </div>
