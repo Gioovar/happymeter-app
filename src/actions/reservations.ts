@@ -183,8 +183,8 @@ export async function generateLayoutFromImage(imageUrl: string) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey)
-        // Switch to pro model which is more stable in v1beta
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
+        // Switch to the most established vision model for v1beta compatibility
+        const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" })
 
         // Fetch image and convert to base64
         const imageResp = await fetch(imageUrl)
