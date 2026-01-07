@@ -154,6 +154,7 @@ model Table {
   type        String    // ROUND, RECT, BAR, STAGE
   capacity    Int       @default(4)
   rotation    Float     @default(0)
+  points      Json?     // For custom polygons: [{x,y}, {x,y}]
   
   floorPlan   FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
   reservations Reservation[]

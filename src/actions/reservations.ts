@@ -104,7 +104,8 @@ export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
                         rotation: table.rotation,
                         label: table.label,
                         type: table.type,
-                        capacity: table.capacity
+                        capacity: table.capacity,
+                        points: table.points // Save points for custom shapes
                     }
                 })
             } else {
@@ -119,7 +120,8 @@ export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
                         rotation: table.rotation,
                         label: table.label,
                         type: table.type,
-                        capacity: table.capacity
+                        capacity: table.capacity,
+                        points: table.points // Save points for custom shapes
                     }
                 })
             }
