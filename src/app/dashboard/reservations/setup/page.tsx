@@ -1,4 +1,4 @@
-import { getFloorPlan } from "@/actions/reservations"
+import { getFloorPlans } from "@/actions/reservations"
 import CanvasEditor from "@/components/reservations/CanvasEditor"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
@@ -6,7 +6,7 @@ import { ChevronLeft } from "lucide-react"
 export const dynamic = 'force-dynamic'
 
 export default async function ReservationSetupPage() {
-    const floorPlan = await getFloorPlan()
+    const floorPlans = await getFloorPlans()
 
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col">
@@ -23,7 +23,7 @@ export default async function ReservationSetupPage() {
                 </div>
             </div>
 
-            <CanvasEditor initialData={floorPlan} />
+            <CanvasEditor initialData={floorPlans} />
         </div>
     )
 }

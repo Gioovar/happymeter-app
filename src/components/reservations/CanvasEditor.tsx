@@ -6,13 +6,30 @@ import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool }
 import { toast } from 'sonner'
 import { saveFloorPlan } from '@/actions/reservations'
 
-export default function CanvasEditor({ initialData }: { initialData: any }) {
-    const [tables, setTables] = useState<any[]>(initialData?.tables || [])
+export default function CanvasEditor({ initialData }: { initialData: any[] }) {
+    const [floorPlans, setFloorPlans] = useState<any[]>(initialData || [])
+    const [activeFloorId, setActiveFloorId] = useState<string>(initialData?.[0]?.id || "")
+    const [tables, setTables] = useState<any[]>(initialData?.[0]?.tables || [])
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
     const [isDrawing, setIsDrawing] = useState(false)
     const [drawingPoints, setDrawingPoints] = useState<{ x: number, y: number }[]>([])
     const containerRef = useRef<HTMLDivElement>(null)
+
+    // Sync tables when switching floors
+    useEffect(() => {
+        const activePlan = floorPlans.find(p => p.id === activeFloorId)
+        if (activePlan) {
+            setTables(activePlan.tables || [])
+        }
+    }, [activeFloorId]) // removed floorPlans from deps to avoid loop
+
+    // Update local floorPlans state when tables change
+    useEffect(() => {
+        setFloorPlans(prev => prev.map(p =>
+            p.id === activeFloorId ? { ...p, tables } : p
+        ))
+    }, [tables]) // removed activeFloorId from deps to avoid loop
 
     const handleDragEnd = (id: string, info: any) => {
         setTables(prev => prev.map(t => {
@@ -161,15 +178,47 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
         setSelectedId(null)
     }
 
+    const handleCreateFloor = async () => {
+        const name = prompt("Nombre del nuevo piso (ej. Piso 2):")
+        if (!name) return
+
+        try {
+            // Optimistic update
+            const tempId = `temp-${Date.now()}`
+            const newFloor = { id: tempId, name, tables: [] }
+            setFloorPlans(prev => [...prev, newFloor])
+            setActiveFloorId(tempId)
+
+            // Dynamic import to avoid circular dependency issues if any
+            const { createFloorPlan } = await import("@/actions/reservations")
+            const result = await createFloorPlan(name)
+
+            if (result.success && result.floorPlan) {
+                // Replace temp with real
+                setFloorPlans(prev => prev.map(p => p.id === tempId ? result.floorPlan : p))
+                setActiveFloorId(result.floorPlan.id)
+                toast.success("Piso creado")
+            } else {
+                toast.error("Error al crear piso")
+                // Revert
+                setFloorPlans(prev => prev.filter(p => p.id !== tempId))
+                setActiveFloorId(initialData[0]?.id || "")
+            }
+        } catch (e) {
+            console.error(e)
+            toast.error("Error al crear piso")
+        }
+    }
+
     const handleSave = async () => {
-        if (!initialData?.id) {
-            toast.error("Error: No se pudo cargar el plano. Recarga la página.")
+        if (!activeFloorId) {
+            toast.error("Error: No hay piso activo.")
             return
         }
 
         setIsSaving(true)
         try {
-            await saveFloorPlan(initialData.id, tables)
+            await saveFloorPlan(activeFloorId, tables)
             toast.success("Distribución guardada correctamente")
         } catch (error) {
             console.error(error)
@@ -200,7 +249,32 @@ export default function CanvasEditor({ initialData }: { initialData: any }) {
         <div className="flex flex-col h-[calc(100vh-120px)] gap-4">
             {/* Toolbar */}
             <div className="flex items-center justify-between bg-zinc-900 p-4 rounded-xl border border-white/10">
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                    {/* Floor Selector */}
+                    <div className="flex items-center gap-1 bg-zinc-800 rounded-lg p-1 mr-4">
+                        {floorPlans.map(floor => (
+                            <button
+                                key={floor.id}
+                                onClick={() => setActiveFloorId(floor.id)}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeFloorId === floor.id
+                                        ? 'bg-zinc-700 text-white shadow-sm'
+                                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50'
+                                    }`}
+                            >
+                                {floor.name}
+                            </button>
+                        ))}
+                        <button
+                            onClick={handleCreateFloor}
+                            className="px-2 py-1.5 text-xs font-medium rounded-md text-zinc-400 hover:text-white hover:bg-zinc-700/50"
+                            title="Agregar Piso"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    <div className="w-px h-8 bg-white/10 mx-2" />
+
                     <button onClick={() => addTable('RECT')} className="p-2 hover:bg-white/10 rounded-lg flex flex-col items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
                         <Square className="w-5 h-5" /> Rect
                     </button>
