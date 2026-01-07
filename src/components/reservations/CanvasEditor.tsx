@@ -360,6 +360,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     }
 
     const handleUpdateFloor = async () => {
+        setIsUpdating(true)
         try {
             const { updateFloorMetadata } = await import("@/actions/reservations")
             const result = await updateFloorMetadata(activeFloorId, editFloorData)
@@ -373,6 +374,8 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         } catch (e) {
             console.error(e)
             toast.error("Error al actualizar")
+        } finally {
+            setIsUpdating(false)
         }
     }
 
@@ -411,6 +414,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
 
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
     const wrapperRef = useRef<HTMLDivElement>(null)
+    const [isUpdating, setIsUpdating] = useState(false)
 
     useEffect(() => {
         if (!wrapperRef.current) return
@@ -895,8 +899,15 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
 
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setIsEditFloorModalOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleUpdateFloor} className="bg-indigo-600 hover:bg-indigo-700">
-                            Guardar Cambios
+                        <Button onClick={handleUpdateFloor} disabled={isUpdating} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                            {isUpdating ? (
+                                <>
+                                    <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
+                                    Guardando...
+                                </>
+                            ) : (
+                                'Guardar Cambios'
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
