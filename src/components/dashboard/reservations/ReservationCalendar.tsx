@@ -89,7 +89,23 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
     for (let i = 0; i < firstDay; i++) days.push(null)
     for (let i = 1; i <= daysInMonth; i++) days.push(i)
 
-    const hasReservations = (day: number) => [1, 2, 3, 4, 5, 6, 7].includes(day)
+    const hasReservations = (day: number) => {
+        if (!reservations || reservations.length === 0) return false
+
+        // Create date for this specific calendar cell
+        const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+
+        // Normalize to YYYY-MM-DD to compare securely ignoring time
+        const cellDateStr = cellDate.toISOString().split('T')[0]
+
+        // Check availability
+        return reservations.some((r: any) => {
+            // Assume r.date is string or Date object
+            const rDate = new Date(r.date)
+            const rDateStr = rDate.toISOString().split('T')[0]
+            return rDateStr === cellDateStr
+        })
+    }
 
     return (
         <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-auto shadow-2xl relative">

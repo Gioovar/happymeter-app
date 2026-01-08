@@ -135,10 +135,10 @@ export default async function ReservationsPage() {
                     </div>
                 </div>
 
-                {/* Capacity / Availability */}
-                {/* Calendar & Capacity */}
+                {/* Right Column: Calendar & Stats */}
                 <div className="space-y-6">
-                    <ReservationCalendar />
+                    {/* NEW CALENDAR WIDGET */}
+                    <ReservationCalendar reservations={reservations} />
 
                     {/* Capacity (Mini) */}
                     <div className="bg-[#111] border border-white/10 rounded-2xl p-6">

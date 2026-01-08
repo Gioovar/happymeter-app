@@ -387,3 +387,64 @@ export async function generateLayoutFromImage(imageUrl: string) {
         return { success: false, error: error.message || "Failed to generate layout" }
     }
 }
+
+// ... (previous code)
+
+export async function getDashboardReservations(monthDate: Date = new Date()) {
+    try {
+        const { userId } = await auth()
+        if (!userId) return { success: false, reservations: [] }
+
+        // Find floor plans owned by user
+        const floorPlans = await prisma.floorPlan.findMany({
+            where: { userId },
+            select: { id: true }
+        })
+
+        const floorPlanIds = floorPlans.map(fp => fp.id)
+
+        // Date Range: Start of month to End of month (plus buffer)
+        // For simplicity, let's just fetch ALL future reservations or a 3-month window
+        const start = new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1)
+        const end = new Date(monthDate.getFullYear(), monthDate.getMonth() + 2, 0)
+
+        // Fetch reservations via tables
+        // Since Reservation is linked to Table, we need to query through Tables or if there's a direct Reservation model?
+        // Let's check schema. Usually: Reservation -> Table -> FloorPlan -> User
+        // Or Reservation -> User directly?
+        // Based on `getProgramFloorPlan` query context: `tables: { include: { reservations: ... } }`
+
+        const reservations = await prisma.reservation.findMany({
+            where: {
+                date: {
+                    gte: start,
+                    lte: end
+                },
+                table: {
+                    floorPlanId: { in: floorPlanIds }
+                }
+            },
+            include: {
+                table: true
+            },
+            orderBy: { date: 'asc' }
+        })
+
+        // Map to simpler structure
+        const formatted = reservations.map((r: any) => ({
+            id: r.id,
+            date: r.date, // Date object
+            time: r.date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }), // Extract time from date if stored as DateTime
+            customerName: r.customerName || "Cliente",
+            tableName: r.table?.label || "Mesa",
+            pax: r.partySize || 4,
+            status: r.status // confirmed, pending, etc.
+        }))
+
+        return { success: true, reservations: JSON.parse(JSON.stringify(formatted)) }
+
+    } catch (error) {
+        console.error("Error fetching dashboard reservations:", error)
+        return { success: false, reservations: [] }
+    }
+}
