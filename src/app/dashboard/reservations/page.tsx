@@ -8,12 +8,20 @@ import {
     Settings
 } from 'lucide-react';
 import Link from 'next/link';
+import { currentUser } from "@clerk/nextjs/server"
 import { getFloorPlan, getDashboardReservations } from "@/actions/reservations"
 import { ReservationCalendar } from "@/components/dashboard/reservations/ReservationCalendar"
+import { NewReservationButton } from "@/components/dashboard/reservations/NewReservationButton"
 
 export const dynamic = 'force-dynamic'
 
 export default async function ReservationsPage() {
+    const user = await currentUser()
+    const userProfile = {
+        name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : undefined,
+        email: user?.emailAddresses[0]?.emailAddress,
+        phone: user?.phoneNumbers[0]?.phoneNumber
+    }
 
     // Fetch existing floor plan
     // const floorPlan = await getFloorPlan()
@@ -63,10 +71,9 @@ export default async function ReservationsPage() {
                         <Settings className="w-4 h-4" />
                         Editar Plano
                     </Link>
-                    <button className="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-orange-900/20 hover:scale-105 transition-all text-white flex items-center gap-2">
-                        <CalendarDays className="w-4 h-4" />
-                        Nueva Reserva
-                    </button>
+
+                    {/* NEW RESERVATION BUTTON CLIENT COMPONENT */}
+                    <NewReservationButton userProfile={userProfile} />
                 </div>
             </div>
 
