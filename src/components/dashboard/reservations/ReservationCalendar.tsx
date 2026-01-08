@@ -214,7 +214,7 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
                                         className="flex items-center gap-2 pl-4"
                                     >
                                         <div className="relative flex-1">
-                                            <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-zinc-500" />
+                                            <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-white" />
                                             <Input
                                                 type="time"
                                                 className="pl-9 bg-zinc-800 border-zinc-700 text-sm"
