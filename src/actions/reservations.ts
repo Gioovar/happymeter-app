@@ -414,6 +414,10 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
         // Or Reservation -> User directly?
         // Based on `getProgramFloorPlan` query context: `tables: { include: { reservations: ... } }`
 
+
+        // ... (inside getDashboardReservations)
+
+        /*
         const reservations = await prisma.reservation.findMany({
             where: {
                 date: {
@@ -429,12 +433,15 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
             },
             orderBy: { date: 'asc' }
         })
+        */
 
-
-        // ... inside getDashboardReservations
+        // MOCK DATA TO TEST SERVER CONNECTIVITY WITHOUT DB QUERY
+        const reservations: any[] = []
+        // If this works, we know the issue is the DB query above.
 
         // Map to simpler structure
         const formatted = reservations.map((r: any) => {
+            // ... existing mapping logic safe for empty array
             let timeStr = "00:00"
             try {
                 // Manual safe formatting or use date-fns if imported
