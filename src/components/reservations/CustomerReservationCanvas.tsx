@@ -221,20 +221,12 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                     drag
                     dragElastic={0.1}
                     dragMomentum={false}
-                    className="relative overflow-visible" // No Card Shape
+                    className="relative overflow-visible"
                     style={{
                         width: floorPlan.width || 800,
-                        height: floorPlan.height || 600,
+                        height: 2000, // Force large height to match Editor Infinite Scroll
                         x, y, scale,
-                        // Full Screen Map Texture
-                        // Background is the map itself, maybe subtle grid or just dark
-                        // User mentioned "Light Effect" should be "Color Principal de su marca"
-                        // But if it's full screen, the light effect might be better on the CONTAINER or the map div?
-                        // Or fixed? "Efecto de luz moderno"
-                        // If map scrolls, light should probably be fixed?
-                        // If fixed, put on container. If contextual to floor, put here.
-                        // Let's put on TABLE layer or just simple dark background.
-                        // User said "no tenga delimitaciones".
+                        // Brand Light Effect
                         background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.1) 0%, rgba(9, 9, 11, 0) 70%)',
                     }}
                 >

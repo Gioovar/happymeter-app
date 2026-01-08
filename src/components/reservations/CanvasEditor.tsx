@@ -442,8 +442,9 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     const containerRatio = containerSize.width / containerSize.height || 1
 
     // Determine fit sizing - Fixed for "Mobile Infinite Scroll" behavior
-    // Always fit width (100%) and let height grow (auto), enabling vertical scrolling.
-    const fitStyle = { width: '100%', height: 'auto', aspectRatio: `${physWidth}/${physHeight}` }
+    // We force a large height (e.g. 2000px) to simulate a long scrollable mobile page
+    // This allows users to add tables far down.
+    const fitStyle = { width: '100%', height: '2000px' }
 
     // Layout constants
     const PHONE_WIDTH = 390
