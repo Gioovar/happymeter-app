@@ -441,11 +441,9 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     const floorRatio = physWidth / physHeight
     const containerRatio = containerSize.width / containerSize.height || 1
 
-    // Determine fit sizing
-    // If floor is "wider" relative to container, constrain width. Else constrain height.
-    const fitStyle = floorRatio > containerRatio
-        ? { width: '100%', height: 'auto', aspectRatio: `${physWidth}/${physHeight}` }
-        : { height: '100%', width: 'auto', aspectRatio: `${physWidth}/${physHeight}` }
+    // Determine fit sizing - Fixed for "Mobile Infinite Scroll" behavior
+    // Always fit width (100%) and let height grow (auto), enabling vertical scrolling.
+    const fitStyle = { width: '100%', height: 'auto', aspectRatio: `${physWidth}/${physHeight}` }
 
     // Layout constants
     const PHONE_WIDTH = 390
@@ -594,10 +592,10 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                             </div>
                         </div>
 
-                        {/* Interactive Canvas Container */}
+                        {/* Interactive Canvas Container - ENABLE SCROLL HERE */}
                         <div
                             ref={wrapperRef}
-                            className="absolute inset-0 top-0 bottom-0 flex items-center justify-center bg-zinc-900 overflow-hidden" // Changed to 900 base
+                            className="absolute inset-0 top-0 bottom-0 block overflow-y-auto overflow-x-hidden bg-zinc-900 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
                             style={{
                                 // Brand Light Effect (Matching Customer View)
                                 background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, #09090b 100%)',
