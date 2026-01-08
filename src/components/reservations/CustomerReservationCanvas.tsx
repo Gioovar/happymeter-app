@@ -87,32 +87,29 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
 
             scale.set(fitScale)
 
-            // 3. Calculate Centering Offset
-            // We want the CENTER of the content to be at the CENTER of the container.
-            // Currently, the map is centered by flexbox (justify-center items-center) based on its WIDTH/HEIGHT.
-            // Map Center = (floorWidth/2, floorHeight/2).
-            // Content Center = (minX + contentWidth/2, minY + contentHeight/2).
+            // 3. New Centering Logic (Top-Left Origin)
+            // We removed flex centering, so 0,0 is Top-Left of screen.
 
-            const floorWidth = floorPlan.width || 800
-            const floorHeight = 2000 // Matched to forced height
+            // Calculate Target Visual Position
+            // We want the CONTENT Center X to match Screen Center X.
+            // ScreenCenterX = ContainerW / 2
+            // ContentWidthScaled = ContentWidth * scale
+            // LeftEdgeOfContent = (ContainerW - ContentWidthScaled) / 2
 
-            const mapCenterX = floorWidth / 2
+            // Map X (where to place the div)
+            // Div starts at 0,0. Content starts at minX.
+            // VisualContentLeft = x + (minX * scale)
+            // We want VisualContentLeft = (ContainerW - ContentWidthScaled) / 2
+            // x = (ContainerW - ContentWidth * scale) / 2 - minX * scale
 
-            const contentCenterX = minX + contentWidth / 2
-            const contentCenterY = minY // Top of the content
+            const targetX = (containerWidth - contentWidth * fitScale) / 2
+            const offsetX = targetX - (minX * fitScale)
 
-            // Center X
-            const offsetX = (mapCenterX - contentCenterX) * fitScale
+            // Map Y (Top Align)
+            // VisualContentTop = y + (minY * scale)
+            // We want VisualContentTop = 120 (Padding)
+            // y = 120 - minY * scale
 
-            // Align Top (Y)
-            // We want the content's top (minY) to be at Y=120 (approx header height + padding)
-            // Current Y is 0 relative to map.
-            // visualY = y * scale + offsetY
-            // We want visualY of minY to be 120.
-            // (minY * scale) + offsetY = 120
-            // offsetY = 120 - (minY * scale)
-            // But 'y' motion value shifts the whole coordinate system?
-            // Yes.
             const TOP_PADDING = 120
             const offsetY = TOP_PADDING - (minY * fitScale)
 
@@ -125,7 +122,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
         return () => window.removeEventListener('resize', fitContent)
     }, [floorPlan, x, y, scale])
 
-    // Touch Handlers for Pinch Zoom
+    // Touch Handlers for Pinch Zoom (Unchanged)
     const handleTouchStart = (e: React.TouchEvent) => {
         if (e.touches.length === 2) {
             const dist = Math.hypot(
@@ -208,7 +205,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             {/* Canvas Container */}
             <div
                 ref={containerRef}
-                className="flex-1 flex items-center justify-center relative overflow-hidden cursor-move touch-none bg-black"
+                className="flex-1 relative overflow-hidden cursor-move touch-none bg-black" // Removed flex center
                 // REMOVED BACKGROUND GRID
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
@@ -223,6 +220,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                         width: floorPlan.width || 800,
                         height: 2000, // Force large height to match Editor Infinite Scroll
                         x, y, scale,
+                        transformOrigin: '0 0', // CRITICAL: Scale from top-left for predictable positioning
                         // Brand Light Effect
                         background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.1) 0%, rgba(9, 9, 11, 0) 70%)',
                     }}
