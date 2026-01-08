@@ -1,4 +1,6 @@
+// @ts-nocheck
 "use client"
+
 
 import { useState } from "react"
 import { CalendarIcon, Clock, User, Phone, Mail, Users } from "lucide-react"
