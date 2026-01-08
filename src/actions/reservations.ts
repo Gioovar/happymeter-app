@@ -235,13 +235,13 @@ export async function getProgramFloorPlan(programId: string) {
 
         if (!program) return { success: false, error: "Negocio no encontrado" }
 
-        const floorPlan = await prisma.floorPlan.findFirst({
+        const floorPlans = await prisma.floorPlan.findMany({
             where: { userId: program.userId },
             include: {
                 tables: {
                     include: {
                         reservations: {
-                            where: { date: { gte: new Date() } } // Future reservations only to check availability
+                            where: { date: { gte: new Date() } } // Future reservations only
                         }
                     }
                 }
@@ -249,9 +249,9 @@ export async function getProgramFloorPlan(programId: string) {
             orderBy: { createdAt: 'asc' }
         })
 
-        if (!floorPlan) return { success: false, error: "No hay mapa configurado" }
+        if (!floorPlans || floorPlans.length === 0) return { success: false, error: "No hay mapa configurado" }
 
-        return { success: true, floorPlan: JSON.parse(JSON.stringify(floorPlan)), businessName: program.businessName }
+        return { success: true, floorPlans: JSON.parse(JSON.stringify(floorPlans)), businessName: program.businessName }
     } catch (error) {
         console.error("Error fetching program floor plan:", error)
         return { success: false, error: "Error al cargar el mapa" }

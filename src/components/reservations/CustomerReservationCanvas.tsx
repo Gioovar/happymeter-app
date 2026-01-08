@@ -24,13 +24,22 @@ interface Table {
 }
 
 interface CustomerReservationCanvasProps {
-    floorPlan: any
+    floorPlans?: any[] // Support multiple floors
+    floorPlan?: any // Legacy support
     businessName: string
     programId: string
 }
 
-export function CustomerReservationCanvas({ floorPlan, businessName, programId }: CustomerReservationCanvasProps) {
+export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorPlan, businessName, programId }: CustomerReservationCanvasProps) {
     const router = useRouter()
+
+    // Resolve initial floor (prioritize array)
+    const allFloors = floorPlans || (initialFloorPlan ? [initialFloorPlan] : [])
+    const [activeFloorId, setActiveFloorId] = useState<string>(allFloors[0]?.id || "")
+
+    // Get current active floor data
+    const currentFloor = allFloors.find(f => f.id === activeFloorId) || allFloors[0] || { tables: [], width: 800 }
+
     const [selectedTable, setSelectedTable] = useState<Table | null>(null)
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -42,11 +51,11 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
 
     // Auto-Crop Width: Calculate actual content width to prevent empty space
     const contentWidth = useMemo(() => {
-        if (!floorPlan.tables?.length) return floorPlan.width || 800
+        if (!currentFloor.tables?.length) return currentFloor.width || 800
         let max = 0
-        floorPlan.tables.forEach((t: any) => max = Math.max(max, t.x + (t.width || 60)))
+        currentFloor.tables.forEach((t: any) => max = Math.max(max, t.x + (t.width || 60)))
         return Math.max(max + 40, 350) // Padding + Min Width safety
-    }, [floorPlan])
+    }, [currentFloor])
 
     // We also keep a state for scale just to trigger re-renders if needed for UI updates (like zoom buttons disabled state), 
     // but primarily we trust the motion value.
@@ -58,13 +67,13 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
 
     // Fit content logic
     useEffect(() => {
-        if (!containerRef.current || !floorPlan.tables || floorPlan.tables.length === 0) return
+        if (!containerRef.current || !currentFloor.tables || currentFloor.tables.length === 0) return
 
         const fitContent = () => {
             if (!containerRef.current) return
 
             // 1. Simple Fit Width Logic (Match Editor)
-            // We ignore "floorPlan.width" and use calculated "contentWidth" (Auto-Crop).
+            // We ignore "currentFloor.width" and use calculated "contentWidth" (Auto-Crop).
             const containerWidth = containerRef.current.clientWidth
 
             // Scale to fit content width
@@ -81,7 +90,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
         fitContent()
         window.addEventListener('resize', fitContent)
         return () => window.removeEventListener('resize', fitContent)
-    }, [floorPlan, contentWidth, x, y, scale])
+    }, [currentFloor, contentWidth, x, y, scale])
 
     // Touch Handlers for Pinch Zoom (Updates Scale -> Updates Div Size -> Updates Native Scroll)
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -143,18 +152,41 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
     return (
         <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-950 touch-none">
             {/* Header */}
-            <div className="absolute top-0 left-0 right-0 p-4 z-50 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-                <button
-                    onClick={() => router.back()}
-                    className="pointer-events-auto p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors"
-                >
-                    <ChevronLeft className="w-6 h-6" />
-                </button>
-                <div className="text-center pointer-events-auto">
-                    <h1 className="text-lg font-bold text-white shadow-sm">{businessName}</h1>
-                    <p className="text-xs text-zinc-400">Selecciona tu mesa</p>
+            {/* Header & Floor Selector */}
+            <div className="absolute top-0 left-0 right-0 z-50 flex flex-col items-center bg-gradient-to-b from-black/90 via-black/80 to-transparent pb-8 pointer-events-none">
+                <div className="w-full p-4 flex items-center justify-between">
+                    <button
+                        onClick={() => router.back()}
+                        className="pointer-events-auto p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors"
+                    >
+                        <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <div className="text-center pointer-events-auto">
+                        <h1 className="text-lg font-bold text-white shadow-sm">{businessName}</h1>
+                        <p className="text-xs text-zinc-400">Selecciona tu mesa</p>
+                    </div>
+                    <div className="w-10" />
                 </div>
-                <div className="w-10" />
+
+                {/* Floor Selector (Visible if > 1 floor) */}
+                {allFloors.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto px-4 w-full justify-center pointer-events-auto no-scrollbar">
+                        {allFloors.map((floor) => (
+                            <button
+                                key={floor.id}
+                                onClick={() => setActiveFloorId(floor.id)}
+                                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap
+                                    ${activeFloorId === floor.id
+                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                                        : 'bg-zinc-800/80 text-zinc-400 hover:bg-zinc-700 hover:text-white border border-white/5'
+                                    }
+                                `}
+                            >
+                                {floor.name || `Piso ${allFloors.indexOf(floor) + 1}`}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Zoom Controls */}
@@ -167,7 +199,8 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             <div
                 ref={containerRef}
                 // ENABLE NATIVE SCROLL (overflow-y-auto), HIDE SCROLLBAR
-                className="flex-1 relative overflow-y-auto overflow-x-hidden bg-black scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+                // ADDED PT-32 to push content below the header
+                className="flex-1 relative overflow-y-auto overflow-x-hidden bg-black scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] pt-32"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -188,7 +221,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
 
                     {/* Render Tables */}
-                    {floorPlan.tables.map((table: Table) => {
+                    {currentFloor.tables.map((table: Table) => {
                         const isReserved = (table.reservations?.length || 0) > 0
                         const isPaid = (table.reservationPrice || 0) > 0 && !isReserved
 
