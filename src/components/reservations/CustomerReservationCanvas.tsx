@@ -94,7 +94,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             // Content Center = (minX + contentWidth/2, minY + contentHeight/2).
 
             const floorWidth = floorPlan.width || 800
-            const floorHeight = floorPlan.height || 600
+            const floorHeight = 2000 // Matched to forced height
 
             const mapCenterX = floorWidth / 2
             const mapCenterY = floorHeight / 2
