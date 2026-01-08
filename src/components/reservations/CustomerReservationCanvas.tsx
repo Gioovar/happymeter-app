@@ -55,66 +55,20 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
         const fitContent = () => {
             if (!containerRef.current) return
 
-            // 1. Calculate Bounding Box of Tables
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-            floorPlan.tables.forEach((t: Table) => {
-                minX = Math.min(minX, t.x)
-                minY = Math.min(minY, t.y)
-                maxX = Math.max(maxX, t.x + (t.width || 60))
-            })
-
-            const PADDING = 40
-            minX -= PADDING
-            minY -= PADDING
-            maxX += PADDING
-            maxY += PADDING
-
-            const contentWidth = maxX - minX
-            const contentHeight = maxY - minY
-
+            // 1. Simple Fit Width Logic (Match Editor)
+            // We ignore "content bounding box" and just fit the FLOOR PLAN (0,0 to Width,Height).
+            const floorWidth = floorPlan.width || 800
             const containerWidth = containerRef.current.clientWidth
-            const containerHeight = containerRef.current.clientHeight
 
-            // 2. Calculate Scale
-            const scaleX = containerWidth / contentWidth
-            const scaleY = containerHeight / contentHeight
-
-            // Mobile adjustment: Ensure at least 0.6x zoom so text/icons are readable
-            let fitScale = Math.min(scaleX, scaleY, 1.5)
-            if (containerWidth < 768) {
-                fitScale = Math.max(fitScale, 0.6)
-            }
-
+            // Scale to fit width
+            const fitScale = containerWidth / floorWidth
             scale.set(fitScale)
 
-            // 3. New Centering Logic (Top-Left Origin)
-            // We removed flex centering, so 0,0 is Top-Left of screen.
-
-            // Calculate Target Visual Position
-            // We want the CONTENT Center X to match Screen Center X.
-            // ScreenCenterX = ContainerW / 2
-            // ContentWidthScaled = ContentWidth * scale
-            // LeftEdgeOfContent = (ContainerW - ContentWidthScaled) / 2
-
-            // Map X (where to place the div)
-            // Div starts at 0,0. Content starts at minX.
-            // VisualContentLeft = x + (minX * scale)
-            // We want VisualContentLeft = (ContainerW - ContentWidthScaled) / 2
-            // x = (ContainerW - ContentWidth * scale) / 2 - minX * scale
-
-            const targetX = (containerWidth - contentWidth * fitScale) / 2
-            const offsetX = targetX - (minX * fitScale)
-
-            // Map Y (Top Align)
-            // VisualContentTop = y + (minY * scale)
-            // We want VisualContentTop = 120 (Padding)
-            // y = 120 - minY * scale
-
-            const TOP_PADDING = 120
-            const offsetY = TOP_PADDING - (minY * fitScale)
-
-            x.set(offsetX)
-            y.set(offsetY)
+            // 2. Reset Position to Top-Left (Native Scroll starts at top)
+            // We don't need to offset X or Y because native scroll handles the viewport.
+            // We just ensure the div is scaled from top-left.
+            x.set(0)
+            y.set(0)
         }
 
         fitContent()
@@ -122,7 +76,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
         return () => window.removeEventListener('resize', fitContent)
     }, [floorPlan, x, y, scale])
 
-    // Touch Handlers for Pinch Zoom (Unchanged)
+    // Touch Handlers for Pinch Zoom (Updates Scale -> Updates Div Size -> Updates Native Scroll)
     const handleTouchStart = (e: React.TouchEvent) => {
         if (e.touches.length === 2) {
             const dist = Math.hypot(
@@ -196,7 +150,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                 <div className="w-10" />
             </div>
 
-            {/* Zoom Controls (Optional, user asked for pinch but buttons are good fallback) */}
+            {/* Zoom Controls */}
             <div className="absolute bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-auto">
                 <button onClick={zoomIn} className="p-3 bg-zinc-800 text-white rounded-full shadow-lg border border-white/10 hover:bg-zinc-700 active:scale-90 transition-transform">+</button>
                 <button onClick={zoomOut} className="p-3 bg-zinc-800 text-white rounded-full shadow-lg border border-white/10 hover:bg-zinc-700 active:scale-90 transition-transform">-</button>
@@ -205,22 +159,20 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             {/* Canvas Container */}
             <div
                 ref={containerRef}
-                className="flex-1 relative overflow-hidden cursor-move touch-none bg-black" // Removed flex center
-                // REMOVED BACKGROUND GRID
+                // ENABLE NATIVE SCROLL (overflow-y-auto), HIDE SCROLLBAR
+                className="flex-1 relative overflow-y-auto overflow-x-hidden bg-black scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
             >
                 <motion.div
-                    drag
-                    dragElastic={0.1}
-                    dragMomentum={false}
-                    className="relative overflow-visible"
+                    // REMOVED DRAG - Conflict with Native Scroll
+                    className="relative overflow-visible mx-auto" // mx-auto centers it horizontally if width < container (zoomed out)
                     style={{
                         width: floorPlan.width || 800,
                         height: 2000, // Force large height to match Editor Infinite Scroll
-                        x, y, scale,
-                        transformOrigin: '0 0', // CRITICAL: Scale from top-left for predictable positioning
+                        scale, // X/Y controlled by native layout now (0,0)
+                        originX: 0, originY: 0, // Scale from top-left
                         // Brand Light Effect
                         background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.1) 0%, rgba(9, 9, 11, 0) 70%)',
                     }}
