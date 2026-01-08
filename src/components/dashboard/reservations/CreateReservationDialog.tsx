@@ -1,9 +1,8 @@
 // @ts-nocheck
 "use client"
 
-
 import { useState } from "react"
-import { CalendarIcon, Clock, User, Phone, Mail, Users } from "lucide-react"
+import { CalendarIcon, Clock, User, Phone, Mail, Users, MessageSquare } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
@@ -43,7 +43,8 @@ export function CreateReservationDialog({ open, onOpenChange, userProfile }: Cre
         time: "20:33", // Mock default matching screenshot
         name: userProfile?.name || "",
         phone: userProfile?.phone || "",
-        email: userProfile?.email || ""
+        email: userProfile?.email || "",
+        notes: ""
     })
 
     const handleChange = (field: string, value: any) => {
@@ -215,6 +216,20 @@ export function CreateReservationDialog({ open, onOpenChange, userProfile }: Cre
                             />
                         </div>
                     )}
+
+                    {/* NOTES (NEW) */}
+                    <div className="space-y-2">
+                        <Label className="text-green-400 font-bold flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4" />
+                            Comentarios / Peticiones Especiales
+                        </Label>
+                        <Textarea
+                            placeholder="Ej: Es cumpleaños, necesitamos silla para bebé, alergias..."
+                            value={formData.notes}
+                            onChange={(e) => handleChange('notes', e.target.value)}
+                            className="bg-zinc-800 border-zinc-700 text-zinc-300 placeholder:text-zinc-600 focus:ring-green-500/50 focus:border-green-500 resize-none h-24"
+                        />
+                    </div>
                 </div>
 
                 <Button

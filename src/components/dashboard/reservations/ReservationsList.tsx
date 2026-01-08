@@ -18,6 +18,7 @@ interface Reservation {
     rating?: number
     phone?: string
     email?: string
+    notes?: string
 }
 
 export function ReservationsList() {
@@ -26,9 +27,9 @@ export function ReservationsList() {
 
     // Mock Data (matches the visual list)
     const reservations: Reservation[] = [
-        { id: 1, day: "ENE", date: 7, name: "Juan Pérez", time: "19:30", table: "Mesa 4", pax: 4, status: "Confirmada", rating: 4.8, phone: "55 1234 5678" },
+        { id: 1, day: "ENE", date: 7, name: "Juan Pérez", time: "19:30", table: "Mesa 4", pax: 4, status: "Confirmada", rating: 4.8, phone: "55 1234 5678", notes: "Es cumpleaños de mi esposa, traer postre con vela por favor." },
         { id: 2, day: "ENE", date: 8, name: "Ana López", time: "20:00", table: "Terraza 1", pax: 2, status: "Pendiente", rating: 5.0, phone: "55 9876 5432" },
-        { id: 3, day: "ENE", date: 9, name: "Carlos Ruiz", time: "21:15", table: "Barra", pax: 1, status: "Confirmada", rating: 4.2 },
+        { id: 3, day: "ENE", date: 9, name: "Carlos Ruiz", time: "21:15", table: "Barra", pax: 1, status: "Confirmada", rating: 4.2, notes: "Alergia a los mariscos." },
         { id: 4, day: "ENE", date: 10, name: "Sofía Díaz", time: "18:45", table: "Mesa 2", pax: 6, status: "Confirmada", rating: 4.9 }
     ]
 

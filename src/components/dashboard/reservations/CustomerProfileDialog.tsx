@@ -15,6 +15,8 @@ interface CustomerProfileDialogProps {
         visits?: number
         rating?: number
         lastVisit?: string
+        table?: string
+        notes?: string
     } | null
 }
 
@@ -58,19 +60,30 @@ export function CustomerProfileDialog({ open, onOpenChange, customer }: Customer
                     </div>
                 </div>
 
-                <div className="bg-zinc-900/50 p-4 rounded-xl border border-white/5">
-                    <h4 className="text-xs font-bold text-zinc-500 uppercase mb-3">Historial Reciente</h4>
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-3 text-sm">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-500">
-                                <Calendar className="w-4 h-4" />
-                            </div>
-                            <div>
-                                <p className="text-white font-medium">Reservación Completada</p>
-                                <p className="text-zinc-500 text-xs">Hace 2 semanas • Mesa 4</p>
-                            </div>
+                <div className="bg-zinc-900/50 p-4 rounded-xl border border-white/5 space-y-3">
+                    <h4 className="text-xs font-bold text-zinc-500 uppercase">Detalles de la Reserva</h4>
+
+                    {/* TABLE INFO */}
+                    <div className="flex items-center gap-3 text-sm">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+                            <Calendar className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <p className="text-white font-medium">Mesa Reservada</p>
+                            <p className="text-zinc-400 text-xs">{customer.table || "No asignada"}</p>
                         </div>
                     </div>
+
+                    {/* NOTES INFO */}
+                    {customer.notes && (
+                        <div className="mt-3 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
+                            <p className="text-xs text-amber-500 font-bold mb-1 flex items-center gap-1">
+                                <MessageCircle className="w-3 h-3" />
+                                Comentarios / Peticiones
+                            </p>
+                            <p className="text-sm text-zinc-300 italic">"{customer.notes}"</p>
+                        </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
