@@ -245,3 +245,134 @@ export const generateExecutiveReportPDF = async (
         throw error
     }
 }
+
+// ... (Previous code)
+
+export const generateReservationListPDF = (
+    date: Date,
+    reservations: any[]
+): void => {
+    try {
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        })
+
+        // Colors
+        const PRIMARY_COLOR = '#7C3AED' // Violet 600
+        const TEXT_COLOR = '#1F2937' // Gray 800
+        const LIGHT_TEXT = '#6B7280' // Gray 500
+
+        // --- HEADER ---
+        doc.setTextColor(PRIMARY_COLOR)
+        doc.setFontSize(10)
+        doc.text('HAPPYMETER RESERVATIONS', 20, 20)
+
+        doc.setTextColor(TEXT_COLOR)
+        doc.setFontSize(24)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Lista de Reservas', 20, 32)
+
+        doc.setFontSize(14)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(LIGHT_TEXT)
+        doc.text(format(date, "EEEE, d 'de' MMMM, yyyy", { locale: es }), 20, 40)
+
+        // Date Info (Right side)
+        doc.setFontSize(10)
+        doc.setTextColor(LIGHT_TEXT)
+        const printDateStr = format(new Date(), "d/MM/yyyy HH:mm", { locale: es })
+        doc.text('IMPRESO EL', 190, 32, { align: 'right' })
+        doc.setTextColor(TEXT_COLOR)
+        doc.text(printDateStr, 190, 38, { align: 'right' })
+
+        doc.setDrawColor(0)
+        doc.setLineWidth(0.5)
+        doc.line(20, 45, 190, 45)
+
+        // --- STATS OVERVIEW ---
+        const startY = 60
+        const totalReservations = reservations.length
+        const totalPax = reservations.reduce((acc, curr) => acc + (curr.pax || 4), 0) // Default 4 if missing
+
+        const drawCard = (x: number, title: string, value: string) => {
+            doc.setFillColor(250, 250, 250)
+            doc.setDrawColor(230, 230, 230)
+            doc.roundedRect(x, startY, 50, 25, 3, 3, 'FD')
+            doc.setFontSize(8)
+            doc.setTextColor(LIGHT_TEXT)
+            doc.setFont('helvetica', 'bold')
+            doc.text(title.toUpperCase(), x + 5, startY + 8)
+            doc.setFontSize(16)
+            doc.setTextColor(TEXT_COLOR)
+            doc.text(value, x + 5, startY + 20)
+        }
+
+        drawCard(20, 'Reservas Totales', totalReservations.toString())
+        drawCard(80, 'Total Personas', totalPax.toString())
+        // Placeholder for occupied tables count or similar
+        const confirmedCount = reservations.filter(r => r.status === 'confirmed').length
+        drawCard(140, 'Confirmadas', confirmedCount.toString())
+
+
+        // --- TABLE ---
+        let tableY = 100
+
+        // Headers
+        doc.setFillColor(245, 245, 245)
+        doc.rect(20, tableY - 8, 170, 10, 'F')
+        doc.setFontSize(9)
+        doc.setTextColor(TEXT_COLOR)
+        doc.setFont('helvetica', 'bold')
+
+        doc.text('HORA', 25, tableY) // 25
+        doc.text('NOMBRE DEL CLIENTE', 50, tableY) // 50
+        doc.text('MESA', 120, tableY) // 120
+        doc.text('PAX', 140, tableY) // 140
+        doc.text('ESTADO', 160, tableY) // 160
+
+        doc.setFont('helvetica', 'normal')
+        tableY += 10
+
+        reservations.forEach((res, index) => {
+            // Row Highlight alt
+            if (index % 2 !== 0) {
+                doc.setFillColor(252, 252, 252)
+                doc.rect(20, tableY - 6, 170, 10, 'F')
+            }
+
+            doc.setTextColor(TEXT_COLOR)
+            doc.text(res.time || '19:30', 25, tableY)
+            doc.text(res.customerName || 'Cliente Anónimo', 50, tableY)
+            doc.text(res.tableName || `Mesa ${index + 1}`, 120, tableY)
+            doc.text((res.pax || 4).toString(), 140, tableY)
+
+            const status = res.status || 'confirmed'
+            const statusText = status === 'confirmed' ? 'Confirmada' : 'Pendiente'
+            const statusColor = status === 'confirmed' ? [16, 185, 129] : [245, 158, 11] // Green vs Amber
+
+            doc.setTextColor(statusColor[0], statusColor[1], statusColor[2])
+            doc.setFont('helvetica', 'bold')
+            doc.text(statusText, 160, tableY)
+            doc.setFont('helvetica', 'normal')
+
+            doc.setDrawColor(240, 240, 240)
+            doc.line(20, tableY + 4, 190, tableY + 4)
+
+            tableY += 12
+        })
+
+        // --- FOOTER ---
+        doc.setFontSize(8)
+        doc.setTextColor(150)
+        const footerText = `Página 1 - Lista de Reservas`
+        doc.text(footerText, 105, 280, { align: 'center' })
+
+        doc.save(`Reservas_${format(date, 'yyyy-MM-dd')}.pdf`)
+
+    } catch (error) {
+        console.error('PDF Generation Error:', error)
+        alert('Hubo un error al generar el PDF. Por favor intenta de nuevo.')
+    }
+}

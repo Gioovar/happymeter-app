@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { generateReservationListPDF } from "@/lib/pdf-generator"
 
 interface ReservationCalendarProps {
     reservations?: any[]
@@ -41,7 +42,6 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
     // Helpers
     const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate()
     const getFirstDayOfMonth = (year: number, month: number) => {
-        // 0 = Sunday, 1 = Monday. We want Monday start? Screenshot shows LU MA MI... (Monday First)
         const day = new Date(year, month, 1).getDay()
         return day === 0 ? 6 : day - 1
     }
@@ -63,24 +63,37 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
         if (onDateSelect) onDateSelect(newDate)
     }
 
+    const handlePrintReport = () => {
+        if (!selectedDate) {
+            alert("Por favor selecciona un día en el calendario para imprimir el reporte.")
+            return
+        }
+
+        // Mock data for PDF demo (if reservations prop is empty)
+        const dataToPrint = (reservations && reservations.length > 0) ? reservations : [
+            { time: '13:00', customerName: 'Familia González', tableName: 'Mesa 4', pax: 4, status: 'confirmed' },
+            { time: '14:30', customerName: 'Juan Pérez', tableName: 'Mesa 2', pax: 2, status: 'confirmed' },
+            { time: '19:00', customerName: 'Cena Empresarial', tableName: 'Terraza 1', pax: 12, status: 'pending' },
+            { time: '20:00', customerName: 'María Rodríguez', tableName: 'Mesa 5', pax: 2, status: 'confirmed' },
+            { time: '21:15', customerName: 'Carlos Ruiz', tableName: 'Barra', pax: 1, status: 'confirmed' },
+        ]
+
+        generateReservationListPDF(selectedDate, dataToPrint)
+    }
+
     // Generate Calendar Grid
     const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth())
     const firstDay = getFirstDayOfMonth(currentDate.getFullYear(), currentDate.getMonth())
     const days = []
 
-    for (let i = 0; i < firstDay; i++) {
-        days.push(null)
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-        days.push(i)
-    }
+    for (let i = 0; i < firstDay; i++) days.push(null)
+    for (let i = 1; i <= daysInMonth; i++) days.push(i)
 
-    const hasReservations = (day: number) => {
-        return [1, 2, 3, 4, 5, 6, 7].includes(day)
-    }
+    const hasReservations = (day: number) => [1, 2, 3, 4, 5, 6, 7].includes(day)
 
     return (
         <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-auto shadow-2xl relative">
+
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <button
@@ -94,6 +107,7 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
                 <h3 className="text-xl font-bold text-white capitalize">
                     {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </h3>
+
                 <div className="flex gap-1 text-zinc-400">
                     <button onClick={handlePrevMonth} className="p-1 hover:text-white transition-colors">
                         <ChevronLeft className="w-6 h-6" />
@@ -120,7 +134,6 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
 
                     const isSelected = selectedDate?.getDate() === day && selectedDate?.getMonth() === currentDate.getMonth()
                     const hasRes = hasReservations(day)
-
                     const isHighlighted = hasRes
 
                     return (
@@ -132,7 +145,7 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
                                     ${isSelected
                                         ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/40 scale-110 z-10'
                                         : isHighlighted
-                                            ? 'bg-indigo-600/80 text-white hover:bg-indigo-500' // Matches the purple circles
+                                            ? 'bg-indigo-600/80 text-white hover:bg-indigo-500'
                                             : 'text-zinc-300 hover:bg-white/10'
                                     }
                                 `}
@@ -144,10 +157,13 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
                 })}
             </div>
 
-            {/* Footer Button - Matching Screenshot */}
-            <button className="w-full mt-8 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
+            {/* Footer Button - Print Report */}
+            <button
+                onClick={handlePrintReport}
+                className="w-full mt-8 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
+            >
                 <Wand2 className="w-5 h-5" />
-                Generar Estrategias
+                Imprimir Lista de Reservas
             </button>
 
             {/* Availability Settings Modal */}
