@@ -4,7 +4,6 @@ import {
     Users,
     CalendarX,
     CalendarCheck,
-    ChevronRight,
     Settings
 } from 'lucide-react';
 import Link from 'next/link';
@@ -12,6 +11,7 @@ import { currentUser } from "@clerk/nextjs/server"
 import { getFloorPlan, getDashboardReservations } from "@/actions/reservations"
 import { ReservationCalendar } from "@/components/dashboard/reservations/ReservationCalendar"
 import { NewReservationButton } from "@/components/dashboard/reservations/NewReservationButton"
+import { ReservationsList } from "@/components/dashboard/reservations/ReservationsList"
 
 export const dynamic = 'force-dynamic'
 
@@ -117,38 +117,10 @@ export default async function ReservationsPage() {
                 </div>
             </div>
 
-            {/* Agenda View Placeholder */}
+            {/* Agenda View */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Upcoming List */}
-                <div className="lg:col-span-2 bg-[#111] border border-white/10 rounded-2xl p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-bold text-white">Próximas Reservas</h3>
-                        <button className="text-xs text-orange-400 hover:text-orange-300 font-medium flex items-center">
-                            Ver Calendario <ChevronRight className="w-3 h-3 ml-1" />
-                        </button>
-                    </div>
-
-                    <div className="space-y-3">
-                        {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-orange-500/30 transition-colors">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex flex-col items-center justify-center w-12 h-12 bg-black rounded-lg border border-white/10">
-                                        <span className="text-xs text-gray-400 font-bold uppercase">ENE</span>
-                                        <span className="text-lg font-bold text-white">0{i + 6}</span>
-                                    </div>
-                                    <div>
-                                        <h4 className="text-white font-medium">Juan Pérez</h4>
-                                        <p className="text-gray-400 text-xs">Mesa 4 • 4 Personas</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <span className="block text-white font-mono font-medium">19:30</span>
-                                    <span className="text-emerald-400 text-xs font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full">Confirmada</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                {/* Upcoming List (Client Component with Dialog Interaction) */}
+                <ReservationsList />
 
                 {/* Right Column: Calendar & Stats */}
                 <div className="space-y-6">
