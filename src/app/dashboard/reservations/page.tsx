@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getFloorPlan } from "@/actions/reservations"
+import { ReservationCalendar } from "@/components/dashboard/reservations/ReservationCalendar"
 
 export const dynamic = 'force-dynamic'
 
@@ -135,27 +136,20 @@ export default async function ReservationsPage() {
                 </div>
 
                 {/* Capacity / Availability */}
-                <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-6">Capacidad Hoy</h3>
-                    <div className="space-y-6">
+                {/* Calendar & Capacity */}
+                <div className="space-y-6">
+                    <ReservationCalendar />
+
+                    {/* Capacity (Mini) */}
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+                        <h3 className="text-sm font-bold text-white mb-4">Capacidad Hoy</h3>
                         <div>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="text-gray-400">Ocupación Total</span>
+                            <div className="flex justify-between text-xs mb-2">
+                                <span className="text-gray-400">Ocupación Tool</span>
                                 <span className="text-white font-bold">65%</span>
                             </div>
-                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                                 <div className="h-full w-[65%] bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mt-6">
-                            <div className="p-4 bg-white/5 rounded-xl text-center">
-                                <span className="block text-2xl font-bold text-white">12</span>
-                                <span className="text-xs text-gray-500 font-medium uppercase">Libres</span>
-                            </div>
-                            <div className="p-4 bg-white/5 rounded-xl text-center">
-                                <span className="block text-2xl font-bold text-white">8</span>
-                                <span className="text-xs text-gray-500 font-medium uppercase">Ocupadas</span>
                             </div>
                         </div>
                     </div>
