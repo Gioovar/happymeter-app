@@ -597,10 +597,10 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                         {/* Interactive Canvas Container */}
                         <div
                             ref={wrapperRef}
-                            className="absolute inset-0 top-0 bottom-0 flex items-center justify-center bg-zinc-800 overflow-hidden"
+                            className="absolute inset-0 top-0 bottom-0 flex items-center justify-center bg-zinc-900 overflow-hidden" // Changed to 900 base
                             style={{
-                                // Card-like shading for the whole phone screen area
-                                background: 'radial-gradient(120% 120% at 50% 0%, #27272a 0%, #09090b 100%)',
+                                // Brand Light Effect (Matching Customer View)
+                                background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, #09090b 100%)',
                             }}
                         >
                             {/* The actual Scale Wrapper */}
@@ -609,16 +609,11 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                     ref={containerRef}
                                     className={`relative transition-colors duration-300 ${isDrawing ? 'cursor-crosshair' : 'cursor-default'}`}
                                     style={{
-                                        // We fit the floor plan into the phone screen width/height based on aspect ratio
-                                        // But wait, we want the user to be able to PAN around if it's large?
-                                        // No, for "Map Editor" usually we want to see the whole thing or zoom.
-                                        // Let's stick to the existing "fitStyle" logic but applied to the phone dimensions.
-                                        // containerSize is now the phone screen size.
                                         ...fitStyle,
                                         width: fitStyle.width,
                                         height: fitStyle.height,
-                                        // Visualization helpers (Matches Customer View Card Style)
-                                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+                                        // Card Style (Matching Customer View)
+                                        boxShadow: '0 0 0 1px rgba(255,255,255,0.1), 0 20px 40px -10px rgba(0,0,0,0.5)',
                                         borderRadius: '32px',
                                         overflow: 'hidden'
                                     }}
@@ -630,12 +625,12 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                         }
                                     }}
                                 >
-                                    {/* Inner highlight for "3D" feel */}
+                                    {/* Inner highlight */}
                                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
 
-                                    {/* Grid on the map itself */}
-                                    <div className="absolute inset-0 opacity-20 pointer-events-none"
-                                        style={{ backgroundImage: 'linear-gradient(rgba(99, 102, 241, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
+                                    {/* Grid on the map itself - Keep SUBTLE for alignment but barely visible */}
+                                    <div className="absolute inset-0 opacity-10 pointer-events-none"
+                                        style={{ backgroundImage: 'linear-gradient(rgba(255,255,255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255, 0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
                                     />
 
                                     {/* Render Shapes (Existing Logic) */}

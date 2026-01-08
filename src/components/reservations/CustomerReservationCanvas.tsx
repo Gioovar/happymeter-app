@@ -237,11 +237,8 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             {/* Canvas Container */}
             <div
                 ref={containerRef}
-                className="flex-1 flex items-center justify-center relative overflow-hidden cursor-move touch-none bg-zinc-800"
-                style={{
-                    backgroundImage: 'linear-gradient(rgba(99, 102, 241, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.5) 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
-                }}
+                className="flex-1 flex items-center justify-center relative overflow-hidden cursor-move touch-none bg-black"
+                // REMOVED BACKGROUND GRID
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -250,18 +247,19 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                     drag
                     dragElastic={0.1}
                     dragMomentum={false}
-                    className="relative rounded-[32px] overflow-hidden" // Card Shape
+                    className="relative rounded-[32px] overflow-hidden"
                     style={{
                         width: floorPlan.width || 800,
                         height: floorPlan.height || 600,
-                        x, y, scale, // Bind motion values
-                        // Shading/Gradient Effect (Image 1 style)
-                        background: 'radial-gradient(120% 120% at 50% 0%, #27272a 0%, #09090b 100%)', // Zinc-800 to Zinc-950
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1)', // Deep shadow + Subtle border (Image 2 frame)
+                        x, y, scale,
+                        // Brand Light Effect: Indigo Glow in center, fading to dark
+                        background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, #09090b 100%)',
+                        boxShadow: '0 0 0 1px rgba(255,255,255,0.1), 0 20px 40px -10px rgba(0,0,0,0.5)', // Distinct Border + Shadow
                     }}
                 >
-                    {/* Inner highlight for "3D" feel */}
+                    {/* Subtle top light reflection */}
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+
                     {/* Render Tables */}
                     {floorPlan.tables.map((table: Table) => {
                         const isReserved = (table.reservations?.length || 0) > 0
