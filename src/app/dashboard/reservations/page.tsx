@@ -14,13 +14,15 @@ export const dynamic = 'force-dynamic'
 
 export default async function ReservationsPage() {
 
+
     // Fetch existing floor plan
     const floorPlan = await getFloorPlan()
 
     // Fetch reservations for calendar
-    // TEMPORARY DEBUG: Disable fetch to prevent crash if DB is sync
-    // const reservationsResult = await getDashboardReservations()
-    const reservations: any[] = [] // reservationsResult.success ? reservationsResult.reservations : []
+    const reservationsResult = await getDashboardReservations()
+    const reservations = reservationsResult.success ? reservationsResult.reservations : []
+
+    // ...
 
     if (!floorPlan || !floorPlan.isConfigured) {
         return (
