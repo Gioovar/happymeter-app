@@ -223,14 +223,30 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
                                             />
                                         </div>
                                         <span className="text-zinc-500 text-xs font-medium">A</span>
-                                        <div className="relative flex-1">
-                                            <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-zinc-500" />
-                                            <Input
-                                                type="time"
-                                                className="pl-9 bg-zinc-800 border-zinc-700 text-sm"
-                                                value={day.closeTime}
-                                                onChange={(e) => handleAvailabilityChange(day.id, 'closeTime', e.target.value)}
+
+                                        <div className="relative flex-1 group">
+                                            {/* Animated Gradient Border Layer */}
+                                            <motion.div
+                                                className="absolute -inset-[2px] rounded-lg opacity-70 blur-[2px]"
+                                                animate={{
+                                                    background: [
+                                                        "linear-gradient(90deg, #f97316, #f59e0b, #f97316)",
+                                                        "linear-gradient(90deg, #f59e0b, #f97316, #f59e0b)"
+                                                    ]
+                                                }}
+                                                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                                             />
+
+                                            {/* Input Content */}
+                                            <div className="relative bg-zinc-900 rounded-md">
+                                                <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-orange-500" />
+                                                <Input
+                                                    type="time"
+                                                    className="pl-9 bg-zinc-900 border-orange-500/30 text-sm focus:border-orange-500 focus:ring-0 text-white"
+                                                    value={day.closeTime}
+                                                    onChange={(e) => handleAvailabilityChange(day.id, 'closeTime', e.target.value)}
+                                                />
+                                            </div>
                                         </div>
                                     </motion.div>
                                 )}
