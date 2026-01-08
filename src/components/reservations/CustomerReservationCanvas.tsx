@@ -116,29 +116,6 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             // Offset = MapCenter - ContentCenter.
             // Correct.
 
-            // Note: Framer motion applies 'scale' from the center by default (50% 50%).
-            // So scaling doesn't shift the center point. We can safely calculate offset in unscaled coordinates?
-            // Yes, because x/y translation happens alongside scaling. 
-            // Wait, transform order matters. usually translate then scale or scale then translate.
-            // Framer Motion: translate varies.
-            // But usually 'x' and 'y' are pixels. Scaling happens around origin.
-            // If origin is center, then (MapCenter) stays fixed during scale.
-            // ContentCenter is (MapCenter - Delta).
-            // If we move by +Delta, ContentCenter becomes MapCenter.
-            // Scaling then happens around MapCenter (which is now ContentCenter). 
-            // Perfect.
-
-            // BUT: We need to scale the offset if the translation is applied *after* scale?
-            // Standard CSS: transform: translate(tx, ty) scale(s).
-            // If so, tx is in screen pixels (or element pixels?).
-            // Usually, if we just set x/y, it shifts the element.
-
-            // Let's assume x/y matches the coordinate system of the element BEFORE scale if using layout?
-            // No, 'x' is typically translate-x.
-            // Let's try applying (MapCenter - ContentCenter) * fitScale.
-            // Actually, if we scale the whole div, the coordinate space scales.
-            // Let's try raw delta first.
-
             const offsetX = (mapCenterX - contentCenterX) * fitScale
             const offsetY = (mapCenterY - contentCenterY) * fitScale
 
@@ -147,9 +124,6 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
         }
 
         fitContent()
-        // const observer = new ResizeObserver(fitContent) // Disable observer loops for now, just run on mount/floorPlan change
-        // observer.observe(containerRef.current)
-        // return () => observer.disconnect()
         window.addEventListener('resize', fitContent)
         return () => window.removeEventListener('resize', fitContent)
     }, [floorPlan, x, y, scale])
@@ -212,7 +186,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
     }
 
     return (
-        <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-800 touch-none">
+        <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-950 touch-none">
             {/* Header */}
             <div className="absolute top-0 left-0 right-0 p-4 z-50 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
                 <button
@@ -247,14 +221,21 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                     drag
                     dragElastic={0.1}
                     dragMomentum={false}
-                    className="relative rounded-[32px] overflow-hidden"
+                    className="relative overflow-visible" // No Card Shape
                     style={{
                         width: floorPlan.width || 800,
                         height: floorPlan.height || 600,
                         x, y, scale,
-                        // Brand Light Effect: Indigo Glow in center, fading to dark
-                        background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, #09090b 100%)',
-                        boxShadow: '0 0 0 1px rgba(255,255,255,0.1), 0 20px 40px -10px rgba(0,0,0,0.5)', // Distinct Border + Shadow
+                        // Full Screen Map Texture
+                        // Background is the map itself, maybe subtle grid or just dark
+                        // User mentioned "Light Effect" should be "Color Principal de su marca"
+                        // But if it's full screen, the light effect might be better on the CONTAINER or the map div?
+                        // Or fixed? "Efecto de luz moderno"
+                        // If map scrolls, light should probably be fixed?
+                        // If fixed, put on container. If contextual to floor, put here.
+                        // Let's put on TABLE layer or just simple dark background.
+                        // User said "no tenga delimitaciones".
+                        background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.1) 0%, rgba(9, 9, 11, 0) 70%)',
                     }}
                 >
                     {/* Subtle top light reflection */}

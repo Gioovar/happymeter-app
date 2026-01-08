@@ -612,10 +612,9 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                         ...fitStyle,
                                         width: fitStyle.width,
                                         height: fitStyle.height,
-                                        // Card Style (Matching Customer View)
-                                        boxShadow: '0 0 0 1px rgba(255,255,255,0.1), 0 20px 40px -10px rgba(0,0,0,0.5)',
-                                        borderRadius: '32px',
-                                        overflow: 'hidden'
+                                        // Full Screen Style (Matching Customer View)
+                                        // Removed shadows/borders to match "Infinite Canvas" feel
+                                        overflow: 'visible'
                                     }}
                                     onClick={(e) => {
                                         if (isDrawing) {
@@ -627,6 +626,14 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                 >
                                     {/* Inner highlight */}
                                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+
+                                    {/* Map Texture / Light Effect - Directly on the map div */}
+                                    <div className="absolute inset-0 pointer-events-none"
+                                        style={{
+                                            background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.1) 0%, rgba(9, 9, 11, 0) 70%)',
+                                            borderRadius: '0px'
+                                        }}
+                                    />
 
                                     {/* Grid on the map itself - Keep SUBTLE for alignment but barely visible */}
                                     <div className="absolute inset-0 opacity-10 pointer-events-none"
