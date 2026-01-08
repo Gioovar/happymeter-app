@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { motion, AnimatePresence, useMotionValue } from "framer-motion"
 import { Users, DollarSign, Calendar, ChevronLeft, Check } from "lucide-react"
 import { toast } from "sonner"
@@ -40,6 +40,14 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
     const y = useMotionValue(0)
     const scale = useMotionValue(1)
 
+    // Auto-Crop Width: Calculate actual content width to prevent empty space
+    const contentWidth = useMemo(() => {
+        if (!floorPlan.tables?.length) return floorPlan.width || 800
+        let max = 0
+        floorPlan.tables.forEach((t: any) => max = Math.max(max, t.x + (t.width || 60)))
+        return Math.max(max + 40, 350) // Padding + Min Width safety
+    }, [floorPlan])
+
     // We also keep a state for scale just to trigger re-renders if needed for UI updates (like zoom buttons disabled state), 
     // but primarily we trust the motion value.
     // Actually, for simple zoom buttons, we can just read/set the motion value.
@@ -56,12 +64,11 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             if (!containerRef.current) return
 
             // 1. Simple Fit Width Logic (Match Editor)
-            // We ignore "content bounding box" and just fit the FLOOR PLAN (0,0 to Width,Height).
-            const floorWidth = floorPlan.width || 800
+            // We ignore "floorPlan.width" and use calculated "contentWidth" (Auto-Crop).
             const containerWidth = containerRef.current.clientWidth
 
-            // Scale to fit width
-            const fitScale = containerWidth / floorWidth
+            // Scale to fit content width
+            const fitScale = containerWidth / contentWidth
             scale.set(fitScale)
 
             // 2. Reset Position to Top-Left (Native Scroll starts at top)
@@ -74,7 +81,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
         fitContent()
         window.addEventListener('resize', fitContent)
         return () => window.removeEventListener('resize', fitContent)
-    }, [floorPlan, x, y, scale])
+    }, [floorPlan, contentWidth, x, y, scale])
 
     // Touch Handlers for Pinch Zoom (Updates Scale -> Updates Div Size -> Updates Native Scroll)
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -169,7 +176,7 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
                     // REMOVED DRAG - Conflict with Native Scroll
                     className="relative overflow-visible mx-auto" // mx-auto centers it horizontally if width < container (zoomed out)
                     style={{
-                        width: floorPlan.width || 800,
+                        width: contentWidth, // Use Auto-Cropped Width
                         height: 2000, // Force large height to match Editor Infinite Scroll
                         scale, // X/Y controlled by native layout now (0,0)
                         originX: 0, originY: 0, // Scale from top-left
