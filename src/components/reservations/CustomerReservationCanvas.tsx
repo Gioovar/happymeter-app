@@ -97,27 +97,24 @@ export function CustomerReservationCanvas({ floorPlan, businessName, programId }
             const floorHeight = 2000 // Matched to forced height
 
             const mapCenterX = floorWidth / 2
-            const mapCenterY = floorHeight / 2
 
             const contentCenterX = minX + contentWidth / 2
-            const contentCenterY = minY + contentHeight / 2
+            const contentCenterY = minY // Top of the content
 
-            // The vector to shift content to map center:
-            // Delta = MapCenter - ContentCenter
-            // If Content is at 100, Map is at 400. Delta = 300.
-            // We need to move the map +300 (Right) so that 100 aligns with 400? 
-            // Wait.
-            // Visual Position = OriginalPosition + Offset.
-            // We want VisualContentCenter = ScreenCenter.
-            // Flexbox aligns MapCenter = ScreenCenter.
-            // So we want VisualContentCenter = MapCenter (visually).
-            // VisualContentCenter = ContentCenter + Offset.
-            // MapCenter = ContentCenter + Offset
-            // Offset = MapCenter - ContentCenter.
-            // Correct.
-
+            // Center X
             const offsetX = (mapCenterX - contentCenterX) * fitScale
-            const offsetY = (mapCenterY - contentCenterY) * fitScale
+
+            // Align Top (Y)
+            // We want the content's top (minY) to be at Y=120 (approx header height + padding)
+            // Current Y is 0 relative to map.
+            // visualY = y * scale + offsetY
+            // We want visualY of minY to be 120.
+            // (minY * scale) + offsetY = 120
+            // offsetY = 120 - (minY * scale)
+            // But 'y' motion value shifts the whole coordinate system?
+            // Yes.
+            const TOP_PADDING = 120
+            const offsetY = TOP_PADDING - (minY * fitScale)
 
             x.set(offsetX)
             y.set(offsetY)
