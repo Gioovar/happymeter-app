@@ -430,21 +430,38 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
             orderBy: { date: 'asc' }
         })
 
+
+        // ... inside getDashboardReservations
+
         // Map to simpler structure
-        const formatted = reservations.map((r: any) => ({
-            id: r.id,
-            date: r.date, // Date object
-            time: r.date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }), // Extract time from date if stored as DateTime
-            customerName: r.customerName || "Cliente",
-            tableName: r.table?.label || "Mesa",
-            pax: r.partySize || 4,
-            status: r.status // confirmed, pending, etc.
-        }))
+        const formatted = reservations.map((r: any) => {
+            let timeStr = "00:00"
+            try {
+                // Manual safe formatting or use date-fns if imported
+                const d = new Date(r.date)
+                const hours = d.getHours().toString().padStart(2, '0')
+                const minutes = d.getMinutes().toString().padStart(2, '0')
+                timeStr = `${hours}:${minutes}`
+            } catch (e) {
+                console.error("Date parsing error", e)
+            }
+
+            return {
+                id: r.id,
+                date: r.date,
+                time: timeStr,
+                customerName: r.customerName || "Cliente",
+                tableName: r.table?.label || "Mesa",
+                pax: r.partySize || 4,
+                status: r.status
+            }
+        })
 
         return { success: true, reservations: JSON.parse(JSON.stringify(formatted)) }
 
     } catch (error) {
         console.error("Error fetching dashboard reservations:", error)
+        // Return empty array instead of crashing
         return { success: false, reservations: [] }
     }
 }
