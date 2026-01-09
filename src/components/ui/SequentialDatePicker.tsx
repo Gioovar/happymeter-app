@@ -23,6 +23,17 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
     const [selectedDay, setSelectedDay] = useState<number | null>(value ? value.getDate() : null)
     const [selectedTime, setSelectedTime] = useState<string | null>(value ? format(value, 'HH:mm') : null)
 
+    // Hydration Safe: Ensure current year/month matches client time if no value provided
+    const [isMounted, setIsMounted] = useState(false)
+    useEffect(() => {
+        setIsMounted(true)
+        if (!value) {
+            const now = new Date()
+            setSelectedYear(now.getFullYear())
+            setSelectedMonth(now.getMonth())
+        }
+    }, [value])
+
     // Force step adjustment if showYear changes (fixes HMR/State persistence issues)
     useEffect(() => {
         if (!showYear && step === 'YEAR') {
@@ -138,82 +149,86 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
 
             {/* Content Swapper */}
             <div className="h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                {!isMounted ? <div className="h-full flex items-center justify-center"><div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div> : (
+                    <>
 
-                {/* YEAR VIEW */}
-                {step === 'YEAR' && (
-                    <div className="grid grid-cols-3 gap-2">
-                        {years.map(year => (
-                            <button
-                                key={year}
-                                onClick={() => handleYearSelect(year)}
-                                className={cn(
-                                    "py-3 rounded-lg text-sm font-medium transition hover:bg-white/10",
-                                    selectedYear === year ? "bg-violet-600 text-white hover:bg-violet-500" : "bg-[#252525] text-gray-300"
-                                )}
-                            >
-                                {year}
-                            </button>
-                        ))}
-                    </div>
-                )}
+                        {/* YEAR VIEW */}
+                        {step === 'YEAR' && (
+                            <div className="grid grid-cols-3 gap-2">
+                                {years.map(year => (
+                                    <button
+                                        key={year}
+                                        onClick={() => handleYearSelect(year)}
+                                        className={cn(
+                                            "py-3 rounded-lg text-sm font-medium transition hover:bg-white/10",
+                                            selectedYear === year ? "bg-violet-600 text-white hover:bg-violet-500" : "bg-[#252525] text-gray-300"
+                                        )}
+                                    >
+                                        {year}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
 
-                {/* MONTH VIEW */}
-                {step === 'MONTH' && (
-                    <div className="grid grid-cols-2 gap-2">
-                        {months.map((month, idx) => (
-                            <button
-                                key={month}
-                                onClick={() => handleMonthSelect(idx)}
-                                className={cn(
-                                    "py-4 rounded-lg text-sm font-medium transition hover:bg-white/10 flex items-center justify-between px-4",
-                                    selectedMonth === idx ? "bg-violet-600 text-white hover:bg-violet-500" : "bg-[#252525] text-gray-300"
-                                )}
-                            >
-                                <span>{month}</span>
-                                {selectedMonth === idx && <Check className="w-4 h-4 ml-2" />}
-                            </button>
-                        ))}
-                    </div>
-                )}
+                        {/* MONTH VIEW */}
+                        {step === 'MONTH' && (
+                            <div className="grid grid-cols-2 gap-2">
+                                {months.map((month, idx) => (
+                                    <button
+                                        key={month}
+                                        onClick={() => handleMonthSelect(idx)}
+                                        className={cn(
+                                            "py-4 rounded-lg text-sm font-medium transition hover:bg-white/10 flex items-center justify-between px-4",
+                                            selectedMonth === idx ? "bg-violet-600 text-white hover:bg-violet-500" : "bg-[#252525] text-gray-300"
+                                        )}
+                                    >
+                                        <span>{month}</span>
+                                        {selectedMonth === idx && <Check className="w-4 h-4 ml-2" />}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
 
-                {/* DAY VIEW */}
-                {step === 'DAY' && (
-                    <div className="grid grid-cols-5 gap-2">
-                        {days.map(day => (
-                            <button
-                                key={day}
-                                onClick={() => handleDaySelect(day)}
-                                className={cn(
-                                    "aspect-square rounded-lg text-sm font-medium transition hover:bg-white/10 flex items-center justify-center",
-                                    selectedDay === day
-                                        ? "bg-violet-600 text-white hover:bg-violet-500 shadow-lg shadow-violet-500/20"
-                                        : "bg-[#252525] text-gray-300"
-                                )}
-                            >
-                                {day}
-                            </button>
-                        ))}
-                    </div>
-                )}
+                        {/* DAY VIEW */}
+                        {step === 'DAY' && (
+                            <div className="grid grid-cols-5 gap-2">
+                                {days.map(day => (
+                                    <button
+                                        key={day}
+                                        onClick={() => handleDaySelect(day)}
+                                        className={cn(
+                                            "aspect-square rounded-lg text-sm font-medium transition hover:bg-white/10 flex items-center justify-center",
+                                            selectedDay === day
+                                                ? "bg-violet-600 text-white hover:bg-violet-500 shadow-lg shadow-violet-500/20"
+                                                : "bg-[#252525] text-gray-300"
+                                        )}
+                                    >
+                                        {day}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
 
-                {/* TIME VIEW */}
-                {step === 'TIME' && (
-                    <div className="grid grid-cols-3 gap-2">
-                        {timeSlots.map(time => (
-                            <button
-                                key={time}
-                                onClick={() => handleTimeSelect(time)}
-                                className={cn(
-                                    "py-2 rounded-lg text-sm font-medium transition hover:bg-white/10",
-                                    selectedTime === time
-                                        ? "bg-violet-600 text-white hover:bg-violet-500 shadow-lg shadow-violet-500/20"
-                                        : "bg-[#252525] text-gray-300"
-                                )}
-                            >
-                                {time}
-                            </button>
-                        ))}
-                    </div>
+                        {/* TIME VIEW */}
+                        {step === 'TIME' && (
+                            <div className="grid grid-cols-3 gap-2">
+                                {timeSlots.map(time => (
+                                    <button
+                                        key={time}
+                                        onClick={() => handleTimeSelect(time)}
+                                        className={cn(
+                                            "py-2 rounded-lg text-sm font-medium transition hover:bg-white/10",
+                                            selectedTime === time
+                                                ? "bg-violet-600 text-white hover:bg-violet-500 shadow-lg shadow-violet-500/20"
+                                                : "bg-[#252525] text-gray-300"
+                                        )}
+                                    >
+                                        {time}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
