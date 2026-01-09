@@ -560,6 +560,73 @@ export async function createReservation(data: {
         })
 
         revalidatePath('/dashboard/reservations')
+
+        // [POST-RESERVATION LOGIC] Check for Loyalty Program & potential actions
+        // We do this after the transaction to not block the reservation itself
+        try {
+            const firstTableId = data.reservations[0]?.tableId
+            if (firstTableId) {
+                // Determine owner from table -> floorPlan -> user
+                // We need to fetch table info first
+                const tableInfo = await prisma.table.findUnique({
+                    where: { id: firstTableId },
+                    include: { floorPlan: { select: { userId: true } } }
+                })
+
+                if (tableInfo?.floorPlan?.userId) {
+                    const program = await prisma.loyaltyProgram.findUnique({
+                        where: { userId: tableInfo.floorPlan.userId }
+                    })
+
+                    if (program) {
+                        // Check if customer is already a member
+                        const whereClause: any[] = []
+                        if (data.customer.phone) whereClause.push({ phone: data.customer.phone })
+                        if (data.customer.email) whereClause.push({ email: data.customer.email })
+
+                        let isMember = false
+                        if (whereClause.length > 0) {
+                            const member = await prisma.loyaltyCustomer.findFirst({
+                                where: {
+                                    programId: program.id,
+                                    OR: whereClause
+                                }
+                            })
+                            if (member) isMember = true
+                        }
+
+                        if (isMember) {
+                            return {
+                                success: true,
+                                action: 'REDIRECT_LOYALTY',
+                                programId: program.id,
+                                businessName: program.businessName
+                            }
+                        } else if (program.enableFirstVisitGift) {
+                            return {
+                                success: true,
+                                action: 'OFFER_GIFT',
+                                programId: program.id,
+                                businessName: program.businessName,
+                                giftText: program.firstVisitGiftText || "¡Tienes un regalo de bienvenida!"
+                            }
+                        } else {
+                            // Default action: Suggest joining
+                            return {
+                                success: true,
+                                action: 'OFFER_JOIN',
+                                programId: program.id,
+                                businessName: program.businessName,
+                                joinMessage: `Únete al club de ${program.businessName} y recibe recompensas.`
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (loyaltyError) {
+            console.error("Error checking loyalty status:", loyaltyError)
+        }
+
         return { success: true }
     } catch (error: any) {
         console.error("Error creating reservation:", error)

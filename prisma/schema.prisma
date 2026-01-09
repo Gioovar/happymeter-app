@@ -727,6 +727,11 @@ model LoyaltyProgram {
   themeColor     String   @default("#8b5cf6") // Hex color
   cardDesign     String   @default("SIMPLE")  // SIMPLE, PREMIUN, CUSTOM (for future)
   isActive       Boolean  @default(true)
+  
+  // First Visit Gift Configuration
+  enableFirstVisitGift Boolean @default(false)
+  firstVisitGiftText   String? @default("¡Un regalo de bienvenida!")
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   
