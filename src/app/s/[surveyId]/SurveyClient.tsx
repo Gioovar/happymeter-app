@@ -31,6 +31,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
     const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isExpanded, setIsExpanded] = useState(false)
+    const [isBirthdayPickerOpen, setIsBirthdayPickerOpen] = useState(false)
 
     useEffect(() => {
         if (surveyId === 'demo') {
@@ -375,10 +376,9 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                     <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} placeholder="ejemplo@correo.com" />
                                                 </div>
 
-                                                {/* Birthday */}
                                                 <div className="space-y-2">
                                                     <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Cumpleaños (Opcional)</label>
-                                                    <Popover>
+                                                    <Popover open={isBirthdayPickerOpen} onOpenChange={setIsBirthdayPickerOpen}>
                                                         <PopoverTrigger asChild>
                                                             <button
                                                                 type="button"
@@ -400,7 +400,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                             <SequentialDatePicker
                                                                 value={formData.birthday ? new Date(formData.birthday) : undefined}
                                                                 onChange={(date) => handleInputChange('birthday', date ? format(date, 'yyyy-MM-dd') : '')}
-                                                                onClose={() => { /* Close logic is tricky with Popover, but Sequential handles visual closure */ }}
+                                                                onClose={() => setIsBirthdayPickerOpen(false)}
                                                             />
                                                         </PopoverContent>
                                                     </Popover>
@@ -603,6 +603,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
 }
 
 function QuestionField({ question, value, onChange, theme, formData }: any) {
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
     const showConditional = question.text.toLowerCase().includes('mesero') && value === 'Sí'
 
     return (
@@ -677,7 +678,7 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
             )}
 
             {question.type === 'DATE' && (
-                <Popover>
+                <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                     <PopoverTrigger asChild>
                         <button
                             type="button"
@@ -699,6 +700,7 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
                         <SequentialDatePicker
                             value={value ? new Date(value) : undefined}
                             onChange={(date) => onChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                            onClose={() => setIsDatePickerOpen(false)}
                         />
                     </PopoverContent>
                 </Popover>
