@@ -109,14 +109,14 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
                                 >
                                     {/* Mobile Design */}
                                     {format === 'mobile' && (
-                                        <>
+                                        <div className="flex flex-col items-center justify-center w-full h-full">
                                             <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 mix-blend-overlay"></div>
-                                            <div className="z-10 text-center space-y-6 p-6">
+                                            <div className="z-10 text-center space-y-6 p-6 w-full flex flex-col items-center">
                                                 <h3 className="text-white font-bold text-2xl drop-shadow-md">
                                                     ¡Tu opinión nos importa!
                                                 </h3>
 
-                                                <div className="bg-white p-4 rounded-3xl shadow-xl mx-auto">
+                                                <div className="bg-white p-4 rounded-3xl shadow-xl w-fit mx-auto">
                                                     <QRCodeSVG
                                                         value={reservationLink}
                                                         size={180}
@@ -136,7 +136,7 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
                                             <div className="absolute bottom-6 left-0 w-full text-center">
                                                 <p className="text-white/60 text-[10px] uppercase tracking-widest">HappyMeter</p>
                                             </div>
-                                        </>
+                                        </div>
                                     )}
 
                                     {/* Print Design */}
