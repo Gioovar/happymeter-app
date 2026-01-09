@@ -418,7 +418,6 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
 
         // ... (inside getDashboardReservations)
 
-        /*
         const reservations = await prisma.reservation.findMany({
             where: {
                 date: {
@@ -434,10 +433,8 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
             },
             orderBy: { date: 'asc' }
         })
-        */
 
-        // MOCK DATA TO TEST SERVER CONNECTIVITY WITHOUT DB QUERY
-        const reservations: any[] = []
+        // MOCK DATA REMOVED
         // If this works, we know the issue is the DB query above.
 
         // Map to simpler structure

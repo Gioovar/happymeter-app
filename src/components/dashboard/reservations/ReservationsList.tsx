@@ -21,17 +21,24 @@ interface Reservation {
     notes?: string
 }
 
-export function ReservationsList() {
+interface ReservationsListProps {
+    reservations: any[]
+}
+
+export function ReservationsList({ reservations }: ReservationsListProps) {
     const [selectedCustomer, setSelectedCustomer] = useState<Reservation | null>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-    // Mock Data (matches the visual list)
-    const reservations: Reservation[] = [
-        { id: 1, day: "ENE", date: 7, name: "Juan Pérez", time: "19:30", table: "Mesa 4", pax: 4, status: "Confirmada", rating: 4.8, phone: "55 1234 5678", notes: "Es cumpleaños de mi esposa, traer postre con vela por favor." },
-        { id: 2, day: "ENE", date: 8, name: "Ana López", time: "20:00", table: "Terraza 1", pax: 2, status: "Pendiente", rating: 5.0, phone: "55 9876 5432" },
-        { id: 3, day: "ENE", date: 9, name: "Carlos Ruiz", time: "21:15", table: "Barra", pax: 1, status: "Confirmada", rating: 4.2, notes: "Alergia a los mariscos." },
-        { id: 4, day: "ENE", date: 10, name: "Sofía Díaz", time: "18:45", table: "Mesa 2", pax: 6, status: "Confirmada", rating: 4.9 }
-    ]
+    // Map incoming data to Reservation interface if needed, or assume pre-formatted
+    const data = reservations.map((res: any) => ({
+        ...res,
+        // Ensure day/date format matches UI (Short Month, Day Number)
+        day: res.day || new Date(res.date).toLocaleDateString("es-ES", { month: "short" }).replace(".", "").toUpperCase().slice(0, 3),
+        date: res.dateNum || new Date(res.date).getDate(),
+        // Map other fields
+        name: res.customerName,
+        table: res.tableName
+    }))
 
     const handleSelect = (res: Reservation) => {
         setSelectedCustomer(res)
@@ -49,31 +56,37 @@ export function ReservationsList() {
                 </div>
 
                 <div className="space-y-3">
-                    {reservations.map((res) => (
-                        <div
-                            key={res.id}
-                            onClick={() => handleSelect(res)}
-                            className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-orange-500/30 hover:bg-white/10 transition-all cursor-pointer group"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="flex flex-col items-center justify-center w-12 h-12 bg-black rounded-lg border border-white/10 group-hover:border-orange-500/50 transition-colors">
-                                    <span className="text-xs text-gray-400 font-bold uppercase">{res.day}</span>
-                                    <span className="text-lg font-bold text-white">{res.date < 10 ? `0${res.date}` : res.date}</span>
-                                </div>
-                                <div>
-                                    <h4 className="text-white font-medium group-hover:text-orange-400 transition-colors">{res.name}</h4>
-                                    <p className="text-gray-400 text-xs">{res.table} • {res.pax} Personas</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <span className="block text-white font-mono font-medium">{res.time}</span>
-                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${res.status === 'Confirmada' ? 'text-emerald-400 bg-emerald-500/10' : 'text-amber-400 bg-amber-500/10'
-                                    }`}>
-                                    {res.status}
-                                </span>
-                            </div>
+                    {data.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            No hay reservas próximas
                         </div>
-                    ))}
+                    ) : (
+                        data.map((res: any) => (
+                            <div
+                                key={res.id}
+                                onClick={() => handleSelect(res)}
+                                className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-orange-500/30 hover:bg-white/10 transition-all cursor-pointer group"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="flex flex-col items-center justify-center w-12 h-12 bg-black rounded-lg border border-white/10 group-hover:border-orange-500/50 transition-colors">
+                                        <span className="text-xs text-gray-400 font-bold uppercase">{res.day}</span>
+                                        <span className="text-lg font-bold text-white">{res.date < 10 ? `0${res.date}` : res.date}</span>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-white font-medium group-hover:text-orange-400 transition-colors">{res.name}</h4>
+                                        <p className="text-gray-400 text-xs">{res.table} • {res.pax} Personas</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="block text-white font-mono font-medium">{res.time}</span>
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${res.status === 'Confirmada' ? 'text-emerald-400 bg-emerald-500/10' : 'text-amber-400 bg-amber-500/10'
+                                        }`}>
+                                        {res.status}
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 

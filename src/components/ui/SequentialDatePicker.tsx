@@ -218,7 +218,7 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
             </div>
 
             {/* Confirm Button */}
-            {includeTime && (step === 'TIME' || (step === 'DAY' && selectedDay)) && (
+            {((includeTime && step === 'TIME') || (!includeTime && step === 'DAY')) && (
                 <div className="mt-4 pt-4 border-t border-white/10">
                     <button
                         onClick={confirmSelection}
@@ -226,7 +226,7 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
                         className={cn(
                             "w-full py-3 rounded-xl font-bold transition flex items-center justify-center gap-2",
                             "bg-white text-black hover:bg-gray-200",
-                            ((!selectedDay && (step === 'DAY' || step === 'TIME')) || (includeTime && !selectedTime)) && "opacity-50 cursor-not-allowed"
+                            (!selectedDay || (includeTime && !selectedTime)) && "opacity-50 cursor-not-allowed"
                         )}
                     >
                         <Check className="w-4 h-4" />

@@ -28,9 +28,8 @@ export default async function ReservationsPage() {
     const floorPlan = { isConfigured: true } // MOCK SAFE MODE
 
     // Fetch reservations for calendar
-    // const reservationsResult = await getDashboardReservations()
-    // const reservations = reservationsResult.success ? reservationsResult.reservations : []
-    const reservations: any[] = [] // MOCK SAFE MODE
+    const reservationsResult = await getDashboardReservations()
+    const reservations = reservationsResult.success ? reservationsResult.reservations : []
 
     if (!floorPlan || !floorPlan.isConfigured) {
         return (
