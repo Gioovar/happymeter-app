@@ -7,6 +7,9 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { SequentialDatePicker } from "@/components/ui/SequentialDatePicker"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 interface Table {
     id: string
@@ -42,7 +45,11 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
     const [selectedTable, setSelectedTable] = useState<Table | null>(null)
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
-    const containerRef = useRef<HTMLDivElement>(null)
+    const [containerRef] = useState<any>({ current: null }) // Hack to fix ref type if needed, or keep original
+    // actually let's keep original ref, just add new state
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+    const realContainerRef = useRef<HTMLDivElement>(null)
 
     // Motion Values for performant drag/zoom
     const x = useMotionValue(0)
@@ -67,14 +74,14 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
     // Fit content logic
     useEffect(() => {
-        if (!containerRef.current || !currentFloor.tables || currentFloor.tables.length === 0) return
+        if (!realContainerRef.current || !currentFloor.tables || currentFloor.tables.length === 0) return
 
         const fitContent = () => {
-            if (!containerRef.current) return
+            if (!realContainerRef.current) return
 
             // 1. Simple Fit Width Logic (Match Editor)
             // We ignore "currentFloor.width" and use calculated "contentWidth" (Auto-Crop).
-            const containerWidth = containerRef.current.clientWidth
+            const containerWidth = realContainerRef.current.clientWidth
 
             // Scale to fit content width
             const fitScale = containerWidth / contentWidth
@@ -197,7 +204,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
             {/* Canvas Container */}
             <div
-                ref={containerRef}
+                ref={realContainerRef}
                 // ENABLE NATIVE SCROLL (overflow-y-auto), HIDE SCROLLBAR
                 // ADDED PT-32 to push content below the header
                 className="flex-1 relative overflow-y-auto overflow-x-hidden bg-black scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] pt-32"
@@ -305,16 +312,21 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     <span className="text-sm font-bold">{selectedTable.capacity || 4}</span>
                                 </div>
 
-                                <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl">
+                                <button
+                                    className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl w-full hover:bg-zinc-800 transition"
+                                    onClick={() => setIsDatePickerOpen(true)}
+                                >
                                     <div className="flex items-center gap-3">
                                         <Calendar className="w-5 h-5 text-zinc-400" />
-                                        <div>
-                                            <p className="text-sm font-medium">Fecha</p>
-                                            <p className="text-xs text-zinc-500">Hoy, lo antes posible</p>
+                                        <div className="text-left">
+                                            <p className="text-sm font-medium text-white">Fecha</p>
+                                            <p className="text-xs text-zinc-500">
+                                                {format(selectedDate, "PPP", { locale: es })}
+                                            </p>
                                         </div>
                                     </div>
-                                    <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-md">Hoy</span>
-                                </div>
+                                    <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-md">Editar</span>
+                                </button>
 
                                 {(selectedTable.reservationPrice || 0) > 0 && (
                                     <div className="flex items-center justify-between p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
@@ -339,6 +351,19 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                     </Dialog>
                 )}
             </AnimatePresence>
+
+            {/* Date Picker Dialog */}
+            <Dialog open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                <DialogContent className="w-[95vw] max-w-[320px] p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl rounded-xl z-[60]">
+                    <DialogTitle className="sr-only">Seleccionar fecha</DialogTitle>
+                    <DialogDescription className="sr-only">Selecciona la fecha de tu reserva</DialogDescription>
+                    <SequentialDatePicker
+                        value={selectedDate}
+                        onChange={(date) => setSelectedDate(date)}
+                        onClose={() => setIsDatePickerOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
