@@ -212,8 +212,9 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
         setIsBooking(false)
 
         if (result.success) {
-            if (result.action) {
-                setPostReservationAction(result)
+            const res = result as any
+            if (res.action) {
+                setPostReservationAction(res)
                 setIsSuccessModalOpen(true)
             } else {
                 toast.success("¡Reserva Confirmada!", {
