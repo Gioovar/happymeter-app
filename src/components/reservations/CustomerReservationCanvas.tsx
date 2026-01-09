@@ -475,10 +475,10 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             <AnimatePresence>
                 {selectedTables.length > 0 && !isConfirmOpen && (
                     <motion.div
-                        initial={{ y: 100, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 100, opacity: 0 }}
-                        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60] w-full max-w-xs px-4 pointer-events-auto"
+                        initial={{ x: "-50%", y: 100, opacity: 0 }}
+                        animate={{ x: "-50%", y: 0, opacity: 1 }}
+                        exit={{ x: "-50%", y: 100, opacity: 0 }}
+                        className="absolute bottom-6 left-1/2 z-[60] w-full max-w-xs px-4 pointer-events-auto"
                     >
                         <Button
                             className="w-full bg-white text-black hover:bg-zinc-200 rounded-full py-6 text-base font-bold shadow-2xl shadow-indigo-500/20"
