@@ -474,6 +474,46 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
     }
 }
 
+export async function getAvailableTables(dateStr: Date, timeStr: string) {
+    try {
+        const date = new Date(dateStr)
+        // Parse time (e.g. "14:00")
+        const [hours, minutes] = timeStr.split(':').map(Number)
+        date.setHours(hours, minutes, 0, 0)
+
+        // Assume standard 2 hour duration for now
+        // We look for reservations that start 2 hours before or after the target time
+        // Actually, simpler: Exact match on date/time for now since we use slots?
+        // Let's do a time range check: occupied if reservation is within [requested - 2h, requested + 2h]
+
+        const startWindow = new Date(date)
+        startWindow.setHours(date.getHours() - 2)
+
+        const endWindow = new Date(date)
+        endWindow.setHours(date.getHours() + 2)
+
+        const conflicts = await prisma.reservation.findMany({
+            where: {
+                date: {
+                    gte: startWindow,
+                    lt: endWindow
+                },
+                status: {
+                    not: 'CANCELED'
+                }
+            },
+            select: {
+                tableId: true
+            }
+        })
+
+        return { success: true, occupiedTableIds: conflicts.map(c => c.tableId) }
+    } catch (error) {
+        console.error("Error checking availability:", error)
+        return { success: false, occupiedTableIds: [] }
+    }
+}
+
 export async function createReservation(data: {
     reservations: {
         tableId: string

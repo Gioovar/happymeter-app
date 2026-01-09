@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { SequentialDatePicker } from "@/components/ui/SequentialDatePicker"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { createReservation } from "@/actions/reservations"
+import { createReservation, getAvailableTables } from "@/actions/reservations"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
@@ -47,6 +47,12 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     const currentFloor = allFloors.find(f => f.id === activeFloorId) || allFloors[0] || { tables: [], width: 800 }
 
     const [selectedTables, setSelectedTables] = useState<Table[]>([])
+    // New Flow States
+    const [bookingStep, setBookingStep] = useState<'SEARCH' | 'SELECT' | 'CONFIRM'>('SEARCH')
+    const [occupiedTableIds, setOccupiedTableIds] = useState<string[]>([])
+    const [selectedTime, setSelectedTime] = useState("14:00") // Default time
+    const [partySize, setPartySize] = useState(2)
+
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const [containerRef] = useState<any>({ current: null }) // Hack to fix ref type if needed, or keep original
     // actually let's keep original ref, just add new state
@@ -176,12 +182,16 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             return
         }
 
+        const combinedDate = new Date(selectedDate)
+        const [hours, minutes] = selectedTime.split(':').map(Number)
+        combinedDate.setHours(hours, minutes)
+
         setIsBooking(true)
         const bookingData = {
             reservations: selectedTables.map(t => ({
                 tableId: t.id,
-                date: selectedDate, // Start time handled by picker
-                partySize: t.capacity || 4 // Default capacity if missing
+                date: combinedDate,
+                partySize: t.capacity || 4
             })),
             customer: customerForm
         }
@@ -204,6 +214,127 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
         }
     }
 
+    const handleSearch = async () => {
+        // Basic validation
+        if (!selectedDate || !selectedTime) return
+
+        setIsBooking(true) // Re-use loading state
+        const dateStr = selectedDate
+        const result = await getAvailableTables(dateStr, selectedTime)
+
+        if (result.success) {
+            setOccupiedTableIds(result.occupiedTableIds || [])
+            setBookingStep('SELECT')
+        } else {
+            toast.error("Error al buscar mesas", { description: "Intenta de nuevo." })
+        }
+        setIsBooking(false)
+    }
+
+    // New SEARCH STEP UI
+    if (bookingStep === 'SEARCH') {
+        return (
+            <div className="h-[100dvh] bg-zinc-950 flex items-center justify-center p-4">
+                <div className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                    {/* Background Glow */}
+                    <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-indigo-500/20 to-transparent pointer-events-none" />
+
+                    <div className="relative z-10 space-y-8">
+                        <div className="text-center space-y-2">
+                            <h1 className="text-2xl font-bold text-white">{businessName}</h1>
+                            <p className="text-zinc-400 text-sm">Reserva tu experiencia</p>
+                        </div>
+
+                        <div className="space-y-6">
+                            {/* Date Picker Trigger */}
+                            <div className="space-y-2">
+                                <Label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Fecha</Label>
+                                <button
+                                    onClick={() => setIsDatePickerOpen(true)}
+                                    className="w-full flex items-center justify-between p-4 bg-zinc-800/50 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-colors text-left group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/30 transition-colors">
+                                            <Calendar className="w-5 h-5 text-indigo-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-medium text-lg">
+                                                {selectedDate ? format(selectedDate, "EEE, d MMMM", { locale: es }) : "Seleccionar Fecha"}
+                                            </p>
+                                            <p className="text-zinc-500 text-xs">
+                                                {selectedDate ? "Fecha seleccionada" : "Toca para elegir"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-xs bg-white/5 px-2 py-1 rounded-md text-zinc-400">Cambiar</div>
+                                </button>
+                            </div>
+
+                            {/* Time & Pax Row */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Hora</Label>
+                                    <select
+                                        value={selectedTime}
+                                        onChange={(e) => setSelectedTime(e.target.value)}
+                                        className="w-full h-14 bg-zinc-800/50 border border-white/5 rounded-2xl px-4 text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/50 appearance-none"
+                                    >
+                                        {/* Generate slots every 30 mins from 13:00 to 22:00 */}
+                                        {Array.from({ length: 19 }).map((_, i) => {
+                                            const hour = Math.floor(i / 2) + 13
+                                            const min = (i % 2) * 30
+                                            const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
+                                            return <option key={time} value={time}>{time}</option>
+                                        })}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Personas</Label>
+                                    <div className="flex items-center h-14 bg-zinc-800/50 border border-white/5 rounded-2xl px-2">
+                                        <button
+                                            onClick={() => setPartySize(Math.max(1, partySize - 1))}
+                                            className="w-10 h-full flex items-center justify-center text-zinc-400 hover:text-white text-xl"
+                                        >-</button>
+                                        <div className="flex-1 text-center font-bold text-white text-lg">{partySize}</div>
+                                        <button
+                                            onClick={() => setPartySize(Math.min(20, partySize + 1))}
+                                            className="w-10 h-full flex items-center justify-center text-zinc-400 hover:text-white text-xl"
+                                        >+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Button
+                                onClick={handleSearch}
+                                disabled={isBooking}
+                                className="w-full h-14 bg-white text-black hover:bg-zinc-200 rounded-2xl text-lg font-bold shadow-xl shadow-indigo-500/10 mt-4"
+                            >
+                                {isBooking ? "Buscando..." : "Buscar Mesas"}
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Re-use Date Picker Dialog but detached from canvas */}
+                    <Dialog open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                        <DialogContent className="w-[95vw] max-w-[320px] p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl rounded-xl z-[60]">
+                            <SequentialDatePicker
+                                value={selectedDate}
+                                onChange={(date) => {
+                                    setSelectedDate(date)
+                                    setIsDatePickerOpen(false)
+                                }}
+                                onClose={() => setIsDatePickerOpen(false)}
+                                showYear={false}
+                                includeTime={false} // Time is handled by select now
+                            />
+                        </DialogContent>
+                    </Dialog>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-950 touch-none">
             {/* Header */}
@@ -211,14 +342,17 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             <div className="absolute top-0 left-0 right-0 z-50 flex flex-col items-center bg-gradient-to-b from-black/90 via-black/80 to-transparent pb-8 pointer-events-none">
                 <div className="w-full p-4 flex items-center justify-between">
                     <button
-                        onClick={() => router.back()}
-                        className="pointer-events-auto p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors"
+                        onClick={() => setBookingStep('SEARCH')}
+                        className="pointer-events-auto p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors flex items-center gap-2 px-4"
                     >
-                        <ChevronLeft className="w-6 h-6" />
+                        <ChevronLeft className="w-4 h-4" />
+                        <span className="text-xs font-bold">Cambiar</span>
                     </button>
                     <div className="text-center pointer-events-auto">
-                        <h1 className="text-lg font-bold text-white shadow-sm">{businessName}</h1>
-                        <p className="text-xs text-zinc-400">Selecciona tu mesa</p>
+                        <h1 className="text-lg font-bold text-white shadow-sm">{selectedTime}</h1>
+                        <p className="text-xs text-zinc-400">
+                            {selectedDate ? format(selectedDate, "EEE, d MMM", { locale: es }) : ""}
+                        </p>
                     </div>
                     <div className="w-10" />
                 </div>
@@ -277,7 +411,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
                     {/* Render Tables */}
                     {currentFloor.tables.map((table: Table) => {
-                        const isReserved = (table.reservations?.length || 0) > 0
+                        const isReserved = (table.reservations?.length || 0) > 0 || occupiedTableIds.includes(table.id)
                         const isSelected = selectedTables.some(t => t.id === table.id)
                         const isPaid = (table.reservationPrice || 0) > 0 && !isReserved
 
