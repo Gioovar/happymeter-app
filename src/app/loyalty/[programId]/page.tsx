@@ -11,7 +11,9 @@ import { esES } from "@clerk/localizations"
 import { useSearchParams, useRouter } from "next/navigation"
 import { claimWelcomeGift } from "@/actions/loyalty"
 
-export default function CustomerLoyaltyPage({ params }: { params: { programId: string } }) {
+import { Suspense } from "react"
+
+function LoyaltyContent({ params }: { params: { programId: string } }) {
     const { user, isLoaded: isClerkLoaded } = useUser()
     const { openUserProfile, signOut } = useClerk()
     const [isLoading, setIsLoading] = useState(true)
@@ -312,5 +314,18 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
                 )}
             </SignedIn>
         </div>
+    )
+}
+
+export default function CustomerLoyaltyPage({ params }: { params: { programId: string } }) {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white gap-4">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+                <p>Cargando programa...</p>
+            </div>
+        }>
+            <LoyaltyContent params={params} />
+        </Suspense>
     )
 }

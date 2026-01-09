@@ -30,15 +30,28 @@ export function ReservationsList({ reservations }: ReservationsListProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
 
     // Map incoming data to Reservation interface if needed, or assume pre-formatted
-    const data = reservations.map((res: any) => ({
-        ...res,
-        // Ensure day/date format matches UI (Short Month, Day Number)
-        day: res.day || new Date(res.date).toLocaleDateString("es-ES", { month: "short" }).replace(".", "").toUpperCase().slice(0, 3),
-        date: res.dateNum || new Date(res.date).getDate(),
-        // Map other fields
-        name: res.customerName,
-        table: res.tableName
-    }))
+    const data = reservations.map((res: any) => {
+        let day = "HOY"
+        let dateNum = 1
+        try {
+            const d = new Date(res.date)
+            // Invalid Date check
+            if (!isNaN(d.getTime())) {
+                day = res.day || d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "").toUpperCase().slice(0, 3)
+                dateNum = res.dateNum || d.getDate()
+            }
+        } catch (e) {
+            console.error("Date error in list", e)
+        }
+
+        return {
+            ...res,
+            day,
+            date: dateNum,
+            name: res.customerName || "Cliente",
+            table: res.tableName || "Mesa"
+        }
+    })
 
     const handleSelect = (res: Reservation) => {
         setSelectedCustomer(res)
