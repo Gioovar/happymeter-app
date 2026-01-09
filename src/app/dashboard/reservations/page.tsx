@@ -38,13 +38,25 @@ export default async function ReservationsPage() {
     let program = null
     try {
         if (user) {
-            program = await prisma.loyaltyProgram.findFirst({
-                where: { clerkUserId: user.id }
+            // Correct field is 'userId' based on schema, not 'clerkUserId'
+            program = await prisma.loyaltyProgram.findUnique({
+                where: { userId: user.id }
             })
+
+            // AUTO-CREATE if missing so user sees the button
+            if (!program) {
+                console.log("Auto-creating Loyalty Program for Reservations...")
+                program = await prisma.loyaltyProgram.create({
+                    data: {
+                        userId: user.id,
+                        businessName: userProfile.name || "Mi Negocio",
+                        description: "Programa de lealtad creado automáticamente."
+                    }
+                })
+            }
         }
     } catch (error) {
-        console.error("Error fetching loyalty program for dashboard:", error)
-        // Consume error to render dashboard without program link
+        console.error("Error fetching/creating loyalty program:", error)
     }
 
     if (!floorPlan || !floorPlan.isConfigured) {
