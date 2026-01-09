@@ -68,6 +68,7 @@ export default function CreateSurveyPage() {
     const [phoneInput, setPhoneInput] = useState('')
     const [isSavingPhone, setIsSavingPhone] = useState(false)
     const [isVerifyStep, setIsVerifyStep] = useState(false)
+    const [isReadyToPublish, setIsReadyToPublish] = useState(false)
 
     useEffect(() => {
         try {
@@ -115,8 +116,8 @@ export default function CreateSurveyPage() {
             const res = await updatePhoneNumber(phoneInput)
             if (res.success) {
                 setNeedsPhone(false)
-                setShowPhoneModal(false)
-                alert('¡Verificado y guardado! Ahora puedes publicar tu encuesta.')
+                setIsReadyToPublish(true) // Switch to publish step instead of closing
+                // alert('¡Verificado y guardado! Ahora puedes publicar tu encuesta.') // Removed alert
             } else {
                 alert('Error al guardar el número')
             }
@@ -154,14 +155,7 @@ export default function CreateSurveyPage() {
         setQuestions(questions.filter(q => q.id !== id))
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-
-        if (needsPhone) {
-            setShowPhoneModal(true)
-            return
-        }
-
+    const executeSubmission = async () => {
         setIsSubmitting(true)
 
         try {
@@ -217,6 +211,17 @@ export default function CreateSurveyPage() {
             alert(`Error: ${error.message}`)
             setIsSubmitting(false)
         }
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (needsPhone) {
+            setShowPhoneModal(true)
+            return
+        }
+
+        await executeSubmission()
     }
 
     return (
@@ -721,6 +726,34 @@ export default function CreateSurveyPage() {
                                     className="w-full py-2 text-sm text-gray-500 hover:text-white transition"
                                 >
                                     Cancelar
+                                </button>
+                            </div>
+                        ) : isReadyToPublish ? (
+                            <div className="space-y-6 animate-in slide-in-from-right-4 duration-300 text-center">
+                                <div className="p-4 bg-violet-500/10 border border-violet-500/20 rounded-xl">
+                                    <h4 className="text-xl font-bold text-white mb-2">¡Todo listo! 🎉</h4>
+                                    <p className="text-gray-300">
+                                        Tu número ha sido verificado. Ya puedes publicar tu encuesta.
+                                    </p>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={executeSubmission}
+                                    disabled={isSubmitting}
+                                    className="w-full py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold rounded-xl transition shadow-lg shadow-violet-600/20 flex items-center justify-center gap-2 relative overflow-hidden group"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Sparkles className="w-5 h-5 animate-spin" />
+                                            <span>Publicando...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Publicar Encuesta</span>
+                                            <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         ) : (
