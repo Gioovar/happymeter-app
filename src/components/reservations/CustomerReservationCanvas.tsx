@@ -411,7 +411,8 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
                     {/* Render Tables */}
                     {currentFloor.tables.map((table: Table) => {
-                        const isReserved = (table.reservations?.length || 0) > 0 || occupiedTableIds.includes(table.id)
+                        // FIX: Only check occupiedTableIds (from search), ignore raw reservations which might be for other days
+                        const isReserved = occupiedTableIds.includes(table.id)
                         const isSelected = selectedTables.some(t => t.id === table.id)
                         const isPaid = (table.reservationPrice || 0) > 0 && !isReserved
 
