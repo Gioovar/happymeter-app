@@ -319,9 +319,9 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     <div className="flex items-center gap-3">
                                         <Calendar className="w-5 h-5 text-zinc-400" />
                                         <div className="text-left">
-                                            <p className="text-sm font-medium text-white">Fecha</p>
+                                            <p className="text-sm font-medium text-white">Fecha y Hora</p>
                                             <p className="text-xs text-zinc-500">
-                                                {format(selectedDate, "PPP", { locale: es })}
+                                                {format(selectedDate, "PPP p", { locale: es })}
                                             </p>
                                         </div>
                                     </div>
@@ -362,6 +362,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                         onChange={(date) => setSelectedDate(date)}
                         onClose={() => setIsDatePickerOpen(false)}
                         showYear={false}
+                        includeTime={true}
                     />
                 </DialogContent>
             </Dialog>

@@ -11,15 +11,17 @@ interface SequentialDatePickerProps {
     onChange: (date: Date) => void
     onClose?: () => void
     showYear?: boolean
+    includeTime?: boolean
 }
 
-type Step = 'YEAR' | 'MONTH' | 'DAY'
+type Step = 'YEAR' | 'MONTH' | 'DAY' | 'TIME'
 
-export function SequentialDatePicker({ value, onChange, onClose, showYear = true }: SequentialDatePickerProps) {
+export function SequentialDatePicker({ value, onChange, onClose, showYear = true, includeTime = false }: SequentialDatePickerProps) {
     const [step, setStep] = useState<Step>(showYear ? 'YEAR' : 'MONTH')
     const [selectedYear, setSelectedYear] = useState<number>(value ? value.getFullYear() : new Date().getFullYear())
     const [selectedMonth, setSelectedMonth] = useState<number>(value ? value.getMonth() : new Date().getMonth())
     const [selectedDay, setSelectedDay] = useState<number | null>(value ? value.getDate() : null)
+    const [selectedTime, setSelectedTime] = useState<string | null>(value ? format(value, 'HH:mm') : null)
 
     // Force step adjustment if showYear changes (fixes HMR/State persistence issues)
     useEffect(() => {
@@ -44,6 +46,16 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
     }
     const days = Array.from({ length: getDaysInMonth(selectedYear, selectedMonth) }, (_, i) => i + 1)
 
+    // Time Slots (30 min increments)
+    const timeSlots = []
+    for (let i = 0; i < 24; i++) {
+        for (let j = 0; j < 60; j += 30) {
+            const hour = i.toString().padStart(2, '0')
+            const minute = j.toString().padStart(2, '0')
+            timeSlots.push(`${hour}:${minute}`)
+        }
+    }
+
     // Handle Selection
     const handleYearSelect = (year: number) => {
         setSelectedYear(year)
@@ -57,11 +69,29 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
 
     const handleDaySelect = (day: number) => {
         setSelectedDay(day)
+        if (includeTime) {
+            setStep('TIME')
+        } else {
+            // If time is not included, confirm selection immediately after day
+            const newDate = new Date(selectedYear, selectedMonth, day)
+            onChange(newDate)
+            if (onClose) onClose()
+        }
+    }
+
+    const handleTimeSelect = (time: string) => {
+        setSelectedTime(time)
     }
 
     const confirmSelection = () => {
         if (selectedDay) {
             const newDate = new Date(selectedYear, selectedMonth, selectedDay)
+
+            if (includeTime && selectedTime) {
+                const [hours, minutes] = selectedTime.split(':').map(Number)
+                newDate.setHours(hours, minutes)
+            }
+
             onChange(newDate)
             if (onClose) onClose()
         }
@@ -69,20 +99,23 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
 
     // Header logic
     const handleBack = () => {
-        if (step === 'DAY') setStep('MONTH')
+        if (step === 'TIME') setStep('DAY')
+        else if (step === 'DAY') setStep('MONTH')
         else if (step === 'MONTH' && showYear) setStep('YEAR')
     }
 
     const getTitle = () => {
         if (step === 'YEAR') return 'Selecciona el Año'
         if (step === 'MONTH') return 'Selecciona el Mes'
-        return 'Selecciona el Día'
+        if (step === 'DAY') return 'Selecciona el Día'
+        return 'Selecciona la Hora'
     }
 
     const getSubtitle = () => {
         if (step === 'YEAR') return '¿En qué año naciste?' // Or generalized
         if (step === 'MONTH') return `${selectedYear}`
-        return `${months[selectedMonth]} ${selectedYear}`
+        if (step === 'DAY') return `${months[selectedMonth]} ${selectedYear}`
+        return `${selectedDay} de ${months[selectedMonth]}`
     }
 
     return (
@@ -162,23 +195,45 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
                         ))}
                     </div>
                 )}
+
+                {/* TIME VIEW */}
+                {step === 'TIME' && (
+                    <div className="grid grid-cols-3 gap-2">
+                        {timeSlots.map(time => (
+                            <button
+                                key={time}
+                                onClick={() => handleTimeSelect(time)}
+                                className={cn(
+                                    "py-2 rounded-lg text-sm font-medium transition hover:bg-white/10",
+                                    selectedTime === time
+                                        ? "bg-violet-600 text-white hover:bg-violet-500 shadow-lg shadow-violet-500/20"
+                                        : "bg-[#252525] text-gray-300"
+                                )}
+                            >
+                                {time}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Confirm Button */}
-            <div className="mt-4 pt-4 border-t border-white/10">
-                <button
-                    onClick={confirmSelection}
-                    disabled={!selectedDay && step === 'DAY'} // Disable only on day step if no day, though logic allows partial flow
-                    className={cn(
-                        "w-full py-3 rounded-xl font-bold transition flex items-center justify-center gap-2",
-                        "bg-white text-black hover:bg-gray-200",
-                        (!selectedDay && step === 'DAY') && "opacity-50 cursor-not-allowed"
-                    )}
-                >
-                    <Check className="w-4 h-4" />
-                    Listo
-                </button>
-            </div>
+            {includeTime && (step === 'TIME' || (step === 'DAY' && selectedDay)) && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                    <button
+                        onClick={confirmSelection}
+                        disabled={!selectedDay || (includeTime && !selectedTime)}
+                        className={cn(
+                            "w-full py-3 rounded-xl font-bold transition flex items-center justify-center gap-2",
+                            "bg-white text-black hover:bg-gray-200",
+                            ((!selectedDay && (step === 'DAY' || step === 'TIME')) || (includeTime && !selectedTime)) && "opacity-50 cursor-not-allowed"
+                        )}
+                    >
+                        <Check className="w-4 h-4" />
+                        Listo
+                    </button>
+                </div>
+            )}
         </div>
     )
 }
