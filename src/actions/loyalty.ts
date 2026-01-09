@@ -565,16 +565,13 @@ export async function deleteLoyaltyReward(programId: string, rewardId: string) {
     }
 }
 
-export async function redeemReward(formData: FormData) {
-    const rawCode = formData.get('code') as string
-    const staffId = formData.get('staffId') as string
-
-    if (!rawCode) return { success: false, error: "Código requerido" }
+export async function redeemReward(staffId: string, code: string) {
+    if (!code) return { success: false, error: "Código requerido" }
 
     // Strip "R:" prefix if present
-    const redemptionCode = rawCode.trim().toUpperCase().startsWith('R:')
-        ? rawCode.trim().substring(2)
-        : rawCode.trim()
+    const redemptionCode = code.trim().toUpperCase().startsWith('R:')
+        ? code.trim().substring(2)
+        : code.trim()
 
     try {
         const redemption = await prisma.loyaltyRedemption.findUnique({
@@ -1058,5 +1055,53 @@ export async function syncClerkLoyaltyCustomer(programId: string) {
     } catch (error) {
         console.error("Error syncing Clerk customer:", error)
         return { success: false, error: "Error al sincronizar cuenta" }
+    }
+}
+
+export async function claimWelcomeGift(programId: string, customerId: string) {
+    try {
+        const program = await prisma.loyaltyProgram.findUnique({
+            where: { id: programId },
+            include: { rewards: true }
+        })
+
+        if (!program || !program.enableFirstVisitGift) {
+            return { success: false, error: "Este programa no ofrece regalo de bienvenida." }
+        }
+
+        // Find system gift reward
+        const giftReward = program.rewards.find(r => r.description === 'SYSTEM_GIFT')
+        if (!giftReward || !giftReward.isActive) {
+            return { success: false, error: "El regalo no está disponible actualmente." }
+        }
+
+        // Check if already claimed or pending
+        const existingRedemption = await prisma.loyaltyRedemption.findFirst({
+            where: {
+                customerId,
+                rewardId: giftReward.id
+            }
+        })
+
+        if (existingRedemption) {
+            return { success: false, error: "Ya tienes este regalo en tu cuenta." }
+        }
+
+        // Create Pending Redemption
+        await prisma.loyaltyRedemption.create({
+            data: {
+                programId,
+                customerId,
+                rewardId: giftReward.id,
+                status: 'PENDING'
+            }
+        })
+
+        revalidatePath(`/loyalty/${programId}`)
+        return { success: true }
+
+    } catch (error) {
+        console.error("Error claiming gift:", error)
+        return { success: false, error: "Error al reclamar el regalo." }
     }
 }

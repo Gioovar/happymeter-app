@@ -89,6 +89,14 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
     // Filter rewards based on filterType and Active status
     const displayedRewards = program?.rewards?.filter((reward: any) => {
         if (!reward.isActive) return false // Hide inactive
+
+        // Hide SYSTEM_GIFT unless user has it pending (or redeemed? redeemed means it's gone or in history)
+        // Check if user has a pending redemption for this reward
+        if (reward.description === "SYSTEM_GIFT") {
+            const hasPending = pendingRedemptions.some((r: any) => r.rewardId === reward.id)
+            if (!hasPending) return false
+        }
+
         if (filterType === "visits") return reward.costInVisits > 0
         if (filterType === "points") return reward.costInPoints > 0
         return true

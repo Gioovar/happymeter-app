@@ -120,7 +120,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
         toast.dismiss()
         if (res.success) {
             toast.success(`Visita registrada!\n${res.tierName ? `MEMBER ${res.tierName}` : ""}`, {
-                description: amount > 0 ? `Puntos ganados: ${res.pointsEarned}` : `Total de visitas: ${res.newTotal}`,
+                description: amount > 0 ? `Puntos ganados: ${res.pointsEarned}` : `Total de visitas: ${res.newVisits}`,
                 duration: 4000,
                 icon: <UtensilsCrossed className="w-5 h-5 text-green-500" />
             })

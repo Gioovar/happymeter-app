@@ -665,7 +665,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                 <p className="text-zinc-300 text-sm mt-2">{postReservationAction.joinMessage}</p>
                             </div>
                             <Button
-                                onClick={() => window.location.href = `/programs/${postReservationAction.programId}`}
+                                onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}`}
                                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl py-6"
                             >
                                 Ver Beneficios del Club
@@ -677,7 +677,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                     {postReservationAction?.action === 'REDIRECT_LOYALTY' && (
                         <ClientSideEffect
                             action={() => {
-                                setTimeout(() => window.location.href = `/programs/${postReservationAction.programId}`, 2000)
+                                setTimeout(() => window.location.href = `/loyalty/${postReservationAction.programId}`, 2000)
                             }}
                         />
                     )}
@@ -715,7 +715,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                 </p>
                             </div>
                             <Button
-                                onClick={() => window.location.href = `/programs/${postReservationAction.programId}`}
+                                onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}?claim_gift=true`}
                                 className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl py-6 shadow-xl shadow-amber-500/20"
                             >
                                 Reclamar Regalo Ahora

@@ -756,12 +756,10 @@ function AdvancedLoyaltyView({ userId, program, onBack, initialTab: propInitialT
         }
 
         setIsRedeeming(true)
-        const formData = new FormData()
-        formData.append('code', redemptionCode)
-        formData.append('staffId', userId)
+        setIsRedeeming(true)
 
         try {
-            const res = await redeemReward(formData)
+            const res = await redeemReward(userId, redemptionCode)
             if (res.success) {
                 toast.success(`¡Premio Canjeado! ${res.rewardName} para ${res.customerName}`)
                 setRedemptionCode("")

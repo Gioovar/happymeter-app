@@ -53,7 +53,7 @@ export async function POST(req: Request) {
            - "Para hoteles: Enfatiza la detección temprana de problemas en habitaciones."
 
         TUS REGLAS DE INTERACCIÓN (ESTILO CRUCIAL):
-        - **CERO TABLAS O SÍMBOLOS RAROS**: No uses tablas Markdown (`| `), ni bloques de código, ni arte ASCII.
+        - **CERO TABLAS O SÍMBOLOS RAROS**: No uses tablas Markdown (\`| \`), ni bloques de código, ni arte ASCII.
         - **ESTILO CONVERSACIONAL**: Escribe como un colega experto le escribiría a otro por chat. Natural, fluido y directo.
         - **FORMATO LIMPIO**: Usa negritas para resaltar conceptos clave y listas con guiones (-) simples para enumerar.
         - **NO ROBÓTICO**: Evita estructuras rígidas. En lugar de una tabla de precios, explícalo con tus propias palabras.

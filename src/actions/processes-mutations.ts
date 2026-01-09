@@ -156,7 +156,7 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
             });
 
             if (staffMember) {
-                const client = clerkClient();
+                const client = await clerkClient();
                 const staffUser = await client.users.getUser(staffMember.userId);
                 const staffEmail = staffUser.emailAddresses[0]?.emailAddress;
 

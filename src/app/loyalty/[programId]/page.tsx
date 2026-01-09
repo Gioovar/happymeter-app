@@ -8,6 +8,8 @@ import { toast } from "sonner"
 import { Phone, ArrowRight, Loader2, Sparkles, User, Calendar, KeyRound } from "lucide-react"
 import { SignIn, SignUp, useUser, SignedIn, SignedOut, useClerk } from "@clerk/nextjs"
 import { esES } from "@clerk/localizations"
+import { useSearchParams, useRouter } from "next/navigation"
+import { claimWelcomeGift } from "@/actions/loyalty"
 
 export default function CustomerLoyaltyPage({ params }: { params: { programId: string } }) {
     const { user, isLoaded: isClerkLoaded } = useUser()
@@ -25,12 +27,41 @@ export default function CustomerLoyaltyPage({ params }: { params: { programId: s
     const [username, setUsername] = useState("")
     const [birthday, setBirthday] = useState("")
 
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const claimGift = searchParams.get("claim_gift")
+
     useEffect(() => {
         // Load Public Program Info immediately
         getPublicLoyaltyProgramInfo(params.programId).then(info => {
             if (info) setProgramInfo(info)
         })
     }, [params.programId])
+
+    useEffect(() => {
+        if (claimGift && customer) {
+            claimWelcomeGift(params.programId, customer.id).then(res => {
+                if (res.success) {
+                    toast.success("¡Regalo de Bienvenida añadido!", {
+                        description: "Lo encontrarás al inicio de tu lista de premios.",
+                        icon: <Sparkles className="w-5 h-5 text-purple-400" />
+                    })
+                    // Remove query param to prevent re-toast on refresh
+                    const newParams = new URLSearchParams(searchParams.toString())
+                    newParams.delete("claim_gift")
+                    router.replace(`/loyalty/${params.programId}`)
+                    // Refresh custom to get the new redemption
+                    handleSync()
+                } else {
+                    if (res.error?.includes("Ya tienes")) {
+                        // already have it, silent or info
+                    } else {
+                        toast.error(res.error)
+                    }
+                }
+            })
+        }
+    }, [claimGift, customer, params.programId, router, searchParams])
 
     useEffect(() => {
         if (!isClerkLoaded) return

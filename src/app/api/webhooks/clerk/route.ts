@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
         // Check for invitation
         if (primaryEmail) {
-            const invitation = await prisma.teamInvitation.findUnique({
+            const invitation = await prisma.teamInvitation.findFirst({
                 where: { email: primaryEmail }
             })
 

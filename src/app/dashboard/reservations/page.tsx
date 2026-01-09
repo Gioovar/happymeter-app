@@ -12,6 +12,8 @@ import { getFloorPlan, getDashboardReservations } from "@/actions/reservations"
 import { ReservationCalendar } from "@/components/dashboard/reservations/ReservationCalendar"
 import { NewReservationButton } from "@/components/dashboard/reservations/NewReservationButton"
 import { ReservationsList } from "@/components/dashboard/reservations/ReservationsList"
+import { prisma } from "@/lib/prisma"
+import { ReservationLinkButton } from "@/components/dashboard/reservations/ReservationLinkButton"
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +32,11 @@ export default async function ReservationsPage() {
     // Fetch reservations for calendar
     const reservationsResult = await getDashboardReservations()
     const reservations = reservationsResult.success ? reservationsResult.reservations : []
+
+    // Fetch program for Link Button
+    const program = await prisma.loyaltyProgram.findFirst({
+        where: { clerkUserId: user?.id }
+    })
 
     if (!floorPlan || !floorPlan.isConfigured) {
         return (
@@ -63,6 +70,8 @@ export default async function ReservationsPage() {
                     <p className="text-gray-400 mt-2">Gestiona tu agenda, capacidad y horarios.</p>
                 </div>
                 <div className="flex gap-3">
+                    {program && <ReservationLinkButton programId={program.id} />}
+
                     <Link
                         href="/dashboard/reservations/setup"
                         className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2.5 rounded-xl font-medium text-sm text-white transition-all flex items-center gap-2"
