@@ -396,7 +396,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                                 <CalendarIcon className="h-4 w-4 opacity-50" />
                                                             </button>
                                                         </PopoverTrigger>
-                                                        <PopoverContent className="w-auto p-0" align="start">
+                                                        <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl" align="start">
                                                             <Calendar
                                                                 mode="single"
                                                                 selected={formData.birthday ? new Date(formData.birthday) : undefined}
@@ -699,7 +699,7 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
                             <CalendarIcon className="h-4 w-4 opacity-50" />
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl" align="start">
                         <Calendar
                             mode="single"
                             selected={value ? new Date(value) : undefined}
