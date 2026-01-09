@@ -9,7 +9,7 @@ import { compressImage } from '@/lib/image-compression'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
-import { Calendar } from '@/components/ui/calendar'
+import { SequentialDatePicker } from '@/components/ui/SequentialDatePicker'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 
@@ -397,14 +397,10 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                             </button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl" align="start">
-                                                            <Calendar
-                                                                mode="single"
-                                                                selected={formData.birthday ? new Date(formData.birthday) : undefined}
-                                                                onSelect={(date) => handleInputChange('birthday', date ? format(date, 'yyyy-MM-dd') : '')}
-                                                                disabled={(date) =>
-                                                                    date > new Date() || date < new Date("1900-01-01")
-                                                                }
-                                                                initialFocus
+                                                            <SequentialDatePicker
+                                                                value={formData.birthday ? new Date(formData.birthday) : undefined}
+                                                                onChange={(date) => handleInputChange('birthday', date ? format(date, 'yyyy-MM-dd') : '')}
+                                                                onClose={() => { /* Close logic is tricky with Popover, but Sequential handles visual closure */ }}
                                                             />
                                                         </PopoverContent>
                                                     </Popover>
@@ -700,11 +696,9 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
                         </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={value ? new Date(value) : undefined}
-                            onSelect={(date) => onChange(date ? format(date, 'yyyy-MM-dd') : '')}
-                            initialFocus
+                        <SequentialDatePicker
+                            value={value ? new Date(value) : undefined}
+                            onChange={(date) => onChange(date ? format(date, 'yyyy-MM-dd') : '')}
                         />
                     </PopoverContent>
                 </Popover>
