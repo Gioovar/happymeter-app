@@ -473,9 +473,6 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
         return { success: false, reservations: [] }
     }
 }
-return { success: false, reservations: [] }
-    }
-}
 
 export async function createReservation(data: {
     reservations: {
