@@ -12,7 +12,10 @@ export default function Error({
 }) {
     useEffect(() => {
         // Log the error to an error reporting service
-        console.error(error)
+        console.error("RUNTIME ERROR CAUGHT:", error)
+        console.error("ERROR DIGEST:", error.digest)
+        console.error("ERROR MESSAGE:", error.message)
+        console.error("ERROR STACK:", error.stack)
     }, [error])
 
     return (
