@@ -409,6 +409,10 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
         const start = new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1)
         const end = new Date(monthDate.getFullYear(), monthDate.getMonth() + 2, 0)
 
+        console.log("Fetching reservations for user:", userId)
+        console.log("FloorPlans:", floorPlanIds)
+        console.log("Date Range:", start, end)
+
         // Fetch reservations via tables
         // Since Reservation is linked to Table, we need to query through Tables or if there's a direct Reservation model?
         // Let's check schema. Usually: Reservation -> Table -> FloorPlan -> User
