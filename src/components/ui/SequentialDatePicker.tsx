@@ -10,15 +10,23 @@ interface SequentialDatePickerProps {
     value?: Date
     onChange: (date: Date) => void
     onClose?: () => void
+    showYear?: boolean
 }
 
 type Step = 'YEAR' | 'MONTH' | 'DAY'
 
-export function SequentialDatePicker({ value, onChange, onClose }: SequentialDatePickerProps) {
-    const [step, setStep] = useState<Step>('YEAR')
+export function SequentialDatePicker({ value, onChange, onClose, showYear = true }: SequentialDatePickerProps) {
+    const [step, setStep] = useState<Step>(showYear ? 'YEAR' : 'MONTH')
     const [selectedYear, setSelectedYear] = useState<number>(value ? value.getFullYear() : new Date().getFullYear())
     const [selectedMonth, setSelectedMonth] = useState<number>(value ? value.getMonth() : new Date().getMonth())
     const [selectedDay, setSelectedDay] = useState<number | null>(value ? value.getDate() : null)
+
+    // Force step adjustment if showYear changes (fixes HMR/State persistence issues)
+    useEffect(() => {
+        if (!showYear && step === 'YEAR') {
+            setStep('MONTH')
+        }
+    }, [showYear, step])
 
     // Years to show (1920 - Current Year)
     const currentYear = new Date().getFullYear()
@@ -62,7 +70,7 @@ export function SequentialDatePicker({ value, onChange, onClose }: SequentialDat
     // Header logic
     const handleBack = () => {
         if (step === 'DAY') setStep('MONTH')
-        else if (step === 'MONTH') setStep('YEAR')
+        else if (step === 'MONTH' && showYear) setStep('YEAR')
     }
 
     const getTitle = () => {
@@ -81,7 +89,7 @@ export function SequentialDatePicker({ value, onChange, onClose }: SequentialDat
         <div className="w-full max-w-[320px] md:max-w-[320px] bg-[#1a1a1a] text-white p-4 mx-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-4">
-                {step !== 'YEAR' ? (
+                {(step !== 'YEAR' && !(step === 'MONTH' && !showYear)) ? (
                     <button onClick={handleBack} className="p-1 hover:bg-white/10 rounded-full transition">
                         <ChevronLeft className="w-5 h-5 text-gray-400" />
                     </button>
