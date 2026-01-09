@@ -18,6 +18,7 @@ export function SequentialDatePicker({ value, onChange, onClose }: SequentialDat
     const [step, setStep] = useState<Step>('YEAR')
     const [selectedYear, setSelectedYear] = useState<number>(value ? value.getFullYear() : new Date().getFullYear())
     const [selectedMonth, setSelectedMonth] = useState<number>(value ? value.getMonth() : new Date().getMonth())
+    const [selectedDay, setSelectedDay] = useState<number | null>(value ? value.getDate() : null)
 
     // Years to show (1920 - Current Year)
     const currentYear = new Date().getFullYear()
@@ -47,9 +48,15 @@ export function SequentialDatePicker({ value, onChange, onClose }: SequentialDat
     }
 
     const handleDaySelect = (day: number) => {
-        const newDate = new Date(selectedYear, selectedMonth, day)
-        onChange(newDate)
-        if (onClose) onClose()
+        setSelectedDay(day)
+    }
+
+    const confirmSelection = () => {
+        if (selectedDay) {
+            const newDate = new Date(selectedYear, selectedMonth, selectedDay)
+            onChange(newDate)
+            if (onClose) onClose()
+        }
     }
 
     // Header logic
@@ -71,7 +78,7 @@ export function SequentialDatePicker({ value, onChange, onClose }: SequentialDat
     }
 
     return (
-        <div className="w-[300px] bg-[#1a1a1a] text-white p-4">
+        <div className="w-full max-w-[320px] md:max-w-[320px] bg-[#1a1a1a] text-white p-4 mx-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-4">
                 {step !== 'YEAR' ? (
@@ -137,7 +144,7 @@ export function SequentialDatePicker({ value, onChange, onClose }: SequentialDat
                                 onClick={() => handleDaySelect(day)}
                                 className={cn(
                                     "aspect-square rounded-lg text-sm font-medium transition hover:bg-white/10 flex items-center justify-center",
-                                    value?.getDate() === day && value?.getMonth() === selectedMonth && value?.getFullYear() === selectedYear
+                                    selectedDay === day
                                         ? "bg-violet-600 text-white hover:bg-violet-500 shadow-lg shadow-violet-500/20"
                                         : "bg-[#252525] text-gray-300"
                                 )}
@@ -147,6 +154,22 @@ export function SequentialDatePicker({ value, onChange, onClose }: SequentialDat
                         ))}
                     </div>
                 )}
+            </div>
+
+            {/* Confirm Button */}
+            <div className="mt-4 pt-4 border-t border-white/10">
+                <button
+                    onClick={confirmSelection}
+                    disabled={!selectedDay && step === 'DAY'} // Disable only on day step if no day, though logic allows partial flow
+                    className={cn(
+                        "w-full py-3 rounded-xl font-bold transition flex items-center justify-center gap-2",
+                        "bg-white text-black hover:bg-gray-200",
+                        (!selectedDay && step === 'DAY') && "opacity-50 cursor-not-allowed"
+                    )}
+                >
+                    <Check className="w-4 h-4" />
+                    Listo
+                </button>
             </div>
         </div>
     )

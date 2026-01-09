@@ -396,7 +396,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                                 <CalendarIcon className="h-4 w-4 opacity-50" />
                                                             </button>
                                                         </PopoverTrigger>
-                                                        <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl" align="start">
+                                                        <PopoverContent className="w-[90vw] max-w-[320px] p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl mx-auto" align="start">
                                                             <SequentialDatePicker
                                                                 value={formData.birthday ? new Date(formData.birthday) : undefined}
                                                                 onChange={(date) => handleInputChange('birthday', date ? format(date, 'yyyy-MM-dd') : '')}
@@ -695,7 +695,7 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
                             <CalendarIcon className="h-4 w-4 opacity-50" />
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl" align="start">
+                    <PopoverContent className="w-[90vw] max-w-[320px] p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl mx-auto" align="start">
                         <SequentialDatePicker
                             value={value ? new Date(value) : undefined}
                             onChange={(date) => onChange(date ? format(date, 'yyyy-MM-dd') : '')}
