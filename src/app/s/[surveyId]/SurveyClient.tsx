@@ -10,7 +10,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import { SequentialDatePicker } from '@/components/ui/SequentialDatePicker'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 
 
 export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, isOwner: boolean }) {
@@ -376,10 +376,11 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                     <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} placeholder="ejemplo@correo.com" />
                                                 </div>
 
+                                                {/* Birthday */}
                                                 <div className="space-y-2">
                                                     <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Cumpleaños (Opcional)</label>
-                                                    <Popover open={isBirthdayPickerOpen} onOpenChange={setIsBirthdayPickerOpen}>
-                                                        <PopoverTrigger asChild>
+                                                    <Dialog open={isBirthdayPickerOpen} onOpenChange={setIsBirthdayPickerOpen}>
+                                                        <DialogTrigger asChild>
                                                             <button
                                                                 type="button"
                                                                 className={cn(
@@ -395,15 +396,17 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                                 )}
                                                                 <CalendarIcon className="h-4 w-4 opacity-50" />
                                                             </button>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-[90vw] max-w-[320px] p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl mx-auto" align="start">
+                                                        </DialogTrigger>
+                                                        <DialogContent className="w-[95vw] max-w-[320px] p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl rounded-xl">
+                                                            <DialogTitle className="sr-only">Seleccionar fecha de cumpleaños</DialogTitle>
+                                                            <DialogDescription className="sr-only">Usa el selector para elegir tu año, mes y día de nacimiento.</DialogDescription>
                                                             <SequentialDatePicker
                                                                 value={formData.birthday ? new Date(formData.birthday) : undefined}
                                                                 onChange={(date) => handleInputChange('birthday', date ? format(date, 'yyyy-MM-dd') : '')}
                                                                 onClose={() => setIsBirthdayPickerOpen(false)}
                                                             />
-                                                        </PopoverContent>
-                                                    </Popover>
+                                                        </DialogContent>
+                                                    </Dialog>
                                                 </div>
 
                                                 {/* Source */}
@@ -678,8 +681,8 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
             )}
 
             {question.type === 'DATE' && (
-                <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                    <PopoverTrigger asChild>
+                <Dialog open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                    <DialogTrigger asChild>
                         <button
                             type="button"
                             className={cn(
@@ -695,15 +698,17 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
                             )}
                             <CalendarIcon className="h-4 w-4 opacity-50" />
                         </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[90vw] max-w-[320px] p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl mx-auto" align="start">
+                    </DialogTrigger>
+                    <DialogContent className="w-[95vw] max-w-[320px] p-0 bg-[#1a1a1a] border border-white/10 text-white shadow-2xl rounded-xl">
+                        <DialogTitle className="sr-only">Seleccionar fecha</DialogTitle>
+                        <DialogDescription className="sr-only">Usa el selector para elegir una fecha.</DialogDescription>
                         <SequentialDatePicker
                             value={value ? new Date(value) : undefined}
                             onChange={(date) => onChange(date ? format(date, 'yyyy-MM-dd') : '')}
                             onClose={() => setIsDatePickerOpen(false)}
                         />
-                    </PopoverContent>
-                </Popover>
+                    </DialogContent>
+                </Dialog>
             )}
 
             {question.type === 'EMOJI' && (
