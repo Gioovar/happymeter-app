@@ -102,3 +102,22 @@ export const DialogFooter: React.FC<{ children: React.ReactNode, className?: str
         {children}
     </div>
 )
+
+export const DialogClose: React.FC<{ children: React.ReactNode, asChild?: boolean }> = ({ children, asChild }) => {
+    const { onOpenChange } = useContext(DialogContext)
+
+    if (asChild && React.isValidElement(children)) {
+        return React.cloneElement(children as React.ReactElement<any>, {
+            onClick: (e: React.MouseEvent) => {
+                children.props.onClick?.(e)
+                onOpenChange(false)
+            }
+        })
+    }
+
+    return (
+        <button onClick={() => onOpenChange(false)}>
+            {children}
+        </button>
+    )
+}
