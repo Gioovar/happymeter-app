@@ -339,7 +339,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
             {/* Floating Action Bar */}
             <AnimatePresence>
-                {selectedTables.length > 0 && (
+                {selectedTables.length > 0 && !isConfirmOpen && (
                     <motion.div
                         initial={{ y: 100, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
