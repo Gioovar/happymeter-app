@@ -199,7 +199,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             return
         }
 
-        const combinedDate = new Date(selectedDate)
+        const combinedDate = new Date(selectedDate || new Date())
         const [hours, minutes] = selectedTime.split(':').map(Number)
         combinedDate.setHours(hours, minutes)
 
@@ -243,8 +243,14 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
         if (!selectedDate || !selectedTime) return
 
         setIsBooking(true) // Re-use loading state
-        const dateStr = selectedDate
-        const result = await getAvailableTables(dateStr, selectedTime)
+        setIsBooking(true) // Re-use loading state
+
+        // Construct full date in Client Timezone (Local)
+        const targetDate = new Date(selectedDate)
+        const [hours, minutes] = selectedTime.split(':').map(Number)
+        targetDate.setHours(hours, minutes, 0, 0)
+
+        const result = await getAvailableTables(targetDate)
 
         if (result.success) {
             setOccupiedTableIds(result.occupiedTableIds || [])
@@ -571,7 +577,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                         <div className="text-left">
                                             <p className="text-sm font-medium text-white">Fecha y Hora</p>
                                             <p className="text-xs text-zinc-500">
-                                                {format(selectedDate, "PPP p", { locale: es })}
+                                                {selectedDate ? format(selectedDate, "PPP p", { locale: es }) : "Fecha no seleccionada"}
                                             </p>
                                         </div>
                                     </div>

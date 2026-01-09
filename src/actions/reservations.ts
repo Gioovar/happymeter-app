@@ -474,12 +474,12 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
     }
 }
 
-export async function getAvailableTables(dateStr: Date, timeStr: string) {
+export async function getAvailableTables(targetDateInput: Date) {
     try {
-        const date = new Date(dateStr)
-        // Parse time (e.g. "14:00")
-        const [hours, minutes] = timeStr.split(':').map(Number)
-        date.setHours(hours, minutes, 0, 0)
+        const date = new Date(targetDateInput)
+        // Date is already fully constructed (Date + Time) from client in correct timezone
+
+        // We look for reservations that start 2 hours before or after the target time
 
         // Assume standard 2 hour duration for now
         // We look for reservations that start 2 hours before or after the target time
