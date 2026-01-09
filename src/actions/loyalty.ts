@@ -46,6 +46,53 @@ export async function updateLoyaltyProgram(programId: string, data: {
                 firstVisitGiftText: data.firstVisitGiftText
             }
         })
+
+        // SYNC REWARD: If enabled, ensure a reward exists. If disabled, deactivate it.
+        if (data.enableFirstVisitGift !== undefined) {
+            const giftText = data.firstVisitGiftText || "Regalo de Bienvenida"
+
+            // Find existing system gift
+            const existingGift = await prisma.loyaltyReward.findFirst({
+                where: {
+                    programId,
+                    description: "SYSTEM_GIFT"
+                }
+            })
+
+            if (data.enableFirstVisitGift) {
+                if (existingGift) {
+                    // Update content and ensure active
+                    await prisma.loyaltyReward.update({
+                        where: { id: existingGift.id },
+                        data: {
+                            name: giftText,
+                            isActive: true,
+                            costInVisits: 1 // Always 1 for first visit logic (or 0 if free?) - strict 1 for "first visit" completion
+                        }
+                    })
+                } else {
+                    // Create new
+                    await prisma.loyaltyReward.create({
+                        data: {
+                            programId,
+                            name: giftText,
+                            description: "SYSTEM_GIFT",
+                            costInVisits: 1,
+                            isActive: true
+                        }
+                    })
+                }
+            } else {
+                // Disable if exists
+                if (existingGift) {
+                    await prisma.loyaltyReward.update({
+                        where: { id: existingGift.id },
+                        data: { isActive: false }
+                    })
+                }
+            }
+        }
+
         revalidatePath('/dashboard/loyalty')
         return { success: true }
     } catch (error) {

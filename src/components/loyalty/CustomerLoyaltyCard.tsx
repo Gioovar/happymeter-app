@@ -97,6 +97,11 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
         const costA = a.costInVisits || a.costInPoints || 0
         const costB = b.costInVisits || b.costInPoints || 0
         return costA - costB
+    }).sort((a: any, b: any) => {
+        // SYSTEM_GIFT always first
+        if (a.description === "SYSTEM_GIFT") return -1
+        if (b.description === "SYSTEM_GIFT") return 1
+        return 0
     }) || []
 
     const tierColor = customer.tier?.color || "#fbbf24" // Default Gold
@@ -317,37 +322,58 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
 
                             // Check pending redemption
                             const pending = pendingRedemptions.find((r: any) => r.rewardId === reward.id)
+                            const isSystemGift = reward.description === "SYSTEM_GIFT"
 
                             return (
                                 <div
                                     key={reward.id}
                                     onClick={() => !isLocked && !pending && handleUnlock(reward.id)}
                                     className={cn(
-                                        "relative overflow-hidden rounded-2xl border border-white/5 bg-[#12121a] p-4 transition-all duration-300",
-                                        isLocked ? "opacity-70" : "hover:border-violet-500/30 hover:bg-[#1a1a24] cursor-pointer active:scale-[0.98]",
+                                        "relative overflow-hidden rounded-2xl border bg-[#12121a] p-4 transition-all duration-300",
+                                        isSystemGift ? "border-purple-500/50 hover:border-purple-400 bg-purple-900/10" : "border-white/5",
+                                        isLocked ? "opacity-70" : "cursor-pointer active:scale-[0.98]",
+                                        !isSystemGift && !isLocked && "hover:border-violet-500/30 hover:bg-[#1a1a24]",
                                         pending ? "border-yellow-500/50 bg-yellow-900/10" : ""
                                     )}
                                 >
+                                    {isSystemGift && !isLocked && !pending && (
+                                        <div className="absolute top-0 right-0 p-1.5 rounded-bl-xl bg-purple-500 text-white shadow-lg shadow-purple-500/20">
+                                            <Sparkles className="w-3 h-3" />
+                                        </div>
+                                    )}
+
                                     <div className="flex gap-4 items-center relative z-10">
                                         <div className={cn(
                                             "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors",
-                                            isLocked ? "bg-white/5 text-gray-500" : pending ? "bg-yellow-500/20 text-yellow-500" : "bg-violet-500/20 text-violet-400"
+                                            isLocked ? "bg-white/5 text-gray-500" :
+                                                pending ? "bg-yellow-500/20 text-yellow-500" :
+                                                    isSystemGift ? "bg-purple-500/20 text-purple-400 border border-purple-500/30 shadow-[0_0_15px_-5px_#a855f7]" :
+                                                        "bg-violet-500/20 text-violet-400"
                                         )}>
-                                            {pending ? <Sparkles className="w-6 h-6 animate-pulse" /> : <Gift className="w-6 h-6" />}
+                                            {pending ? <Sparkles className="w-6 h-6 animate-pulse" /> : <Gift className={cn("w-6 h-6", isSystemGift && "animate-pulse")} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start mb-1">
-                                                <h3 className={cn("font-bold truncate pr-2", pending ? "text-yellow-500" : "text-white")}>
+                                                <h3 className={cn("font-bold truncate pr-2",
+                                                    pending ? "text-yellow-500" :
+                                                        isSystemGift ? "text-white text-lg" : "text-white"
+                                                )}>
                                                     {reward.name}
                                                 </h3>
                                                 {isLocked && <Lock className="w-4 h-4 text-gray-500 shrink-0 mt-1" />}
                                             </div>
-                                            <p className="text-xs text-gray-400 mb-2">{requirementText}</p>
+                                            <p className="text-xs text-gray-400 mb-2">
+                                                {isSystemGift ? "¡Tu regalo de bienvenida!" : requirementText}
+                                            </p>
 
                                             {/* Progress Bar */}
                                             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                                 <div
-                                                    className={cn("h-full rounded-full transition-all duration-500", pending ? "bg-yellow-500" : "bg-violet-500")}
+                                                    className={cn("h-full rounded-full transition-all duration-500",
+                                                        pending ? "bg-yellow-500" :
+                                                            isSystemGift ? "bg-gradient-to-r from-purple-500 to-pink-500" :
+                                                                "bg-violet-500"
+                                                    )}
                                                     style={{ width: `${progress}%` }}
                                                 />
                                             </div>
