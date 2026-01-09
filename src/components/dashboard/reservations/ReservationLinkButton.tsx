@@ -104,7 +104,7 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
                                     ref={previewRef}
                                     className={`relative overflow-hidden flex flex-col items-center justify-center transition-all duration-500 mx-auto ${format === 'mobile'
                                         ? 'w-[300px] h-[533px] bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#ec4899]' // Mobile Vertical
-                                        : 'w-[400px] h-[300px] bg-white text-black' // Print Card
+                                        : 'w-[400px] h-[400px] bg-white text-black' // Print Square
                                         }`}
                                 >
                                     {/* Mobile Design */}
@@ -139,29 +139,17 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
                                         </div>
                                     )}
 
-                                    {/* Print Design */}
+                                    {/* Print Design (Clean QR Only) */}
                                     {format === 'print' && (
-                                        <div className="flex flex-row items-center gap-8 p-8 border-4 border-black m-4 h-[calc(100%-2rem)] w-[calc(100%-2rem)]">
-                                            <div className="bg-black p-2">
-                                                <QRCodeSVG
-                                                    value={reservationLink}
-                                                    size={150}
-                                                    level={"H"}
-                                                    fgColor="#FFFFFF"
-                                                    bgColor="#000000"
-                                                />
-                                            </div>
-                                            <div className="flex-1 space-y-2 text-left">
-                                                <h3 className="text-3xl font-black uppercase tracking-tighter leading-none">
-                                                    Reserva<br />Aquí
-                                                </h3>
-                                                <p className="text-sm font-medium text-gray-600">
-                                                    Escanea el código con tu cámara para asegurar tu lugar.
-                                                </p>
-                                                <div className="pt-2">
-                                                    <p className="text-xs text-gray-400 font-mono">{reservationLink.replace('https://', '')}</p>
-                                                </div>
-                                            </div>
+                                        <div className="flex items-center justify-center w-full h-full bg-white p-4">
+                                            <QRCodeSVG
+                                                value={reservationLink}
+                                                size={300}
+                                                level={"H"}
+                                                fgColor="#000000"
+                                                bgColor="#FFFFFF"
+                                                includeMargin={true}
+                                            />
                                         </div>
                                     )}
 
