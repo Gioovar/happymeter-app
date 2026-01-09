@@ -163,8 +163,8 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     const zoomOut = () => scale.set(Math.max(scale.get() / 1.2, 0.3))
 
     const handleTableClick = (table: Table) => {
-        // Red = Reserved = Blocked
-        if ((table.reservations?.length || 0) > 0) {
+        // Use occupiedTableIds (filtered by date/time) instead of raw table.reservations (all history)
+        if (occupiedTableIds.includes(table.id)) {
             toast.error("Mesa Ocupada", {
                 description: "Esta mesa ya tiene una reservación para hoy.",
                 duration: 2000
