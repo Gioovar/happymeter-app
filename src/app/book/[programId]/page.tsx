@@ -1,8 +1,15 @@
+import dynamic from "next/dynamic"
 import { getProgramFloorPlan } from "@/actions/reservations"
-import { CustomerReservationCanvas } from "@/components/reservations/CustomerReservationCanvas"
 import { notFound } from "next/navigation"
-
 import { currentUser } from "@clerk/nextjs/server"
+
+const CustomerReservationCanvas = dynamic(
+    () => import("@/components/reservations/CustomerReservationCanvas").then(mod => mod.CustomerReservationCanvas),
+    {
+        ssr: false,
+        loading: () => <div className="text-white">Cargando mapa...</div>
+    }
+)
 
 export default async function ReservationPage({ params }: { params: { programId: string } }) {
     const { programId } = params
