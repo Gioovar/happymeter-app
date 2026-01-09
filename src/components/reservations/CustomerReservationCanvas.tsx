@@ -61,7 +61,12 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const [containerRef] = useState<any>({ current: null }) // Hack to fix ref type if needed, or keep original
     // actually let's keep original ref, just add new state
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+
+    // Hydration Safe Init
+    useEffect(() => {
+        setSelectedDate(new Date())
+    }, [])
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
     const [isBooking, setIsBooking] = useState(false)
     const [customerForm, setCustomerForm] = useState({

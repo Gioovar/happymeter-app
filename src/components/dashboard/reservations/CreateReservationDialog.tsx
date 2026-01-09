@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CalendarIcon, Clock, User, Phone, Mail, Users, MessageSquare } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -34,7 +34,7 @@ const MOCK_TABLES = [
 ]
 
 export function CreateReservationDialog({ open, onOpenChange, userProfile }: CreateReservationDialogProps) {
-    const [date, setDate] = useState<Date | undefined>(new Date())
+    const [date, setDate] = useState<Date | undefined>(undefined)
     const [selectedTables, setSelectedTables] = useState<string[]>([])
 
     // Form State
@@ -46,6 +46,11 @@ export function CreateReservationDialog({ open, onOpenChange, userProfile }: Cre
         email: userProfile?.email || "",
         notes: ""
     })
+
+    // Hydration Safe: Set default date only on client
+    useEffect(() => {
+        setDate(new Date())
+    }, [])
 
     const handleChange = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }))
