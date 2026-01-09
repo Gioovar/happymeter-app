@@ -34,9 +34,10 @@ export default async function ReservationsPage() {
     const reservations = reservationsResult.success ? reservationsResult.reservations : []
 
     // Fetch program for Link Button
-    const program = await prisma.loyaltyProgram.findFirst({
-        where: { clerkUserId: user?.id }
-    })
+    // Fetch program for Link Button
+    const program = user ? await prisma.loyaltyProgram.findFirst({
+        where: { clerkUserId: user.id }
+    }) : null
 
     if (!floorPlan || !floorPlan.isConfigured) {
         return (
