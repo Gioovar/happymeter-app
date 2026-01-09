@@ -6,10 +6,22 @@ import { currentUser } from "@clerk/nextjs/server"
 
 export default async function ReservationPage({ params }: { params: { programId: string } }) {
     const { programId } = params
-    const result = await getProgramFloorPlan(programId)
-    const user = await currentUser()
+    console.log(`[ReservationPage] accessing programId: ${programId}`)
 
-    if (!result.success || !result.floorPlans || result.floorPlans.length === 0) {
+    // Safe User Fetch
+    let user = null
+    try {
+        user = await currentUser()
+    } catch (e) {
+        console.error("[ReservationPage] currentUser() failed", e)
+    }
+
+    const result = await getProgramFloorPlan(programId)
+    console.log(`[ReservationPage] floorPlan result:`, result.success)
+
+    // Validate result structure before render
+    if (!result?.success || !result?.floorPlans || result.floorPlans.length === 0) {
+        console.warn("[ReservationPage] NotFound triggered")
         return notFound()
     }
 
