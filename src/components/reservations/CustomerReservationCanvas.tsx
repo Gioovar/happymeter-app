@@ -34,9 +34,14 @@ interface CustomerReservationCanvasProps {
     floorPlan?: any // Legacy support
     businessName: string
     programId: string
+    currentUser?: {
+        name: string
+        email?: string
+        phone?: string
+    }
 }
 
-export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorPlan, businessName, programId }: CustomerReservationCanvasProps) {
+export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorPlan, businessName, currentUser, programId }: CustomerReservationCanvasProps) {
     const router = useRouter()
 
     // Resolve initial floor (prioritize array)
@@ -59,7 +64,11 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     const [selectedDate, setSelectedDate] = useState<Date>(new Date())
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
     const [isBooking, setIsBooking] = useState(false)
-    const [customerForm, setCustomerForm] = useState({ name: '', phone: '', email: '' })
+    const [customerForm, setCustomerForm] = useState({
+        name: currentUser?.name || '',
+        phone: currentUser?.phone || '',
+        email: currentUser?.email || ''
+    })
     const realContainerRef = useRef<HTMLDivElement>(null)
 
     // Motion Values for performant drag/zoom
