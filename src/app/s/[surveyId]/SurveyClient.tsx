@@ -3,9 +3,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
-import { Check, ChevronLeft, Upload, X, Instagram, Facebook, Sparkles } from 'lucide-react'
+import { Check, ChevronLeft, Upload, X, Instagram, Facebook, Sparkles, Calendar as CalendarIcon } from 'lucide-react'
 import Image from 'next/image'
 import { compressImage } from '@/lib/image-compression'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { cn } from '@/lib/utils'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 
 export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, isOwner: boolean }) {
@@ -373,7 +378,36 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                 {/* Birthday */}
                                                 <div className="space-y-2">
                                                     <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Cumpleaños (Opcional)</label>
-                                                    <input type="date" value={formData.birthday} onChange={(e) => handleInputChange('birthday', e.target.value)} className="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-violet-500 transition border border-white/5" style={{ backgroundColor: theme.inputBg, color: theme.text }} />
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <button
+                                                                type="button"
+                                                                className={cn(
+                                                                    "w-full rounded-xl px-4 py-3.5 text-left font-normal transition border border-white/5 flex items-center justify-between",
+                                                                    !formData.birthday && "text-muted-foreground"
+                                                                )}
+                                                                style={{ backgroundColor: theme.inputBg, color: formData.birthday ? theme.text : theme.textSecondary }}
+                                                            >
+                                                                {formData.birthday ? (
+                                                                    format(new Date(formData.birthday), "PPP", { locale: es })
+                                                                ) : (
+                                                                    <span>Selecciona una fecha</span>
+                                                                )}
+                                                                <CalendarIcon className="h-4 w-4 opacity-50" />
+                                                            </button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0" align="start">
+                                                            <Calendar
+                                                                mode="single"
+                                                                selected={formData.birthday ? new Date(formData.birthday) : undefined}
+                                                                onSelect={(date) => handleInputChange('birthday', date ? format(date, 'yyyy-MM-dd') : '')}
+                                                                disabled={(date) =>
+                                                                    date > new Date() || date < new Date("1900-01-01")
+                                                                }
+                                                                initialFocus
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
                                                 </div>
 
                                                 {/* Source */}
@@ -644,6 +678,36 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
                         </button>
                     ))}
                 </div>
+            )}
+
+            {question.type === 'DATE' && (
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <button
+                            type="button"
+                            className={cn(
+                                "w-full rounded-xl px-4 py-3.5 text-left font-normal transition border border-white/5 flex items-center justify-between",
+                                !value && "text-muted-foreground"
+                            )}
+                            style={{ backgroundColor: theme.inputBg, color: value ? theme.text : theme.textSecondary }}
+                        >
+                            {value ? (
+                                format(new Date(value), "PPP", { locale: es })
+                            ) : (
+                                <span>Selecciona una fecha</span>
+                            )}
+                            <CalendarIcon className="h-4 w-4 opacity-50" />
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            mode="single"
+                            selected={value ? new Date(value) : undefined}
+                            onSelect={(date) => onChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
             )}
 
             {question.type === 'EMOJI' && (
