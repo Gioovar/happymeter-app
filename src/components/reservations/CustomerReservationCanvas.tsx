@@ -361,6 +361,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                         value={selectedDate}
                         onChange={(date) => setSelectedDate(date)}
                         onClose={() => setIsDatePickerOpen(false)}
+                        showYear={false}
                     />
                 </DialogContent>
             </Dialog>
