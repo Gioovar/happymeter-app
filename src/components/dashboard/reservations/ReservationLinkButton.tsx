@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Share2, Download, Printer, Smartphone, ExternalLink, X } from "lucide-react"
+import { Share2, Download, Printer, Smartphone, ExternalLink, Link as LinkIcon, Check, X } from "lucide-react"
 import { useState, useRef } from "react"
 import { toast } from "sonner"
 import {
@@ -19,6 +19,7 @@ interface ReservationLinkButtonProps {
 }
 
 export function ReservationLinkButton({ programId, className }: ReservationLinkButtonProps) {
+    const [copied, setCopied] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
     const [format, setFormat] = useState<'mobile' | 'print'>('mobile')
     const [isDownloading, setIsDownloading] = useState(false)
@@ -31,6 +32,13 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
     }
 
     const reservationLink = getLink()
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(reservationLink)
+        setCopied(true)
+        toast.success("Enlace copiado")
+        setTimeout(() => setCopied(false), 2000)
+    }
 
     const handleDownload = async () => {
         if (!previewRef.current) return
@@ -87,75 +95,77 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
                 <div className="flex flex-col md:flex-row h-[600px]">
                     {/* Left: Preview Area (Darker bg) */}
                     <div className="flex-1 bg-[#0c0c0e] flex items-center justify-center p-8 relative overflow-hidden">
-                        {/* The Capture Container */}
-                        <div className="relative shadow-2xl shadow-black/50 transition-all duration-300 transform hover:scale-[1.02]">
+                        {/* The Capture Container - Centered */}
+                        <div className="w-full h-full flex items-center justify-center">
+                            <div className="relative shadow-2xl shadow-black/50 transition-all duration-300 transform hover:scale-[1.02]">
 
-                            {/* RENDER PREVIEW BASED ON FORMAT */}
-                            <div
-                                ref={previewRef}
-                                className={`relative overflow-hidden flex flex-col items-center justify-center transition-all duration-500 ${format === 'mobile'
+                                {/* RENDER PREVIEW BASED ON FORMAT */}
+                                <div
+                                    ref={previewRef}
+                                    className={`relative overflow-hidden flex flex-col items-center justify-center transition-all duration-500 mx-auto ${format === 'mobile'
                                         ? 'w-[300px] h-[533px] bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#ec4899]' // Mobile Vertical
                                         : 'w-[400px] h-[300px] bg-white text-black' // Print Card
-                                    }`}
-                            >
-                                {/* Mobile Design */}
-                                {format === 'mobile' && (
-                                    <>
-                                        <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 mix-blend-overlay"></div>
-                                        <div className="z-10 text-center space-y-6 p-6">
-                                            <h3 className="text-white font-bold text-2xl drop-shadow-md">
-                                                ¡Tu opinión nos importa!
-                                            </h3>
+                                        }`}
+                                >
+                                    {/* Mobile Design */}
+                                    {format === 'mobile' && (
+                                        <>
+                                            <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 mix-blend-overlay"></div>
+                                            <div className="z-10 text-center space-y-6 p-6">
+                                                <h3 className="text-white font-bold text-2xl drop-shadow-md">
+                                                    ¡Tu opinión nos importa!
+                                                </h3>
 
-                                            <div className="bg-white p-4 rounded-3xl shadow-xl mx-auto">
+                                                <div className="bg-white p-4 rounded-3xl shadow-xl mx-auto">
+                                                    <QRCodeSVG
+                                                        value={reservationLink}
+                                                        size={180}
+                                                        level={"H"}
+                                                        includeMargin={false}
+                                                        fgColor="#000000"
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <p className="text-white/90 text-sm font-medium tracking-wide bg-black/20 py-1 px-4 rounded-full inline-block backdrop-blur-sm">
+                                                        Escanea para Reservar
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {/* Bottom branding */}
+                                            <div className="absolute bottom-6 left-0 w-full text-center">
+                                                <p className="text-white/60 text-[10px] uppercase tracking-widest">HappyMeter</p>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* Print Design */}
+                                    {format === 'print' && (
+                                        <div className="flex flex-row items-center gap-8 p-8 border-4 border-black m-4 h-[calc(100%-2rem)] w-[calc(100%-2rem)]">
+                                            <div className="bg-black p-2">
                                                 <QRCodeSVG
                                                     value={reservationLink}
-                                                    size={180}
+                                                    size={150}
                                                     level={"H"}
-                                                    includeMargin={false}
-                                                    fgColor="#000000"
+                                                    fgColor="#FFFFFF"
+                                                    bgColor="#000000"
                                                 />
                                             </div>
-
-                                            <div className="space-y-1">
-                                                <p className="text-white/90 text-sm font-medium tracking-wide bg-black/20 py-1 px-4 rounded-full inline-block backdrop-blur-sm">
-                                                    Escanea para Reservar
+                                            <div className="flex-1 space-y-2 text-left">
+                                                <h3 className="text-3xl font-black uppercase tracking-tighter leading-none">
+                                                    Reserva<br />Aquí
+                                                </h3>
+                                                <p className="text-sm font-medium text-gray-600">
+                                                    Escanea el código con tu cámara para asegurar tu lugar.
                                                 </p>
+                                                <div className="pt-2">
+                                                    <p className="text-xs text-gray-400 font-mono">{reservationLink.replace('https://', '')}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                        {/* Bottom branding */}
-                                        <div className="absolute bottom-6 left-0 w-full text-center">
-                                            <p className="text-white/60 text-[10px] uppercase tracking-widest">HappyMeter</p>
-                                        </div>
-                                    </>
-                                )}
+                                    )}
 
-                                {/* Print Design */}
-                                {format === 'print' && (
-                                    <div className="flex flex-row items-center gap-8 p-8 border-4 border-black m-4 h-[calc(100%-2rem)] w-[calc(100%-2rem)]">
-                                        <div className="bg-black p-2">
-                                            <QRCodeSVG
-                                                value={reservationLink}
-                                                size={150}
-                                                level={"H"}
-                                                fgColor="#FFFFFF"
-                                                bgColor="#000000"
-                                            />
-                                        </div>
-                                        <div className="flex-1 space-y-2 text-left">
-                                            <h3 className="text-3xl font-black uppercase tracking-tighter leading-none">
-                                                Reserva<br />Aquí
-                                            </h3>
-                                            <p className="text-sm font-medium text-gray-600">
-                                                Escanea el código con tu cámara para asegurar tu lugar.
-                                            </p>
-                                            <div className="pt-2">
-                                                <p className="text-xs text-gray-400 font-mono">{reservationLink.replace('https://', '')}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
+                                </div>
                             </div>
                         </div>
 
@@ -172,8 +182,8 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
                             <button
                                 onClick={() => setFormat('mobile')}
                                 className={`flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-md transition-all ${format === 'mobile'
-                                        ? 'bg-[#6366f1] text-white shadow-lg shadow-indigo-500/20'
-                                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                                    ? 'bg-[#6366f1] text-white shadow-lg shadow-indigo-500/20'
+                                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                                     }`}
                             >
                                 <Smartphone className="w-4 h-4" />
@@ -182,8 +192,8 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
                             <button
                                 onClick={() => setFormat('print')}
                                 className={`flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-md transition-all ${format === 'print'
-                                        ? 'bg-white text-black shadow-lg'
-                                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                                    ? 'bg-white text-black shadow-lg'
+                                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                                     }`}
                             >
                                 <Printer className="w-4 h-4" />
@@ -211,7 +221,7 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
                             </div>
                         </div>
 
-                        <div className="mt-auto space-y-4">
+                        <div className="mt-auto space-y-3">
                             <Button
                                 onClick={handleDownload}
                                 disabled={isDownloading}
@@ -225,6 +235,15 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
                                         Descargar Imagen
                                     </>
                                 )}
+                            </Button>
+
+                            <Button
+                                onClick={handleCopy}
+                                variant="outline"
+                                className="w-full h-12 border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-300 font-medium rounded-xl gap-2"
+                            >
+                                {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <LinkIcon className="w-4 h-4" />}
+                                {copied ? "Copiado al portapapeles" : "Copiar Enlace Directo"}
                             </Button>
 
                             <button
