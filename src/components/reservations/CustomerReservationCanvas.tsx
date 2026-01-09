@@ -43,7 +43,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     // Get current active floor data
     const currentFloor = allFloors.find(f => f.id === activeFloorId) || allFloors[0] || { tables: [], width: 800 }
 
-    const [selectedTable, setSelectedTable] = useState<Table | null>(null)
+    const [selectedTables, setSelectedTables] = useState<Table[]>([])
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const [containerRef] = useState<any>({ current: null }) // Hack to fix ref type if needed, or keep original
     // actually let's keep original ref, just add new state
@@ -144,16 +144,34 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             return
         }
 
-        setSelectedTable(table)
-        setIsConfirmOpen(true)
+        setSelectedTables(prev => {
+            const isSelected = prev.find(t => t.id === table.id)
+            if (isSelected) {
+                return prev.filter(t => t.id !== table.id)
+            } else {
+                if (prev.length >= 3) {
+                    toast.error("Límite alcanzado", {
+                        description: "Solo puedes seleccionar hasta 3 mesas.",
+                    })
+                    return prev
+                }
+                return [...prev, table]
+            }
+        })
     }
 
+    const totalCapacity = selectedTables.reduce((acc, t) => acc + (t.capacity || 4), 0)
+    const totalPrice = selectedTables.reduce((acc, t) => acc + (t.reservationPrice || 0), 0)
+    const tableLabels = selectedTables.map(t => t.label).join(", ")
+
     const confirmReservation = () => {
+        if (selectedTables.length === 0) return
         // Placeholder for booking logic
-        toast.success("¡Mesa seleccionada!", {
+        toast.success(`¡${selectedTables.length} mesas seleccionadas!`, {
             description: "En el futuro aquí te pediremos pago o confirmación final."
         })
         setIsConfirmOpen(false)
+        setSelectedTables([])
     }
 
     return (
@@ -230,6 +248,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                     {/* Render Tables */}
                     {currentFloor.tables.map((table: Table) => {
                         const isReserved = (table.reservations?.length || 0) > 0
+                        const isSelected = selectedTables.some(t => t.id === table.id)
                         const isPaid = (table.reservationPrice || 0) > 0 && !isReserved
 
                         return (
@@ -237,8 +256,8 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                 key={table.id}
                                 onClick={() => handleTableClick(table)}
                                 className={`absolute flex items-center justify-center transition-all duration-300 cursor-pointer 
-                                    ${selectedTable?.id === table.id
-                                        ? 'ring-4 ring-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.5)] z-20'
+                                    ${isSelected
+                                        ? 'ring-4 ring-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.5)] z-20 scale-105'
                                         : isReserved ? '' : 'hover:scale-105 active:scale-95 hover:ring-2 hover:ring-white/50'
                                     }
                                 `}
@@ -288,15 +307,34 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                 </motion.div>
             </div>
 
+            {/* Floating Action Bar */}
+            <AnimatePresence>
+                {selectedTables.length > 0 && (
+                    <motion.div
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60] w-full max-w-xs px-4 pointer-events-auto"
+                    >
+                        <Button
+                            className="w-full bg-white text-black hover:bg-zinc-200 rounded-full py-6 text-base font-bold shadow-2xl shadow-indigo-500/20"
+                            onClick={() => setIsConfirmOpen(true)}
+                        >
+                            Confirmar {selectedTables.length} {selectedTables.length === 1 ? 'Mesa' : 'Mesas'}
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Confirmation Drawer/Modal */}
             <AnimatePresence>
-                {selectedTable && isConfirmOpen && (
+                {isConfirmOpen && selectedTables.length > 0 && (
                     <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
                         <DialogContent className="max-w-sm rounded-[24px] border-zinc-800 bg-zinc-900 text-white">
                             <DialogHeader>
-                                <DialogTitle>{selectedTable.label || "Mesa seleccionada"}</DialogTitle>
+                                <DialogTitle>Confirmar Reserva</DialogTitle>
                                 <DialogDescription className="text-zinc-400">
-                                    Confirma los detalles de tu reserva.
+                                    Has seleccionado: <span className="text-white font-medium">{tableLabels}</span>
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -305,11 +343,11 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     <div className="flex items-center gap-3">
                                         <Users className="w-5 h-5 text-zinc-400" />
                                         <div>
-                                            <p className="text-sm font-medium">Personas</p>
-                                            <p className="text-xs text-zinc-500">Máximo {selectedTable.capacity || 4}</p>
+                                            <p className="text-sm font-medium">Total Personas</p>
+                                            <p className="text-xs text-zinc-500">Capacidad máxima</p>
                                         </div>
                                     </div>
-                                    <span className="text-sm font-bold">{selectedTable.capacity || 4}</span>
+                                    <span className="text-sm font-bold">{totalCapacity}</span>
                                 </div>
 
                                 <button
@@ -328,16 +366,16 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-md">Editar</span>
                                 </button>
 
-                                {(selectedTable.reservationPrice || 0) > 0 && (
+                                {totalPrice > 0 && (
                                     <div className="flex items-center justify-between p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
                                         <div className="flex items-center gap-3">
                                             <DollarSign className="w-5 h-5 text-indigo-400" />
                                             <div>
-                                                <p className="text-sm font-bold text-indigo-100">Costo de Reserva</p>
-                                                <p className="text-xs text-indigo-300">Se cobra al confirmar</p>
+                                                <p className="text-sm font-bold text-indigo-100">Costo Total</p>
+                                                <p className="text-xs text-indigo-300">Reserva de {selectedTables.length} mesas</p>
                                             </div>
                                         </div>
-                                        <span className="text-lg font-bold text-white">${selectedTable.reservationPrice}</span>
+                                        <span className="text-lg font-bold text-white">${totalPrice}</span>
                                     </div>
                                 )}
                             </div>
