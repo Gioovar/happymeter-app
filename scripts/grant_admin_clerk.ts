@@ -1,4 +1,4 @@
-®
+
 import { createClerkClient } from '@clerk/nextjs/server'
 import { prisma } from '../src/lib/prisma'
 

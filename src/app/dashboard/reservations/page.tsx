@@ -35,9 +35,17 @@ export default async function ReservationsPage() {
 
     // Fetch program for Link Button
     // Fetch program for Link Button
-    const program = user ? await prisma.loyaltyProgram.findFirst({
-        where: { clerkUserId: user.id }
-    }) : null
+    let program = null
+    try {
+        if (user) {
+            program = await prisma.loyaltyProgram.findFirst({
+                where: { clerkUserId: user.id }
+            })
+        }
+    } catch (error) {
+        console.error("Error fetching loyalty program for dashboard:", error)
+        // Consume error to render dashboard without program link
+    }
 
     if (!floorPlan || !floorPlan.isConfigured) {
         return (
