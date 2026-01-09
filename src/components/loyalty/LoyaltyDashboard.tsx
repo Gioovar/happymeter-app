@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createLoyaltyProgram, addLoyaltyReward, createLoyaltyRule, updateLoyaltyRule, applyLoyaltyTemplate, updateLoyaltyReward, deleteLoyaltyReward, redeemReward, logCustomerVisit } from "@/actions/loyalty"
+import { createLoyaltyProgram, addLoyaltyReward, createLoyaltyRule, updateLoyaltyRule, applyLoyaltyTemplate, updateLoyaltyReward, deleteLoyaltyReward, redeemReward, logCustomerVisit, updateLoyaltyProgram } from "@/actions/loyalty"
 // Update imports to include getOperators and toggleMemberStatus
 import { inviteMember, getOperators, toggleMemberStatus } from "@/actions/team"
 import { createPromotion, deletePromotion, getPromotions } from "@/actions/loyalty"
@@ -268,6 +268,89 @@ const StaffInviteForm = ({ className }: { className?: string }) => {
         </form>
     )
 }
+const WelcomeGiftCard = ({ program, onUpdate }: { program: any, onUpdate: (enable: boolean, text: string) => Promise<void> }) => {
+    const [isEnabled, setIsEnabled] = useState(program.enableFirstVisitGift || false)
+    const [giftText, setGiftText] = useState(program.firstVisitGiftText || "¡Tienes un regalo de bienvenida!")
+    const [isEditing, setIsEditing] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+
+    const handleSave = async () => {
+        setIsSaving(true)
+        try {
+            await onUpdate(isEnabled, giftText)
+            setIsEditing(false)
+            toast.success("Configuración de regalo actualizada")
+        } catch (error) {
+            toast.error("Error al guardar")
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    return (
+        <div className="bg-[#111] p-6 rounded-2xl border border-white/10 relative overflow-hidden group hover:border-white/20 transition-all">
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center border border-pink-500/30">
+                        <Gift className="w-5 h-5 text-pink-400" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-white">Regalo de Bienvenida</h3>
+                        <p className="text-xs text-gray-400">Para nuevos clientes en reservas</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            const newState = !isEnabled
+                            setIsEnabled(newState)
+                            // Auto save toggle if not editing text
+                            if (!isEditing) {
+                                onUpdate(newState, giftText).then(() => toast.success(newState ? "Regalo activado" : "Regalo desactivado"))
+                            }
+                        }}
+                        className={cn("w-10 h-5 rounded-full relative transition-colors", isEnabled ? "bg-pink-500" : "bg-gray-700")}
+                    >
+                        <div className={cn("w-3 h-3 bg-white rounded-full absolute top-1 transition-all", isEnabled ? "left-6" : "left-1")} />
+                    </button>
+                </div>
+            </div>
+
+            {isEnabled && (
+                <div className="mt-4 bg-white/5 rounded-xl p-3 border border-white/5">
+                    {!isEditing ? (
+                        <div className="flex justify-between items-center group/text">
+                            <p className="text-sm text-gray-300 italic">"{giftText}"</p>
+                            <button onClick={() => setIsEditing(true)} className="p-1.5 hover:bg-white/10 rounded-lg text-gray-500 hover:text-white transition-colors">
+                                <Pencil className="w-3 h-3" />
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            <input
+                                value={giftText}
+                                onChange={(e) => setGiftText(e.target.value)}
+                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-pink-500 outline-none"
+                                placeholder="Ej. ¡Shot de bienvenida gratis!"
+                            />
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-xs text-gray-400 hover:text-white">Cancelar</button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    className="px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-xs font-bold transition-colors"
+                                >
+                                    {isSaving ? "Guardando..." : "Guardar"}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    )
+}
+
 
 
 
@@ -945,6 +1028,20 @@ function AdvancedLoyaltyView({ userId, program, onBack, initialTab: propInitialT
                                     icon={BarChart3}
                                     gradient="from-emerald-400/20 to-green-500/20"
                                     iconColor="text-emerald-400"
+                                />
+                            </div>
+
+                            {/* FIRST VISIT GIFT CARD */}
+                            <div className="mb-8">
+                                <WelcomeGiftCard
+                                    program={program}
+                                    onUpdate={async (enable, text) => {
+                                        await updateLoyaltyProgram(program.id, {
+                                            enableFirstVisitGift: enable,
+                                            firstVisitGiftText: text
+                                        })
+                                        router.refresh()
+                                    }}
                                 />
                             </div>
 

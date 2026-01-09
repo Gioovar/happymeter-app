@@ -34,12 +34,16 @@ export async function createLoyaltyProgram(data: {
 
 export async function updateLoyaltyProgram(programId: string, data: {
     pointsPercentage?: number
+    enableFirstVisitGift?: boolean
+    firstVisitGiftText?: string
 }) {
     try {
         await prisma.loyaltyProgram.update({
             where: { id: programId },
             data: {
-                pointsPercentage: data.pointsPercentage
+                pointsPercentage: data.pointsPercentage,
+                enableFirstVisitGift: data.enableFirstVisitGift,
+                firstVisitGiftText: data.firstVisitGiftText
             }
         })
         revalidatePath('/dashboard/loyalty')
@@ -578,9 +582,9 @@ export async function createLoyaltyRule(programId: string, data: {
             data: {
                 programId,
                 name: data.name,
-                description: data.rewardText,
+                // description: data.rewardText, // Field does not exist
                 trigger: data.triggerType,
-                conditions: data.conditionValue, // Storing simple JSON
+                conditions: { ...data.conditionValue, rewardText: data.rewardText },
                 rewardId: null, // Optional for now
                 pointsMultiplier: 1,
                 isActive: true
@@ -605,9 +609,9 @@ export async function updateLoyaltyRule(programId: string, ruleId: string, data:
             where: { id: ruleId },
             data: {
                 name: data.name,
-                description: data.rewardText,
+                // description: data.rewardText, // Field does not exist
                 trigger: data.triggerType,
-                conditions: data.conditionValue,
+                conditions: { ...data.conditionValue, rewardText: data.rewardText },
             }
         })
         revalidatePath('/dashboard/loyalty')
@@ -655,8 +659,7 @@ export async function applyLoyaltyTemplate(programId: string, type: 'bar' | 'res
                     description: r.description,
                     costInVisits: r.costInVisits,
                     isActive: true,
-                    // Use a placeholder magic string if needed or handle validation elsewhere
-                    validityDays: 30
+                    // validityDays: 30 // Field does not exist
                 }
             })
         }
