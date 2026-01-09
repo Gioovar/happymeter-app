@@ -118,17 +118,29 @@ export default async function ReservationsPage() {
 
             {/* Agenda View */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* DEBUG VIEW */}
-                <div className="lg:col-span-3 bg-zinc-900 border border-yellow-500/30 p-6 rounded-2xl">
-                    <h3 className="text-yellow-500 font-bold mb-4">⚠️ Modo Diagnóstico</h3>
-                    <p className="text-zinc-400 mb-2">Total Reservas Encontradas: <span className="text-white font-mono">{reservations.length}</span></p>
-                    <div className="bg-black p-4 rounded-xl overflow-auto max-h-[400px]">
-                        <pre className="text-xs text-green-400 font-mono">
-                            {JSON.stringify(reservations, null, 2)}
-                        </pre>
+                {/* Upcoming List (Client Component with Dialog Interaction) */}
+                <ReservationsList reservations={reservations} />
+
+                {/* Right Column: Calendar & Stats */}
+                <div className="space-y-6">
+                    {/* NEW CALENDAR WIDGET */}
+                    <ReservationCalendar reservations={reservations} />
+
+                    {/* Capacity (Mini) */}
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+                        <h3 className="text-sm font-bold text-white mb-4">Capacidad Hoy</h3>
+                        <div>
+                            <div className="flex justify-between text-xs mb-2">
+                                <span className="text-gray-400">Ocupación Tool</span>
+                                <span className="text-white font-bold">65%</span>
+                            </div>
+                            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div className="h-full w-[65%] bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div >
-    );
+        </div>
+    )
 }

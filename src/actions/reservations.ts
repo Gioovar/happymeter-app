@@ -474,3 +474,59 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
         return { success: false, reservations: [] }
     }
 }
+return { success: false, reservations: [] }
+    }
+}
+
+export async function createReservation(data: {
+    reservations: {
+        tableId: string
+        date: Date
+        partySize: number
+    }[]
+    customer: {
+        name: string
+        phone?: string
+        email?: string
+    }
+}) {
+    try {
+        // No auth check needed here as this is public customer facing (or use anonymous session if needed)
+        // Ideally we should validate captcha or rate limit
+
+        await prisma.$transaction(async (tx) => {
+            for (const res of data.reservations) {
+                // simple check for double booking
+                const existing = await tx.reservation.findFirst({
+                    where: {
+                        tableId: res.tableId,
+                        date: res.date,
+                        status: { not: 'CANCELED' }
+                    }
+                })
+
+                if (existing) {
+                    throw new Error(`Mesa ya reservada para esta hora`)
+                }
+
+                await tx.reservation.create({
+                    data: {
+                        tableId: res.tableId,
+                        date: res.date,
+                        partySize: res.partySize,
+                        customerName: data.customer.name,
+                        customerPhone: data.customer.phone,
+                        customerEmail: data.customer.email,
+                        status: 'CONFIRMED'
+                    }
+                })
+            }
+        })
+
+        revalidatePath('/dashboard/reservations')
+        return { success: true }
+    } catch (error: any) {
+        console.error("Error creating reservation:", error)
+        return { success: false, error: error.message || "Error al crear la reserva" }
+    }
+}

@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button"
 import { SequentialDatePicker } from "@/components/ui/SequentialDatePicker"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { createReservation } from "@/actions/reservations"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface Table {
     id: string
@@ -49,6 +52,8 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     // actually let's keep original ref, just add new state
     const [selectedDate, setSelectedDate] = useState<Date>(new Date())
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+    const [isBooking, setIsBooking] = useState(false)
+    const [customerForm, setCustomerForm] = useState({ name: '', phone: '', email: '' })
     const realContainerRef = useRef<HTMLDivElement>(null)
 
     // Motion Values for performant drag/zoom
@@ -164,14 +169,39 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     const totalPrice = selectedTables.reduce((acc, t) => acc + (t.reservationPrice || 0), 0)
     const tableLabels = selectedTables.map(t => t.label).join(", ")
 
-    const confirmReservation = () => {
+    const confirmReservation = async () => {
         if (selectedTables.length === 0) return
-        // Placeholder for booking logic
-        toast.success(`¡${selectedTables.length} mesas seleccionadas!`, {
-            description: "En el futuro aquí te pediremos pago o confirmación final."
-        })
-        setIsConfirmOpen(false)
-        setSelectedTables([])
+        if (!customerForm.name) {
+            toast.error("Faltan datos", { description: "Por favor ingresa tu nombre." })
+            return
+        }
+
+        setIsBooking(true)
+        const bookingData = {
+            reservations: selectedTables.map(t => ({
+                tableId: t.id,
+                date: selectedDate, // Start time handled by picker
+                partySize: t.capacity || 4 // Default capacity if missing
+            })),
+            customer: customerForm
+        }
+
+        const result = await createReservation(bookingData)
+        setIsBooking(false)
+
+        if (result.success) {
+            toast.success("¡Reserva Confirmada!", {
+                description: "Te esperamos. Hemos guardado tu lugar.",
+                duration: 5000
+            })
+            setIsConfirmOpen(false)
+            setSelectedTables([])
+            setCustomerForm({ name: '', phone: '', email: '' })
+        } else {
+            toast.error("Error al reservar", {
+                description: result.error || "Intenta de nuevo más tarde."
+            })
+        }
     }
 
     return (
@@ -339,6 +369,29 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                             </DialogHeader>
 
                             <div className="py-4 space-y-4">
+                                {/* Customer Form */}
+                                <div className="space-y-3 p-3 bg-zinc-800/50 rounded-xl border border-white/5">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-zinc-400">Nombre Completo</Label>
+                                        <Input
+                                            placeholder="Tu nombre"
+                                            className="bg-black/50 border-white/10 h-9"
+                                            value={customerForm.name}
+                                            onChange={(e) => setCustomerForm(prev => ({ ...prev, name: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-zinc-400">Celular (Opcional)</Label>
+                                        <Input
+                                            placeholder="55 1234 5678"
+                                            type="tel"
+                                            className="bg-black/50 border-white/10 h-9"
+                                            value={customerForm.phone}
+                                            onChange={(e) => setCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl">
                                     <div className="flex items-center gap-3">
                                         <Users className="w-5 h-5 text-zinc-400" />
@@ -381,8 +434,13 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                             </div>
 
                             <DialogFooter>
-                                <Button className="w-full bg-white text-black hover:bg-zinc-200 rounded-xl py-6 text-base font-bold" onClick={confirmReservation}>
-                                    Confirmar Reserva <Check className="w-4 h-4 ml-2" />
+                                <Button
+                                    className="w-full bg-white text-black hover:bg-zinc-200 rounded-xl py-6 text-base font-bold"
+                                    onClick={confirmReservation}
+                                    disabled={isBooking}
+                                >
+                                    {isBooking ? "Confirmando..." : "Confirmar Reserva"}
+                                    {!isBooking && <Check className="w-4 h-4 ml-2" />}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
