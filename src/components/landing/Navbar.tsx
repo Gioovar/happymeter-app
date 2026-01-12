@@ -58,7 +58,7 @@ export default function Navbar() {
                         <NavLink href="/blog" isNew>Blog</NavLink>
                         <NavLink href="/blog/guia-digitalizar-feedback">Tutoriales</NavLink>
                         <NavLink href="/creators" isNew>Únete</NavLink>
-                        <NavLink href="/sellers">Aliados</NavLink>
+
                         <NavLink href="mailto:soporte@happymeters.com">Ayuda</NavLink>
                     </div>
                 </div>
@@ -110,9 +110,7 @@ export default function Navbar() {
                         <Link href="/creators" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
                             Únete
                         </Link>
-                        <Link href="/sellers" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
-                            Aliados
-                        </Link>
+
                         <Link href="mailto:soporte@happymeters.com" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
                             Ayuda y Soporte
                         </Link>
