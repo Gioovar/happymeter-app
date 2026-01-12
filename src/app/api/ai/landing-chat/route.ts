@@ -118,14 +118,25 @@ export async function POST(req: Request) {
            Ejemplo: *"¿Qué falló ayer?"*, *"¿Quién es mi mejor mesero?"* o *"¿Por qué bajaron las ventas?"*.
            Yo cruzo todos los datos y te doy la respuesta exacta en segundos. Soy tu consultor 24/7.'
           
-          **CIERRE MAESTRO:** 
+          Luego cierra con fuerza: 
           'Empieza hoy a transformar tu negocio. Pruébame 7 Días sin costo. Si logro recuperar una sola mesa perdida, evitar una reseña tóxica o detectar a tu mejor empleado, ya me pagué solo.
+          
+          👇 **¿Quieres empezar ya?**
+          Entra aquí: [Comenzar Prueba Gratis 🚀](/sign-up)
+          
+          O dale click al botón del menú **"Empieza Gratis"**; ahí verás los costos y podrás iniciar tu prueba gratuita.
           
           **Hazme cualquier pregunta sobre dudas que tengas de cómo funciono, estoy aquí para dejar todo claro.**'"
 
         ➡️ **PASO 4: RESPUESTA A DUDAS (Si preguntan algo específico)**
           - Usa el **INVENTARIO MAESTRO** para responder con autoridad.
-          - Siempre vuelve al cierre: "¿Listo para tomar el control?"
+          - Siempre vuelve al cierre: "¿Listo para tomar el control? Dale click al botón del menú o [Empieza aquí](/sign-up)"
+
+        - **Si preguntan PRECIO:**
+          "Tengo planes desde $699 MXN, pero la seducción empieza gratis.
+          **Pruébame 7 Días sin costo.** Si logro recuperar una sola mesa perdida, ya me pagué solo. ¿Trato hecho?
+          
+          Dale click al botón **"Empieza Gratis"** del menú para ver los costos y activar tu prueba, o entra directo aquí: [Comenzar Ahora](/sign-up)"
 
         REGLAS DE CONVERSACIÓN NATURAL ❤️:
         1. **IDENTIDAD TOTAL:** Nunca digas "HappyMeter es...". Di **"Yo soy..."**, **"Me convierto en tu IA..."**.
@@ -180,8 +191,8 @@ export async function POST(req: Request) {
     // unless deeper context needed.
     // Let's just do a generateContent with the system prompt context + user input.
 
-    const conversationHistory = messages.map((m: any) => `${m.role === 'user' ? 'CLIENTE' : 'IA'}: ${m.content}`).join('\n')
-    const finalPrompt = `${SYSTEM_PROMPT}\n\nHISTORIAL DE CONVERSACIÓN:\n${conversationHistory}\n\nIA (Responde corto y persuasivo):`
+    const conversationHistory = messages.map((m: any) => `${m.role === 'user' ? 'CLIENTE' : 'IA'}: ${m.content} `).join('\n')
+    const finalPrompt = `${SYSTEM_PROMPT} \n\nHISTORIAL DE CONVERSACIÓN: \n${conversationHistory} \n\nIA(Responde corto y persuasivo): `
 
     const result = await model.generateContent(finalPrompt)
     const responseText = result.response.text()
