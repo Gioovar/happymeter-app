@@ -49,27 +49,27 @@ export default function ParticleBackground() {
                 this.z = 0
             }
 
-            update(time: number, rotX: number, rotY: number, mX: number, mY: number) {
-                // 1. Calculate Base Radius with Noise (Liquid Effect)
-                // Using basic sine waves to simulate Perlin noise on the surface
-                const freq = 4
-                const amp = 20
+            update(time: number, rotX: number, rotY: number) {
+                // 1. "Weird Shapes" that "Rice" (Sube)
+                // We simulate rising liquid by offsetting time based on Y position
 
-                // Displace based on original angles (topology)
-                // "Breathing" waves
-                let r = baseRadius +
-                    Math.sin(this.originalTheta * freq + time) * amp +
-                    Math.cos(this.originalPhi * freq + time) * amp
+                // Complex Noise Function for "Formas Raras"
+                const freq = 3
+                const amp = 40 // Aggressive deformation
 
-                // 2. Mouse Interaction: Local Bulge/Deformation
-                // We need to know where the mouse is "projecting" on the sphere roughly
-                // Simple hack: Deform based on screen space proximity after projection?
-                // Or deform based on angle relative to view?
-                // Let's rely on the rotation for interaction mostly, but add a 
-                // "Pulse" wave driven by mouse speed?
-                // Or simplified: "Magnetic" bulge towards viewer if mouse is center?
+                // Primary rising wave (Vertical flow)
+                // using originalTheta (Y-ish) to drive the phase
+                const risingPhase = time * 2 - this.originalTheta * 2
 
-                // Let's convert to Cartesian first with the noisy radius
+                let distortion = Math.sin(this.originalPhi * freq + risingPhase) * amp
+
+                // Secondary chaotic wave (The "Weird" part)
+                distortion += Math.sin(this.originalTheta * 5 + time * 3) * (amp * 0.5)
+
+                // Apply distortion to radius
+                let r = baseRadius + distortion
+
+                // 2. Cartesian Conversion
                 let x = r * Math.sin(this.phi) * Math.cos(this.theta)
                 let y = r * Math.sin(this.phi) * Math.sin(this.theta)
                 let z = r * Math.cos(this.phi)
