@@ -1,5 +1,5 @@
 
-import { Bot, MessageCircle, QrCode, BarChart3 } from 'lucide-react'
+import { Bot, MessageCircle, QrCode, BarChart3, ClipboardCheck, CalendarDays, Megaphone, LayoutDashboard, Sparkles } from 'lucide-react'
 
 const features = [
     {
@@ -29,6 +29,41 @@ const features = [
         description: "Crea adicción en tus clientes. Un sistema de puntos automático que los obliga a volver una y otra vez.",
         color: "text-fuchsia-400",
         bg: "bg-fuchsia-500/10"
+    },
+    {
+        icon: ClipboardCheck,
+        title: "Supervisor Digital",
+        description: "Tus protocolos se cumplen o te enteras. El staff sube foto/video de cada tarea (limpieza, apertura) y tú apruebas.",
+        color: "text-emerald-400",
+        bg: "bg-emerald-500/10"
+    },
+    {
+        icon: CalendarDays,
+        title: "Sistema de Reservas",
+        description: "Organiza tu flujo de clientes sin errores. Gestiona mesas y horarios desde tu propio centro de comando.",
+        color: "text-amber-400",
+        bg: "bg-amber-500/10"
+    },
+    {
+        icon: Megaphone,
+        title: "Motor de Ventas",
+        description: "Tu base de datos trabaja para ti. Envía promociones a clientes dormidos y llénalos de nuevo en días flojos.",
+        color: "text-cyan-400",
+        bg: "bg-cyan-500/10"
+    },
+    {
+        icon: LayoutDashboard,
+        title: "Panel de Dueño (El Cerebro)",
+        description: "Todo lo que pasa en tu negocio en una sola pantalla. Métricas reales para decisiones de millón de dólares.",
+        color: "text-indigo-400",
+        bg: "bg-indigo-500/10"
+    },
+    {
+        icon: Sparkles,
+        title: "Tu Propio Asistente IA",
+        description: "Pregúntale lo que sea: '¿Por qué bajaron las ventas ayer?' o '¿Quién es mi mejor mesero?'. Te responde con datos.",
+        color: "text-pink-400",
+        bg: "bg-pink-500/10"
     }
 ]
 
@@ -37,11 +72,11 @@ export default function Features() {
         <section className="py-24 bg-black/50 relative">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Todo lo que necesitas para crecer</h2>
-                    <p className="text-gray-400 text-lg">HappyMeter no es solo una encuesta, es un sistema completo de inteligencia de clientes.</p>
+                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Los 9 Poderes de tu Sistema Operativo</h2>
+                    <p className="text-gray-400 text-lg">HappyMeter no es solo una encuesta, es el arsenal completo para dominar tu mercado.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {features.map((feature, index) => {
                         const Icon = feature.icon
                         return (
