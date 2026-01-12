@@ -15,59 +15,84 @@ export default function ParticleBackground() {
         let width = canvas.width = window.innerWidth
         let height = canvas.height = window.innerHeight
 
-        const particles: Particle[] = []
-        // Adjust density based on screen size
-        const particleCount = window.innerWidth < 768 ? 40 : 80
-        const connectionDistance = 150
-        const mouseDistance = 250
+        let mouseX = width / 2
+        let mouseY = height / 2
 
-        let mouseX = -1000 // Start off screen
-        let mouseY = -1000
+        const particles: Particle[] = []
+        // Higher density for the head mesh
+        const particleCount = window.innerWidth < 768 ? 100 : 250
+        const connectionDistance = 100 // Tighter connections for the head
+
+        // Head definition
+        const headWidth = Math.min(width * 0.35, 300)
+        const headHeight = headWidth * 1.4
 
         class Particle {
             x: number
             y: number
+            originX: number
+            originY: number
             vx: number
             vy: number
             size: number
             color: string
+            isHead: boolean
 
-            constructor() {
-                this.x = Math.random() * width
-                this.y = Math.random() * height
-                // Slower, smoother movement
-                this.vx = (Math.random() - 0.5) * 0.3
-                this.vy = (Math.random() - 0.5) * 0.3
-                this.size = Math.random() * 2 + 1
-                // Brand colors: Violet to Fuchsia mix
-                this.color = Math.random() > 0.5
-                    ? `rgba(139, 92, 246, ${Math.random() * 0.6 + 0.2})` // Violet-500
-                    : `rgba(217, 70, 239, ${Math.random() * 0.6 + 0.2})` // Fuchsia-500
+            constructor(forceHead: boolean = false) {
+                // Determine if particle is part of the Head or the Aura
+                // 80% chance to be part of the head structure
+                this.isHead = forceHead || Math.random() > 0.2
+
+                if (this.isHead) {
+                    // Spawn inside the Head Ellipse
+                    const angle = Math.random() * Math.PI * 2
+                    // Distribute more towards surface for contour, but some inside for volume
+                    const radiusScale = Math.sqrt(Math.random())
+                    const rx = (headWidth / 2) * radiusScale
+                    const ry = (headHeight / 2) * radiusScale
+
+                    this.originX = width / 2 + Math.cos(angle) * rx
+                    this.originY = height / 2 + Math.sin(angle) * ry
+                } else {
+                    // Spawn randomly for background 'circuit' feel
+                    this.originX = Math.random() * width
+                    this.originY = Math.random() * height
+                }
+
+                this.x = this.originX
+                this.y = this.originY
+
+                // Micro-movement (vibration/alive feel)
+                this.vx = (Math.random() - 0.5) * 0.5
+                this.vy = (Math.random() - 0.5) * 0.5
+
+                this.size = Math.random() * 1.5 + 0.5
+
+                // Tech colors: Cyan/Blue mix with Violet
+                const isBlue = Math.random() > 0.5
+                this.color = isBlue
+                    ? `rgba(6, 182, 212, ${Math.random() * 0.5 + 0.3})` // Cyan
+                    : `rgba(139, 92, 246, ${Math.random() * 0.5 + 0.3})` // Violet
             }
 
             update() {
+                // Jitter around origin
                 this.x += this.vx
                 this.y += this.vy
 
-                // Bounce off edges smoothly
-                if (this.x < 0 || this.x > width) this.vx *= -1
-                if (this.y < 0 || this.y > height) this.vy *= -1
+                // Tether to origin (spring force)
+                const dx = this.originX - this.x
+                const dy = this.originY - this.y
+                const dist = Math.sqrt(dx * dx + dy * dy)
 
-                // Mouse interaction (Magnetic Effect)
-                const dx = mouseX - this.x
-                const dy = mouseY - this.y
-                const distance = Math.sqrt(dx * dx + dy * dy)
-
-                if (distance < mouseDistance) {
-                    const forceDirectionX = dx / distance
-                    const forceDirectionY = dy / distance
-                    const force = (mouseDistance - distance) / mouseDistance
-
-                    // Gentle attraction
-                    const attractionStrength = 0.5
-                    this.vx += forceDirectionX * force * attractionStrength * 0.05
-                    this.vy += forceDirectionY * force * attractionStrength * 0.05
+                if (dist > 10) {
+                    this.vx += dx * 0.005
+                    this.vy += dy * 0.005
                 }
+
+                // Damping
+                this.vx *= 0.95
+                this.vy *= 0.95
             }
 
             draw() {
@@ -84,34 +109,111 @@ export default function ParticleBackground() {
             particles.push(new Particle())
         }
 
+        const drawEye = (centerX: number, centerY: number, size: number) => {
+            if (!ctx) return
+
+            // Eye Glow
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, size * 2)
+            gradient.addColorStop(0, 'rgba(6, 182, 212, 0.2)')
+            gradient.addColorStop(1, 'rgba(6, 182, 212, 0)')
+            ctx.fillStyle = gradient
+            ctx.beginPath()
+            ctx.arc(centerX, centerY, size * 2, 0, Math.PI * 2)
+            ctx.fill()
+
+            // Sclera (Frame)
+            ctx.strokeStyle = 'rgba(6, 182, 212, 0.8)' // Cyan
+            ctx.lineWidth = 1.5
+            ctx.beginPath()
+            // Techno-shape (slightly hexagonal or bracketed)
+            ctx.moveTo(centerX - size, centerY)
+            ctx.lineTo(centerX - size * 0.5, centerY - size * 0.7)
+            ctx.lineTo(centerX + size * 0.5, centerY - size * 0.7)
+            ctx.lineTo(centerX + size, centerY)
+            ctx.lineTo(centerX + size * 0.5, centerY + size * 0.7)
+            ctx.lineTo(centerX - size * 0.5, centerY + size * 0.7)
+            ctx.closePath()
+            ctx.stroke()
+
+            // Pupil Tracking
+            const angle = Math.atan2(mouseY - centerY, mouseX - centerX)
+            // Limit pupil movement radius
+            const pupilRadius = size * 0.4
+            const pupilX = centerX + Math.cos(angle) * pupilRadius
+            const pupilY = centerY + Math.sin(angle) * pupilRadius
+
+            // Pupil Draw
+            ctx.fillStyle = '#fff'
+            ctx.beginPath()
+            ctx.arc(pupilX, pupilY, 2, 0, Math.PI * 2)
+            ctx.fill()
+
+            // Connecting line to mouse (Targeting system look)
+            ctx.strokeStyle = 'rgba(6, 182, 212, 0.1)'
+            ctx.lineWidth = 0.5
+            ctx.beginPath()
+            ctx.moveTo(pupilX, pupilY)
+            ctx.lineTo(mouseX, mouseY)
+            ctx.stroke()
+        }
+
         const animate = () => {
             ctx.clearRect(0, 0, width, height)
 
-            // Update and draw particles
+            // 1. Draw Mesh & Particles
             particles.forEach(particle => {
                 particle.update()
-                particle.draw()
+                // particle.draw() // Optional: Only draw particles if they connect, or draw faint
+
+                // Draw Connections
+                // Optimization: Check only nearby particles
+                // For a simple aesthetic, brute force on small count is fine, 
+                // but let's just loop locally if possible. 
+                // Given N=250, N^2 is 62,500 ops per frame, manageable on modern desktop.
+                // On mobile we reduced N.
             })
 
-            // Draw connections (The Neural Network)
+            // Draw Mesh (The Neural Brain)
+            ctx.lineWidth = 0.8
             for (let i = 0; i < particles.length; i++) {
-                for (let j = i; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x
-                    const dy = particles[i].y - particles[j].y
-                    const distance = Math.sqrt(dx * dx + dy * dy)
+                const p1 = particles[i]
 
-                    if (distance < connectionDistance) {
+                // Draw particle (nodes)
+                ctx.beginPath()
+                ctx.arc(p1.x, p1.y, p1.size, 0, Math.PI * 2)
+                ctx.fillStyle = p1.color
+                ctx.fill()
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j]
+                    const dx = p1.x - p2.x
+                    const dy = p1.y - p2.y
+                    const dist = Math.sqrt(dx * dx + dy * dy)
+
+                    if (dist < connectionDistance) {
                         ctx.beginPath()
-                        // Opacity based on distance (closer = clearer)
-                        const opacity = 1 - (distance / connectionDistance)
-                        ctx.strokeStyle = `rgba(139, 92, 246, ${opacity * 0.2})` // Subtle violet lines
-                        ctx.lineWidth = 1
-                        ctx.moveTo(particles[i].x, particles[i].y)
-                        ctx.lineTo(particles[j].x, particles[j].y)
+
+                        // Opacity logic:
+                        // Make connections inside the head stronger
+                        const alpha = (1 - dist / connectionDistance) * 0.3
+
+                        ctx.strokeStyle = p1.isHead && p2.isHead
+                            ? `rgba(6, 182, 212, ${alpha})` // Cyan internal structure
+                            : `rgba(139, 92, 246, ${alpha * 0.5})` // Violet outer connections
+
+                        ctx.moveTo(p1.x, p1.y)
+                        ctx.lineTo(p2.x, p2.y)
                         ctx.stroke()
                     }
                 }
             }
+
+            // 2. Draw The EYES (Overlay on top of mesh)
+            const eyeSpacing = headWidth * 0.35 // Distance between eyes
+            const eyeYLevel = height / 2 - headHeight * 0.05 // Slightly above center
+
+            drawEye(width / 2 - eyeSpacing, eyeYLevel, 12) // Left Eye
+            drawEye(width / 2 + eyeSpacing, eyeYLevel, 12) // Right Eye
 
             requestAnimationFrame(animate)
         }
@@ -121,6 +223,8 @@ export default function ParticleBackground() {
         const handleResize = () => {
             width = canvas.width = window.innerWidth
             height = canvas.height = window.innerHeight
+            // Need to re-init particles to center them? 
+            // For now, let's just update bounds. Ideally we respawn.
         }
 
         const handleMouseMove = (e: MouseEvent) => {
@@ -129,19 +233,12 @@ export default function ParticleBackground() {
             mouseY = e.clientY - rect.top
         }
 
-        const handleMouseLeave = () => {
-            mouseX = -1000
-            mouseY = -1000
-        }
-
         window.addEventListener('resize', handleResize)
         window.addEventListener('mousemove', handleMouseMove)
-        window.addEventListener('mouseleave', handleMouseLeave)
 
         return () => {
             window.removeEventListener('resize', handleResize)
             window.removeEventListener('mousemove', handleMouseMove)
-            window.removeEventListener('mouseleave', handleMouseLeave)
         }
     }, [])
 
@@ -150,8 +247,8 @@ export default function ParticleBackground() {
             ref={canvasRef}
             className="absolute inset-0 w-full h-full pointer-events-none"
             style={{
-                // Subtle dark gradient background
-                background: 'radial-gradient(circle at center, #0a0a0a 0%, #000 100%)'
+                // Deep cyber background
+                background: 'radial-gradient(circle at center, #020617 0%, #000 100%)'
             }}
         />
     )
