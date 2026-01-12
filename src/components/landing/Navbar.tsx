@@ -108,7 +108,7 @@ export default function Navbar() {
                             Tutoriales
                         </Link>
                         <Link href="/creators" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
-                            Creadores
+                            Únete
                         </Link>
                         <Link href="/sellers" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
                             Aliados
