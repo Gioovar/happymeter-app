@@ -18,10 +18,10 @@ export default function ParticleBackground() {
         let mouseX = 0
         let mouseY = 0
 
-        // 3D Config
-        const cols = 50
-        const rows = 50
-        const separation = 40 // Distance between dots
+        // 3D Config - HIGHER DENSITY
+        const cols = 80
+        const rows = 80
+        const separation = 30 // Closer together for finer mesh
         const particleCount = cols * rows
 
         // Particles Storage
@@ -52,16 +52,16 @@ export default function ParticleBackground() {
             ctx.clearRect(0, 0, width, height)
 
             // Camera / Projection Settings
-            const focalLength = 600
-            const centerY = height / 2 + 100 // Move horizon down a bit
+            const focalLength = 500
+            const centerY = height / 2
             const centerX = width / 2
 
-            // Mouse Interaction: Rotate the entire grid slightly
+            // Mouse Interaction: Rotate the entire grid
             // Normalize mouse position -1 to 1
-            const targetRotX = (mouseY / height - 0.5) * 0.5 // Tilt up/down
-            const targetRotY = (mouseX / width - 0.5) * 0.5 // Pan left/right
+            const targetRotX = (mouseY / height - 0.5) * 0.2 // Reduced tilt range
+            const targetRotY = (mouseX / width - 0.5) * 0.2 // Reduced pan range
 
-            time += 0.02
+            time += 0.015 // Slower, more elegant flow
 
             // Sort particles by Z depth so we draw distant ones first (Painter's Algorithm)
             // For simple dots it matters less, but good for depth opacity
@@ -72,14 +72,12 @@ export default function ParticleBackground() {
                 // 1. WAVE CALCULATION
                 // Calculate Height (Y) based on Sine Waves
                 // Add complexity: multiple waves
-                const distFromCenter = Math.sqrt(p.originalX * p.originalX + p.originalZ * p.originalZ)
-
-                // Main rolling wave
-                let y = Math.sin((p.originalX * 0.01) + time) * 50
+                // Flowing, smoother waves
+                let y = Math.sin((p.originalX * 0.01) + time) * 30
                 // Cross wave
-                y += Math.sin((p.originalZ * 0.02) + time) * 50
+                y += Math.sin((p.originalZ * 0.015) + time) * 30
                 // Ripple effect
-                y += Math.sin(distFromCenter * 0.005 - time * 2) * 20
+                y += Math.sin((p.originalX + p.originalZ) * 0.005 + time * 0.5) * 10
 
                 // 2. 3D ROTATION
                 // Rotate around Y (Pan)
@@ -91,7 +89,7 @@ export default function ParticleBackground() {
                 rz = rz * Math.cos(targetRotX) + y * Math.sin(targetRotX)
 
                 // Push grid into the distance so it's not in our face
-                rz += 1000 // Z-offset
+                rz += 800
 
                 // 3. PROJECTION (3D -> 2D)
                 if (rz > 0) { // Only draw if in front of camera
@@ -100,16 +98,18 @@ export default function ParticleBackground() {
                     const projY = centerY + ry * scale
 
                     // Style
+                    // FINE LOOK TUNING
                     // Alpha based on depth (fog effect)
-                    const alpha = Math.max(0, 1 - (rz / 3000))
-                    // Size based on depth
-                    const size = Math.max(0.5, 3 * scale)
+                    const alpha = Math.max(0, 1 - (rz / 2500))
+
+                    // SIZE: Drastically reduced
+                    // Max size is now 1.2px (was 3px)
+                    const size = Math.max(0.1, 1.2 * scale)
 
                     ctx.beginPath()
-                    ctx.fillStyle = `rgba(139, 92, 246, ${alpha})` // Violet theme
-                    // Use a mix of colors?
-                    // Let's use Cyan/Violet gradient based on height
-                    // if (y > 20) ctx.fillStyle = `rgba(6, 182, 212, ${alpha})` // Cyan peaks
+                    // Color: Crisp White/Blue mix for "Antigravity" look
+                    // Use a slight cyan tint for 'tech' feel but mostly bright
+                    ctx.fillStyle = `rgba(165, 180, 252, ${alpha})` // Indigo-200 tint (Ethereal)
 
                     ctx.arc(projX, projY, size, 0, Math.PI * 2)
                     ctx.fill()
