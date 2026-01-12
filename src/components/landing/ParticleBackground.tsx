@@ -46,9 +46,9 @@ export default function ParticleBackground() {
             const vCtx = virtualCanvas.getContext('2d')
             if (!vCtx) return
 
-            // Responsive Scaling
-            // We want the logo to be a good size relative to screen
-            const scale = Math.min(width, height) * 0.4
+            // Responsive Scaling - DOUBLE SIZE
+            // We want the logo to be DOMINANT
+            const scale = Math.min(width, height) * 0.85
             // Aspect ratio of the image
             const aspectRatio = image.width / image.height
 
@@ -84,7 +84,7 @@ export default function ParticleBackground() {
                             targetY: y,
                             vx: 0,
                             vy: 0,
-                            size: Math.random() * 1.5 + 0.5,
+                            size: Math.random() * 2 + 1, // Bigger particles
                             color: colors[Math.floor(Math.random() * colors.length)]
                         })
                     }
@@ -143,19 +143,20 @@ export default function ParticleBackground() {
                 const dy = p.targetY - p.y
 
                 // Spring strength
-                p.vx += dx * 0.03
-                p.vy += dy * 0.03
+                p.vx += dx * 0.05 // Stronger spring
+                p.vy += dy * 0.05
 
                 // 2. Mouse Repulsion (Disruption)
                 const dmx = p.x - mouseX
                 const dmy = p.y - mouseY
                 const distMouse = Math.sqrt(dmx * dmx + dmy * dmy)
-                const mouseRadius = 100
+                // Much larger activation zone
+                const mouseRadius = 300
 
                 if (distMouse < mouseRadius) {
                     const force = (mouseRadius - distMouse) / mouseRadius
                     const angle = Math.atan2(dmy, dmx)
-                    const pushStr = 3
+                    const pushStr = 20 // MUCH EXPLOSIVE
 
                     p.vx += Math.cos(angle) * force * pushStr
                     p.vy += Math.sin(angle) * force * pushStr
