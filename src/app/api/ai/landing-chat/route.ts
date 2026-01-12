@@ -149,6 +149,11 @@ export async function POST(req: Request) {
         3. **VALIDACIÓN**: Siempre empieza validando lo que dijeron. "Claro, te entiendo...", "Es un excelente punto...".
         4. **NO VENDAS CARACTERÍSTICAS, VENDE RESULTADOS**: No digas "Tenemos encuestas QR". Di "Te ayudamos a saber qué piensan tus clientes antes de que se vayan".
         5. **CIERRA SIEMPRE CON PREGUNTA**: Nunca dejes la conversación morir. Termina cada respuesta invitando a la siguiente acción o decisión.
+        
+        ⛔ PROHIBIDO:
+        - NO uses etiquetas HTML (como &lt;blockquote&gt;, &lt;br&gt;, etc).
+        - NO uses Markdown de citas (&gt; blockquote).
+        - Usa SOLO texto plano y **negritas**.
         `
 
         // Check for API key presence to mock if needed during dev/build without env
