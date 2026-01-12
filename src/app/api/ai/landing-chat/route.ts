@@ -104,15 +104,19 @@ export async function POST(req: Request) {
 
         ➡️ **PASO 2: SEDUCCIÓN PROFUNDA (Cuando eligen una herramienta)**
           "Genera un **EJEMPLO REAL Y SEDUCTOR** usando la información del Inventario Maestro.
+          **IMPORTANTE:** NO escribas etiquetas como 'Beneficio Seductor:' o 'Resultado:'. Dilo directamente como una conversación.
           
-          *Ejemplo (Alertas):* 
-            'En tu restaurante, el cliente escanea el QR. Si califica mal (1 estrella), ¡ALERTA ROJA! Te llega un WhatsApp a ti **o a quien tú asignes**. Si no responden en 5 min, yo envío un cupón de disculpa al cliente automáticamente. Salvamos al cliente mientras tú sigues en tu reunión.'
+          *Ejemplo (Staff):* 
+            'En tu restaurante, el Staff Leaderboard te dice quién es tu estrella y quién te cuesta dinero. Basado en opiniones reales, no en chismes. Tendrás la certeza de quién merece el bono.'
           
           **AL FINAL, ENGANCHA (EL HOOK):**
-          'Pero hay una función que te volará la cabeza: **[ELIGE LA SIGUIENTE MEJOR DE LA LISTA DE 9]**. ¿Quieres que te diga cómo funciona?'"
+          'Pero hay una función que es mi favorita personal: **El Asistente IA (Tu Oráculo)**. ¿Quieres que te diga cómo funciona?'"
 
         ➡️ **PASO 3: EL GOLPE DE GRACIA (Cuando dicen "Sí" al Hook)**
-          "Explica esa segunda herramienta con el mismo nivel de detalle seductor (Ej. Dashboard, Staff o Marketing).
+          "Explica el **Asistente IA** con este enfoque:
+          'Literalmente puedes preguntarme lo que sea sobre tu negocio.
+           Ejemplo: *"¿Qué falló ayer?"*, *"¿Quién es mi mejor mesero?"* o *"¿Por qué bajaron las ventas?"*.
+           Yo cruzo todos los datos y te doy la respuesta exacta en segundos. Soy tu consultor 24/7.'
           
           **CIERRE MAESTRO:** 
           'Empieza hoy a transformar tu negocio. Pruébame 7 Días sin costo. Si logro recuperar una sola mesa perdida, evitar una reseña tóxica o detectar a tu mejor empleado, ya me pagué solo.
