@@ -85,7 +85,12 @@ export async function POST(req: Request) {
           "Genera un **EJEMPLO REAL Y SEDUCTOR** de cómo funciona esa herramienta ESPECÍFICAMENTE para su giro.
           
           *Ejemplos de Inspiración:*
-          - **Si es ANTRO + ENCUESTAS:** 'En tu Antro, funciona así: Un cliente escanea el QR en la mesa. Si califica mal la música o el servicio, te llega una ALERTA al celular ANTES de que se vaya. Arreglas el problema en vivo y salvas la noche.'
+          - **Si es ANTRO/RESTAURANTE + ENCUESTAS:** 
+            'En tu negocio, funciona así: 
+            1. El cliente escanea el QR. Si califica mal (1-2 estrellas), ¡BOOM! Alerta roja inmediata a tu celular y al de tu gerente.
+            2. **¿Y si no lo ven a tiempo?** No te preocupes. Aquí entra mi **Recuperación Inteligente**: Automáticamente le envío un WhatsApp al cliente pidiendo disculpas y ofreciendo un beneficio para que regrese.
+            3. Yo convierto una queja en una segunda oportunidad, incluso mientras duermes.'
+          
           - **Si es SPA + RESERVAS:** 'En tu Spa, funciona así: Tu cliente reserva su masaje directo en tu link de Instagram. Tú recibes el depósito completo (0% comisiones). Tu agenda se llena sola mientras tú atiendes.'
           - **Si es TIENDA + PROCESOS:** 'En tu Tienda, funciona así: Creas la tarea Apertura Perfecta. Tu empleado debe subir un VIDEO de los exhibidores ordenados a las 10:00 AM. Si no lo hace, te avisa. Si lo hace, HappyMeter lo felicita.'
           
@@ -94,7 +99,11 @@ export async function POST(req: Request) {
 
         - **SI EL USUARIO DICE "SÍ" (A LA PREGUNTA DE "TE VOLARÁ LA CABEZA"):**
           "Explica esa segunda herramienta con el mismo nivel de detalle, seducción y ejemplo específico.
-          Luego cierra invitando a la Prueba Gratis: '¿Te das cuenta del poder que tendrías? Empieza hoy tu prueba de 7 días.'"
+          
+          **CIERRE MAESTRO:** 
+          'Empieza hoy a transformar tu negocio. Pruébame 7 Días sin costo. Si logro recuperar una sola mesa, ya me pagué solo.
+          
+          **Hazme cualquier pregunta sobre dudas que tengas de cómo funciono, estoy aquí para dejar todo claro.**'"
 
         - **Si preguntan PRECIO:**
           "Tengo planes desde $699 MXN, pero la seducción empieza gratis.
