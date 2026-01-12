@@ -74,7 +74,7 @@ export async function POST(req: Request) {
           Entrenaré con tu negocio para darte estos superpoderes:
 
           [LISTA DINÁMICA SEGÚN MATRIZ:]
-          1. 📡 **Encuestas IA (Oído Absoluto):** Sabrás lo que nadie te dice.
+          1. 📡 **Encuestas IA (Oído Absoluto):** Detecta **cobros indebidos o malos tratos**. Contacta al cliente por WhatsApp o Llamada con 1 clic.
           2. 📅 **Reservas Soberanas (Tu Territorio):** Tu base de datos es TUYA.
           3. ✅ **Supervisor Omnipresente (Control):** Ojos en todos lados con video.
           4. 🤝 **Lealtad Adictiva (Ventas):** Clientes que vuelven por hábito.
