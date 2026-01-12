@@ -18,9 +18,10 @@ export default function ParticleBackground() {
         let mouseX = width / 2
         let mouseY = height / 2
 
-        // Configuration
-        const particleCount = 2500 // High density for solid look
-        const baseRadius = window.innerWidth < 768 ? 150 : 280
+        // Configuration - ETHEREAL CLOUD
+        const particleCount = 1500 // Reduced for "separadas"
+        // "Ocupen la pantalla completa": Radius is now dynamic based on screen size
+        let baseRadius = Math.min(width, height) * 0.45
 
         // Particles
         const particles: Particle[] = []
@@ -55,7 +56,7 @@ export default function ParticleBackground() {
 
                 // Complex Noise Function for "Formas Raras"
                 const freq = 3
-                const amp = 40 // Aggressive deformation
+                const amp = 60 // Larger amplitude for larger sphere
 
                 // Primary rising wave (Vertical flow)
                 // using originalTheta (Y-ish) to drive the phase
@@ -103,12 +104,8 @@ export default function ParticleBackground() {
         let targetRotY = 0
 
         const animate = () => {
-            // Trail effect? 
-            // ctx.clearRect(0, 0, width, height) 
-            // The image looks crisp, so clearRect is better
-            // But let's use a very dark fill to prevent trails for this sharp look
-            ctx.fillStyle = '#020617'
-            ctx.fillRect(0, 0, width, height) // Clear with bg color
+            // Clear with transparent black to avoid trails
+            ctx.clearRect(0, 0, width, height)
 
             time += 0.015
 
@@ -143,7 +140,7 @@ export default function ParticleBackground() {
             // Draw Loop
             particles.forEach(p => {
                 // Projection
-                const zDepth = p.z + 800 // Push back
+                const zDepth = p.z + 1000 // Push back more since it's huge now
                 const scale = focalLength / zDepth
 
                 const projX = centerX + p.x * scale
@@ -157,9 +154,7 @@ export default function ParticleBackground() {
 
                 if (zDepth > 0) {
                     // Normalize position for color mix
-                    // p.x is rotated position. 
-                    // -300 to 300 roughly
-                    const normalizedX = Math.max(-1, Math.min(1, p.x / 300))
+                    const normalizedX = Math.max(-1, Math.min(1, p.x / (baseRadius * 1.2)))
 
                     // Cyan: 180-200, Magenta: 300
                     // Mix: Let's interpolate RGB
@@ -168,17 +163,18 @@ export default function ParticleBackground() {
 
                     const t = (normalizedX + 1) / 2 // 0 to 1
 
-                    const r = Math.floor(6 * (1 - t) + 217 * t)
+                    const r = Math.floor(6 * (1 - t) + 217 * t) // Cyan -> Magenta
                     const g = Math.floor(182 * (1 - t) + 70 * t)
                     const b = Math.floor(212 * (1 - t) + 239 * t)
 
-                    // Depth shading
-                    // Closer particles are brighter
-                    const alpha = Math.max(0.2, 1 - (p.z / 400)) // Simple fog
+                    // FINENESS & OPACITY TUNING
+                    // "Opacidad mas baja" -> Max opacity 0.6
+                    const alpha = Math.max(0.1, (1 - (p.z / 800)) * 0.5)
 
                     ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`
 
-                    const size = scale * 2.5 // Dot size
+                    // "Mas finas" -> Smaller size
+                    const size = scale * 1.2 // Was 2.5
 
                     ctx.beginPath()
                     ctx.arc(projX, projY, size, 0, Math.PI * 2)
@@ -194,6 +190,7 @@ export default function ParticleBackground() {
         const handleResize = () => {
             width = canvas.width = window.innerWidth
             height = canvas.height = window.innerHeight
+            baseRadius = Math.min(width, height) * 0.45
         }
 
         const handleMouseMove = (e: MouseEvent) => {
