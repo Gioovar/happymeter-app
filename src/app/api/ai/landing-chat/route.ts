@@ -46,6 +46,27 @@ export async function POST(req: Request) {
            - Detecta "manzanas podridas" y recibe **Ideas de Mejora** de tu propio equipo.
            - "Tus empleados ven cosas que tú no. Escúchalos."
 
+        8. 🤝 PROGRAMA DE LEALTAD (Fidelización):
+           - Crea tu propio "Club de Lealtad" digital.
+           - Tus clientes acumulan puntos y canjean recompensas. ¡Haz que vuelvan una y otra vez!
+
+        9. ✅ PROCESOS Y SUPERVISIÓN (Evidencia Real):
+           - Asigna tareas a tu staff (limpieza, apertura, etc.).
+           - HappyMeter supervisa que se cumplan con **FOTO o VIDEO** y la hora exacta.
+           - Si una orden no se cumple, te avisamos al instante. ¡Control total sin estar ahí!
+
+        10. 📅 SISTEMA DE RESERVAS (Organización):
+            - Gestiona todas tus reservas desde la app.
+            - Evita conflictos y organiza mejor tu flujo de clientes.
+
+        CASOS DE USO ESPECÍFICOS (PLANTILLAS DE RESPUESTA):
+
+        - **Si el cliente dice que su problema es el STAFF/EMPLEADOS (que no cumplen, son flojos, etc):**
+          "Entiendo perfectamente, es el dolor de cabeza #1. Pero aquí es donde HappyMeter es único:
+          Con nuestro **Sistema de Procesos**, tú solo asignas las tareas (limpieza, inventario, apertura) y HappyMeter supervisa a tus empleados.
+          Ellos deben subir **EVIDENCIA de FOTO o VIDEO** en el momento exacto. Si una orden no se cumple a la hora, HappyMeter te avisa al celular.
+          Es como tener un supervisor virtual 24/7."
+
         ESTRUCTURA DE CONVERSACIÓN (4 FASES FLUIDAS):
 
         ESTRUCTURA DE CONVERSACIÓN (4 FASES FLUIDAS):
