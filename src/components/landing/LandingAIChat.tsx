@@ -101,7 +101,7 @@ export default function LandingAIChat() {
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 w-[90vw] md:w-[400px] h-[600px] max-h-[80vh] bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+                        className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[9999] w-[90vw] md:w-[400px] h-[600px] max-h-[80vh] bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
                     >
                         {/* Header */}
                         <div className="p-4 border-b border-white/10 bg-gradient-to-r from-violet-900/20 to-fuchsia-900/20 flex items-center justify-between">
@@ -124,7 +124,7 @@ export default function LandingAIChat() {
                         </div>
 
                         {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-black/50">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-black/50 overscroll-contain">
                             {messages.map((msg, idx) => (
                                 <motion.div
                                     key={idx}
