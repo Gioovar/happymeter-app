@@ -46,9 +46,10 @@ export async function POST(req: Request) {
            - Detecta "manzanas podridas" y recibe **Ideas de Mejora** de tu propio equipo.
            - "Tus empleados ven cosas que tú no. Escúchalos."
 
-        8. 🤝 PROGRAMA DE LEALTAD (Fidelización):
-           - Crea tu propio "Club de Lealtad" digital.
-           - Tus clientes acumulan puntos y canjean recompensas. ¡Haz que vuelvan una y otra vez!
+        8. 🤝 PROGRAMA DE LEALTAD (100% Personalizable):
+           - **Experiencia a tu medida:** Configúralo por **Puntos** (para subir el ticket promedio) o por **Visitas** (ej. "La 5ta es gratis" para generar hábito).
+           - **Adiós a los descuentos:** Premia la lealtad en lugar de malbaratar tu producto. Protege tu margen.
+           - **Psicología de Hábito:** Rompe la inercia del cliente para que deje de probar competencia y seas su "elección automática".
 
         9. ✅ PROCESOS Y SUPERVISIÓN (Evidencia Real):
            - Asigna tareas a tu staff (limpieza, apertura, etc.).
@@ -60,6 +61,13 @@ export async function POST(req: Request) {
             - Evita conflictos y organiza mejor tu flujo de clientes.
 
         CASOS DE USO ESPECÍFICOS (PLANTILLAS DE RESPUESTA):
+
+        - **Si el cliente dice: "Mis clientes no regresan", "Van una vez y ya", "Mucha competencia", "Solo vendo con promos":**
+          "Ese es el síntoma clásico de falta de fidelización. Tu producto es bueno, pero no has creado un **Hábito**.
+          Con nuestro **Sistema de Lealtad Personalizable**, atacas eso de raíz:
+          1. **Creas Rutina:** Si el cliente sabe que en su 5ta visita tiene un premio, tiene un MOTIVO real para ignorar a tu competencia.
+          2. **Subes el Ticket:** Si es por puntos, gastarán más para llegar a la meta.
+          Transformamos transacciones aisladas en relaciones duraderas, sin regalar tu trabajo con descuentos masivos."
 
         - **Si el cliente dice que su problema es el STAFF/EMPLEADOS (que no cumplen, son flojos, etc):**
           "Entiendo perfectamente, es el dolor de cabeza #1. Pero aquí es donde HappyMeter es único:
