@@ -25,6 +25,18 @@ export default function LandingAIChat() {
         scrollToBottom()
     }, [messages])
 
+    // Lock body scroll when chat is open to prevent background scrolling
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.style.overflow = 'unset'
+        }
+        return () => {
+            document.body.style.overflow = 'unset'
+        }
+    }, [isOpen])
+
     const handleOpen = () => {
         setIsOpen(true)
         if (!hasInitialized && messages.length === 0) {
