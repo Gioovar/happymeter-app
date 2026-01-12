@@ -15,68 +15,87 @@ export default function ParticleBackground() {
         let width = canvas.width = window.innerWidth
         let height = canvas.height = window.innerHeight
 
-        let mouseX = 0
-        let mouseY = 0
+        let mouseX = width / 2
+        let mouseY = height / 2
 
-        // Config
-        const particleCount = 4000 // Dense but performant
+        // "Magnetic" Center (Lagging behind mouse)
+        let centerX = width / 2
+        let centerY = height / 2
+
+        const particleCount = 3000
         const particles: Particle[] = []
 
         class Particle {
             x: number
             y: number
-            z: number
             radius: number
-            theta: number
-            phi: number
+            angle: number
             speed: number
-            originalRadius: number
+            size: number
+            color: string
+            orbitRadius: number
 
             constructor() {
-                // Spherical Distribution
-                // Distribute more particles near the surface of the sphere for the "Shell" look
-                // But also some internal volume
+                // Initial distribution
+                this.x = Math.random() * width
+                this.y = Math.random() * height
 
-                this.originalRadius = Math.random() * 800 + 100 // Spread out
-                this.radius = this.originalRadius
+                // Polar coordinates relative to center
+                this.orbitRadius = Math.random() * Math.max(width, height) * 0.8
+                this.angle = Math.random() * Math.PI * 2
 
-                this.theta = Math.random() * Math.PI * 2 // Angle round X
-                this.phi = Math.acos((Math.random() * 2) - 1) // Angle round Y
+                // Speed is faster near center (Kepler) but clamped
+                this.speed = (0.005 + (1 - this.orbitRadius / Math.max(width, height)) * 0.01) * (Math.random() > 0.5 ? 1 : 1)
 
-                this.speed = Math.random() * 0.002 + 0.001
-
-                // Convert spherical to cartesian for initial check (optional)
+                this.size = Math.random() * 2 + 1
             }
 
-            update(time: number, rotX: number, rotY: number) {
-                // 1. Orbital Rotation
-                this.theta += this.speed
+            update() {
+                // Update Angle (Orbit)
+                this.angle += this.speed
 
-                // 2. Breathing / Pulsing (Vortex effect)
-                // Particles drift in and out slightly
-                this.radius = this.originalRadius + Math.sin(time * 2 + this.originalRadius * 0.01) * 20
+                // Calculate Target Position based on Orbit
+                // The "Center" moves, so we calculate position relative to that
+                const targetX = centerX + Math.cos(this.angle) * this.orbitRadius
+                const targetY = centerY + Math.sin(this.angle) * this.orbitRadius
 
-                // 3. Convert Spherical -> Cartesian
-                this.x = this.radius * Math.sin(this.phi) * Math.cos(this.theta)
-                this.y = this.radius * Math.sin(this.phi) * Math.sin(this.theta)
-                this.z = this.radius * Math.cos(this.phi)
+                // Ease towards ideal orbit position (Fluidity)
+                this.x += (targetX - this.x) * 0.1
+                this.y += (targetY - this.y) * 0.1
+            }
 
-                // 4. Global Rotation (Mouse)
-                // Rotate around Y
-                const cosY = Math.cos(rotY)
-                const sinY = Math.sin(rotY)
-                let x1 = this.x * cosY - this.z * sinY
-                let z1 = this.z * cosY + this.x * sinY
+            draw() {
+                if (!ctx) return
 
-                // Rotate around X
-                const cosX = Math.cos(rotX)
-                const sinX = Math.sin(rotX)
-                let y1 = this.y * cosX - z1 * sinX
-                let z2 = z1 * cosX + this.y * sinX
+                // Calculate velocity vector for orientation
+                // V ≈ current - previous, but we know exact orbital tangent
+                // Tangent vector: (-sin(angle), cos(angle))
 
-                this.x = x1
-                this.y = y1
-                this.z = z2
+                // Dash Length based on distance from center (faster = longer)
+                const dashLen = 5 + (200 / (this.orbitRadius + 50)) * 5
+
+                // Calculate tail position
+                // The particle looks "forward" along the tangent
+                const tailX = this.x - Math.cos(this.angle + Math.PI / 2) * dashLen
+                const tailY = this.y - Math.sin(this.angle + Math.PI / 2) * dashLen
+
+                ctx.beginPath()
+                ctx.strokeStyle = '#4285F4' // Google Blue / Brand Blue
+                ctx.lineWidth = this.size < 1.5 ? 1 : 2
+                ctx.lineCap = 'round'
+                ctx.globalAlpha = Math.min(1, 200 / (this.orbitRadius + 10)) // Fade out at edges
+
+                ctx.moveTo(this.x, this.y)
+                // Actually, tangent is perpendicular to radius.
+                // If angle is 0 (right), tangent is down (PI/2)
+                const rot = this.angle + Math.PI / 2
+
+                const endX = this.x + Math.cos(rot) * dashLen * (this.speed > 0 ? 1 : -1)
+                const endY = this.y + Math.sin(rot) * dashLen * (this.speed > 0 ? 1 : -1)
+
+                ctx.lineTo(endX, endY)
+                ctx.stroke()
+                ctx.globalAlpha = 1
             }
         }
 
@@ -85,50 +104,20 @@ export default function ParticleBackground() {
             particles.push(new Particle())
         }
 
-        let time = 0
-
         const animate = () => {
-            ctx.clearRect(0, 0, width, height)
+            // Trail Effect (partial clear)
+            // Creates the blur/motion smear
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.3)' // Dark background with trail
+            ctx.fillRect(0, 0, width, height)
 
-            // Camera
-            const focalLength = 400
-            const centerX = width / 2
-            const centerY = height / 2
+            // Update Virtual Center (Magnetic Mouse)
+            centerX += (mouseX - centerX) * 0.05
+            centerY += (mouseY - centerY) * 0.05
 
-            // Mouse Target Rotation (Smooth drift)
-            let targetRotX = (mouseY / height - 0.5) * 1.5 // Full tilt
-            let targetRotY = (mouseX / width - 0.5) * 1.5 // Full pan
-
-            // Auto rotation base
-            targetRotY += time * 0.2
-
-            time += 0.005
-
-            // Draw Order: Sort by Z depth
-            // Essential for a sphere to look solid
-            // particles.sort((a, b) => b.z - a.z) // Expensive every frame? 4000 is okay.
-
-            for (let i = 0; i < particleCount; i++) {
-                const p = particles[i]
-                p.update(time, targetRotX, targetRotY)
-
-                const zDepth = p.z + 1000 // Push camera back
-
-                if (zDepth > 0) {
-                    const scale = focalLength / zDepth
-                    const x = centerX + p.x * scale
-                    const y = centerY + p.y * scale
-
-                    const size = Math.max(0.2, 1.5 * scale)
-                    const alpha = Math.max(0, 1 - (zDepth / 2000))
-
-                    ctx.beginPath()
-                    // Color from reference: Cool Blue/White
-                    ctx.fillStyle = `rgba(165, 180, 252, ${alpha})`
-                    ctx.arc(x, y, size, 0, Math.PI * 2)
-                    ctx.fill()
-                }
-            }
+            particles.forEach(p => {
+                p.update()
+                p.draw()
+            })
 
             requestAnimationFrame(animate)
         }
@@ -157,10 +146,10 @@ export default function ParticleBackground() {
     return (
         <canvas
             ref={canvasRef}
-            className="absolute inset-0 w-full h-full pointer-events-none"
+            className="absolute inset-0 w-full h-full point-events-none"
             style={{
-                // Deep void
-                background: 'radial-gradient(circle at center, #020617 0%, #000 100%)'
+                // Solid background color ensures trails work
+                background: '#020617'
             }}
         />
     )
