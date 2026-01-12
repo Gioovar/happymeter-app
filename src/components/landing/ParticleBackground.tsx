@@ -92,11 +92,42 @@ export default function ParticleBackground() {
             }
         }
 
+        // Helper to spawn fallback particles
+        const spawnFallback = () => {
+            console.log("Spawning fallback particles")
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    targetX: Math.random() * width,
+                    targetY: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    size: Math.random() * 2 + 1,
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                })
+            }
+        }
+
         // Load Image
         const image = new Image()
         image.src = '/logo-particles.png'
+
         image.onload = () => {
+            console.log("Image loaded successfully", image.width, image.height)
             initParticles(image)
+            console.log("Particles generated:", particles.length)
+
+            if (particles.length === 0) {
+                console.warn("No particles generated from image. Using fallback.")
+                spawnFallback()
+            }
+            animate()
+        }
+
+        image.onerror = (e) => {
+            console.error("Failed to load logo image", e)
+            spawnFallback()
             animate()
         }
 
