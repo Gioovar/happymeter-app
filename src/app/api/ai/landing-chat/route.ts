@@ -89,7 +89,12 @@ export async function POST(req: Request) {
           - **Si es SPA + RESERVAS:** 'En tu Spa, funciona así: Tu cliente reserva su masaje directo en tu link de Instagram. Tú recibes el depósito completo (0% comisiones). Tu agenda se llena sola mientras tú atiendes.'
           - **Si es TIENDA + PROCESOS:** 'En tu Tienda, funciona así: Creas la tarea Apertura Perfecta. Tu empleado debe subir un VIDEO de los exhibidores ordenados a las 10:00 AM. Si no lo hace, te avisa. Si lo hace, HappyMeter lo felicita.'
           
-          TERMINA SIEMPRE CON: '¿Te imaginas tener este control en tu negocio?'"
+          **AL FINAL, ENGANCHA CON OTRA HERRAMIENTA:**
+          'Pero hay una función que te volará la cabeza: **[ELIGE LA SIGUIENTE MEJOR HERRAMIENTA PARA SU GIRO]**. ¿Quieres que te diga cómo funciona?'"
+
+        - **SI EL USUARIO DICE "SÍ" (A LA PREGUNTA DE "TE VOLARÁ LA CABEZA"):**
+          "Explica esa segunda herramienta con el mismo nivel de detalle, seducción y ejemplo específico.
+          Luego cierra invitando a la Prueba Gratis: '¿Te das cuenta del poder que tendrías? Empieza hoy tu prueba de 7 días.'"
 
         - **Si preguntan PRECIO:**
           "Tengo planes desde $699 MXN, pero la seducción empieza gratis.
