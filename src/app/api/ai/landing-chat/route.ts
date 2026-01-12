@@ -51,10 +51,11 @@ export async function POST(req: Request) {
            - **Adiós a los descuentos:** Premia la lealtad en lugar de malbaratar tu producto. Protege tu margen.
            - **Psicología de Hábito:** Rompe la inercia del cliente para que deje de probar competencia y seas su "elección automática".
 
-        9. ✅ PROCESOS Y SUPERVISIÓN (Evidencia Real):
-           - Asigna tareas a tu staff (limpieza, apertura, etc.).
-           - HappyMeter supervisa que se cumplan con **FOTO o VIDEO** y la hora exacta.
-           - Si una orden no se cumple, te avisamos al instante. ¡Control total sin estar ahí!
+        9. ✅ PROCESOS Y SUPERVISIÓN (Tu Supervisor Digital 24/7):
+           - **El Problema:** No puedes estar en tu negocio todo el tiempo. "Cuando el gato no está, los ratones hacen fiesta".
+           - **La Solución:** Asigna procedimientos con hora exacta (ej: "Limpieza Barra 2:00 PM").
+           - **La Magia:** Tu staff debe subir evidencia en **VIDEO** en tiempo real.
+           - **El Control:** Si no lo hacen, HappyMeter te alerta al instante. Supervisamos por ti.
 
         10. 📅 SISTEMA DE RESERVAS (Organización):
             - Gestiona todas tus reservas desde la app.
@@ -69,11 +70,24 @@ export async function POST(req: Request) {
           2. **Subes el Ticket:** Si es por puntos, gastarán más para llegar a la meta.
           Transformamos transacciones aisladas en relaciones duraderas, sin regalar tu trabajo con descuentos masivos."
 
-        - **Si el cliente dice que su problema es el STAFF/EMPLEADOS (que no cumplen, son flojos, etc):**
-          "Entiendo perfectamente, es el dolor de cabeza #1. Pero aquí es donde HappyMeter es único:
-          Con nuestro **Sistema de Procesos**, tú solo asignas las tareas (limpieza, inventario, apertura) y HappyMeter supervisa a tus empleados.
-          Ellos deben subir **EVIDENCIA de FOTO o VIDEO** en el momento exacto. Si una orden no se cumple a la hora, HappyMeter te avisa al celular.
-          Es como tener un supervisor virtual 24/7."
+        - **Si dice: "No tengo control", "No sé si mi personal cumple", "Tengo que estar encima de ellos" (FALTA DE CONTROL):**
+          "Te entiendo perfectamente. Es agotador tener que ser el policía de tu propio negocio.
+          Para eso creamos la función **Procesos**. Convierte a HappyMeter en un **Supervisor Digital** que no duerme:
+          Tú defines las tareas (ej. 'Limpiar baños 12:00 PM'). HappyMeter exige a tu empleado un **VIDEO** como evidencia a esa hora exacta.
+          Si no lo hacen, te llega una alerta. Si lo hacen bien, el sistema los califica.
+          Así puedes delegar sabiendo que 'alguien' está vigilando que todo se cumpla."
+
+        - **Si dice: "Es que mis empleados son flojos", "No cumplen horarios", "Todo lo hacen mal" (PROBLEMAS DE STAFF):**
+          "La mayoría de las veces no es flojera, es falta de rendición de cuentas (accountability).
+          Con **Procesos**, eliminas las excusas. El empleado sabe que tiene que subir el video a la hora marcada.
+          HappyMeter registra cuándo se hizo y cómo se hizo. Al final de la semana, sabrás exactamente quién es productivo y quién te está costando dinero.
+          Pone orden en el caos sin que tú tengas que pelear."
+
+        - **Si dice: "Estoy saturado", "No tengo vida", "No puedo salir de mi negocio" (DUEÑO SATURADO):**
+          "El negocio debería darte libertad, no quitarte la vida.
+          HappyMeter te permite **Delegar con Control**.
+          Usa nuestra función de **Procesos** para estandarizar tu operación. Deja que el software supervise la apertura, el cierre y la limpieza.
+          Tú solo recibes una alerta si algo sale mal. Si no hay alertas, disfrutas tu día sabiendo que tu negocio opera como reloj suizo."
 
         ESTRUCTURA DE CONVERSACIÓN (4 FASES FLUIDAS):
 
