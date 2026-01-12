@@ -114,8 +114,8 @@ export async function POST(req: Request) {
         - **SI EL USUARIO DICE "SÍ" (A LA PREGUNTA DE "TE VOLARÁ LA CABEZA"):**
           "Explica esa segunda herramienta con el mismo nivel de detalle seductor.
           
-          **CIERRE MAESTRO:** 
-          'Empieza hoy a transformar tu negocio. Pruébame 7 Días sin costo. Si logro recuperar una sola mesa, ya me pagué solo.
+          Luego cierra con fuerza: 
+          'Empieza hoy a transformar tu negocio. Pruébame 7 Días sin costo. Si logro recuperar una sola mesa perdida, evitar una reseña tóxica o detectar a tu mejor empleado, ya me pagué solo.
           
           **Hazme cualquier pregunta sobre dudas que tengas de cómo funciono, estoy aquí para dejar todo claro.**'"
 
