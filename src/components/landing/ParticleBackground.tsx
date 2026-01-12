@@ -15,222 +15,120 @@ export default function ParticleBackground() {
         let width = canvas.width = window.innerWidth
         let height = canvas.height = window.innerHeight
 
-        let mouseX = -1000
-        let mouseY = -1000
+        let mouseX = 0
+        let mouseY = 0
 
-        interface Particle {
-            x: number
-            y: number
-            targetX: number
-            targetY: number
-            vx: number
-            vy: number
-            size: number
-            color: string
-        }
+        // 3D Config
+        const cols = 50
+        const rows = 50
+        const separation = 40 // Distance between dots
+        const particleCount = cols * rows
 
-        let particles: Particle[] = []
+        // Particles Storage
+        // We store x,y,z relative to center 0,0,0
+        const particles: { x: number; z: number; originalX: number; originalZ: number }[] = []
 
-        // Brand colors for the logo particles
-        const colors = [
-            'rgba(139, 92, 246, 0.9)', // Violet
-            'rgba(217, 70, 239, 0.9)', // Fuchsia
-            'rgba(6, 182, 212, 0.9)'   // Cyan
-        ]
+        // Init Grid
+        // Center the grid around (0,0,0)
+        const startX = (cols * separation) / 2
+        const startZ = (rows * separation) / 2
 
-        const initParticles = (image: HTMLImageElement) => {
-            particles = []
-
-            // Draw image to a virtual canvas to read pixel data
-            const virtualCanvas = document.createElement('canvas')
-            const vCtx = virtualCanvas.getContext('2d')
-            if (!vCtx) return
-
-            // Responsive Scaling - DOUBLE SIZE
-            // We want the logo to be DOMINANT
-            const scale = Math.min(width, height) * 0.85
-            // Aspect ratio of the image
-            const aspectRatio = image.width / image.height
-
-            const imgHeight = scale
-            const imgWidth = scale * aspectRatio
-
-            virtualCanvas.width = width
-            virtualCanvas.height = height
-
-            // Center image
-            const offsetX = (width - imgWidth) / 2
-            const offsetY = (height - imgHeight) / 2
-
-            vCtx.drawImage(image, offsetX, offsetY, imgWidth, imgHeight)
-
-            // Read pixel data
-            // Optimization: Don't read every pixel. Skip based on density.
-            const density = window.innerWidth < 768 ? 6 : 4 // Higher number = fewer particles
-            const imageData = vCtx.getImageData(0, 0, width, height)
-            const data = imageData.data
-
-            for (let y = 0; y < height; y += density) {
-                for (let x = 0; x < width; x += density) {
-                    const index = (y * width + x) * 4
-                    const alpha = data[index + 3]
-
-                    if (alpha > 128) { // If pixel is visible
-                        // This X,Y is a target
-                        particles.push({
-                            x: Math.random() * width, // Start random
-                            y: Math.random() * height,
-                            targetX: x,
-                            targetY: y,
-                            vx: 0,
-                            vy: 0,
-                            size: Math.random() * 2 + 1, // Bigger particles
-                            color: colors[Math.floor(Math.random() * colors.length)]
-                        })
-                    }
-                }
-            }
-        }
-
-        // Helper to spawn fallback particles
-        const spawnFallback = () => {
-            console.log("Spawning fallback particles")
-            for (let i = 0; i < 100; i++) {
+        for (let ix = 0; ix < cols; ix++) {
+            for (let iz = 0; iz < rows; iz++) {
+                const x = ix * separation - startX
+                const z = iz * separation - startZ
                 particles.push({
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    targetX: Math.random() * width,
-                    targetY: Math.random() * height,
-                    vx: (Math.random() - 0.5) * 0.5,
-                    vy: (Math.random() - 0.5) * 0.5,
-                    size: Math.random() * 2 + 1,
-                    color: colors[Math.floor(Math.random() * colors.length)]
+                    x,
+                    z,
+                    originalX: x,
+                    originalZ: z
                 })
             }
         }
 
-        // Load Image
-        const image = new Image()
-        image.src = '/logo-particles.png'
-
-        image.onload = () => {
-            console.log("Image loaded successfully", image.width, image.height)
-            initParticles(image)
-            console.log("Particles generated:", particles.length)
-
-            if (particles.length === 0) {
-                console.warn("No particles generated from image. Using fallback.")
-                spawnFallback()
-            }
-            animate()
-        }
-
-        image.onerror = (e) => {
-            console.error("Failed to load logo image", e)
-            spawnFallback()
-            animate()
-        }
+        let time = 0
 
         const animate = () => {
             ctx.clearRect(0, 0, width, height)
 
-            for (let i = 0; i < particles.length; i++) {
+            // Camera / Projection Settings
+            const focalLength = 600
+            const centerY = height / 2 + 100 // Move horizon down a bit
+            const centerX = width / 2
+
+            // Mouse Interaction: Rotate the entire grid slightly
+            // Normalize mouse position -1 to 1
+            const targetRotX = (mouseY / height - 0.5) * 0.5 // Tilt up/down
+            const targetRotY = (mouseX / width - 0.5) * 0.5 // Pan left/right
+
+            time += 0.02
+
+            // Sort particles by Z depth so we draw distant ones first (Painter's Algorithm)
+            // For simple dots it matters less, but good for depth opacity
+
+            for (let i = 0; i < particleCount; i++) {
                 const p = particles[i]
 
-                // Physics
-                // 1. Spring force to Target
-                const dx = p.targetX - p.x
-                const dy = p.targetY - p.y
+                // 1. WAVE CALCULATION
+                // Calculate Height (Y) based on Sine Waves
+                // Add complexity: multiple waves
+                const distFromCenter = Math.sqrt(p.originalX * p.originalX + p.originalZ * p.originalZ)
 
-                // Spring strength
-                p.vx += dx * 0.05 // Stronger spring
-                p.vy += dy * 0.05
+                // Main rolling wave
+                let y = Math.sin((p.originalX * 0.01) + time) * 50
+                // Cross wave
+                y += Math.sin((p.originalZ * 0.02) + time) * 50
+                // Ripple effect
+                y += Math.sin(distFromCenter * 0.005 - time * 2) * 20
 
-                // 2. Mouse Repulsion (Disruption)
-                const dmx = p.x - mouseX
-                const dmy = p.y - mouseY
-                const distMouse = Math.sqrt(dmx * dmx + dmy * dmy)
-                // Much larger activation zone
-                const mouseRadius = 300
+                // 2. 3D ROTATION
+                // Rotate around Y (Pan)
+                let rx = p.originalX * Math.cos(targetRotY) - p.originalZ * Math.sin(targetRotY)
+                let rz = p.originalZ * Math.cos(targetRotY) + p.originalX * Math.sin(targetRotY)
 
-                if (distMouse < mouseRadius) {
-                    const force = (mouseRadius - distMouse) / mouseRadius
-                    const angle = Math.atan2(dmy, dmx)
-                    const pushStr = 20 // MUCH EXPLOSIVE
+                // Rotate around X (Tilt) - Apply to y and z
+                let ry = y * Math.cos(targetRotX) - rz * Math.sin(targetRotX)
+                rz = rz * Math.cos(targetRotX) + y * Math.sin(targetRotX)
 
-                    p.vx += Math.cos(angle) * force * pushStr
-                    p.vy += Math.sin(angle) * force * pushStr
+                // Push grid into the distance so it's not in our face
+                rz += 1000 // Z-offset
+
+                // 3. PROJECTION (3D -> 2D)
+                if (rz > 0) { // Only draw if in front of camera
+                    const scale = focalLength / rz
+                    const projX = centerX + rx * scale
+                    const projY = centerY + ry * scale
+
+                    // Style
+                    // Alpha based on depth (fog effect)
+                    const alpha = Math.max(0, 1 - (rz / 3000))
+                    // Size based on depth
+                    const size = Math.max(0.5, 3 * scale)
+
+                    ctx.beginPath()
+                    ctx.fillStyle = `rgba(139, 92, 246, ${alpha})` // Violet theme
+                    // Use a mix of colors?
+                    // Let's use Cyan/Violet gradient based on height
+                    // if (y > 20) ctx.fillStyle = `rgba(6, 182, 212, ${alpha})` // Cyan peaks
+
+                    ctx.arc(projX, projY, size, 0, Math.PI * 2)
+                    ctx.fill()
                 }
-
-                // Friction
-                p.vx *= 0.85
-                p.vy *= 0.85
-
-                p.x += p.vx
-                p.y += p.vy
-
-                // Draw Particle
-                ctx.beginPath()
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-                ctx.fillStyle = p.color
-                ctx.fill()
             }
-
-            // Draw Connections (Look for neighbors)
-            // Optimization for high particle count: only check a subset or purely generic grid
-            // Since logo has structure, we can just check local neighbors in the array?
-            // No, the array order is scanline. So neighbors in array are neighbors in Y usually.
-            // Let's rely on standard distance check but be careful with performance.
-            // Limit checks to max 5000 checks per frame? Random subset?
-
-            // For logo, the shape is defined by the particles themselves, 
-            // explicit lines might be too heavy visual clutter if density is high.
-            // Let's add faint lines ONLY if mouse is close, to show 'activation' in that area.
-
-            // Drawing lines only near mouse
-            /*
-            particles.forEach((p1, index) => {
-                const dmx = p1.x - mouseX
-                const dmy = p1.y - mouseY
-                const distMouse = Math.sqrt(dmx * dmx + dmy * dmy)
-                
-                if (distMouse < 150) {
-                     // Check neighbors
-                     for (let j = index + 1; j < particles.length; j++) {
-                         const p2 = particles[j]
-                         // Optimization: Skip if far in array index? (Likely far in Y)
-                         // Just simple distance check for now
-                         const dx = p1.x - p2.x
-                         const dy = p1.y - p2.y
-                         if (Math.abs(dx) > 20 || Math.abs(dy) > 20) continue; // Fast reject
-
-                         const dist = Math.sqrt(dx*dx + dy*dy)
-                         if (dist < 20) {
-                             ctx.beginPath()
-                             ctx.strokeStyle = 'rgba(139, 92, 246, 0.2)'
-                             ctx.moveTo(p1.x, p1.y)
-                             ctx.lineTo(p2.x, p2.y)
-                             ctx.stroke()
-                         }
-                     }
-                }
-            })
-            */
 
             requestAnimationFrame(animate)
         }
 
+        animate()
+
         const handleResize = () => {
             width = canvas.width = window.innerWidth
             height = canvas.height = window.innerHeight
-            // Re-init to rescale logo
-            initParticles(image)
         }
 
         const handleMouseMove = (e: MouseEvent) => {
-            const rect = canvas.getBoundingClientRect()
-            mouseX = e.clientX - rect.left
-            mouseY = e.clientY - rect.top
+            mouseX = e.clientX
+            mouseY = e.clientY
         }
 
         window.addEventListener('resize', handleResize)
