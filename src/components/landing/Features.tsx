@@ -3,30 +3,30 @@ import { Bot, MessageCircle, QrCode, BarChart3 } from 'lucide-react'
 
 const features = [
     {
+        icon: MessageCircle,
+        title: "El Escudo Anti-Quejas",
+        description: "Intercepta el mal servicio ANTES de que llegue a Google. Te aviso por WhatsApp al instante para que salves la mesa.",
+        color: "text-red-400",
+        bg: "bg-red-500/10"
+    },
+    {
         icon: Bot,
-        title: "Análisis con IA",
-        description: "Nuestra IA lee cada comentario y detecta el sentimiento (positivo, neutral, negativo) automáticamente.",
+        title: "Tu Oído Absoluto (IA)",
+        description: "Detecta lo que tus clientes realmente piensan. Nuestra IA analiza sentimientos y sabe qué falló sin que tú estés ahí.",
         color: "text-violet-400",
         bg: "bg-violet-500/10"
     },
     {
-        icon: MessageCircle,
-        title: "Reportes por WhatsApp",
-        description: "Recibe resúmenes semanales y alertas críticas directamente en tu WhatsApp. No más emails perdidos.",
-        color: "text-green-400",
-        bg: "bg-green-500/10"
-    },
-    {
-        icon: QrCode,
-        title: "Códigos QR Dinámicos",
-        description: "Genera QRs únicos para cada mesa, producto o sucursal. Imprímelos y empieza a medir hoy.",
+        icon: BarChart3,
+        title: "Detector de Talento",
+        description: "Ranking automático de empleados. Premia al mesero estrella y detecta quién te está costando dinero.",
         color: "text-blue-400",
         bg: "bg-blue-500/10"
     },
     {
-        icon: BarChart3,
-        title: "Métricas en Tiempo Real",
-        description: "Visualiza tu NPS (Net Promoter Score) y tendencias de satisfacción al instante.",
+        icon: QrCode,
+        title: "Máquina de Lealtad",
+        description: "Crea adicción en tus clientes. Un sistema de puntos automático que los obliga a volver una y otra vez.",
         color: "text-fuchsia-400",
         bg: "bg-fuchsia-500/10"
     }

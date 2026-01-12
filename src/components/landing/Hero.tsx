@@ -21,20 +21,23 @@ export default function Hero() {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
                     </span>
-                    <span>La herramienta #1 para Feedback de Clientes</span>
+                    <span>No es software. Es tu Propio Cerebro Digital.</span>
                 </div>
 
                 {/* Main Headline */}
                 <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight mb-8 leading-tight">
-                    Convierte Opiniones <br />
+                    El Primer <br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
-                        en Crecimiento
+                        Sistema Operativo
                     </span>
+                    <br />
+                    para Negocios Físicos
                 </h1>
 
                 {/* Subheadline */}
                 <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                    HappyMeter te ayuda a recolectar feedback, analizar sentimientos con IA y retener clientes automáticamente. Sin código. Sin fricción.
+                    Deja de ser un todólogo. Instala tu propia <strong>Inteligencia Artificial</strong> que escucha, supervisa, retiene clientes y entrena a tu staff. <br />
+                    <span className="text-white font-medium">Recupera tu libertad y tu dinero.</span>
                 </p>
 
                 {/* CTA Buttons */}

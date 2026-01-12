@@ -55,10 +55,10 @@ export default function PainPointSection() {
                     {/* Copy Side */}
                     <div className="space-y-8">
                         <h2 className="text-4xl md:text-5xl font-bold leading-tight text-white">
-                            El silencio de tus clientes está <span className="text-red-500">matando tu negocio</span>
+                            Tu negocio pierde dinero <span className="text-red-500">mientras duermes</span>
                         </h2>
                         <p className="text-xl text-gray-400 leading-relaxed">
-                            El 96% de los clientes insatisfechos no se quejan, simplemente <strong>no vuelven</strong>. Y lo peor: le cuentan su mala experiencia a 10 amigos.
+                            El 96% de tus clientes infelices no te reclaman a ti, <strong>se van con tu competencia</strong>. Dejas ir miles de dólares en mesas vacías, clientes únicos y personal que no rinde.
                         </p>
 
                         <div className="space-y-4">
@@ -67,8 +67,8 @@ export default function PainPointSection() {
                                     <AlertTriangle className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-white text-lg">Te enteras demasiado tarde</h4>
-                                    <p className="text-gray-500">Cuando lees la reseña en Google, el daño ya está hecho.</p>
+                                    <h4 className="font-bold text-white text-lg">Ceguera Operativa</h4>
+                                    <p className="text-gray-500">No sabes quién roba, quién trata mal al cliente o por qué bajan las ventas.</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-4">
@@ -76,15 +76,15 @@ export default function PainPointSection() {
                                     <TrendingDown className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-white text-lg">Pierdes dinero invisible</h4>
-                                    <p className="text-gray-500">Miles de dólares se van por la puerta sin que sepas por qué.</p>
+                                    <h4 className="font-bold text-white text-lg">Reputación en Riesgo</h4>
+                                    <p className="text-gray-500">Una sola reseña tóxica en Google te cuesta decenas de clientes nuevos.</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="pt-6">
                             <p className="text-white font-medium border-l-4 border-violet-500 pl-4 italic">
-                                "HappyMeter intercepta esa queja antes de que salga del local. Conviertes un cliente enojado en uno fiel al instante."
+                                "HappyMeter es tu escudo. Intercepto la queja, recupero al cliente y te aviso al celular antes de que sea tarde."
                             </p>
                         </div>
                     </div>
