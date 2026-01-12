@@ -134,7 +134,7 @@ export default function ParticleBackground() {
 
             // First Update loop
             particles.forEach(p => {
-                p.update(time, targetRotX, targetRotY + autoSpin, mouseX, mouseY)
+                p.update(time, targetRotX, targetRotY + autoSpin)
             })
 
             // Sort
