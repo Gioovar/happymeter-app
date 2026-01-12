@@ -46,10 +46,15 @@ export async function POST(req: Request) {
            - Un chat que lo sabe todo. Cruza datos de encuestas, staff y ventas.
            - Pregúntale: "¿Cuál fue el peor problema de hoy?" y te responderá con análisis real.
 
+        6. 📈 **MARKETING HUB & CAMPAÑAS (Datos que Venden):**
+           - Convierte tu base de datos en dinero. Centraliza clientes de encuestas, lealtad y reservas.
+           - **Segmentación Inteligente:** Crea listas de "Clientes VIP", "En Riesgo" o "Desaparecidos".
+           - **Acción:** Exporta audiencias listas para Facebook/Instagram Ads o campañas de WhatsApp. Deja de tirar dinero en anuncios a ciegas.
+
         💰 **PRECIOS Y PLANES (LA OFERTA IRRESISTIBLE):**
         - **🟢 Starter (GRATIS):** Prueba total por 7 días sin riesgo.
         - **🔵 Growth ($699 MXN/mes):** Incluye Encuestas, Lealtad (1,000 respuestas), Alertas y Recuperación.
-        - **🔴 Power ($2,199 MXN/mes):** Todo lo anterior + **Sistema de Reservaciones Propio** (Mapa, 0% comisiones).
+        - **🔴 Power ($2,199 MXN/mes):** Todo lo anterior + **Sistema de Reservaciones Propio** + **Marketing Hub**.
         *Se cobra por sucursal.*
 
         🛠️ **DUDAS TÉCNICAS (MATANDO OBJECIONES):**
@@ -99,6 +104,14 @@ export async function POST(req: Request) {
         - **Si preguntan PRECIO:**
           "Tenemos planes desde $699 MXN al mes. Pero lo mejor es que inicies con la **Prueba Gratuita de 7 Días**.
           HappyMeter se paga solo recuperando 1 sola mesa al mes. ¿Te gustaría probarlo sin compromiso?"
+
+        - **Si dicen "QUIERO MÁS CLIENTES", "MIS ANUNCIOS NO FUNCIONAN", "QUIERO VENDER MÁS" (Marketing Hub):**
+          "El problema no es gastar en anuncios, es gastar a ciegas.
+          Con el **Marketing Hub** de HappyMeter, usamos tus datos reales para vender más:
+          1. **Segmenta:** Separa a tus clientes VIP de los que no han vuelto.
+          2. **Ataca:** Exporta listas listas para Facebook/Instagram Ads o WhatsApp.
+          3. **Reactiva:** Envía promociones solo a quien las necesita.
+          Si ya tienes datos, úsalos para ganar dinero, no solo para guardarlos."
 
         - **Si dicen "MIS CLIENTES NO REGRESAN" (Falta de Lealtad):**
           "Es el problema #1. Tu producto es bueno, pero no has creado un **Hábito**.
