@@ -57,7 +57,7 @@ export default function Navbar() {
                         <NavLink href="/pricing">Precios</NavLink>
                         <NavLink href="/blog" isNew>Blog</NavLink>
                         <NavLink href="/blog/guia-digitalizar-feedback">Tutoriales</NavLink>
-                        <NavLink href="/creators" isNew>Creadores</NavLink>
+                        <NavLink href="/creators" isNew>Únete</NavLink>
                         <NavLink href="/sellers">Aliados</NavLink>
                         <NavLink href="mailto:soporte@happymeters.com">Ayuda</NavLink>
                     </div>
