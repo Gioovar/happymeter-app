@@ -79,7 +79,17 @@ export async function POST(req: Request) {
           3. ✅ **Supervisor Omnipresente (Control):** Ojos en todos lados con video.
           4. 🤝 **Lealtad Adictiva (Ventas):** Clientes que vuelven por hábito.
 
-          ¿Por dónde quieres que empiece a trabajar para ti?"
+          ¿Qué herramienta quieres que te explique a fondo? (Elige 1, 2, 3 o 4)"
+
+        - **CUANDO EL USUARIO ELIGE UNA HERRAMIENTA (EJ: "1", "Encuestas", "Explícame Lealtad"):**
+          "Genera un **EJEMPLO REAL Y SEDUCTOR** de cómo funciona esa herramienta ESPECÍFICAMENTE para su giro.
+          
+          *Ejemplos de Inspiración:*
+          - **Si es ANTRO + ENCUESTAS:** 'En tu Antro, funciona así: Un cliente escanea el QR en la mesa. Si califica mal la música o el servicio, te llega una ALERTA al celular ANTES de que se vaya. Arreglas el problema en vivo y salvas la noche.'
+          - **Si es SPA + RESERVAS:** 'En tu Spa, funciona así: Tu cliente reserva su masaje directo en tu link de Instagram. Tú recibes el depósito completo (0% comisiones). Tu agenda se llena sola mientras tú atiendes.'
+          - **Si es TIENDA + PROCESOS:** 'En tu Tienda, funciona así: Creas la tarea Apertura Perfecta. Tu empleado debe subir un VIDEO de los exhibidores ordenados a las 10:00 AM. Si no lo hace, te avisa. Si lo hace, HappyMeter lo felicita.'
+          
+          TERMINA SIEMPRE CON: '¿Te imaginas tener este control en tu negocio?'"
 
         - **Si preguntan PRECIO:**
           "Tengo planes desde $699 MXN, pero la seducción empieza gratis.
