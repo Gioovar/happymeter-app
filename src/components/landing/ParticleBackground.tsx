@@ -15,125 +15,176 @@ export default function ParticleBackground() {
         let width = canvas.width = window.innerWidth
         let height = canvas.height = window.innerHeight
 
-        let mouseX = -1000 // Start off screen
-        let mouseY = -1000
+        let mouseX = width / 2
+        let mouseY = height / 2
 
-        // Configuration for "Subtle Authority"
-        const density = 6000 // larger area per particle = fewer particles
-        const particleCount = Math.floor((width * height) / density) // Responsive count (~150 on desktop)
-        const connectionDist = 120 // Range for synaptic lines
+        // Configuration
+        const particleCount = 2500 // High density for solid look
+        const baseRadius = window.innerWidth < 768 ? 150 : 280
 
+        // Particles
         const particles: Particle[] = []
 
         class Particle {
+            theta: number
+            phi: number
             x: number
             y: number
-            vx: number
-            vy: number
-            size: number
-            color: string
-            phase: number // For sine wave wobble
+            z: number
+            originalTheta: number
+            originalPhi: number
 
-            constructor() {
-                this.x = Math.random() * width
-                this.y = Math.random() * height
+            constructor(index: number, total: number) {
+                // Fibonacci Sphere Distribution (Even spacing)
+                const phi = Math.acos(1 - 2 * (index + 0.5) / total)
+                const theta = Math.PI * (1 + Math.sqrt(5)) * index
 
-                // Slow, upward drift like bubbles or heat data
-                this.vx = (Math.random() - 0.5) * 0.2
-                this.vy = Math.random() * -0.5 - 0.1 // Always Up (-y)
+                this.originalTheta = theta
+                this.originalPhi = phi
+                this.theta = theta
+                this.phi = phi
 
-                this.size = Math.random() * 2 + 0.5 // varied fine sizes
-                this.phase = Math.random() * Math.PI * 2
-
-                // Brand Colors (Violet / Cyan) but faint
-                // Using HSLA for better control
-                const isViolet = Math.random() > 0.4
-                // Violet (260ish) or Cyan (180ish)
-                const hue = isViolet ? 260 : 190
-                this.color = `hsla(${hue}, 80%, 70%, `
+                this.x = 0
+                this.y = 0
+                this.z = 0
             }
 
-            update(time: number) {
-                // 1. Movement
-                this.y += this.vy
-                this.x += this.vx + Math.sin(time * 0.001 + this.phase) * 0.1 // Gentle sway
+            update(time: number, rotX: number, rotY: number, mX: number, mY: number) {
+                // 1. Calculate Base Radius with Noise (Liquid Effect)
+                // Using basic sine waves to simulate Perlin noise on the surface
+                const freq = 4
+                const amp = 20
 
-                // 2. Wrap around properties
-                // If it goes off top, respawn at bottom
-                if (this.y < -10) {
-                    this.y = height + 10
-                    this.x = Math.random() * width
-                }
-                // Horizontal wrap
-                if (this.x > width + 10) this.x = -10
-                if (this.x < -10) this.x = width + 10
+                // Displace based on original angles (topology)
+                // "Breathing" waves
+                let r = baseRadius +
+                    Math.sin(this.originalTheta * freq + time) * amp +
+                    Math.cos(this.originalPhi * freq + time) * amp
 
-                // 3. Mouse Interaction (Gentle Repel)
-                const dx = this.x - mouseX
-                const dy = this.y - mouseY
-                const dist = Math.sqrt(dx * dx + dy * dy)
-                const mouseRadius = 150
+                // 2. Mouse Interaction: Local Bulge/Deformation
+                // We need to know where the mouse is "projecting" on the sphere roughly
+                // Simple hack: Deform based on screen space proximity after projection?
+                // Or deform based on angle relative to view?
+                // Let's rely on the rotation for interaction mostly, but add a 
+                // "Pulse" wave driven by mouse speed?
+                // Or simplified: "Magnetic" bulge towards viewer if mouse is center?
 
-                if (dist < mouseRadius) {
-                    const force = (mouseRadius - dist) / mouseRadius
-                    const angle = Math.atan2(dy, dx)
+                // Let's convert to Cartesian first with the noisy radius
+                let x = r * Math.sin(this.phi) * Math.cos(this.theta)
+                let y = r * Math.sin(this.phi) * Math.sin(this.theta)
+                let z = r * Math.cos(this.phi)
 
-                    // Very gentle push
-                    this.x += Math.cos(angle) * force * 1
-                    this.y += Math.sin(angle) * force * 1
-                }
-            }
+                // 3. Rotation (Trackball)
+                // Rotate around Y
+                const cosY = Math.cos(rotY)
+                const sinY = Math.sin(rotY)
+                const x1 = x * cosY - z * sinY
+                const z1 = z * cosY + x * sinY
 
-            draw(opacity: number) {
-                if (!ctx) return
-                ctx.beginPath()
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-                ctx.fillStyle = this.color + opacity + ')' // Complete the hsla string
-                ctx.fill()
+                // Rotate around X
+                const cosX = Math.cos(rotX)
+                const sinX = Math.sin(rotX)
+                const y1 = y * cosX - z1 * sinX
+                const z2 = z1 * cosX + y * sinX
+
+                this.x = x1
+                this.y = y1
+                this.z = z2
             }
         }
 
-        // Init
+        // Init Particles
         for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle())
+            particles.push(new Particle(i, particleCount))
         }
 
         let time = 0
+        let targetRotX = 0
+        let targetRotY = 0
+
         const animate = () => {
-            ctx.clearRect(0, 0, width, height)
-            time += 16 // roughly 60fps ms
+            // Trail effect? 
+            // ctx.clearRect(0, 0, width, height) 
+            // The image looks crisp, so clearRect is better
+            // But let's use a very dark fill to prevent trails for this sharp look
+            ctx.fillStyle = '#020617'
+            ctx.fillRect(0, 0, width, height) // Clear with bg color
 
-            // Draw Connections First (Background layer)
-            ctx.lineWidth = 0.5
+            time += 0.015
 
-            // Nested loop optimized for N < 200
-            for (let i = 0; i < particles.length; i++) {
-                const p1 = particles[i]
-                p1.update(time)
+            // Smooth Rotation Smoothing
+            // Map mouse to rotation angles
+            const targetX = (mouseY / height - 0.5) * Math.PI // -PI/2 to PI/2
+            const targetY = (mouseX / width - 0.5) * Math.PI // -PI/2 to PI/2
 
-                // Check neighbors
-                for (let j = i + 1; j < particles.length; j++) {
-                    const p2 = particles[j]
-                    const dx = p1.x - p2.x
-                    const dy = p1.y - p2.y
-                    const dist = Math.sqrt(dx * dx + dy * dy)
+            targetRotX += (targetX - targetRotX) * 0.05
+            targetRotY += (targetY - targetRotY) * 0.05
 
-                    if (dist < connectionDist) {
-                        const alpha = 1 - (dist / connectionDist)
-                        // Very subtle lines
-                        ctx.strokeStyle = `rgba(139, 92, 246, ${alpha * 0.15})`
-                        ctx.beginPath()
-                        ctx.moveTo(p1.x, p1.y)
-                        ctx.lineTo(p2.x, p2.y)
-                        ctx.stroke()
-                    }
+            // Add auto-spin
+            const autoSpin = time * 0.2
+
+            // Render
+            const focalLength = 600
+            const centerX = width / 2
+            const centerY = height / 2
+
+            // Sort particles for Z-order (Painter's algorithm)
+            // Essential for gradient sphere look
+            // We update positions first, then sort, then draw
+
+            // First Update loop
+            particles.forEach(p => {
+                p.update(time, targetRotX, targetRotY + autoSpin, mouseX, mouseY)
+            })
+
+            // Sort
+            particles.sort((a, b) => b.z - a.z)
+
+            // Draw Loop
+            particles.forEach(p => {
+                // Projection
+                const zDepth = p.z + 800 // Push back
+                const scale = focalLength / zDepth
+
+                const projX = centerX + p.x * scale
+                const projY = centerY + p.y * scale
+
+                // Dynamic Color Gradient
+                // Map X position to Color Range (Cyan <-> Magenta)
+                // Normalize X (-radius to +radius) roughly -1 to 1
+                // Actually use original sphere coordinates for consistent surface color vs lighting effect?
+                // The reference shows lighting. Let's use Z-depth for brightness and X for Hue.
+
+                if (zDepth > 0) {
+                    // Normalize position for color mix
+                    // p.x is rotated position. 
+                    // -300 to 300 roughly
+                    const normalizedX = Math.max(-1, Math.min(1, p.x / 300))
+
+                    // Cyan: 180-200, Magenta: 300
+                    // Mix: Let's interpolate RGB
+                    // Cyan: [6, 182, 212]
+                    // Magenta: [217, 70, 239]
+
+                    const t = (normalizedX + 1) / 2 // 0 to 1
+
+                    const r = Math.floor(6 * (1 - t) + 217 * t)
+                    const g = Math.floor(182 * (1 - t) + 70 * t)
+                    const b = Math.floor(212 * (1 - t) + 239 * t)
+
+                    // Depth shading
+                    // Closer particles are brighter
+                    const alpha = Math.max(0.2, 1 - (p.z / 400)) // Simple fog
+
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`
+
+                    const size = scale * 2.5 // Dot size
+
+                    ctx.beginPath()
+                    ctx.arc(projX, projY, size, 0, Math.PI * 2)
+                    ctx.fill()
                 }
-
-                // Draw Particle
-                // Opacity pulses slightly for twinkling
-                const pulse = Math.sin(time * 0.002 + p1.phase) * 0.2 + 0.6
-                p1.draw(pulse)
-            }
+            })
 
             requestAnimationFrame(animate)
         }
@@ -146,24 +197,16 @@ export default function ParticleBackground() {
         }
 
         const handleMouseMove = (e: MouseEvent) => {
-            // Add slight lag or smoothing if desired, but direct is fine for this
             mouseX = e.clientX
             mouseY = e.clientY
         }
 
-        const handleMouseLeave = () => {
-            mouseX = -1000
-            mouseY = -1000
-        }
-
         window.addEventListener('resize', handleResize)
         window.addEventListener('mousemove', handleMouseMove)
-        window.addEventListener('mouseleave', handleMouseLeave)
 
         return () => {
             window.removeEventListener('resize', handleResize)
             window.removeEventListener('mousemove', handleMouseMove)
-            window.removeEventListener('mouseleave', handleMouseLeave)
         }
     }, [])
 
@@ -172,8 +215,7 @@ export default function ParticleBackground() {
             ref={canvasRef}
             className="absolute inset-0 w-full h-full pointer-events-none"
             style={{
-                // Subtle gradient base - matches site theme
-                background: 'radial-gradient(circle at 50% 50%, #0a0a0a 0%, #000 100%)'
+                background: '#020617'
             }}
         />
     )
