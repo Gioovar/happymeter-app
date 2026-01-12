@@ -15,216 +15,184 @@ export default function ParticleBackground() {
         let width = canvas.width = window.innerWidth
         let height = canvas.height = window.innerHeight
 
-        let mouseX = width / 2
-        let mouseY = height / 2
+        let mouseX = -1000
+        let mouseY = -1000
 
-        const particles: Particle[] = []
-        // Higher density for the head mesh
-        const particleCount = window.innerWidth < 768 ? 100 : 250
-        const connectionDistance = 100 // Tighter connections for the head
-
-        // Head definition
-        const headWidth = Math.min(width * 0.35, 300)
-        const headHeight = headWidth * 1.4
-
-        class Particle {
+        interface Particle {
             x: number
             y: number
-            originX: number
-            originY: number
+            targetX: number
+            targetY: number
             vx: number
             vy: number
             size: number
             color: string
-            isHead: boolean
+        }
 
-            constructor(forceHead: boolean = false) {
-                // Determine if particle is part of the Head or the Aura
-                // 80% chance to be part of the head structure
-                this.isHead = forceHead || Math.random() > 0.2
+        let particles: Particle[] = []
 
-                if (this.isHead) {
-                    // Spawn inside the Head Ellipse
-                    const angle = Math.random() * Math.PI * 2
-                    // Distribute more towards surface for contour, but some inside for volume
-                    const radiusScale = Math.sqrt(Math.random())
-                    const rx = (headWidth / 2) * radiusScale
-                    const ry = (headHeight / 2) * radiusScale
+        // Brand colors for the logo particles
+        const colors = [
+            'rgba(139, 92, 246, 0.9)', // Violet
+            'rgba(217, 70, 239, 0.9)', // Fuchsia
+            'rgba(6, 182, 212, 0.9)'   // Cyan
+        ]
 
-                    this.originX = width / 2 + Math.cos(angle) * rx
-                    this.originY = height / 2 + Math.sin(angle) * ry
-                } else {
-                    // Spawn randomly for background 'circuit' feel
-                    this.originX = Math.random() * width
-                    this.originY = Math.random() * height
+        const initParticles = (image: HTMLImageElement) => {
+            particles = []
+
+            // Draw image to a virtual canvas to read pixel data
+            const virtualCanvas = document.createElement('canvas')
+            const vCtx = virtualCanvas.getContext('2d')
+            if (!vCtx) return
+
+            // Responsive Scaling
+            // We want the logo to be a good size relative to screen
+            const scale = Math.min(width, height) * 0.4
+            // Aspect ratio of the image
+            const aspectRatio = image.width / image.height
+
+            const imgHeight = scale
+            const imgWidth = scale * aspectRatio
+
+            virtualCanvas.width = width
+            virtualCanvas.height = height
+
+            // Center image
+            const offsetX = (width - imgWidth) / 2
+            const offsetY = (height - imgHeight) / 2
+
+            vCtx.drawImage(image, offsetX, offsetY, imgWidth, imgHeight)
+
+            // Read pixel data
+            // Optimization: Don't read every pixel. Skip based on density.
+            const density = window.innerWidth < 768 ? 6 : 4 // Higher number = fewer particles
+            const imageData = vCtx.getImageData(0, 0, width, height)
+            const data = imageData.data
+
+            for (let y = 0; y < height; y += density) {
+                for (let x = 0; x < width; x += density) {
+                    const index = (y * width + x) * 4
+                    const alpha = data[index + 3]
+
+                    if (alpha > 128) { // If pixel is visible
+                        // This X,Y is a target
+                        particles.push({
+                            x: Math.random() * width, // Start random
+                            y: Math.random() * height,
+                            targetX: x,
+                            targetY: y,
+                            vx: 0,
+                            vy: 0,
+                            size: Math.random() * 1.5 + 0.5,
+                            color: colors[Math.floor(Math.random() * colors.length)]
+                        })
+                    }
                 }
-
-                this.x = this.originX
-                this.y = this.originY
-
-                // Micro-movement (vibration/alive feel)
-                this.vx = (Math.random() - 0.5) * 0.5
-                this.vy = (Math.random() - 0.5) * 0.5
-
-                this.size = Math.random() * 1.5 + 0.5
-
-                // Tech colors: Cyan/Blue mix with Violet
-                const isBlue = Math.random() > 0.5
-                this.color = isBlue
-                    ? `rgba(6, 182, 212, ${Math.random() * 0.5 + 0.3})` // Cyan
-                    : `rgba(139, 92, 246, ${Math.random() * 0.5 + 0.3})` // Violet
-            }
-
-            update() {
-                // Jitter around origin
-                this.x += this.vx
-                this.y += this.vy
-
-                // Tether to origin (spring force)
-                const dx = this.originX - this.x
-                const dy = this.originY - this.y
-                const dist = Math.sqrt(dx * dx + dy * dy)
-
-                if (dist > 10) {
-                    this.vx += dx * 0.005
-                    this.vy += dy * 0.005
-                }
-
-                // Damping
-                this.vx *= 0.95
-                this.vy *= 0.95
-            }
-
-            draw() {
-                if (!ctx) return
-                ctx.beginPath()
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-                ctx.fillStyle = this.color
-                ctx.fill()
             }
         }
 
-        // Init particles
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle())
-        }
-
-        const drawEye = (centerX: number, centerY: number, size: number) => {
-            if (!ctx) return
-
-            // Eye Glow
-            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, size * 2)
-            gradient.addColorStop(0, 'rgba(6, 182, 212, 0.2)')
-            gradient.addColorStop(1, 'rgba(6, 182, 212, 0)')
-            ctx.fillStyle = gradient
-            ctx.beginPath()
-            ctx.arc(centerX, centerY, size * 2, 0, Math.PI * 2)
-            ctx.fill()
-
-            // Sclera (Frame)
-            ctx.strokeStyle = 'rgba(6, 182, 212, 0.8)' // Cyan
-            ctx.lineWidth = 1.5
-            ctx.beginPath()
-            // Techno-shape (slightly hexagonal or bracketed)
-            ctx.moveTo(centerX - size, centerY)
-            ctx.lineTo(centerX - size * 0.5, centerY - size * 0.7)
-            ctx.lineTo(centerX + size * 0.5, centerY - size * 0.7)
-            ctx.lineTo(centerX + size, centerY)
-            ctx.lineTo(centerX + size * 0.5, centerY + size * 0.7)
-            ctx.lineTo(centerX - size * 0.5, centerY + size * 0.7)
-            ctx.closePath()
-            ctx.stroke()
-
-            // Pupil Tracking
-            const angle = Math.atan2(mouseY - centerY, mouseX - centerX)
-            // Limit pupil movement radius
-            const pupilRadius = size * 0.4
-            const pupilX = centerX + Math.cos(angle) * pupilRadius
-            const pupilY = centerY + Math.sin(angle) * pupilRadius
-
-            // Pupil Draw
-            ctx.fillStyle = '#fff'
-            ctx.beginPath()
-            ctx.arc(pupilX, pupilY, 2, 0, Math.PI * 2)
-            ctx.fill()
-
-            // Connecting line to mouse (Targeting system look)
-            ctx.strokeStyle = 'rgba(6, 182, 212, 0.1)'
-            ctx.lineWidth = 0.5
-            ctx.beginPath()
-            ctx.moveTo(pupilX, pupilY)
-            ctx.lineTo(mouseX, mouseY)
-            ctx.stroke()
+        // Load Image
+        const image = new Image()
+        image.src = '/logo-particles.png'
+        image.onload = () => {
+            initParticles(image)
+            animate()
         }
 
         const animate = () => {
             ctx.clearRect(0, 0, width, height)
 
-            // 1. Draw Mesh & Particles
-            particles.forEach(particle => {
-                particle.update()
-                // particle.draw() // Optional: Only draw particles if they connect, or draw faint
-
-                // Draw Connections
-                // Optimization: Check only nearby particles
-                // For a simple aesthetic, brute force on small count is fine, 
-                // but let's just loop locally if possible. 
-                // Given N=250, N^2 is 62,500 ops per frame, manageable on modern desktop.
-                // On mobile we reduced N.
-            })
-
-            // Draw Mesh (The Neural Brain)
-            ctx.lineWidth = 0.8
             for (let i = 0; i < particles.length; i++) {
-                const p1 = particles[i]
+                const p = particles[i]
 
-                // Draw particle (nodes)
-                ctx.beginPath()
-                ctx.arc(p1.x, p1.y, p1.size, 0, Math.PI * 2)
-                ctx.fillStyle = p1.color
-                ctx.fill()
+                // Physics
+                // 1. Spring force to Target
+                const dx = p.targetX - p.x
+                const dy = p.targetY - p.y
 
-                for (let j = i + 1; j < particles.length; j++) {
-                    const p2 = particles[j]
-                    const dx = p1.x - p2.x
-                    const dy = p1.y - p2.y
-                    const dist = Math.sqrt(dx * dx + dy * dy)
+                // Spring strength
+                p.vx += dx * 0.03
+                p.vy += dy * 0.03
 
-                    if (dist < connectionDistance) {
-                        ctx.beginPath()
+                // 2. Mouse Repulsion (Disruption)
+                const dmx = p.x - mouseX
+                const dmy = p.y - mouseY
+                const distMouse = Math.sqrt(dmx * dmx + dmy * dmy)
+                const mouseRadius = 100
 
-                        // Opacity logic:
-                        // Make connections inside the head stronger
-                        const alpha = (1 - dist / connectionDistance) * 0.3
+                if (distMouse < mouseRadius) {
+                    const force = (mouseRadius - distMouse) / mouseRadius
+                    const angle = Math.atan2(dmy, dmx)
+                    const pushStr = 3
 
-                        ctx.strokeStyle = p1.isHead && p2.isHead
-                            ? `rgba(6, 182, 212, ${alpha})` // Cyan internal structure
-                            : `rgba(139, 92, 246, ${alpha * 0.5})` // Violet outer connections
-
-                        ctx.moveTo(p1.x, p1.y)
-                        ctx.lineTo(p2.x, p2.y)
-                        ctx.stroke()
-                    }
+                    p.vx += Math.cos(angle) * force * pushStr
+                    p.vy += Math.sin(angle) * force * pushStr
                 }
+
+                // Friction
+                p.vx *= 0.85
+                p.vy *= 0.85
+
+                p.x += p.vx
+                p.y += p.vy
+
+                // Draw Particle
+                ctx.beginPath()
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+                ctx.fillStyle = p.color
+                ctx.fill()
             }
 
-            // 2. Draw The EYES (Overlay on top of mesh)
-            const eyeSpacing = headWidth * 0.35 // Distance between eyes
-            const eyeYLevel = height / 2 - headHeight * 0.05 // Slightly above center
+            // Draw Connections (Look for neighbors)
+            // Optimization for high particle count: only check a subset or purely generic grid
+            // Since logo has structure, we can just check local neighbors in the array?
+            // No, the array order is scanline. So neighbors in array are neighbors in Y usually.
+            // Let's rely on standard distance check but be careful with performance.
+            // Limit checks to max 5000 checks per frame? Random subset?
 
-            drawEye(width / 2 - eyeSpacing, eyeYLevel, 12) // Left Eye
-            drawEye(width / 2 + eyeSpacing, eyeYLevel, 12) // Right Eye
+            // For logo, the shape is defined by the particles themselves, 
+            // explicit lines might be too heavy visual clutter if density is high.
+            // Let's add faint lines ONLY if mouse is close, to show 'activation' in that area.
+
+            // Drawing lines only near mouse
+            /*
+            particles.forEach((p1, index) => {
+                const dmx = p1.x - mouseX
+                const dmy = p1.y - mouseY
+                const distMouse = Math.sqrt(dmx * dmx + dmy * dmy)
+                
+                if (distMouse < 150) {
+                     // Check neighbors
+                     for (let j = index + 1; j < particles.length; j++) {
+                         const p2 = particles[j]
+                         // Optimization: Skip if far in array index? (Likely far in Y)
+                         // Just simple distance check for now
+                         const dx = p1.x - p2.x
+                         const dy = p1.y - p2.y
+                         if (Math.abs(dx) > 20 || Math.abs(dy) > 20) continue; // Fast reject
+
+                         const dist = Math.sqrt(dx*dx + dy*dy)
+                         if (dist < 20) {
+                             ctx.beginPath()
+                             ctx.strokeStyle = 'rgba(139, 92, 246, 0.2)'
+                             ctx.moveTo(p1.x, p1.y)
+                             ctx.lineTo(p2.x, p2.y)
+                             ctx.stroke()
+                         }
+                     }
+                }
+            })
+            */
 
             requestAnimationFrame(animate)
         }
 
-        animate()
-
         const handleResize = () => {
             width = canvas.width = window.innerWidth
             height = canvas.height = window.innerHeight
-            // Need to re-init particles to center them? 
-            // For now, let's just update bounds. Ideally we respawn.
+            // Re-init to rescale logo
+            initParticles(image)
         }
 
         const handleMouseMove = (e: MouseEvent) => {
@@ -247,7 +215,6 @@ export default function ParticleBackground() {
             ref={canvasRef}
             className="absolute inset-0 w-full h-full pointer-events-none"
             style={{
-                // Deep cyber background
                 background: 'radial-gradient(circle at center, #020617 0%, #000 100%)'
             }}
         />
