@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
-import { ShieldCheck, Home } from "lucide-react" // Removed LogOut
+import { ShieldCheck, Home, History as HistoryIcon } from "lucide-react" // Removed LogOut
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import OpsHeader from "./OpsHeader"
@@ -23,6 +23,7 @@ export default async function OpsLayout({
     // - User is an active Member with role OPERATOR/ADMIN
     // OR
     // - User is an Owner (has created a team?) - Owners should be able to see this view for testing.
+    // We'll assume yes for now.
 
     const member = await prisma.teamMember.findFirst({
         where: { userId }
@@ -65,12 +66,16 @@ export default async function OpsLayout({
             </main>
 
             {/* Bottom Nav (If deeper navigation needed later, for now just Home) */}
-            <nav className="fixed bottom-0 left-0 right-0 h-16 bg-slate-900 border-t border-slate-800 flex items-center justify-around px-4 pb-safe">
-                <Link href="/ops/tasks" className="flex flex-col items-center gap-1 text-indigo-400">
+            <nav className="fixed bottom-0 left-0 right-0 h-16 bg-slate-900 border-t border-slate-800 flex items-center justify-around px-4 pb-safe z-40">
+                <Link href="/ops/tasks" className="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-400 transition-colors">
                     <Home className="w-6 h-6" />
                     <span className="text-[10px] font-medium">Tareas</span>
                 </Link>
-                {/* Add more tabs like History here later */}
+                <Link href="/ops/history" className="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-400 transition-colors">
+                    <HistoryIcon className="w-6 h-6" />
+                    <span className="text-[10px] font-medium">Historial</span>
+                </Link>
+                {/* Scanner button usually central/floating? or in nav? User had big button in dashboard */}
             </nav>
         </div>
     )

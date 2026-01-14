@@ -880,6 +880,7 @@ model LoyaltyRedemption {
   // Unique code for this specific redemption instance that staff scans
   redemptionCode  String   @unique @default(uuid())
   status          String   @default("PENDING") // PENDING (customer unlocked), REDEEMED (staff scanned)
+  evidenceUrl     String?  // Optional photo proof of delivery
 
   program         LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
   customer        LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)

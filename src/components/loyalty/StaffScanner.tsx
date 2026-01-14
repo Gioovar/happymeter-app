@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react"
 import { Html5Qrcode } from "html5-qrcode"
 import { toast } from "sonner"
 import { validateVisitScan, logCustomerVisit, redeemReward } from "@/actions/loyalty"
-import { Loader2, ScanLine, Tag, UtensilsCrossed, X, DollarSign, Camera, RefreshCcw } from "lucide-react"
+import { Loader2, ScanLine, Tag, UtensilsCrossed, X, DollarSign, Camera, RefreshCcw, UploadCloud, Image as ImageIcon } from "lucide-react"
+import Image from "next/image"
 
 interface StaffScannerProps {
     staffId: string
@@ -28,6 +29,11 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
     const [customerName, setCustomerName] = useState("")
     const [programName, setProgramName] = useState("") // New state for Business Name
     const [spendAmount, setSpendAmount] = useState("")
+
+    // Redemption Evidence State
+    const [showRedemptionModal, setShowRedemptionModal] = useState(false)
+    const [pendingRedemptionCode, setPendingRedemptionCode] = useState<string | null>(null)
+    const [evidenceBase64, setEvidenceBase64] = useState<string | null>(null)
 
     useEffect(() => {
         // Initialize scanner instance once
@@ -195,25 +201,67 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
             }
 
         } else if (type === 'REDEEM') {
-            toast.loading("Verificando premio...")
-            const res = await redeemReward(staffId, payload)
-            if (res.success) {
-                toast.dismiss()
-                toast.success(`PREMIO ENTREGADO: ${res.rewardName}`, {
-                    description: `Cliente: ${res.customerName}`,
-                    duration: 5000,
-                    icon: <Tag className="w-5 h-5 text-purple-500" />
-                })
-                resumeScanner(3000)
-            } else {
-                toast.dismiss()
-                toast.error(res.error || "Código inválido o ya usado")
-                resumeScanner(2000)
-            }
+            // STOP! Ask for evidence first
+            setPendingRedemptionCode(payload)
+            setEvidenceBase64(null)
+            setShowRedemptionModal(true)
+            setIsProcessing(false) // Wait for user interaction
         } else {
             // Unknown type
             toast.error("Formato QR no reconocido")
             resumeScanner(2000)
+        }
+    }
+
+    const handleEvidenceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("La imagen debe pesar menos de 5MB")
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            setEvidenceBase64(reader.result as string)
+        }
+        reader.readAsDataURL(file)
+    }
+
+    const handleConfirmRedemption = async () => {
+        if (!pendingRedemptionCode) return
+
+        // Removed mandatory evidence check as per potential flexibility, 
+        // but user requested it. Let's make it mandatory for "Evidence Flow".
+        if (!evidenceBase64) {
+            toast.error("Debes adjuntar una foto de evidencia")
+            return
+        }
+
+        toast.loading("Procesando premio...")
+        const res = await redeemReward(staffId, pendingRedemptionCode, evidenceBase64)
+
+        if (res.success) {
+            toast.dismiss()
+            toast.success(`PREMIO ENTREGADO: ${res.rewardName}`, {
+                description: `Cliente: ${res.customerName}`,
+                duration: 5000,
+                icon: <Tag className="w-5 h-5 text-purple-500" />
+            })
+            setShowRedemptionModal(false)
+            setPendingRedemptionCode(null)
+            setEvidenceBase64(null)
+            resumeScanner(3000)
+        } else {
+            toast.dismiss()
+            toast.error(res.error || "Código inválido o ya usado")
+            // Keep modal open on error? Or close?
+            // If invalid code, maybe close.
+            if (res.error?.includes("inválido")) {
+                setShowRedemptionModal(false)
+                resumeScanner(2000)
+            }
         }
     }
 
@@ -410,6 +458,76 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                                 className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
                             >
                                 {scanType === 'POINTS' ? 'Confirmar Monto' : 'Registrar Visita'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* REDEMPTION EVIDENCE MODAL */}
+            {showRedemptionModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900">
+                                    Entregar Premio
+                                </h3>
+                                <p className="text-slate-500 text-sm">
+                                    Evidencia de entrega requerida
+                                </p>
+                            </div>
+                            <button onClick={() => { setShowRedemptionModal(false); setPendingRedemptionCode(null); setIsProcessing(false); resumeScanner(500); }} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-6 mb-6">
+                            <div className="bg-purple-50 border border-purple-100 rounded-2xl p-6 text-center">
+                                <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <Tag className="w-8 h-8" />
+                                </div>
+                                <p className="text-purple-900 font-medium">
+                                    Escaneaste un Cupón
+                                </p>
+                                <p className="text-purple-600/70 text-xs mt-1">Sube una foto entregando el producto.</p>
+                            </div>
+
+                            {/* PHOTO UPLOAD */}
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="relative group cursor-pointer w-full h-48 rounded-2xl overflow-hidden bg-slate-100 border-2 border-dashed border-slate-300 hover:border-purple-500 transition-colors">
+                                    {evidenceBase64 ? (
+                                        <Image src={evidenceBase64} alt="Evidence" fill className="object-cover" />
+                                    ) : (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                                            <Camera className="w-10 h-10 mb-2 opacity-50" />
+                                            <span className="text-xs uppercase font-bold">Tomar Foto</span>
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        onChange={handleEvidenceFileChange}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => { setShowRedemptionModal(false); setPendingRedemptionCode(null); setIsProcessing(false); resumeScanner(500); }}
+                                className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleConfirmRedemption}
+                                disabled={!evidenceBase64}
+                                className="flex-1 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-200"
+                            >
+                                Confirmar Entrega
                             </button>
                         </div>
                     </div>

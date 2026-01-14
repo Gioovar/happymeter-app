@@ -47,7 +47,7 @@ export default function OpsPage() {
                 </Link>
 
                 {/* HISTORY BUTTON */}
-                <button className="group relative overflow-hidden bg-[#16161e] border border-white/5 rounded-3xl p-6 transition-all active:scale-95 hover:bg-[#1c1c24]">
+                <Link href="/ops/history" className="group relative overflow-hidden bg-[#16161e] border border-white/5 rounded-3xl p-6 transition-all active:scale-95 hover:bg-[#1c1c24]">
                     <div className="flex items-center gap-4">
                         <div className="bg-white/5 w-12 h-12 rounded-2xl flex items-center justify-center">
                             <History className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />
@@ -57,7 +57,7 @@ export default function OpsPage() {
                             <p className="text-gray-500 text-sm">Ver últimos movimientos</p>
                         </div>
                     </div>
-                </button>
+                </Link>
             </div>
         </div>
     )

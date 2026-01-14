@@ -569,7 +569,7 @@ export async function deleteLoyaltyReward(programId: string, rewardId: string) {
     }
 }
 
-export async function redeemReward(staffId: string, code: string) {
+export async function redeemReward(staffId: string, code: string, evidenceUrl?: string) {
     if (!code) return { success: false, error: "Código requerido" }
 
     // Strip "R:" prefix if present
@@ -592,7 +592,8 @@ export async function redeemReward(staffId: string, code: string) {
             data: {
                 status: "REDEEMED",
                 staffId: staffId || "SYSTEM",
-                redeemedAt: new Date()
+                redeemedAt: new Date(),
+                evidenceUrl: evidenceUrl || null
             }
         })
 
@@ -607,6 +608,35 @@ export async function redeemReward(staffId: string, code: string) {
     } catch (error) {
         console.error("Redemption error:", error)
         return { success: false, error: "Error de sistema al canjear" }
+    }
+}
+
+export async function getStaffRedemptionHistory(staffId: string) {
+    try {
+        const redemptions = await prisma.loyaltyRedemption.findMany({
+            where: {
+                staffId: staffId,
+                status: 'REDEEMED'
+            },
+            take: 20,
+            orderBy: { redeemedAt: 'desc' },
+            include: {
+                reward: { select: { name: true, costInVisits: true } },
+                customer: { select: { name: true, phone: true } }
+            }
+        })
+
+        // Safe DTO serialization
+        return redemptions.map(r => ({
+            id: r.id,
+            rewardName: r.reward.name,
+            customerName: r.customer.name || r.customer.phone || "Cliente",
+            redeemedAt: r.redeemedAt.toISOString(),
+            evidenceUrl: r.evidenceUrl
+        }))
+    } catch (error) {
+        console.error("Error fetching staff history:", error)
+        return []
     }
 }
 
