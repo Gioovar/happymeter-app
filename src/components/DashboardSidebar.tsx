@@ -291,23 +291,34 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
         <>
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 z-40 transition-all duration-300">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-1 overflow-hidden">
                     <button
                         onClick={() => toggleMobileMenu(true)}
-                        className="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                        className="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors flex-shrink-0"
                     >
                         <Menu className="w-6 h-6" />
                     </button>
-                    <div className="relative">
+
+                    {/* Logo Icon Only on Mobile to save space */}
+                    <div className="flex-shrink-0">
+                        <BrandLogo withText={false} size="sm" />
+                    </div>
+
+                    <div className="relative flex-1 max-w-[200px]">
                         <button
                             onClick={() => setIsModeSelectorOpen(!isModeSelectorOpen)}
-                            className="flex items-center gap-2 group"
+                            className={cn(
+                                "w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 shadow-lg group",
+                                isModeSelectorOpen
+                                    ? "bg-[#111] border-violet-500/50 text-white"
+                                    : "bg-[#111] border-white/10 text-gray-300 hover:border-white/20"
+                            )}
                         >
-                            <span className="font-bold text-lg text-white tracking-tight">
-                                Happy<span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-text-gradient">Meter</span>
+                            <span className="text-xs font-semibold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400 truncate">
+                                Áreas de Trabajo
                             </span>
                             <ChevronDown className={cn(
-                                "w-4 h-4 text-gray-400 transition-transform duration-200",
+                                "w-3 h-3 text-gray-400 transition-transform duration-200 flex-shrink-0",
                                 isModeSelectorOpen && "rotate-180"
                             )} />
                         </button>
@@ -316,11 +327,11 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                         {isModeSelectorOpen && (
                             <>
                                 <div
-                                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px]"
+                                    className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
                                     onClick={() => setIsModeSelectorOpen(false)}
                                 />
-                                <div className="absolute top-full left-0 mt-2 w-56 bg-[#18181b] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-left">
-                                    <div className="p-2 space-y-1">
+                                <div className="absolute top-full left-0 right-0 mt-3 bg-[#18181b] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top p-1.5">
+                                    <div className="grid gap-1">
                                         {MODES.map((mode) => {
                                             const isActive = getActiveMode(pathname) === mode.id
                                             const Icon = mode.icon
@@ -330,22 +341,29 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                                                     href={mode.href}
                                                     onClick={() => setIsModeSelectorOpen(false)}
                                                     className={cn(
-                                                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                                                        "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 items-start",
                                                         isActive
-                                                            ? "bg-white/10 text-white"
-                                                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                                                            ? "bg-gradient-to-r from-violet-600/20 to-indigo-600/20 text-white border border-white/5"
+                                                            : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
                                                     )}
                                                 >
                                                     <div className={cn(
-                                                        "p-1.5 rounded-md transition-colors",
-                                                        isActive ? "bg-white/10" : "bg-white/5 group-hover:bg-white/10"
+                                                        "p-2 rounded-lg transition-colors bg-[#0a0a0a] border border-white/5",
+                                                        isActive ? "text-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.3)]" : "text-gray-500 group-hover:text-gray-300"
                                                     )}>
-                                                        <Icon className={cn(
-                                                            "w-4 h-4",
-                                                            isActive ? "text-white" : "text-gray-400"
-                                                        )} />
+                                                        <Icon className="w-4 h-4" />
                                                     </div>
-                                                    {mode.label}
+                                                    <div>
+                                                        <span className={cn("block font-semibold", isActive ? "text-white" : "text-gray-300")}>
+                                                            {mode.label}
+                                                        </span>
+                                                        <span className="text-[10px] text-gray-500 font-normal">
+                                                            {mode.label === 'Encuestas' && 'Gestiona tus métricas'}
+                                                            {mode.label === 'Lealtad' && 'Premios y clientes'}
+                                                            {mode.label === 'Procesos' && 'Flujos y tareas'}
+                                                            {mode.label === 'Reservas' && 'Agenda y citas'}
+                                                        </span>
+                                                    </div>
                                                 </Link>
                                             )
                                         })}
