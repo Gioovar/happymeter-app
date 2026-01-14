@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { X, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,10 +12,34 @@ interface PromotionsSliderProps {
 export function PromotionsSlider({ promotions }: PromotionsSliderProps) {
     const [mounted, setMounted] = useState(false)
     const [selectedPromo, setSelectedPromo] = useState<any>(null)
+    const scrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         setMounted(true)
     }, [])
+
+    // Auto-scroll logic
+    useEffect(() => {
+        if (!promotions || promotions.length <= 1) return
+
+        const interval = setInterval(() => {
+            if (scrollRef.current) {
+                const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+
+                // Check if we are at the end
+                // We use a small buffer (10px) to account for potential fractional pixels
+                if (scrollLeft + clientWidth >= scrollWidth - 10) {
+                    // Reset to start
+                    scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' })
+                } else {
+                    // Scroll to next slide
+                    scrollRef.current.scrollBy({ left: clientWidth, behavior: 'smooth' })
+                }
+            }
+        }, 4000)
+
+        return () => clearInterval(interval)
+    }, [promotions])
 
     if (!mounted || !promotions || promotions.length === 0) return null
 
@@ -23,7 +47,10 @@ export function PromotionsSlider({ promotions }: PromotionsSliderProps) {
         <>
             {/* Native CSS Scroll Snap Slider for better mobile stability */}
             <div className="w-full mt-6 relative z-0">
-                <div className="flex flex-row flex-nowrap overflow-x-auto snap-x snap-mandatory rounded-2xl shadow-lg border border-white/5 scrollbar-hide aspect-[21/9]">
+                <div
+                    ref={scrollRef}
+                    className="flex flex-row flex-nowrap overflow-x-auto snap-x snap-mandatory rounded-2xl shadow-lg border border-white/5 scrollbar-hide aspect-[21/9]"
+                >
                     {promotions.map((promo) => (
                         <div
                             key={promo.id}
