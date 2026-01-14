@@ -4,6 +4,7 @@ import { InstallPwa } from "@/components/pwa/InstallPwa"
 import { useState, useEffect } from "react"
 import { CustomerLoyaltyCard } from "@/components/loyalty/CustomerLoyaltyCard"
 import { syncClerkLoyaltyCustomer, updateLoyaltyProfile, getCustomerStatus, getPublicLoyaltyProgramInfo } from "@/actions/loyalty"
+import { PromotionsSlider } from "@/components/loyalty/PromotionsSlider"
 import { toast } from "sonner"
 import { Phone, ArrowRight, Loader2, Sparkles, User, Calendar, KeyRound } from "lucide-react"
 import { SignIn, SignUp, useUser, SignedIn, SignedOut, useClerk } from "@clerk/nextjs"
@@ -295,22 +296,32 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                         </div>
                     </div>
                 ) : (
-                    customer && <CustomerLoyaltyCard
-                        customer={customer}
-                        className="min-h-screen"
-                        onEditProfile={() => {
-                            setName(customer.name || user?.firstName || "")
-                            setUsername(customer.username || "")
-                            // Format date to YYYY-MM-DD for input type="date"
-                            if (customer.birthday) {
-                                const d = new Date(customer.birthday)
-                                setBirthday(d.toISOString().split('T')[0])
-                            } else {
-                                setBirthday("")
-                            }
-                            setShowProfileForm(true)
-                        }}
-                    />
+                    customer && (
+                        <CustomerLoyaltyCard
+                            customer={customer}
+                            className="min-h-screen"
+                            onEditProfile={() => {
+                                setName(customer.name || user?.firstName || "")
+                                setUsername(customer.username || "")
+                                // Format date to YYYY-MM-DD for input type="date"
+                                if (customer.birthday) {
+                                    const d = new Date(customer.birthday)
+                                    setBirthday(d.toISOString().split('T')[0])
+                                } else {
+                                    setBirthday("")
+                                }
+                                setShowProfileForm(true)
+                            }}
+                        >
+                            {/* Inject Promotions Slider */}
+                            {programInfo?.promotions && programInfo.promotions.length > 0 && (
+                                <div className="mt-2 text-sm font-bold text-gray-500 uppercase tracking-wider px-1 mb-2">
+                                    Promociones
+                                </div>
+                            )}
+                            <PromotionsSlider promotions={programInfo?.promotions || []} />
+                        </CustomerLoyaltyCard>
+                    )
                 )}
             </SignedIn>
         </div>
