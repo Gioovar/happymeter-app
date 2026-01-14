@@ -7,7 +7,7 @@ import LandingAIChat from './LandingAIChat'
 
 export default function Hero() {
     return (
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <section className="relative min-h-screen flex items-center justify-center overflow-x-hidden">
             {/* Antigravity Background */}
             <div className="absolute inset-0 z-0">
                 <ParticleBackground />
