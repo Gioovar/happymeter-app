@@ -23,7 +23,7 @@ export function PromotionsSlider({ promotions }: PromotionsSliderProps) {
         <>
             {/* Native CSS Scroll Snap Slider for better mobile stability */}
             <div className="w-full mt-6 relative z-0">
-                <div className="flex overflow-x-auto snap-x snap-mandatory rounded-2xl shadow-lg border border-white/5 scrollbar-hide aspect-[21/9]">
+                <div className="flex flex-row flex-nowrap overflow-x-auto snap-x snap-mandatory rounded-2xl shadow-lg border border-white/5 scrollbar-hide aspect-[21/9]">
                     {promotions.map((promo) => (
                         <div
                             key={promo.id}
