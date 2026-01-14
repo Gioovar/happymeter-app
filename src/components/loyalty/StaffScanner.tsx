@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Html5QrcodeScanner } from "html5-qrcode"
+import { Html5Qrcode } from "html5-qrcode"
 import { toast } from "sonner"
 import { validateVisitScan, logCustomerVisit, redeemReward } from "@/actions/loyalty"
 import { Loader2, ScanLine, Tag, UtensilsCrossed, X, DollarSign, Camera } from "lucide-react"
@@ -13,7 +13,8 @@ interface StaffScannerProps {
 export function StaffScanner({ staffId }: StaffScannerProps) {
     const [scanResult, setScanResult] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
-    const scannerRef = useRef<Html5QrcodeScanner | null>(null)
+    const [scannerError, setScannerError] = useState<string | null>(null)
+    const scannerRef = useRef<Html5Qrcode | null>(null)
 
     // Points Logic State
     const [showAmountModal, setShowAmountModal] = useState(false)
@@ -22,30 +23,38 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
     const [spendAmount, setSpendAmount] = useState("")
 
     useEffect(() => {
-        // Initialize scanner on mount
-        const scanner = new Html5QrcodeScanner(
-            "reader",
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
-            },
-            /* verbose= */ false
-        )
-
-        scanner.render(onScanSuccess, onScanFailure)
+        // Use Html5Qrcode directly for more control (Auto-start)
+        const scanner = new Html5Qrcode("reader")
         scannerRef.current = scanner
 
-        function onScanSuccess(decodedText: string, decodedResult: any) {
-            handleScan(decodedText)
+        const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
         }
 
-        function onScanFailure(error: any) {
-            // quiet failure
-        }
+        scanner.start(
+            { facingMode: "environment" }, // Prefer back camera
+            config,
+            (decodedText) => {
+                handleScan(decodedText)
+            },
+            (errorMessage) => {
+                // ignore frames without QR
+            }
+        ).catch(err => {
+            console.error("Error starting scanner:", err)
+            setScannerError("No se pudo iniciar la cámara. Verifica los permisos.")
+        })
 
         return () => {
-            scanner.clear().catch(error => console.error("Failed to clear scanner", error))
+            if (scanner.isScanning) {
+                scanner.stop().then(() => {
+                    scanner.clear()
+                }).catch(err => console.error("Failed to stop scanner", err))
+            } else {
+                scanner.clear()
+            }
         }
     }, [])
 
@@ -175,7 +184,13 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                     <p className="text-sm text-slate-500">Escanea el QR del cliente o su premio</p>
                 </div>
 
-                <div id="reader" className="w-full overflow-hidden rounded-lg"></div>
+                <div id="reader" className="w-full overflow-hidden rounded-lg min-h-[300px] bg-black"></div>
+
+                {scannerError && (
+                    <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm text-center">
+                        {scannerError}
+                    </div>
+                )}
 
                 {isProcessing && !showAmountModal && (
                     <div className="mt-4 p-3 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center gap-2">
