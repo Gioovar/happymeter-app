@@ -345,7 +345,10 @@ export async function validateVisitScan(uniqueCustomerToken: string) {
         return {
             success: true,
             customerName: customer.name || "Cliente",
-            programType: customer.program.pointsPercentage > 0 ? "POINTS" : "VISITS",
+            programType: customer.program.pointsPercentage > 0 ? "POINTS" : "VISITS", // Deprecated but kept for compat
+            hasPoints: customer.program.pointsPercentage > 0,
+            hasVisits: true, // All programs track visits
+            visitGift: customer.program.enableFirstVisitGift ? customer.program.firstVisitGiftText : null,
             programId: customer.programId,
             businessName: customer.program.businessName
         }

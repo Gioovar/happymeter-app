@@ -22,6 +22,8 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
     // Unified Modal State
     const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [scanType, setScanType] = useState<"POINTS" | "VISITS">("VISITS")
+    const [availableModes, setAvailableModes] = useState<("POINTS" | "VISITS")[]>([])
+
     const [pendingVisitToken, setPendingVisitToken] = useState<string | null>(null)
     const [customerName, setCustomerName] = useState("")
     const [programName, setProgramName] = useState("") // New state for Business Name
@@ -144,7 +146,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
             toast.loading("Verificando cliente...")
 
             // VALIDATE FIRST
-            const validation = await validateVisitScan(payload)
+            const validation: any = await validateVisitScan(payload) // Cast to any to access new fields safely if TS doesn't catch up yet
 
             if (validation.success) {
                 toast.dismiss()
@@ -152,17 +154,32 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                 // Store scan details
                 setPendingVisitToken(payload)
                 setCustomerName(validation.customerName || "Cliente")
-                setProgramName(validation.businessName || "") // Capture business name
+                setProgramName(validation.businessName || "")
 
-                // Determine Mode (Points vs Visits)
-                // Note: The validation from server says what program type it is.
-                if (validation.programType === 'POINTS') {
-                    setScanType("POINTS")
+                // Determine Available Modes
+                const modes: ("POINTS" | "VISITS")[] = []
+                if (validation.hasPoints) modes.push("POINTS")
+                if (validation.hasVisits) modes.push("VISITS")
+
+                setAvailableModes(modes)
+
+                // Default selection strategy
+                if (modes.length > 0) {
+                    // If current selection is not available, switch to first available
+                    // Priority: If ONLY points, set points. If BOTH, default to VISITS (easier flow) or keep previous user selection?
+                    // Let's default to the 'primary' logic of the program.
+                    // If points > 0, commonly users want points.
+                    if (validation.hasPoints) {
+                        setScanType("POINTS")
+                    } else {
+                        setScanType("VISITS")
+                    }
                 } else {
+                    // Fallback
                     setScanType("VISITS")
                 }
 
-                // Show Confirmation Modal for BOTH types
+                // Show Confirmation Modal
                 setShowConfirmModal(true)
 
             } else {
@@ -205,7 +222,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                 try {
                     scannerRef.current.resume()
                 } catch (e) {
-                    // If resume fails, it might not be paused or state issue. 
+                    // If resume fails, it might not be paused or state issue.
                     // Just ensure processing flag is off.
                     console.log("Resume callback warning", e)
                 }
@@ -257,7 +274,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                 #reader__scan_region {
                     background: white !important;
                 }
-                #reader__dashboard_section_csr span, 
+                #reader__dashboard_section_csr span,
                 #reader__dashboard_section_swaplink {
                     color: #1e293b !important; /* slate-800 */
                     font-weight: 500 !important;
@@ -324,6 +341,24 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
+
+                        {/* MODE SWITCHER */}
+                        {availableModes.length > 1 && (
+                            <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
+                                <button
+                                    onClick={() => setScanType("VISITS")}
+                                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${scanType === "VISITS" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                                >
+                                    Visita
+                                </button>
+                                <button
+                                    onClick={() => setScanType("POINTS")}
+                                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${scanType === "POINTS" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                                >
+                                    Puntos
+                                </button>
+                            </div>
+                        )}
 
                         <div className="space-y-4 mb-6">
                             {scanType === 'POINTS' ? (
