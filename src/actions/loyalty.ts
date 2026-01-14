@@ -1,6 +1,6 @@
 'use server'
 
-import { auth, currentUser, clerkClient } from "@clerk/nextjs/server"
+import { auth, currentUser } from "@clerk/nextjs/server"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { randomUUID } from "crypto"
@@ -632,39 +632,59 @@ export async function getProgramRedemptions(programId: string) {
         if (staffIds.length === 0) return redemptions
 
         // 1. Fetch DB Settings (Phone, Job, Photo, etc can be here if synced)
-        const dbUsers = await prisma.userSettings.findMany({
-            where: { userId: { in: staffIds } },
-            select: { userId: true, phone: true, jobTitle: true, photoUrl: true }
-        })
-        const dbUserMap = new Map(dbUsers.map(u => [u.userId, u]))
-
-        // 2. Fetch Clerk Names
-        let clerkUsers: any[] = []
+        let dbUserMap = new Map()
         try {
-            const client = await clerkClient()
-            const clerkResponse = await client.users.getUserList({ userId: staffIds, limit: 100 })
-            clerkUsers = clerkResponse.data
-        } catch (err) {
-            console.error("Failed to fetch clerk users", err)
+            const dbUsers = await prisma.userSettings.findMany({
+                where: { userId: { in: staffIds } },
+                select: { userId: true, phone: true, jobTitle: true, photoUrl: true }
+            })
+            dbUserMap = new Map(dbUsers.map(u => [u.userId, u]))
+        } catch (e) {
+            console.error("DB User fetch error", e)
         }
-        const clerkUserMap = new Map(clerkUsers.map(u => [u.id, u]))
+
+        // 2. Fetch Clerk Names via raw API (Bypassing SDK to avoid version/env issues)
+        let clerkUserMap = new Map()
+        if (process.env.CLERK_SECRET_KEY) {
+            try {
+                // Construct URL with multiple user_id params manually
+                const idsParam = staffIds.map(id => `user_id=${id}`).join('&')
+                const res = await fetch(`https://api.clerk.com/v1/users?limit=100&${idsParam}`, {
+                    headers: {
+                        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    next: { revalidate: 60 } // Cache for 1 minute
+                })
+
+                if (res.ok) {
+                    const data = await res.json() // data is User[]
+                    clerkUserMap = new Map(data.map((u: any) => [u.id, u]))
+                } else {
+                    console.error("Clerk API Fetch Error", await res.text())
+                }
+            } catch (err) {
+                console.error("Failed to fetch clerk users raw", err)
+            }
+        }
 
         return redemptions.map(r => {
             const dbUser = r.staffId ? dbUserMap.get(r.staffId) : null
             const clerkUser = r.staffId ? clerkUserMap.get(r.staffId) : null
 
-            const fullName = clerkUser ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim() : "Personal"
+            // Clerk API returns snake_case
+            const fullName = clerkUser ? `${clerkUser.first_name || ""} ${clerkUser.last_name || ""}`.trim() : "Personal"
 
             return {
                 ...r,
-                staffName: fullName || dbUser?.phone || "Desconocido", // Fallback chain
+                staffName: clerkUser ? fullName : (dbUser?.phone || "Desconocido"),
                 staffDetails: r.staffId ? {
                     id: r.staffId,
-                    name: fullName || "Miembro del Staff",
-                    email: clerkUser?.emailAddresses?.[0]?.emailAddress,
+                    name: clerkUser ? fullName : "Miembro del Staff",
+                    email: clerkUser?.email_addresses?.[0]?.email_address,
                     phone: dbUser?.phone || "No registrado",
                     jobTitle: dbUser?.jobTitle || "Staff",
-                    photoUrl: clerkUser?.imageUrl || dbUser?.photoUrl // Clerk image is usually better
+                    photoUrl: clerkUser?.image_url || dbUser?.photoUrl
                 } : null
             }
         })
