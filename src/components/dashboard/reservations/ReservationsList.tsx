@@ -92,9 +92,21 @@ export function ReservationsList({ reservations }: ReservationsListProps) {
                                 </div>
                                 <div className="text-right">
                                     <span className="block text-white font-mono font-medium">{res.time}</span>
-                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${res.status === 'Confirmada' ? 'text-emerald-400 bg-emerald-500/10' : 'text-amber-400 bg-amber-500/10'
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${res.status === 'SEATED' ? 'text-emerald-400 bg-emerald-500/10' :
+                                            res.status === 'NO_SHOW' ? 'text-red-400 bg-red-500/10' :
+                                                res.status === 'CANCELED' ? 'text-gray-400 bg-gray-500/10' :
+                                                    'text-amber-400 bg-amber-500/10' // Default / CONFIRMED
                                         }`}>
-                                        {res.status}
+                                        {
+                                            {
+                                                'CONFIRMED': 'Confirmada',
+                                                'SEATED': 'Asistió',
+                                                'NO_SHOW': 'No Asistió',
+                                                'CANCELED': 'Cancelada',
+                                                'COMPLETED': 'Completada',
+                                                'Confirmada': 'Confirmada' // Fallback for existing data
+                                            }[res.status as string] || res.status
+                                        }
                                     </span>
                                 </div>
                             </div>
