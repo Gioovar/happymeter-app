@@ -59,8 +59,6 @@ export function RedemptionHistory({ programId }: RedemptionHistoryProps) {
         )
     }
 
-    const [selectedStaff, setSelectedStaff] = useState<any | null>(null)
-
     // Group by Date
     const groupedRedemptions = redemptions.reduce((acc: any, r: any) => {
         const date = new Date(r.redeemedAt)

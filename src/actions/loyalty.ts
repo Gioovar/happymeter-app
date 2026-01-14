@@ -629,36 +629,45 @@ export async function getProgramRedemptions(programId: string) {
         // Resolve staff details - SIMPLE DB ONLY MODE (No Clerk/External calls)
         const staffIds = Array.from(new Set(redemptions.map(r => r.staffId).filter(Boolean))) as string[]
 
-        if (staffIds.length === 0) return redemptions
-
-        // 1. Fetch DB Settings (Phone, Job)
         let dbUserMap = new Map()
-        try {
-            const dbUsers = await prisma.userSettings.findMany({
-                where: { userId: { in: staffIds } },
-                select: { userId: true, phone: true, jobTitle: true }
-            })
-            dbUserMap = new Map(dbUsers.map(u => [u.userId, u]))
-        } catch (e) {
-            console.error("DB User fetch error", e)
+        if (staffIds.length > 0) {
+            try {
+                const dbUsers = await prisma.userSettings.findMany({
+                    where: { userId: { in: staffIds } },
+                    select: { userId: true, phone: true, jobTitle: true }
+                })
+                dbUserMap = new Map(dbUsers.map(u => [u.userId, u]))
+            } catch (e) {
+                console.error("DB User fetch error", e)
+            }
         }
 
+        // Return SAFE SERIALIZABLE DTO
+        // Next.js Server Actions sometimes choke on Date objects or complex Prisma types 
+        // if they are nested deeply or if superjson isn't perfectly configured.
+        // We manually serialize to ensure stability.
         return redemptions.map(r => {
             const dbUser = r.staffId ? dbUserMap.get(r.staffId) : null
-
-            // Simple logic: Use system ID or Phone. No external names.
             const displayName = dbUser?.phone || "Staff"
 
             return {
-                ...r,
+                id: r.id,
+                redeemedAt: r.redeemedAt.toISOString(), // Force String
+                status: r.status,
+                reward: {
+                    name: r.reward?.name || "Premio Eliminado",
+                    // Avoid passing full reward object to prevent Decimal/Date serialization issues
+                },
+                customer: {
+                    name: r.customer?.name || null,
+                    phone: r.customer?.phone || "Sin teléfono"
+                },
                 staffName: r.staffId === 'SYSTEM' ? 'Sistema' : displayName,
                 staffDetails: r.staffId ? {
                     id: r.staffId,
                     name: displayName,
-                    email: null,
-                    phone: dbUser?.phone || "",
                     jobTitle: dbUser?.jobTitle || "Staff",
-                    photoUrl: null
+                    // No complex objects here
                 } : null
             }
         })
