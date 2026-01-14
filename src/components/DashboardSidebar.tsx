@@ -291,7 +291,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
         <>
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 z-40 transition-all duration-300">
-                <div className="flex items-center gap-2 flex-1 overflow-hidden">
+                <div className="flex items-center gap-2 flex-1">
                     <button
                         onClick={() => toggleMobileMenu(true)}
                         className="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors flex-shrink-0"
