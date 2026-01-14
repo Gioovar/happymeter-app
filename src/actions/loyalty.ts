@@ -864,6 +864,30 @@ export async function getProgramCustomers(programId: string) {
 
 // --- OTP & Expanded Registration ---
 
+export async function getCustomerDetails(customerId: string) {
+    try {
+        const customer = await prisma.loyaltyCustomer.findUnique({
+            where: { id: customerId },
+            include: {
+                tier: true,
+                visits: {
+                    take: 10,
+                    orderBy: { visitDate: 'desc' }
+                },
+                redemptions: {
+                    take: 5,
+                    orderBy: { redeemedAt: 'desc' },
+                    include: { reward: true }
+                }
+            }
+        })
+        return { success: true, customer }
+    } catch (error) {
+        console.error("Error fetching customer details:", error)
+        return { success: false, error: "Failed to fetch details" }
+    }
+}
+
 export async function sendLoyaltyOtp(programId: string, phone: string) {
     try {
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
