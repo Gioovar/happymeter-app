@@ -360,7 +360,6 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             const isSystemGift = reward.description === "SYSTEM_GIFT"
 
                             return (
-                            return (
                                 <div
                                     key={reward.id}
                                     className={cn(
