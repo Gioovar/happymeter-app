@@ -5,7 +5,7 @@ import { createPortal } from "react-dom"
 import { QRCodeSVG } from "qrcode.react"
 import { unlockReward, getMemberLoyaltyPrograms, getLoyaltyNotifications, markNotificationsAsRead } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar, Bell, QrCode } from "lucide-react"
+import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar, Bell, QrCode, Trophy } from "lucide-react"
 import { InstallPwa } from "@/components/pwa/InstallPwa"
 import { cn } from "@/lib/utils"
 import { useClerk, useUser } from "@clerk/nextjs"
@@ -246,11 +246,11 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                 </div>
                                 <div className="bg-white p-2 rounded-xl border-2 border-dashed border-gray-200">
                                     <QRCodeSVG
-                                        value={`https://happymeters.com/admin/scan/${customer.magicToken}`}
+                                        value={`https://happymeters.com/admin/scan/${customer.magicToken}${filterType && filterType !== 'all' ? `?type=${filterType.toUpperCase()}` : ''}`}
                                         size={200}
                                         level="H"
                                         includeMargin={true}
-                                        className="w-full h-auto"
+                                        className="w-full h-full"
                                     />
                                 </div>
                                 <p className="mt-4 text-center font-mono text-sm font-bold text-gray-900 tracking-widest">{customer.magicToken}</p>
@@ -510,31 +510,64 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                     </div>
 
                                     <div className="space-y-2">
-                                        {myCards.length > 0 ? myCards.map((membership: any) => (
-                                            <Link
-                                                key={membership.program.id}
-                                                href={`/loyalty/${membership.program.id}`}
-                                                className={cn(
-                                                    "flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5",
-                                                    membership.program.id === program.id ? "bg-white/5 border-white/10" : ""
-                                                )}
-                                            >
-                                                <div className="w-10 h-10 rounded-full bg-black/50 p-1 flex items-center justify-center border border-white/5 shrink-0 overflow-hidden">
-                                                    {membership.program.logoUrl ? (
-                                                        <img src={membership.program.logoUrl} alt={membership.program.businessName} className="w-full h-full object-cover rounded-full" />
-                                                    ) : (
-                                                        <CreditCard className="w-4 h-4 text-gray-500" />
+                                        {myCards.length > 0 ? myCards.flatMap((membership: any) => {
+                                            const cards = []
+                                            const isHybrid = membership.program.pointsPercentage > 0 // Assuming all have visits by default
+
+                                            // Card 1: Visits (Always add if it's the default or part of hybrid)
+                                            // Actually, if it's hybrid, render BOTH. If only points? render points. If only visits? visits.
+                                            // The backend says 'pointsPercentage > 0' means points. Everyone has visits.
+
+                                            // Visits Card
+                                            cards.push(
+                                                <Link
+                                                    key={`${membership.program.id}-visits`}
+                                                    href={`/loyalty/${membership.program.id}?mode=VISITS`}
+                                                    className={cn(
+                                                        "flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5",
+                                                        (membership.program.id === program.id && (!filterType || filterType === 'visits')) ? "bg-white/5 border-white/10" : ""
                                                     )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-bold text-gray-200 truncate">{membership.program.businessName}</div>
-                                                    <div className="text-[10px] text-gray-500 truncate">Ver tarjeta</div>
-                                                </div>
-                                                {membership.program.id === program.id && (
-                                                    <div className="w-2 h-2 rounded-full bg-violet-500" />
-                                                )}
-                                            </Link>
-                                        )) : (
+                                                >
+                                                    <div className="w-10 h-10 rounded-full bg-orange-500/10 p-2 flex items-center justify-center border border-orange-500/20 shrink-0">
+                                                        <CreditCard className="w-full h-full text-orange-500" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-sm font-bold text-gray-200 truncate">{membership.program.businessName}</div>
+                                                        <div className="text-[10px] text-gray-500 truncate flex items-center gap-1">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                                                            Tarjeta de Visitas
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            )
+
+                                            // Points Card (if eligible)
+                                            if (membership.program.pointsPercentage > 0) {
+                                                cards.push(
+                                                    <Link
+                                                        key={`${membership.program.id}-points`}
+                                                        href={`/loyalty/${membership.program.id}?mode=POINTS`}
+                                                        className={cn(
+                                                            "flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5",
+                                                            (membership.program.id === program.id && filterType === 'points') ? "bg-white/5 border-white/10" : ""
+                                                        )}
+                                                    >
+                                                        <div className="w-10 h-10 rounded-full bg-blue-500/10 p-2 flex items-center justify-center border border-blue-500/20 shrink-0">
+                                                            <Trophy className="w-full h-full text-blue-500" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-sm font-bold text-gray-200 truncate">{membership.program.businessName}</div>
+                                                            <div className="text-[10px] text-gray-500 truncate flex items-center gap-1">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                                                Tarjeta de Puntos
+                                                            </div>
+                                                        </div>
+                                                    </Link>
+                                                )
+                                            }
+
+                                            return cards
+                                        }) : (
                                             <div className="text-center py-6 px-4 border border-dashed border-white/10 rounded-xl">
                                                 <Wallet className="w-8 h-8 text-gray-600 mx-auto mb-2" />
                                                 <p className="text-xs text-gray-500">No tienes otras tarjetas guardadas aún.</p>

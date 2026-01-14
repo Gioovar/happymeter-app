@@ -106,38 +106,42 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
         let payload = data
 
         // Normalize payload logic
-        if (data.startsWith("V:")) {
+        let hintType: "POINTS" | "VISITS" | null = null
+
+        // Try to parse as URL first
+        if (data.includes("http") || data.includes("happymeters.com")) {
+            try {
+                const urlObj = new URL(data)
+                // Path: /admin/scan/TOKEN
+                const parts = urlObj.pathname.split('/')
+                // Filter empty parts
+                const cleanParts = parts.filter(p => p.length > 0)
+
+                // extract token (last part)
+                const tokenCandidate = cleanParts[cleanParts.length - 1]
+                if (tokenCandidate && tokenCandidate !== 'scan') {
+                    payload = tokenCandidate
+                    type = 'VISIT'
+                }
+
+                // Extract hint
+                const typeParam = urlObj.searchParams.get('type')
+                if (typeParam === 'POINTS') hintType = 'POINTS'
+                if (typeParam === 'VISITS') hintType = 'VISITS'
+
+            } catch (e) {
+                // Fallback to simple split if URL parsing fails (e.g. partial URL)
+                if (data.includes("/scan/")) {
+                    payload = data.split("/scan/")[1]?.split("?")[0] || data
+                    type = "VISIT"
+                }
+            }
+        } else if (data.startsWith("V:")) {
             type = "VISIT"
             payload = data.substring(2)
         } else if (data.startsWith("R:")) {
             type = "REDEEM"
             payload = data.substring(2)
-        } else if (data.includes("happymeters.com/admin/scan/")) {
-            // Extract token from URL
-            type = "VISIT"
-            payload = data.split("/scan/")[1] || data
-        } else {
-            // Heuristic detection
-            if (data.includes("-") && data.length > 20) {
-                // Long UUID-like with hyphens -> Visit Token
-                // BUT check if it's a URL first
-                if (data.startsWith("http")) {
-                    try {
-                        const url = new URL(data)
-                        const parts = url.pathname.split('/')
-                        payload = parts[parts.length - 1]
-                    } catch (e) {
-                        // keep as is
-                    }
-                }
-                type = 'VISIT'
-            } else if (data.length <= 10) {
-                // Short alphanumeric -> Redemption Code
-                type = 'REDEEM'
-            } else {
-                // Fallback for odd formats
-                type = 'VISIT'
-            }
         }
 
         console.log(`Scan handling: Raw=${data}, Type=${type}, Payload=${payload}`)
@@ -165,11 +169,11 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
 
                 // Default selection strategy
                 if (modes.length > 0) {
-                    // If current selection is not available, switch to first available
-                    // Priority: If ONLY points, set points. If BOTH, default to VISITS (easier flow) or keep previous user selection?
-                    // Let's default to the 'primary' logic of the program.
-                    // If points > 0, commonly users want points.
-                    if (validation.hasPoints) {
+                    // Respect encoded hint if available AND supported
+                    if (hintType && modes.includes(hintType)) {
+                        setScanType(hintType)
+                    } else if (validation.hasPoints) {
+                        // Default priority
                         setScanType("POINTS")
                     } else {
                         setScanType("VISITS")

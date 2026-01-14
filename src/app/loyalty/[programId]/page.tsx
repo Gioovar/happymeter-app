@@ -299,6 +299,7 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                     customer && (
                         <CustomerLoyaltyCard
                             customer={customer}
+                            filterType={(searchParams.get("mode")?.toLowerCase() as "visits" | "points") || "all"}
                             className="min-h-screen"
                             onEditProfile={() => {
                                 setName(customer.name || user?.firstName || "")
