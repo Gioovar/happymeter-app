@@ -1,10 +1,6 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Pagination } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/pagination';
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { X, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -25,40 +21,49 @@ export function PromotionsSlider({ promotions }: PromotionsSliderProps) {
 
     return (
         <>
-            <div className="w-full rounded-2xl overflow-hidden shadow-lg mt-6 border border-white/5 relative z-0">
-                <Swiper
-                    modules={[Autoplay, Pagination]}
-                    spaceBetween={0}
-                    slidesPerView={1}
-                    autoplay={{ delay: 5000, disableOnInteraction: false }}
-                    pagination={{ clickable: true }}
-                    className="w-full aspect-[21/9] bg-[#1a1a1a] cursor-pointer"
-                >
+            {/* Native CSS Scroll Snap Slider for better mobile stability */}
+            <div className="w-full mt-6 relative z-0">
+                <div className="flex overflow-x-auto snap-x snap-mandatory rounded-2xl shadow-lg border border-white/5 scrollbar-hide aspect-[21/9]">
                     {promotions.map((promo) => (
-                        <SwiperSlide key={promo.id} onClick={() => setSelectedPromo(promo)}>
-                            <div className="relative w-full h-full group">
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors z-10 flex items-center justify-center">
-                                    <span className="opacity-0 group-hover:opacity-100 bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur-sm text-sm font-medium transition-opacity transform translate-y-4 group-hover:translate-y-0">
-                                        Ver Detalles
-                                    </span>
-                                </div>
-                                <img
-                                    src={promo.imageUrl}
-                                    alt={promo.title || "Promoción"}
-                                    className="w-full h-full object-cover"
-                                />
+                        <div
+                            key={promo.id}
+                            className="snap-center shrink-0 w-full h-full relative group cursor-pointer"
+                            onClick={() => setSelectedPromo(promo)}
+                        >
+                            <img
+                                src={promo.imageUrl}
+                                alt={promo.title || "Promoción"}
+                                className="w-full h-full object-cover"
+                            />
+
+                            {/* Overlay Gradient */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 flex flex-col justify-end">
                                 {promo.title && (
-                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 pt-12">
-                                        <h3 className="text-white font-bold text-xl mb-1">{promo.title}</h3>
+                                    <>
+                                        <h3 className="text-white font-bold text-lg md:text-xl mb-1 line-clamp-1">{promo.title}</h3>
                                         {promo.description && (
-                                            <p className="text-white/80 text-sm line-clamp-1">{promo.description}</p>
+                                            <p className="text-white/80 text-xs md:text-sm line-clamp-1">{promo.description}</p>
                                         )}
-                                    </div>
+                                    </>
                                 )}
                             </div>
-                        </SwiperSlide>
+
+                            {/* View Details Badge */}
+                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                                <span className="text-white text-xs font-semibold">Ver Detalles</span>
+                            </div>
+                        </div>
                     ))}
-                </Swiper>
+                </div>
+
+                {/* Dots indicator */}
+                {promotions.length > 1 && (
+                    <div className="flex justify-center gap-2 mt-3">
+                        {promotions.map((_, idx) => (
+                            <div key={idx} className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                        ))}
+                    </div>
+                )}
             </div>
 
             <Dialog open={!!selectedPromo} onOpenChange={(open) => !open && setSelectedPromo(null)}>
