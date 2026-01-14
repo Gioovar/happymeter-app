@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { Menu, X, Home, LogOut, Settings, LayoutDashboard, Shield, Store, Calendar, HelpCircle } from 'lucide-react'
+import { Menu, X, Home, LogOut, Settings, LayoutDashboard, Shield, Store, Calendar, HelpCircle, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
@@ -12,7 +12,7 @@ import NotificationsBell from '@/components/notifications/NotificationsBell'
 import CommandCenter from '@/components/CommandCenter'
 import PWAInstallButton from '@/components/PWAInstallButton'
 
-import { GLOBAL_NAV_ITEMS, NAVIGATION_CONFIG, NavigationMode } from '@/config/navigation'
+import { GLOBAL_NAV_ITEMS, NAVIGATION_CONFIG, NavigationMode, MODES } from '@/config/navigation'
 
 // Helper to determine mode from pathname (Shared logic, could be extracted but fine here)
 const getActiveMode = (pathname: string | null): NavigationMode => {
@@ -111,6 +111,7 @@ import { useDashboard } from '@/context/DashboardContext'
 
 export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: boolean, userRole?: string }) {
     const { isMobileMenuOpen, toggleMobileMenu } = useDashboard()
+    const [isModeSelectorOpen, setIsModeSelectorOpen] = useState(false)
     const pathname = usePathname() // Safe to use here without Suspense in Layout generally, but safer to keep high
 
     const SidebarContent = () => (
@@ -297,9 +298,62 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                     >
                         <Menu className="w-6 h-6" />
                     </button>
-                    <span className="font-bold text-lg text-white tracking-tight">
-                        Happy<span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-text-gradient">Meter</span>
-                    </span>
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsModeSelectorOpen(!isModeSelectorOpen)}
+                            className="flex items-center gap-2 group"
+                        >
+                            <span className="font-bold text-lg text-white tracking-tight">
+                                Happy<span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-text-gradient">Meter</span>
+                            </span>
+                            <ChevronDown className={cn(
+                                "w-4 h-4 text-gray-400 transition-transform duration-200",
+                                isModeSelectorOpen && "rotate-180"
+                            )} />
+                        </button>
+
+                        {/* Mode Selector Popup */}
+                        {isModeSelectorOpen && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px]"
+                                    onClick={() => setIsModeSelectorOpen(false)}
+                                />
+                                <div className="absolute top-full left-0 mt-2 w-56 bg-[#18181b] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-left">
+                                    <div className="p-2 space-y-1">
+                                        {MODES.map((mode) => {
+                                            const isActive = getActiveMode(pathname) === mode.id
+                                            const Icon = mode.icon
+                                            return (
+                                                <Link
+                                                    key={mode.id}
+                                                    href={mode.href}
+                                                    onClick={() => setIsModeSelectorOpen(false)}
+                                                    className={cn(
+                                                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                                                        isActive
+                                                            ? "bg-white/10 text-white"
+                                                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                                                    )}
+                                                >
+                                                    <div className={cn(
+                                                        "p-1.5 rounded-md transition-colors",
+                                                        isActive ? "bg-white/10" : "bg-white/5 group-hover:bg-white/10"
+                                                    )}>
+                                                        <Icon className={cn(
+                                                            "w-4 h-4",
+                                                            isActive ? "text-white" : "text-gray-400"
+                                                        )} />
+                                                    </div>
+                                                    {mode.label}
+                                                </Link>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
                 {/* Notifications on Mobile */}
                 <div className="flex items-center gap-2">

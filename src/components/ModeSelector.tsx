@@ -11,7 +11,7 @@ import {
     LayoutDashboard
 } from 'lucide-react';
 import { useMemo } from 'react';
-import { NavigationMode } from '@/config/navigation';
+import { NavigationMode, MODES } from '@/config/navigation';
 
 export default function ModeSelector() {
     const pathname = usePathname();
@@ -24,40 +24,9 @@ export default function ModeSelector() {
         return 'surveys'; // Default mode
     }, [pathname]);
 
-    const modes = [
-        {
-            id: 'surveys',
-            label: 'Encuestas',
-            href: '/dashboard',
-            icon: BarChart3,
-            color: 'from-violet-600 to-indigo-600'
-        },
-        {
-            id: 'loyalty',
-            label: 'Lealtad',
-            href: '/dashboard/loyalty',
-            icon: Gift,
-            color: 'from-fuchsia-600 to-pink-600'
-        },
-        {
-            id: 'processes',
-            label: 'Procesos',
-            href: '/dashboard/processes',
-            icon: Settings2,
-            color: 'from-cyan-600 to-blue-600'
-        },
-        {
-            id: 'reservations',
-            label: 'Reservas',
-            href: '/dashboard/reservations',
-            icon: Calendar,
-            color: 'from-amber-500 to-orange-600'
-        }
-    ];
-
     return (
         <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-full border border-white/10 shadow-lg overflow-x-auto max-w-full no-scrollbar">
-            {modes.map((mode) => {
+            {MODES.map((mode) => {
                 const isActive = activeMode === mode.id;
                 const Icon = mode.icon;
 

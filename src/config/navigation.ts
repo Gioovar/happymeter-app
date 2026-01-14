@@ -19,7 +19,11 @@ import {
     CalendarCheck,
     AlertCircle,
     GitMerge,
-    Armchair
+    Armchair,
+    BarChart3,
+    Gift,
+    Settings2,
+    Calendar
 } from 'lucide-react'
 
 export type NavigationMode = 'surveys' | 'loyalty' | 'processes' | 'reservations';
@@ -66,6 +70,37 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
         { title: 'Configuración', href: '/dashboard/settings', icon: Settings },
     ]
 };
+
+export const MODES = [
+    {
+        id: 'surveys',
+        label: 'Encuestas',
+        href: '/dashboard',
+        icon: BarChart3,
+        color: 'from-violet-600 to-indigo-600'
+    },
+    {
+        id: 'loyalty',
+        label: 'Lealtad',
+        href: '/dashboard/loyalty',
+        icon: Gift,
+        color: 'from-fuchsia-600 to-pink-600'
+    },
+    {
+        id: 'processes',
+        label: 'Procesos',
+        href: '/dashboard/processes',
+        icon: Settings2,
+        color: 'from-cyan-600 to-blue-600'
+    },
+    {
+        id: 'reservations',
+        label: 'Reservas',
+        href: '/dashboard/reservations',
+        icon: Calendar,
+        color: 'from-amber-500 to-orange-600'
+    }
+] as const;
 
 export const GLOBAL_NAV_ITEMS: NavItem[] = [
     { title: 'Ayuda y Soporte', href: '/dashboard/help', icon: HelpCircle },
