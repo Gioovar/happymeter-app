@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Html5Qrcode } from "html5-qrcode"
 import { toast } from "sonner"
 import { validateVisitScan, logCustomerVisit, redeemReward } from "@/actions/loyalty"
-import { Loader2, ScanLine, Tag, UtensilsCrossed, X, DollarSign, Camera } from "lucide-react"
+import { Loader2, ScanLine, Tag, UtensilsCrossed, X, DollarSign, Camera, RefreshCcw } from "lucide-react"
 
 interface StaffScannerProps {
     staffId: string
@@ -14,6 +14,9 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
     const [scanResult, setScanResult] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
     const [scannerError, setScannerError] = useState<string | null>(null)
+    const [facingMode, setFacingMode] = useState<"user" | "environment">("environment")
+
+    // Use consistent ref for the scanner instance
     const scannerRef = useRef<Html5Qrcode | null>(null)
 
     // Points Logic State
@@ -23,10 +26,26 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
     const [spendAmount, setSpendAmount] = useState("")
 
     useEffect(() => {
-        // Use Html5Qrcode directly for more control (Auto-start)
+        // Initialize scanner instance once
         const scanner = new Html5Qrcode("reader")
         scannerRef.current = scanner
 
+        // Start scanning immediately
+        startScanning(scanner, facingMode)
+
+        // Cleanup on unmount
+        return () => {
+            if (scanner.isScanning) {
+                scanner.stop().then(() => {
+                    scanner.clear()
+                }).catch(err => console.error("Failed to stop scanner", err))
+            } else {
+                scanner.clear()
+            }
+        }
+    }, [])
+
+    const startScanning = (scanner: Html5Qrcode, mode: "user" | "environment") => {
         const config = {
             fps: 10,
             qrbox: { width: 250, height: 250 },
@@ -34,7 +53,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
         }
 
         scanner.start(
-            { facingMode: "environment" }, // Prefer back camera
+            { facingMode: mode },
             config,
             (decodedText) => {
                 handleScan(decodedText)
@@ -46,17 +65,24 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
             console.error("Error starting scanner:", err)
             setScannerError("No se pudo iniciar la cámara. Verifica los permisos.")
         })
+    }
 
-        return () => {
+    const toggleCamera = async () => {
+        const scanner = scannerRef.current
+        if (!scanner) return
+
+        try {
             if (scanner.isScanning) {
-                scanner.stop().then(() => {
-                    scanner.clear()
-                }).catch(err => console.error("Failed to stop scanner", err))
-            } else {
-                scanner.clear()
+                await scanner.stop()
             }
+            const newMode = facingMode === "environment" ? "user" : "environment"
+            setFacingMode(newMode)
+            startScanning(scanner, newMode)
+        } catch (err) {
+            console.error("Failed to toggle camera:", err)
+            toast.error("Error al cambiar de cámara")
         }
-    }, [])
+    }
 
     const handleScan = async (data: string) => {
         if (isProcessing) return
@@ -184,7 +210,17 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                     <p className="text-sm text-slate-500">Escanea el QR del cliente o su premio</p>
                 </div>
 
-                <div id="reader" className="w-full overflow-hidden rounded-lg min-h-[300px] bg-black"></div>
+                <div className="relative">
+                    <div id="reader" className="w-full overflow-hidden rounded-lg min-h-[300px] bg-black"></div>
+
+                    {/* Toggle Camera Button */}
+                    <button
+                        onClick={toggleCamera}
+                        className="absolute bottom-4 right-4 p-3 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white hover:bg-white/30 transition-all shadow-lg active:scale-95 z-10"
+                    >
+                        <RefreshCcw className="w-6 h-6" />
+                    </button>
+                </div>
 
                 {scannerError && (
                     <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm text-center">
