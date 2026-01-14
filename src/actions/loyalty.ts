@@ -1,6 +1,6 @@
 'use server'
 
-import { auth, currentUser } from "@clerk/nextjs/server"
+import { auth, currentUser, clerkClient } from "@clerk/nextjs/server"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { randomUUID } from "crypto"
@@ -626,23 +626,48 @@ export async function getProgramRedemptions(programId: string) {
             }
         })
 
-        // Resolve staff names
-        // staffId is just a string (Clerk ID). We need to fetch UserSettings or TeamMembers
+        // Resolve staff details
         const staffIds = Array.from(new Set(redemptions.map(r => r.staffId).filter(Boolean))) as string[]
 
         if (staffIds.length === 0) return redemptions
 
-        const staffUsers = await prisma.userSettings.findMany({
+        // 1. Fetch DB Settings (Phone, Job, Photo, etc can be here if synced)
+        const dbUsers = await prisma.userSettings.findMany({
             where: { userId: { in: staffIds } },
-            select: { userId: true, phone: true }
+            select: { userId: true, phone: true, jobTitle: true, photoUrl: true }
         })
+        const dbUserMap = new Map(dbUsers.map(u => [u.userId, u]))
 
-        const staffMap = new Map(staffUsers.map(u => [u.userId, u.phone || "Personal"]))
+        // 2. Fetch Clerk Names
+        let clerkUsers: any[] = []
+        try {
+            const client = await clerkClient()
+            const clerkResponse = await client.users.getUserList({ userId: staffIds, limit: 100 })
+            clerkUsers = clerkResponse.data
+        } catch (err) {
+            console.error("Failed to fetch clerk users", err)
+        }
+        const clerkUserMap = new Map(clerkUsers.map(u => [u.id, u]))
 
-        return redemptions.map(r => ({
-            ...r,
-            staffName: r.staffId ? (staffMap.get(r.staffId) || "Desconocido") : "Sistema"
-        }))
+        return redemptions.map(r => {
+            const dbUser = r.staffId ? dbUserMap.get(r.staffId) : null
+            const clerkUser = r.staffId ? clerkUserMap.get(r.staffId) : null
+
+            const fullName = clerkUser ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim() : "Personal"
+
+            return {
+                ...r,
+                staffName: fullName || dbUser?.phone || "Desconocido", // Fallback chain
+                staffDetails: r.staffId ? {
+                    id: r.staffId,
+                    name: fullName || "Miembro del Staff",
+                    email: clerkUser?.emailAddresses?.[0]?.emailAddress,
+                    phone: dbUser?.phone || "No registrado",
+                    jobTitle: dbUser?.jobTitle || "Staff",
+                    photoUrl: clerkUser?.imageUrl || dbUser?.photoUrl // Clerk image is usually better
+                } : null
+            }
+        })
 
     } catch (error) {
         console.error("Error fetching redemptions:", error)
