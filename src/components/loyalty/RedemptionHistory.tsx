@@ -98,12 +98,11 @@ export function RedemptionHistory({ programId }: RedemptionHistoryProps) {
                                                     disabled={!redemption.staffDetails}
                                                 >
                                                     {redemption.staffDetails?.photoUrl ? (
-                                                        <Image
+                                                        /* eslint-disable-next-line @next/next/no-img-element */
+                                                        <img
                                                             src={redemption.staffDetails.photoUrl}
                                                             alt={redemption.staffDetails.name}
-                                                            width={24}
-                                                            height={24}
-                                                            className="rounded-full object-cover"
+                                                            className="w-6 h-6 rounded-full object-cover"
                                                         />
                                                     ) : (
                                                         <div className="w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center">
@@ -149,12 +148,11 @@ export function RedemptionHistory({ programId }: RedemptionHistoryProps) {
                         <div className="px-6 pb-6 -mt-10">
                             <div className="relative inline-block">
                                 {selectedStaff.photoUrl ? (
-                                    <Image
+                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                    <img
                                         src={selectedStaff.photoUrl}
                                         alt={selectedStaff.name}
-                                        width={80}
-                                        height={80}
-                                        className="rounded-full border-4 border-[#1a1a24] object-cover bg-[#1a1a24]"
+                                        className="w-20 h-20 rounded-full border-4 border-[#1a1a24] object-cover bg-[#1a1a24]"
                                     />
                                 ) : (
                                     <div className="w-20 h-20 rounded-full border-4 border-[#1a1a24] bg-violet-900 flex items-center justify-center text-violet-200">
