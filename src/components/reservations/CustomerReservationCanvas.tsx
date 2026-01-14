@@ -13,6 +13,7 @@ import { es } from "date-fns/locale"
 import { createReservation, getAvailableTables } from "@/actions/reservations"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 
 interface Table {
     id: string
@@ -39,9 +40,11 @@ interface CustomerReservationCanvasProps {
         email?: string
         phone?: string
     }
+    className?: string
+    isAdmin?: boolean
 }
 
-export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorPlan, businessName, currentUser, programId }: CustomerReservationCanvasProps) {
+export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorPlan, businessName, currentUser, programId, className, isAdmin = false }: CustomerReservationCanvasProps) {
     const router = useRouter()
 
     // Resolve initial floor (prioritize array)
@@ -218,7 +221,15 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
         if (result.success) {
             const res = result as any
-            if (res.action) {
+            if (isAdmin) {
+                toast.success("Reserva Creada (Admin)", {
+                    description: "La reserva se ha guardado correctamente.",
+                })
+                setIsConfirmOpen(false)
+                setSelectedTables([])
+                setCustomerForm({ name: '', phone: '', email: '' })
+                setBookingStep('SEARCH')
+            } else if (res.action) {
                 setPostReservationAction(res)
                 setIsSuccessModalOpen(true)
             } else {
@@ -264,7 +275,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     // New SEARCH STEP UI
     if (bookingStep === 'SEARCH') {
         return (
-            <div className="h-[100dvh] bg-zinc-950 flex items-center justify-center p-4">
+            <div className={cn("h-[100dvh] bg-zinc-950 flex items-center justify-center p-4", className)}>
                 <div className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
                     {/* Background Glow */}
                     <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-indigo-500/20 to-transparent pointer-events-none" />
@@ -366,7 +377,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     }
 
     return (
-        <div className="h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-950 touch-none">
+        <div className={cn("h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-950 touch-none", className)}>
             {/* Header */}
             {/* Header & Floor Selector */}
             <div className="absolute top-0 left-0 right-0 z-50 flex flex-col items-center bg-gradient-to-b from-black/90 via-black/80 to-transparent pb-8 pointer-events-none">

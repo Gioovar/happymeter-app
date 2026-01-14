@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { currentUser } from "@clerk/nextjs/server"
-import { getFloorPlan, getDashboardReservations } from "@/actions/reservations"
+import { getFloorPlans, getDashboardReservations } from "@/actions/reservations"
 import { ReservationCalendar } from "@/components/dashboard/reservations/ReservationCalendar"
 import { NewReservationButton } from "@/components/dashboard/reservations/NewReservationButton"
 import { ReservationsList } from "@/components/dashboard/reservations/ReservationsList"
@@ -26,8 +26,8 @@ export default async function ReservationsPage() {
     }
 
     // Fetch existing floor plan
-    // const floorPlan = await getFloorPlan()
-    const floorPlan = { isConfigured: true } // MOCK SAFE MODE
+    const floorPlans = await getFloorPlans()
+    // const floorPlan = { isConfigured: true } // MOCK SAFE MODE
 
     // Fetch reservations for calendar
     const reservationsResult = await getDashboardReservations()
@@ -59,7 +59,7 @@ export default async function ReservationsPage() {
         console.error("Error fetching/creating loyalty program:", error)
     }
 
-    if (!floorPlan || !floorPlan.isConfigured) {
+    if (!floorPlans || floorPlans.length === 0) {
         return (
             <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center space-y-6">
                 <div className="bg-zinc-800/50 p-6 rounded-full ring-1 ring-white/10">
@@ -102,7 +102,12 @@ export default async function ReservationsPage() {
                     </Link>
 
                     {/* NEW RESERVATION BUTTON CLIENT COMPONENT */}
-                    <NewReservationButton userProfile={userProfile} />
+                    <NewReservationButton
+                        userProfile={userProfile}
+                        programId={program?.id}
+                        floorPlans={floorPlans}
+                        businessName={userProfile.name} // Or program.businessName if available
+                    />
                 </div>
             </div>
 

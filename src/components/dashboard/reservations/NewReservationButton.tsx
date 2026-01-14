@@ -12,9 +12,12 @@ interface NewReservationButtonProps {
         email?: string
         phone?: string
     }
+    programId?: string
+    floorPlans?: any[]
+    businessName?: string
 }
 
-export function NewReservationButton({ userProfile }: NewReservationButtonProps) {
+export function NewReservationButton({ userProfile, programId, floorPlans, businessName }: NewReservationButtonProps) {
     const [isModalOpen, setIsModalOpen] = useState(false)
 
     return (
@@ -31,6 +34,9 @@ export function NewReservationButton({ userProfile }: NewReservationButtonProps)
                 open={isModalOpen}
                 onOpenChange={setIsModalOpen}
                 userProfile={userProfile}
+                programId={programId}
+                floorPlans={floorPlans}
+                businessName={businessName}
             />
         </>
     )
