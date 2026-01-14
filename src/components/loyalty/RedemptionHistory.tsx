@@ -39,56 +39,74 @@ export function RedemptionHistory({ programId }: RedemptionHistoryProps) {
         )
     }
 
+    // Group by Date
+    const groupedRedemptions = redemptions.reduce((acc: any, r: any) => {
+        const date = new Date(r.redeemedAt)
+        const dateKey = date.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+
+        if (!acc[dateKey]) acc[dateKey] = []
+        acc[dateKey].push(r)
+        return acc
+    }, {})
+
     return (
-        <div className="space-y-4">
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 px-1">Historial de Entregas</h3>
-            <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#16161e]">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-white/5 text-gray-400 font-medium">
-                            <tr>
-                                <th className="p-4">Premio</th>
-                                <th className="p-4">Cliente</th>
-                                <th className="p-4">Entregado Por</th>
-                                <th className="p-4 text-right">Fecha</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {redemptions.map((redemption) => (
-                                <tr key={redemption.id} className="hover:bg-white/5 transition-colors">
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-500">
-                                                <Gift className="w-4 h-4" />
-                                            </div>
-                                            <span className="font-bold text-gray-200">{redemption.reward.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-2">
-                                            <User className="w-4 h-4 text-gray-500" />
-                                            <span className="text-gray-300">
-                                                {redemption.customer.name || redemption.customer.phone || "Cliente"}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-2">
-                                            <ShieldCheck className="w-4 h-4 text-violet-500" />
-                                            <span className="font-medium text-violet-300">
-                                                {redemption.staffName}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-right text-gray-500 font-mono text-xs">
-                                        {new Date(redemption.redeemedAt).toLocaleString()}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+        <div className="space-y-8">
+            {Object.keys(groupedRedemptions).map((dateKey) => (
+                <div key={dateKey} className="space-y-3">
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider px-1 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-violet-500"></span>
+                        {dateKey.charAt(0).toUpperCase() + dateKey.slice(1)} <span className="text-gray-600">({groupedRedemptions[dateKey].length})</span>
+                    </h3>
+
+                    <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#16161e]">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-white/5 text-gray-400 font-medium">
+                                    <tr>
+                                        <th className="p-4 w-1/3">Premio</th>
+                                        <th className="p-4 w-1/3">Cliente</th>
+                                        <th className="p-4 w-1/4">Entregado Por</th>
+                                        <th className="p-4 text-right">Hora</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {groupedRedemptions[dateKey].map((redemption: any) => (
+                                        <tr key={redemption.id} className="hover:bg-white/5 transition-colors">
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-500">
+                                                        <Gift className="w-4 h-4" />
+                                                    </div>
+                                                    <span className="font-bold text-gray-200">{redemption.reward.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <User className="w-4 h-4 text-gray-500" />
+                                                    <span className="text-gray-300">
+                                                        {redemption.customer.name || redemption.customer.phone || "Cliente"}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <ShieldCheck className="w-4 h-4 text-violet-500" />
+                                                    <span className="font-medium text-violet-300">
+                                                        {redemption.staffName}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4 text-right text-gray-500 font-mono text-xs">
+                                                {new Date(redemption.redeemedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            ))}
         </div>
     )
 }

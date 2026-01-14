@@ -49,6 +49,7 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
         { title: 'Clientes', href: '/dashboard/loyalty', query: { tab: 'clients' }, icon: Users },
         { title: 'Juegos', href: '/dashboard/games', icon: Gamepad2 },
         { title: 'Logros', href: '/dashboard/achievements', icon: Trophy },
+        { title: 'Historial de Premios', href: '/dashboard/loyalty/history', icon: Clock },
         { title: 'Campañas', href: '/dashboard/campaigns', icon: Megaphone },
     ],
     processes: [
