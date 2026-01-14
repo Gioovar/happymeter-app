@@ -1184,7 +1184,6 @@ export async function syncClerkLoyaltyCustomer(programId: string) {
                         }
                     },
                     redemptions: {
-                        where: { status: 'PENDING' },
                         include: { reward: true }
                     },
                     tier: true
@@ -1208,7 +1207,6 @@ export async function syncClerkLoyaltyCustomer(programId: string) {
                         }
                     },
                     redemptions: {
-                        where: { status: 'PENDING' },
                         include: { reward: true }
                     },
                     tier: true
