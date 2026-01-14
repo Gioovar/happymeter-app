@@ -147,6 +147,26 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
 
     return (
         <div className="w-full max-w-md mx-auto relative">
+            <style jsx global>{`
+                #reader__scan_region {
+                    background: white !important;
+                }
+                #reader__dashboard_section_csr span, 
+                #reader__dashboard_section_swaplink {
+                    color: #1e293b !important; /* slate-800 */
+                    font-weight: 500 !important;
+                }
+                #reader__dashboard_section_csr button {
+                    color: #4f46e5 !important; /* indigo-600 */
+                    border-color: #4f46e5 !important;
+                    background: white !important;
+                }
+                #reader select {
+                    color: #1e293b !important;
+                    background: white !important;
+                    border: 1px solid #e2e8f0 !important;
+                }
+            `}</style>
             <div className="bg-white rounded-xl shadow-lg border border-slate-100 p-4">
                 <div className="text-center mb-4">
                     <h2 className="text-lg font-bold text-slate-800 flex items-center justify-center gap-2">
