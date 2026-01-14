@@ -85,12 +85,23 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
     }
 
     const handleScan = async (data: string) => {
+        // Prevent concurrent handling if multiple frames trigger before pause
         if (isProcessing) return
         setIsProcessing(true)
+
+        // PAUSE SCANNER PHYSICALLY (Freeze frame)
+        if (scannerRef.current?.isScanning) {
+            try {
+                scannerRef.current.pause(true)
+            } catch (e) {
+                console.log("Pause not supported or failed", e)
+            }
+        }
 
         let type = "UNKNOWN"
         let payload = data
 
+        // Normalize payload logic
         if (data.startsWith("V:")) {
             type = "VISIT"
             payload = data.substring(2)
@@ -98,12 +109,20 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
             type = "REDEEM"
             payload = data.substring(2)
         } else {
-            if (data.includes("-")) {
-                type = 'VISIT' // Assume magic token
+            // Heuristic detection
+            if (data.includes("-") && data.length > 10) {
+                // Long UUID-like with hyphens -> Visit Token
+                type = 'VISIT'
+            } else if (data.length <= 10) {
+                // Short alphanumeric -> Redemption Code
+                type = 'REDEEM'
             } else {
-                type = 'REDEEM' // Short code
+                // Fallback for odd formats
+                type = 'VISIT'
             }
         }
+
+        console.log(`Scan handling: Raw=${data}, Type=${type}, Payload=${payload}`)
 
         if (type === 'VISIT') {
             toast.loading("Verificando cliente...")
@@ -118,15 +137,19 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                     setPendingVisitToken(payload)
                     setCustomerName(validation.customerName || "Cliente")
                     setShowAmountModal(true)
-                    // Note: Scanner keeps running in background, but isProcessing=true blocks new scans
+                    // Scanner stays paused until modal is closed
                 } else {
                     // Log immediately for Visits based
                     await submitVisit(payload)
                 }
             } else {
                 toast.dismiss()
-                toast.error(validation.error || "Cliente no encontrado")
-                pauseFor(2000)
+                toast.error(`Cliente no encontrado`, {
+                    description: `Código: ${payload.substring(0, 15)}...`,
+                    duration: 3000
+                })
+                // Resume after delay to allow reading error
+                resumeScanner(2000)
             }
 
         } else if (type === 'REDEEM') {
@@ -139,13 +162,32 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                     duration: 5000,
                     icon: <Tag className="w-5 h-5 text-purple-500" />
                 })
-                pauseFor(3000)
+                resumeScanner(3000)
             } else {
                 toast.dismiss()
                 toast.error(res.error || "Código inválido o ya usado")
-                pauseFor(2000)
+                resumeScanner(2000)
             }
+        } else {
+            // Unknown type
+            toast.error("Formato QR no reconocido")
+            resumeScanner(2000)
         }
+    }
+
+    const resumeScanner = (delayMs: number = 0) => {
+        setTimeout(() => {
+            setIsProcessing(false)
+            if (scannerRef.current) {
+                try {
+                    scannerRef.current.resume()
+                } catch (e) {
+                    // If resume fails, it might not be paused or state issue. 
+                    // Just ensure processing flag is off.
+                    console.log("Resume callback warning", e)
+                }
+            }
+        }, delayMs)
     }
 
     const submitVisit = async (token: string, amount: number = 0) => {
@@ -163,11 +205,10 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
             setShowAmountModal(false)
             setPendingVisitToken(null)
             setSpendAmount("")
-            pauseFor(3000)
+            resumeScanner(3000)
         } else {
             toast.error(res.error || "Error al registrar")
-            // Even on error, we reset to allow retry
-            pauseFor(2000)
+            resumeScanner(2000)
         }
     }
 
@@ -176,9 +217,6 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
         submitVisit(pendingVisitToken, parseFloat(spendAmount) || 0)
     }
 
-    const pauseFor = (ms: number) => {
-        setTimeout(() => setIsProcessing(false), ms)
-    }
 
     return (
         <div className="w-full max-w-md mx-auto relative">
