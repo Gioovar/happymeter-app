@@ -318,7 +318,6 @@ export async function getCustomerStatus(programId: string, magicToken: string) {
                     }
                 },
                 redemptions: {
-                    where: { status: 'PENDING' },
                     include: { reward: true }
                 },
                 tier: true
