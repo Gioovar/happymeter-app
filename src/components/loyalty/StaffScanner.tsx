@@ -172,10 +172,8 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                     // Respect encoded hint if available AND supported
                     if (hintType && modes.includes(hintType)) {
                         setScanType(hintType)
-                    } else if (validation.hasPoints) {
-                        // Default priority
-                        setScanType("POINTS")
                     } else {
+                        // Default to VISITS (Lower friction default)
                         setScanType("VISITS")
                     }
                 } else {
