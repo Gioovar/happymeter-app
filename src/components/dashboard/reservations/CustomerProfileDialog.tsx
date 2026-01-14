@@ -4,11 +4,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Phone, Mail, Star, MessageCircle, Calendar } from "lucide-react"
+import { toast } from "sonner"
 
 interface CustomerProfileDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     customer: {
+        id: string | number
         name: string
         phone?: string
         email?: string
@@ -84,6 +86,40 @@ export function CustomerProfileDialog({ open, onOpenChange, customer }: Customer
                             <p className="text-sm text-zinc-300 italic">"{customer.notes}"</p>
                         </div>
                     )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                    <Button
+                        onClick={async () => {
+                            // Import action dynamically or assume passed prop? 
+                            // Better to keep it clean. Importing directly is fine in Client Components in Next.js
+                            const { updateReservationStatus } = await import("@/actions/reservations")
+                            toast.promise(updateReservationStatus(customer.id, "SEATED"), {
+                                loading: "Registrando asistencia...",
+                                success: "¡Cliente marcado como ASISTIÓ!",
+                                error: "Error al actualizar"
+                            })
+                            onOpenChange(false)
+                        }}
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-12 rounded-xl"
+                    >
+                        ✅ Asistió
+                    </Button>
+                    <Button
+                        onClick={async () => {
+                            const { updateReservationStatus } = await import("@/actions/reservations")
+                            toast.promise(updateReservationStatus(customer.id, "NO_SHOW"), {
+                                loading: "Actualizando...",
+                                success: "Marcado como NO ASISTIÓ",
+                                error: "Error al actualizar"
+                            })
+                            onOpenChange(false)
+                        }}
+                        variant="destructive"
+                        className="w-full h-12 rounded-xl font-bold bg-white/5 hover:bg-red-500/20 text-red-500 border border-red-500/20"
+                    >
+                        ❌ No Asistió
+                    </Button>
                 </div>
             </DialogContent>
         </Dialog>
