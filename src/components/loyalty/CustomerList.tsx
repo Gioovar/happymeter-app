@@ -11,7 +11,8 @@ export function CustomerList({ customers = [] }: CustomerListProps) {
     const [searchTerm, setSearchTerm] = useState("")
 
     const filtered = customers.filter(c =>
-        c.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.magicToken?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.phone?.includes(searchTerm)
     )
@@ -60,10 +61,13 @@ export function CustomerList({ customers = [] }: CustomerListProps) {
                                         <td className="p-4">
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-white text-sm">
-                                                    {customer.firstName || "Sin Nombre"}
+                                                    {customer.name || customer.username || "Sin Nombre"}
                                                 </span>
-                                                <code className="text-xs text-gray-500 font-mono mt-0.5">
-                                                    {customer.magicToken || "ID-MISSING"}
+                                                <span className="text-xs text-gray-400">
+                                                    {customer.phone || customer.email || "Sin contacto"}
+                                                </span>
+                                                <code className="text-[10px] text-gray-600 font-mono mt-0.5">
+                                                    {customer.magicToken?.slice(0, 8) || "HIDDEN"}...
                                                 </code>
                                             </div>
                                         </td>
