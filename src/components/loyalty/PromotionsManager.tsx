@@ -27,11 +27,18 @@ export function PromotionsManager({ programId }: PromotionsManagerProps) {
 
     const loadPromotions = async () => {
         setIsLoading(true)
-        const res = await getPromotions(programId)
-        if (res.success) {
-            setPromotions(res.promotions || [])
+        try {
+            const res = await getPromotions(programId)
+            if (res.success) {
+                setPromotions(res.promotions || [])
+            } else {
+                toast.error("Error al cargar promociones")
+            }
+        } catch (error) {
+            toast.error("Error de conexión")
+        } finally {
+            setIsLoading(false)
         }
-        setIsLoading(false)
     }
 
     const compressImage = (file: File): Promise<string> => {
