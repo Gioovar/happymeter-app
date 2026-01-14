@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShieldCheck, Menu, X, CheckSquare, ScanLine, LogOut } from 'lucide-react'
+import { ShieldCheck, Menu, X, CheckSquare, ScanLine, LogOut, Home, User } from 'lucide-react'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
 
@@ -55,12 +55,25 @@ export default function OpsHeader() {
                         </div>
 
                         <nav className="space-y-2 flex-1">
+                            {/* HOME LINK */}
+                            <Link
+                                href="/ops"
+                                onClick={() => setIsOpen(false)}
+                                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname === '/ops'
+                                    ? 'bg-indigo-500/10 text-indigo-400 font-medium'
+                                    : 'text-slate-300 hover:bg-white/5'
+                                    }`}
+                            >
+                                <Home className="w-5 h-5" />
+                                Ir al Inicio
+                            </Link>
+
                             <Link
                                 href="/ops/tasks"
                                 onClick={() => setIsOpen(false)}
                                 className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname.startsWith('/ops/tasks')
-                                        ? 'bg-indigo-500/10 text-indigo-400 font-medium'
-                                        : 'text-slate-300 hover:bg-white/5'
+                                    ? 'bg-indigo-500/10 text-indigo-400 font-medium'
+                                    : 'text-slate-300 hover:bg-white/5'
                                     }`}
                             >
                                 <CheckSquare className="w-5 h-5" />
@@ -72,12 +85,25 @@ export default function OpsHeader() {
                                 href="/ops/scanner"
                                 onClick={() => setIsOpen(false)}
                                 className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname?.includes('/scanner')
-                                        ? 'bg-indigo-500/10 text-indigo-400 font-medium'
-                                        : 'text-slate-300 hover:bg-white/5'
+                                    ? 'bg-indigo-500/10 text-indigo-400 font-medium'
+                                    : 'text-slate-300 hover:bg-white/5'
                                     }`}
                             >
                                 <ScanLine className="w-5 h-5" />
                                 Escanear QR
+                            </Link>
+
+                            {/* PROFILE LINK */}
+                            <Link
+                                href="/ops/profile-setup"
+                                onClick={() => setIsOpen(false)}
+                                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname.startsWith('/ops/profile-setup')
+                                    ? 'bg-indigo-500/10 text-indigo-400 font-medium'
+                                    : 'text-slate-300 hover:bg-white/5'
+                                    }`}
+                            >
+                                <User className="w-5 h-5" />
+                                Ver mi Perfil
                             </Link>
                         </nav>
 
