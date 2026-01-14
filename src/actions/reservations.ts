@@ -633,3 +633,18 @@ export async function createReservation(data: {
         return { success: false, error: error.message || "Error al crear la reserva" }
     }
 }
+
+export async function updateReservationStatus(id: string, status: string) {
+    try {
+        const reservation = await prisma.reservation.update({
+            where: { id },
+            data: { status }
+        })
+
+        revalidatePath('/dashboard/reservations')
+        return { success: true, reservation }
+    } catch (error) {
+        console.error("Error updating reservation status:", error)
+        return { success: false, error: "Failed to update status" }
+    }
+}
