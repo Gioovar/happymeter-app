@@ -434,7 +434,7 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
             include: {
                 table: true
             },
-            orderBy: { date: 'asc' }
+            orderBy: { date: 'desc' }
         })
 
         // MOCK DATA REMOVED
