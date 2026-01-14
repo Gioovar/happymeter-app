@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { Phone, Mail, Star, MessageCircle, Calendar } from "lucide-react"
 import { toast } from "sonner"
+import { updateReservationStatus } from "@/actions/reservations"
 
 interface CustomerProfileDialogProps {
     open: boolean
@@ -90,11 +91,8 @@ export function CustomerProfileDialog({ open, onOpenChange, customer }: Customer
 
                 <div className="grid grid-cols-2 gap-3 pt-2">
                     <Button
-                        onClick={async () => {
-                            // Import action dynamically or assume passed prop? 
-                            // Better to keep it clean. Importing directly is fine in Client Components in Next.js
-                            const { updateReservationStatus } = await import("@/actions/reservations")
-                            toast.promise(updateReservationStatus(customer.id, "SEATED"), {
+                        onClick={() => {
+                            toast.promise(updateReservationStatus(customer.id as string, "SEATED"), {
                                 loading: "Registrando asistencia...",
                                 success: "¡Cliente marcado como ASISTIÓ!",
                                 error: "Error al actualizar"
@@ -106,9 +104,8 @@ export function CustomerProfileDialog({ open, onOpenChange, customer }: Customer
                         ✅ Asistió
                     </Button>
                     <Button
-                        onClick={async () => {
-                            const { updateReservationStatus } = await import("@/actions/reservations")
-                            toast.promise(updateReservationStatus(customer.id, "NO_SHOW"), {
+                        onClick={() => {
+                            toast.promise(updateReservationStatus(customer.id as string, "NO_SHOW"), {
                                 loading: "Actualizando...",
                                 success: "Marcado como NO ASISTIÓ",
                                 error: "Error al actualizar"
