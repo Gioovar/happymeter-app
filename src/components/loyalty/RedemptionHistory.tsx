@@ -12,12 +12,24 @@ interface RedemptionHistoryProps {
 export function RedemptionHistory({ programId }: RedemptionHistoryProps) {
     const [redemptions, setRedemptions] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        getProgramRedemptions(programId).then(data => {
-            setRedemptions(data)
-            setLoading(false)
-        })
+        getProgramRedemptions(programId)
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setRedemptions(data)
+                } else {
+                    console.error("Data received is not an array:", data)
+                    setRedemptions([]) // Fallback to empty
+                }
+                setLoading(false)
+            })
+            .catch(err => {
+                console.error("Failed to load history:", err)
+                setError("No se pudo cargar el historial. Intenta recargar.")
+                setLoading(false)
+            })
     }, [programId])
 
     if (loading) {
@@ -28,7 +40,15 @@ export function RedemptionHistory({ programId }: RedemptionHistoryProps) {
         )
     }
 
-    if (redemptions.length === 0) {
+    if (error) {
+        return (
+            <div className="p-6 text-center border border-red-500/20 bg-red-500/10 rounded-xl text-red-400">
+                <p>{error}</p>
+            </div>
+        )
+    }
+
+    if (!redemptions || redemptions.length === 0) {
         return (
             <div className="text-center py-12 border-2 border-dashed border-white/5 rounded-3xl bg-white/5">
                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-600">
