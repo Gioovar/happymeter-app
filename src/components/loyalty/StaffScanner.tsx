@@ -24,6 +24,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
     const [scanType, setScanType] = useState<"POINTS" | "VISITS">("VISITS")
     const [pendingVisitToken, setPendingVisitToken] = useState<string | null>(null)
     const [customerName, setCustomerName] = useState("")
+    const [programName, setProgramName] = useState("") // New state for Business Name
     const [spendAmount, setSpendAmount] = useState("")
 
     useEffect(() => {
@@ -151,6 +152,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                 // Store scan details
                 setPendingVisitToken(payload)
                 setCustomerName(validation.customerName || "Cliente")
+                setProgramName(validation.businessName || "") // Capture business name
 
                 // Determine Mode (Points vs Visits)
                 // Note: The validation from server says what program type it is.
@@ -313,7 +315,10 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                                 <h3 className="text-xl font-bold text-slate-900">
                                     {scanType === 'POINTS' ? 'Registrar Consumo' : 'Registrar Visita'}
                                 </h3>
-                                <p className="text-slate-500 text-sm">Cliente: {customerName}</p>
+                                <p className="text-slate-500 text-sm">
+                                    <span className="font-bold">{customerName}</span>
+                                    {programName && <span className="block text-indigo-600 font-bold text-xs mt-1 bg-indigo-50 px-2 py-1 rounded-md inline-block w-fit">{programName}</span>}
+                                </p>
                             </div>
                             <button onClick={() => { setShowConfirmModal(false); setPendingVisitToken(null); setIsProcessing(false); resumeScanner(500); }} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full">
                                 <X className="w-5 h-5" />

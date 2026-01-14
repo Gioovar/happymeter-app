@@ -346,7 +346,8 @@ export async function validateVisitScan(uniqueCustomerToken: string) {
             success: true,
             customerName: customer.name || "Cliente",
             programType: customer.program.pointsPercentage > 0 ? "POINTS" : "VISITS",
-            programId: customer.programId
+            programId: customer.programId,
+            businessName: customer.program.businessName
         }
     } catch (error) {
         return { success: false, error: "Error de validación" }
