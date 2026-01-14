@@ -85,12 +85,12 @@ export default async function ReservationsPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-end">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0">
                 <div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">Reservaciones</h1>
                     <p className="text-gray-400 mt-2">Gestiona tu agenda, capacidad y horarios.</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3 w-full md:w-auto">
                     {program && <ReservationLinkButton programId={program.id} />}
 
                     <Link
