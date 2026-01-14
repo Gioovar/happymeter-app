@@ -503,33 +503,70 @@ export async function unlockReward(customerId: string, rewardId: string) {
     // Customer clicks "Use Points" to generate a redemption code
     try {
         const reward = await prisma.loyaltyReward.findUnique({ where: { id: rewardId } })
-        const customer = await prisma.loyaltyCustomer.findUnique({ where: { id: customerId } })
+        const customer = await prisma.loyaltyCustomer.findUnique({
+            where: { id: customerId },
+            include: { redemptions: true } // Include redemptions to check dupes
+        })
 
         if (!reward || !customer) return { success: false, error: "Data not found" }
 
+        // CHECK 1: Enough visits?
         if (customer.currentVisits < reward.costInVisits) {
             return { success: false, error: "Not enough visits" }
         }
 
-        const [updatedCustomer, redemption] = await prisma.$transaction([
-            prisma.loyaltyCustomer.update({
+        // CHECK 2: Already unlocked/redeemed? (Ladder Logic prevents duplicates)
+        const alreadyExists = customer.redemptions.some(r => r.rewardId === rewardId)
+        if (alreadyExists) {
+            return { success: false, error: "Este premio ya fue desbloqueado" }
+        }
+
+        // TRANSACTION: Create Redemption but DO NOT DECREMENT VISITS (Cumulative Ladder)
+        // Unless it's a Points transaction? 
+        // For VISITS logic (Ladder), we usually don't decrement until the end.
+        // But for POINTS logic (Store), we DO decrement.
+
+        // Distinguish based on cost type
+        let customerUpdateData: any = {}
+
+        if (reward.costInPoints > 0) {
+            // POINTS MODE: Spendable currency -> Decrement
+            if (customer.currentPoints < reward.costInPoints) return { success: false, error: "Puntos insuficientes" }
+            customerUpdateData = { currentPoints: { decrement: reward.costInPoints } }
+        } else {
+            // VISITS MODE: Milestone Ladder -> Cumulative (No Decrement)
+            // We just create the redemption record.
+            customerUpdateData = { lastVisitDate: new Date() } // Dummy update to touch stamp? Not needed.
+            // Actually, pass empty or meaningful update
+        }
+
+        // Check if we actually need to update customer (only for points)
+        const ops = []
+        if (reward.costInPoints > 0) {
+            ops.push(prisma.loyaltyCustomer.update({
                 where: { id: customerId },
-                data: { currentVisits: { decrement: reward.costInVisits } }
-            }),
-            prisma.loyaltyRedemption.create({
-                data: {
-                    programId: reward.programId,
-                    customerId: customerId,
-                    rewardId: rewardId,
-                    status: "PENDING",
-                    redemptionCode: randomUUID().slice(0, 8).toUpperCase()
-                }
-            })
-        ])
+                data: customerUpdateData
+            }))
+        }
+
+        ops.push(prisma.loyaltyRedemption.create({
+            data: {
+                programId: reward.programId,
+                customerId: customerId,
+                rewardId: rewardId,
+                status: "PENDING",
+                redemptionCode: randomUUID().slice(0, 8).toUpperCase()
+            }
+        }))
+
+        const results = await prisma.$transaction(ops)
+        // Redemption is the last result
+        const redemption = results[results.length - 1]
 
         revalidatePath(`/loyalty/${customer.programId}`)
         return { success: true, redemption }
     } catch (error) {
+        console.error("Unlock error", error)
         return { success: false, error: "Failed to unlock reward" }
     }
 }
@@ -598,6 +635,9 @@ export async function redeemReward(staffId: string, code: string, evidenceUrl?: 
         })
 
         revalidatePath('/dashboard/loyalty')
+        if (redemption.programId) {
+            revalidatePath(`/loyalty/${redemption.programId}`)
+        }
 
         return {
             success: true,
