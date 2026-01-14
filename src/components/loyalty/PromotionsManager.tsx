@@ -14,6 +14,7 @@ export function PromotionsManager({ programId }: PromotionsManagerProps) {
     const [promotions, setPromotions] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isCreating, setIsCreating] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const [newPromo, setNewPromo] = useState({
         title: "",
         description: "",
@@ -33,17 +34,57 @@ export function PromotionsManager({ programId }: PromotionsManagerProps) {
         setIsLoading(false)
     }
 
+    const compressImage = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1280; // Reasonable max width for web
+
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    // Compress to WebP at 0.8 quality
+                    resolve(canvas.toDataURL('image/webp', 0.8));
+                };
+                img.onerror = (error) => reject(error);
+            };
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
     const handleCreate = async () => {
         if (!newPromo.imageUrl) return
 
-        const res = await createPromotion(programId, newPromo)
-        if (res.success) {
-            toast.success("Promoción creada")
-            setIsCreating(false)
-            setNewPromo({ title: "", description: "", imageUrl: "" })
-            loadPromotions()
-        } else {
-            toast.error("Error al crear promoción")
+        setIsSubmitting(true)
+        try {
+            const res = await createPromotion(programId, newPromo)
+            if (res.success) {
+                toast.success("Promoción creada")
+                setIsCreating(false)
+                setNewPromo({ title: "", description: "", imageUrl: "" })
+                loadPromotions()
+            } else {
+                toast.error("Error al crear promoción")
+            }
+        } catch (error) {
+            toast.error("Error inesperado")
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -84,18 +125,16 @@ export function PromotionsManager({ programId }: PromotionsManagerProps) {
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        onChange={(e) => {
+                                        onChange={async (e) => {
                                             const file = e.target.files?.[0]
                                             if (file) {
-                                                if (file.size > 2 * 1024 * 1024) {
-                                                    toast.error("La imagen es muy pesada. Máximo 2MB.")
-                                                    return
+                                                try {
+                                                    const compressed = await compressImage(file)
+                                                    setNewPromo({ ...newPromo, imageUrl: compressed })
+                                                    toast.success("Imagen optimizada correctamente")
+                                                } catch (err) {
+                                                    toast.error("Error al procesar imagen")
                                                 }
-                                                const reader = new FileReader()
-                                                reader.onloadend = () => {
-                                                    setNewPromo({ ...newPromo, imageUrl: reader.result as string })
-                                                }
-                                                reader.readAsDataURL(file)
                                             }
                                         }}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -151,10 +190,17 @@ export function PromotionsManager({ programId }: PromotionsManagerProps) {
                             </div>
                             <button
                                 onClick={handleCreate}
-                                disabled={!newPromo.imageUrl}
-                                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:shadow-none"
+                                disabled={!newPromo.imageUrl || isSubmitting}
+                                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:shadow-none flex justify-center items-center gap-2"
                             >
-                                Crear Promoción
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Creando...
+                                    </>
+                                ) : (
+                                    "Crear Promoción"
+                                )}
                             </button>
                         </div>
                     </DialogContent>
