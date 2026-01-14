@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { MessageSquare, Send, X, Bot, Sparkles, User, ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -16,6 +17,11 @@ export default function LandingAIChat() {
     const [isLoading, setIsLoading] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const [hasInitialized, setHasInitialized] = useState(false)
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -108,7 +114,7 @@ export default function LandingAIChat() {
 
             {/* Chat Modal */}
             <AnimatePresence>
-                {isOpen && (
+                {isOpen && mounted && createPortal(
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -202,7 +208,8 @@ export default function LandingAIChat() {
                                 </button>
                             </form>
                         </div>
-                    </motion.div>
+                    </motion.div>,
+                    document.body
                 )}
             </AnimatePresence>
         </>
