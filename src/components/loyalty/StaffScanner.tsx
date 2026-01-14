@@ -108,10 +108,24 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
         } else if (data.startsWith("R:")) {
             type = "REDEEM"
             payload = data.substring(2)
+        } else if (data.includes("happymeters.com/admin/scan/")) {
+            // Extract token from URL
+            type = "VISIT"
+            payload = data.split("/scan/")[1] || data
         } else {
             // Heuristic detection
-            if (data.includes("-") && data.length > 10) {
+            if (data.includes("-") && data.length > 20) {
                 // Long UUID-like with hyphens -> Visit Token
+                // BUT check if it's a URL first
+                if (data.startsWith("http")) {
+                    try {
+                        const url = new URL(data)
+                        const parts = url.pathname.split('/')
+                        payload = parts[parts.length - 1]
+                    } catch (e) {
+                        // keep as is
+                    }
+                }
                 type = 'VISIT'
             } else if (data.length <= 10) {
                 // Short alphanumeric -> Redemption Code
