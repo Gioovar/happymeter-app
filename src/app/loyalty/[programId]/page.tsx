@@ -314,12 +314,12 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                             }}
                         >
                             {/* Inject Promotions Slider */}
-                            {programInfo?.promotions && programInfo.promotions.length > 0 && (
+                            {customer.program?.promotions && customer.program.promotions.length > 0 && (
                                 <div className="mt-2 text-sm font-bold text-gray-500 uppercase tracking-wider px-1 mb-2">
                                     Promociones
                                 </div>
                             )}
-                            <PromotionsSlider promotions={programInfo?.promotions || []} />
+                            <PromotionsSlider promotions={customer.program?.promotions || []} />
                         </CustomerLoyaltyCard>
                     )
                 )}
