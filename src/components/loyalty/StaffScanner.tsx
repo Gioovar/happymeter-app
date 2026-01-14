@@ -19,8 +19,9 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
     // Use consistent ref for the scanner instance
     const scannerRef = useRef<Html5Qrcode | null>(null)
 
-    // Points Logic State
-    const [showAmountModal, setShowAmountModal] = useState(false)
+    // Unified Modal State
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [scanType, setScanType] = useState<"POINTS" | "VISITS">("VISITS")
     const [pendingVisitToken, setPendingVisitToken] = useState<string | null>(null)
     const [customerName, setCustomerName] = useState("")
     const [spendAmount, setSpendAmount] = useState("")
@@ -145,17 +146,23 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
             const validation = await validateVisitScan(payload)
 
             if (validation.success) {
+                toast.dismiss()
+
+                // Store scan details
+                setPendingVisitToken(payload)
+                setCustomerName(validation.customerName || "Cliente")
+
+                // Determine Mode (Points vs Visits)
+                // Note: The validation from server says what program type it is.
                 if (validation.programType === 'POINTS') {
-                    // STOP and Ask for Amount
-                    toast.dismiss()
-                    setPendingVisitToken(payload)
-                    setCustomerName(validation.customerName || "Cliente")
-                    setShowAmountModal(true)
-                    // Scanner stays paused until modal is closed
+                    setScanType("POINTS")
                 } else {
-                    // Log immediately for Visits based
-                    await submitVisit(payload)
+                    setScanType("VISITS")
                 }
+
+                // Show Confirmation Modal for BOTH types
+                setShowConfirmModal(true)
+
             } else {
                 toast.dismiss()
                 toast.error(`Cliente no encontrado`, {
@@ -216,7 +223,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                 icon: <UtensilsCrossed className="w-5 h-5 text-green-500" />
             })
             // Reset modal
-            setShowAmountModal(false)
+            setShowConfirmModal(false)
             setPendingVisitToken(null)
             setSpendAmount("")
             resumeScanner(3000)
@@ -226,11 +233,21 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
         }
     }
 
-    const handleConfirmAmount = () => {
+    const handleConfirmVisit = () => {
         if (!pendingVisitToken) return
-        submitVisit(pendingVisitToken, parseFloat(spendAmount) || 0)
-    }
 
+        if (scanType === 'POINTS') {
+            const amount = parseFloat(spendAmount) || 0
+            if (amount <= 0) {
+                toast.error("Ingresa un monto válido")
+                return
+            }
+            submitVisit(pendingVisitToken, amount)
+        } else {
+            // Visits based - simple confirmation
+            submitVisit(pendingVisitToken, 0)
+        }
+    }
 
     return (
         <div className="w-full max-w-md mx-auto relative">
@@ -280,62 +297,77 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                     </div>
                 )}
 
-                {isProcessing && !showAmountModal && (
+                {isProcessing && !showConfirmModal && (
                     <div className="mt-4 p-3 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" /> Procesando...
                     </div>
                 )}
             </div>
 
-            {/* AMOUNT INPUT MODAL */}
-            {showAmountModal && (
+            {/* CONFIRMATION / AMOUNT MODAL */}
+            {showConfirmModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+                    <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <h3 className="text-xl font-bold text-slate-900">Registrar Consumo</h3>
+                                <h3 className="text-xl font-bold text-slate-900">
+                                    {scanType === 'POINTS' ? 'Registrar Consumo' : 'Registrar Visita'}
+                                </h3>
                                 <p className="text-slate-500 text-sm">Cliente: {customerName}</p>
                             </div>
-                            <button onClick={() => { setShowAmountModal(false); setPendingVisitToken(null); setIsProcessing(false); }} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full">
+                            <button onClick={() => { setShowConfirmModal(false); setPendingVisitToken(null); setIsProcessing(false); resumeScanner(500); }} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         <div className="space-y-4 mb-6">
-                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Monto del Ticket</label>
-                                <div className="flex items-center gap-2">
-                                    <DollarSign className="w-6 h-6 text-slate-400" />
-                                    <input
-                                        type="number"
-                                        value={spendAmount}
-                                        onChange={(e) => setSpendAmount(e.target.value)}
-                                        placeholder="0.00"
-                                        autoFocus
-                                        className="bg-transparent text-3xl font-bold text-slate-900 w-full outline-none placeholder:text-slate-300"
-                                    />
+                            {scanType === 'POINTS' ? (
+                                <>
+                                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Monto del Ticket</label>
+                                        <div className="flex items-center gap-2">
+                                            <DollarSign className="w-6 h-6 text-slate-400" />
+                                            <input
+                                                type="number"
+                                                value={spendAmount}
+                                                onChange={(e) => setSpendAmount(e.target.value)}
+                                                placeholder="0.00"
+                                                autoFocus
+                                                className="bg-transparent text-3xl font-bold text-slate-900 w-full outline-none placeholder:text-slate-300"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button className="w-full py-3 bg-slate-100 border border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-2 text-slate-500 hover:bg-slate-200 transition-colors">
+                                        <Camera className="w-4 h-4" />
+                                        <span className="font-medium">Adjuntar Foto del Ticket</span>
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center">
+                                    <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <UtensilsCrossed className="w-8 h-8" />
+                                    </div>
+                                    <p className="text-indigo-900 font-medium">
+                                        ¿Confirmar visita para <strong>{customerName}</strong>?
+                                    </p>
+                                    <p className="text-indigo-600/70 text-xs mt-1">Se sumará 1 visita a su cuenta.</p>
                                 </div>
-                            </div>
-
-                            <button className="w-full py-3 bg-slate-100 border border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-2 text-slate-500 hover:bg-slate-200 transition-colors">
-                                <Camera className="w-4 h-4" />
-                                <span className="font-medium">Adjuntar Foto del Ticket</span>
-                            </button>
+                            )}
                         </div>
 
                         <div className="flex gap-3">
                             <button
-                                onClick={() => { setShowAmountModal(false); setPendingVisitToken(null); setIsProcessing(false); }}
+                                onClick={() => { setShowConfirmModal(false); setPendingVisitToken(null); setIsProcessing(false); resumeScanner(500); }}
                                 className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition-colors"
                             >
                                 Cancelar
                             </button>
                             <button
-                                onClick={handleConfirmAmount}
-                                disabled={!spendAmount}
+                                onClick={handleConfirmVisit}
+                                disabled={scanType === 'POINTS' && !spendAmount}
                                 className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
                             >
-                                Confirmar
+                                {scanType === 'POINTS' ? 'Confirmar Monto' : 'Registrar Visita'}
                             </button>
                         </div>
                     </div>
