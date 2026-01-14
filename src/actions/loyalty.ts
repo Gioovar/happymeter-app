@@ -626,113 +626,40 @@ export async function getProgramRedemptions(programId: string) {
             }
         })
 
-        // Resolve staff details
-        const rawStaffIds = Array.from(new Set(redemptions.map(r => r.staffId).filter(Boolean))) as string[]
+        // Resolve staff details - SIMPLE DB ONLY MODE (No Clerk/External calls)
+        const staffIds = Array.from(new Set(redemptions.map(r => r.staffId).filter(Boolean))) as string[]
 
-        if (rawStaffIds.length === 0) return redemptions
+        if (staffIds.length === 0) return redemptions
 
-        const clerkIds = new Set<string>()
-        const teamMemberIds = new Set<string>()
-
-        // Classify IDs
-        rawStaffIds.forEach(id => {
-            if (id === 'SYSTEM') return
-            if (id.startsWith('user_')) {
-                clerkIds.add(id)
-            } else {
-                // Assume UUID or legacy ID -> Check TeamMember
-                teamMemberIds.add(id)
-            }
-        })
-
-        // Resolve TeamMember IDs to Clerk UserIds
-        const teamMemberMap = new Map<string, string>() // teamMemberId -> userId
-        if (teamMemberIds.size > 0) {
-            try {
-                const members = await prisma.teamMember.findMany({
-                    where: { id: { in: Array.from(teamMemberIds) } },
-                    select: { id: true, userId: true }
-                })
-                members.forEach(m => {
-                    teamMemberMap.set(m.id, m.userId)
-                    clerkIds.add(m.userId)
-                })
-            } catch (e) {
-                console.error("Failed to resolve TeamMember IDs", e)
-            }
-        }
-
-        const finalUserIds = Array.from(clerkIds)
-
-        // 1. Fetch DB Settings
+        // 1. Fetch DB Settings (Phone, Job)
         let dbUserMap = new Map()
-        if (finalUserIds.length > 0) {
-            try {
-                const dbUsers = await prisma.userSettings.findMany({
-                    where: { userId: { in: finalUserIds } },
-                    select: { userId: true, phone: true, jobTitle: true, photoUrl: true }
-                })
-                dbUserMap = new Map(dbUsers.map(u => [u.userId, u]))
-            } catch (e) {
-                console.error("DB User fetch error", e)
-            }
-        }
-
-        // 2. Fetch Clerk Names via raw API
-        let clerkUserMap = new Map()
-        if (process.env.CLERK_SECRET_KEY && finalUserIds.length > 0) {
-            try {
-                const idsParam = finalUserIds.map(id => `user_id=${id}`).join('&')
-                // Clerk API limitation: check if URL is too long or batch?
-                // For now assuming < 100 ids fits in query params or we might need batching logic later.
-
-                const res = await fetch(`https://api.clerk.com/v1/users?limit=100&${idsParam}`, {
-                    headers: {
-                        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    next: { revalidate: 60 }
-                })
-
-                if (res.ok) {
-                    const data = await res.json()
-                    clerkUserMap = new Map(data.map((u: any) => [u.id, u]))
-                } else {
-                    console.error("Clerk API Fetch Error", await res.text())
-                }
-            } catch (err) {
-                console.error("Failed to fetch clerk users raw", err)
-            }
+        try {
+            const dbUsers = await prisma.userSettings.findMany({
+                where: { userId: { in: staffIds } },
+                select: { userId: true, phone: true, jobTitle: true }
+            })
+            dbUserMap = new Map(dbUsers.map(u => [u.userId, u]))
+        } catch (e) {
+            console.error("DB User fetch error", e)
         }
 
         return redemptions.map(r => {
-            if (!r.staffId || r.staffId === 'SYSTEM') {
-                return { ...r, staffName: "Sistema" }
-            }
+            const dbUser = r.staffId ? dbUserMap.get(r.staffId) : null
 
-            // Determine real Clerk ID
-            const realUserId = r.staffId.startsWith('user_') ? r.staffId : teamMemberMap.get(r.staffId)
-
-            if (!realUserId) {
-                return { ...r, staffName: "Desconocido" }
-            }
-
-            const dbUser = dbUserMap.get(realUserId)
-            const clerkUser = clerkUserMap.get(realUserId)
-
-            const fullName = clerkUser ? `${clerkUser.first_name || ""} ${clerkUser.last_name || ""}`.trim() : "Personal"
+            // Simple logic: Use system ID or Phone. No external names.
+            const displayName = dbUser?.phone || "Staff"
 
             return {
                 ...r,
-                staffName: clerkUser ? fullName : (dbUser?.phone || "Desconocido"),
-                staffDetails: {
-                    id: realUserId, // Use the resolved ID for display/linking
-                    name: clerkUser ? fullName : "Miembro del Staff",
-                    email: clerkUser?.email_addresses?.[0]?.email_address,
-                    phone: dbUser?.phone || "No registrado",
+                staffName: r.staffId === 'SYSTEM' ? 'Sistema' : displayName,
+                staffDetails: r.staffId ? {
+                    id: r.staffId,
+                    name: displayName,
+                    email: null,
+                    phone: dbUser?.phone || "",
                     jobTitle: dbUser?.jobTitle || "Staff",
-                    photoUrl: clerkUser?.image_url || dbUser?.photoUrl
-                }
+                    photoUrl: null
+                } : null
             }
         })
 
