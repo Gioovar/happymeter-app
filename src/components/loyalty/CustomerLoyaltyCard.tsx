@@ -433,6 +433,14 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                                 <Sparkles className="w-4 h-4 text-yellow-500 group-hover:scale-110 transition-transform" />
                                                 <span className="text-xs font-bold text-yellow-500 uppercase tracking-wide">CÓDIGO DE CANJE GENERADO</span>
                                             </button>
+                                        ) : customer.redemptions?.some((r: any) => r.rewardId === reward.id && r.status === 'REDEEMED') ? (
+                                            // Redeemed State (Prioritized over Unlocked)
+                                            <div className="text-center">
+                                                <div className="flex items-center justify-center gap-2 text-green-500/80 text-xs font-bold uppercase tracking-wider bg-green-900/10 py-2 rounded-lg border border-green-500/10">
+                                                    <Check className="w-4 h-4" />
+                                                    Premio Entregado
+                                                </div>
+                                            </div>
                                         ) : !isLocked ? (
                                             <button
                                                 onClick={(e) => {
@@ -444,20 +452,12 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                                 Desbloquear Recompensa
                                             </button>
                                         ) : (
-                                            // Locked or Redeemed State
+                                            // Locked State
                                             <div className="text-center">
-                                                {/* Check if previously redeemed */}
-                                                {customer.redemptions?.some((r: any) => r.rewardId === reward.id && r.status === 'REDEEMED') ? (
-                                                    <div className="flex items-center justify-center gap-2 text-green-500/80 text-xs font-bold uppercase tracking-wider bg-green-900/10 py-2 rounded-lg border border-green-500/10">
-                                                        <Check className="w-4 h-4" />
-                                                        Premio Entregado
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center justify-center gap-2 text-gray-500 text-xs font-medium py-2">
-                                                        <Lock className="w-3 h-3" />
-                                                        <span>{requirementText}</span>
-                                                    </div>
-                                                )}
+                                                <div className="flex items-center justify-center gap-2 text-gray-500 text-xs font-medium py-2">
+                                                    <Lock className="w-3 h-3" />
+                                                    <span>{requirementText}</span>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
