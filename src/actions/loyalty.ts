@@ -610,6 +610,46 @@ export async function redeemReward(staffId: string, code: string) {
     }
 }
 
+export async function getProgramRedemptions(programId: string) {
+    try {
+        const redemptions = await prisma.loyaltyRedemption.findMany({
+            where: {
+                programId,
+                status: "REDEEMED"
+            },
+            include: {
+                customer: true,
+                reward: true
+            },
+            orderBy: {
+                redeemedAt: 'desc'
+            }
+        })
+
+        // Resolve staff names
+        // staffId is just a string (Clerk ID). We need to fetch UserSettings or TeamMembers
+        const staffIds = Array.from(new Set(redemptions.map(r => r.staffId).filter(Boolean))) as string[]
+
+        if (staffIds.length === 0) return redemptions
+
+        const staffUsers = await prisma.userSettings.findMany({
+            where: { userId: { in: staffIds } },
+            select: { userId: true, phone: true }
+        })
+
+        const staffMap = new Map(staffUsers.map(u => [u.userId, u.phone || "Personal"]))
+
+        return redemptions.map(r => ({
+            ...r,
+            staffName: r.staffId ? (staffMap.get(r.staffId) || "Desconocido") : "Sistema"
+        }))
+
+    } catch (error) {
+        console.error("Error fetching redemptions:", error)
+        return []
+    }
+}
+
 export async function generateQrCode(text: string) {
     try {
         return await QRCode.toDataURL(text)

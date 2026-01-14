@@ -25,6 +25,8 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
     const { program, visits, currentVisits } = customer
     const [selectedReward, setSelectedReward] = useState<any | null>(null)
     const [showQr, setShowQr] = useState(false)
+    const [redeemQrData, setRedeemQrData] = useState<{ code: string, name: string } | null>(null)
+    const [activeTab, setActiveTab] = useState("rewards") // rewards, history, info
     const [showMenu, setShowMenu] = useState(false)
     const [myCards, setMyCards] = useState<any[]>([])
     const [notifications, setNotifications] = useState<any[]>([])
@@ -238,22 +240,47 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
 
                     {/* QR Code Popover (Portal) */}
                     {showQr && mounted && createPortal(
-                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowQr(false)}>
-                            <div className="bg-white p-6 rounded-3xl shadow-2xl scale-100 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => { setShowQr(false); setTimeout(() => setRedeemQrData(null), 300); }}>
+                            <div className={cn(
+                                "bg-white p-6 rounded-3xl shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative overflow-hidden",
+                                redeemQrData ? "border-4 border-yellow-500 shadow-yellow-500/50" : ""
+                            )} onClick={e => e.stopPropagation()}>
+
+                                {redeemQrData && (
+                                    <div className="absolute top-0 right-0 p-2 bg-yellow-500 text-white rounded-bl-2xl font-bold text-xs uppercase tracking-wide">
+                                        Premio
+                                    </div>
+                                )}
+
                                 <div className="mb-4 text-center">
-                                    <h3 className="text-black font-bold text-lg">Tu Código de Miembro</h3>
-                                    <p className="text-gray-500 text-xs">Muestra esto al personal para registrar tu visita</p>
+                                    <h3 className={cn("font-bold text-lg", redeemQrData ? "text-yellow-600" : "text-black")}>
+                                        {redeemQrData ? "Canjear Recompensa" : "Tu Código de Miembro"}
+                                    </h3>
+                                    <p className="text-gray-500 text-xs">
+                                        {redeemQrData ? "Muestra este código al personal para recibir tu premio" : "Muestra esto al personal para registrar tu visita"}
+                                    </p>
                                 </div>
-                                <div className="bg-white p-2 rounded-xl border-2 border-dashed border-gray-200">
+
+                                <div className={cn(
+                                    "bg-white p-2 rounded-xl border-2 border-dashed mx-auto",
+                                    redeemQrData ? "border-yellow-400" : "border-gray-200"
+                                )}>
                                     <QRCodeSVG
-                                        value={`https://happymeters.com/admin/scan/${customer.magicToken}${filterType && filterType !== 'all' ? `?type=${filterType.toUpperCase()}` : ''}`}
+                                        value={redeemQrData ? redeemQrData.code : `https://happymeters.com/admin/scan/${customer.magicToken}${filterType && filterType !== 'all' ? `?type=${filterType.toUpperCase()}` : ''}`}
                                         size={200}
                                         level="H"
                                         includeMargin={true}
                                         className="w-full h-full"
                                     />
                                 </div>
-                                <p className="mt-4 text-center font-mono text-sm font-bold text-gray-900 tracking-widest">{customer.magicToken}</p>
+
+                                <div className="mt-4 text-center">
+                                    {redeemQrData ? (
+                                        <p className="font-bold text-lg text-yellow-600 leading-tight">{redeemQrData.name}</p>
+                                    ) : (
+                                        <p className="font-mono text-sm font-bold text-gray-900 tracking-widest">{customer.magicToken}</p>
+                                    )}
+                                </div>
                             </div>
                         </div>,
                         document.body
@@ -333,14 +360,12 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             const isSystemGift = reward.description === "SYSTEM_GIFT"
 
                             return (
+                            return (
                                 <div
                                     key={reward.id}
-                                    onClick={() => !isLocked && !pending && handleUnlock(reward.id)}
                                     className={cn(
                                         "relative overflow-hidden rounded-2xl border bg-[#12121a] p-4 transition-all duration-300",
-                                        isSystemGift ? "border-purple-500/50 hover:border-purple-400 bg-purple-900/10" : "border-white/5",
-                                        isLocked ? "opacity-70" : "cursor-pointer active:scale-[0.98]",
-                                        !isSystemGift && !isLocked && "hover:border-violet-500/30 hover:bg-[#1a1a24]",
+                                        isSystemGift ? "border-purple-500/50 bg-purple-900/10" : "border-white/5",
                                         pending ? "border-yellow-500/50 bg-yellow-900/10" : ""
                                     )}
                                 >
@@ -358,7 +383,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                                     isSystemGift ? "bg-purple-500/20 text-purple-400 border border-purple-500/30 shadow-[0_0_15px_-5px_#a855f7]" :
                                                         "bg-violet-500/20 text-violet-400"
                                         )}>
-                                            {pending ? <Sparkles className="w-6 h-6 animate-pulse" /> : <Gift className={cn("w-6 h-6", isSystemGift && "animate-pulse")} />}
+                                            {pending ? <Trophy className="w-6 h-6 animate-pulse" /> : <Gift className={cn("w-6 h-6", isSystemGift && "animate-pulse")} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start mb-1">
@@ -388,12 +413,39 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                         </div>
                                     </div>
 
-                                    {pending && (
-                                        <div className="mt-3 bg-yellow-500/10 rounded-lg p-2 flex items-center gap-2 justify-center border border-yellow-500/20">
-                                            <Sparkles className="w-4 h-4 text-yellow-500" />
-                                            <span className="text-xs font-bold text-yellow-500 uppercase tracking-wide">Código de canje generado</span>
-                                        </div>
-                                    )}
+                                    {/* ACTIONS */}
+                                    <div className="mt-4 relative z-20">
+                                        {pending ? (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    if (pending.redemptionCode) {
+                                                        setRedeemQrData({
+                                                            code: `R:${pending.redemptionCode}`,
+                                                            name: reward.name
+                                                        })
+                                                        setShowQr(true)
+                                                    } else {
+                                                        toast.error("Error: Código de canje no encontrado")
+                                                    }
+                                                }}
+                                                className="w-full bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-3 flex items-center justify-center gap-2 transition-all active:scale-95 group"
+                                            >
+                                                <Sparkles className="w-4 h-4 text-yellow-500 group-hover:scale-110 transition-transform" />
+                                                <span className="text-xs font-bold text-yellow-500 uppercase tracking-wide">CÓDIGO DE CANJE GENERADO</span>
+                                            </button>
+                                        ) : !isLocked ? (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    handleUnlock(reward.id)
+                                                }}
+                                                className="w-full bg-violet-600 hover:bg-violet-700 text-white rounded-xl p-3 font-bold text-xs uppercase shadow-lg shadow-violet-500/20 transition-all active:scale-95"
+                                            >
+                                                Desbloquear Recompensa
+                                            </button>
+                                        ) : null}
+                                    </div>
                                 </div>
                             )
                         })}
@@ -404,7 +456,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
             {/* FLOATING QR BUTTON (Bottom) */}
             <div className="absolute bottom-6 left-0 right-0 z-30 px-6 flex justify-center pointer-events-none">
                 <button
-                    onClick={() => setShowQr(true)}
+                    onClick={() => { setRedeemQrData(null); setShowQr(true); }}
                     className="pointer-events-auto bg-gradient-to-r from-orange-500 to-pink-500 text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 hover:scale-105 transition-transform active:scale-95 border-2 border-white/20 text-sm tracking-wide"
                 >
                     <QrCode className="w-5 h-5" />

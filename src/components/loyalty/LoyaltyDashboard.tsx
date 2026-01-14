@@ -7,7 +7,7 @@ import { inviteMember, getOperators, toggleMemberStatus } from "@/actions/team"
 import { createPromotion, deletePromotion, getPromotions } from "@/actions/loyalty"
 
 import { toast } from "sonner"
-import { Plus, Save, Gift, Trophy, QrCode, Zap, Layers, BarChart3, ArrowRight, Sparkles, Crown, X, Pencil, Eye, Utensils, Wine, Star, Camera, Users, Loader2, Bell } from "lucide-react"
+import { Plus, Save, Gift, Trophy, QrCode, Zap, Layers, BarChart3, ArrowRight, Sparkles, Crown, X, Pencil, Eye, Utensils, Wine, Star, Camera, Users, Loader2, Bell, Clock } from "lucide-react"
 import { CustomerLoyaltyCard } from "./CustomerLoyaltyCard"
 import { cn } from "@/lib/utils"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import TiersManager from "./TiersManager"
 import NotificationsManager from "./NotificationsManager"
+import { RedemptionHistory } from "./RedemptionHistory"
 
 
 
@@ -166,6 +167,7 @@ function PremiumTabs({ activeTab, setActiveTab, children }: any) {
     const tabs = [
         { id: 'overview', label: 'Visión General', icon: BarChart3 },
         { id: 'promotions', label: 'Promociones', icon: Layers },
+        { id: 'history', label: 'Historial', icon: Clock },
         { id: 'clients', label: 'Clientes', icon: Users },
         { id: 'notifications', label: 'Comunicaciones', icon: Bell },
         { id: 'tiers', label: 'Niveles VIP', icon: Crown },
@@ -1095,6 +1097,12 @@ function AdvancedLoyaltyView({ userId, program, onBack, initialTab: propInitialT
                     {activeTab === 'promotions' && (
                         <div className="animate-in fade-in duration-500">
                             <PromotionsManager programId={program.id} />
+                        </div>
+                    )}
+
+                    {activeTab === 'history' && (
+                        <div className="animate-in fade-in duration-500">
+                            <RedemptionHistory programId={program.id} />
                         </div>
                     )}
 
