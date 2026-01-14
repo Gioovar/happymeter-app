@@ -100,14 +100,14 @@ export function RedemptionHistory({ programId }: RedemptionHistoryProps) {
                                                     <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-500">
                                                         <Gift className="w-4 h-4" />
                                                     </div>
-                                                    <span className="font-bold text-gray-200">{redemption.reward.name}</span>
+                                                    <span className="font-bold text-gray-200">{redemption.reward?.name || "Premio Eliminado"}</span>
                                                 </div>
                                             </td>
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2">
                                                     <User className="w-4 h-4 text-gray-500" />
                                                     <span className="text-gray-300">
-                                                        {redemption.customer.name || redemption.customer.phone || "Cliente"}
+                                                        {redemption.customer?.name || redemption.customer?.phone || "Cliente"}
                                                     </span>
                                                 </div>
                                             </td>
