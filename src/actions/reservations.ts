@@ -615,7 +615,7 @@ export async function createReservation(data: {
                         const program = settings.loyaltyProgram
                         if (program) {
                             // Construct URL (assume production domain or localhost)
-                            const domain = process.env.NEXT_PUBLIC_APP_URL || "https://happymeters.app"
+                            const domain = process.env.NEXT_PUBLIC_APP_URL || "https://www.happymeters.com"
                             loyaltyUrl = `${domain}/loyalty/${program.id}`
                         }
                     }
