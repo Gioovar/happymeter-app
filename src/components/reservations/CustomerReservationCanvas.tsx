@@ -669,7 +669,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                 </p>
                             </div>
                             <Button
-                                onClick={() => window.location.href = `/programs/${postReservationAction.programId}`}
+                                onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}?claim_gift=true`}
                                 className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl py-6 shadow-xl shadow-amber-500/20"
                             >
                                 Reclamar Regalo Ahora
@@ -700,74 +700,6 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                         <ClientSideEffect
                             action={() => {
                                 setTimeout(() => window.location.href = `/loyalty/${postReservationAction.programId}`, 2000)
-                            }}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
-
-            {/* Success / Post-Reservation Modal */}
-            <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
-                <DialogContent className="w-[95vw] max-w-sm bg-zinc-900 border border-white/10 text-white rounded-3xl p-6 text-center">
-                    {postReservationAction?.action === 'REDIRECT_LOYALTY' && (
-                        <div className="space-y-4 py-4">
-                            <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                                <Sparkles className="w-8 h-8 text-indigo-400" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold">¡Reserva Confirmada!</h2>
-                                <p className="text-zinc-400 text-sm mt-2">Ya eres socio de {postReservationAction.businessName}.</p>
-                                <p className="text-white text-sm font-medium mt-1">Redirigiendo a tu tarjeta...</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {postReservationAction?.action === 'OFFER_GIFT' && (
-                        <div className="space-y-4 py-4">
-                            <div className="w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(245,158,11,0.3)]">
-                                <Gift className="w-10 h-10 text-amber-400" />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
-                                    ¡Regalo Desbloqueado!
-                                </h2>
-                                <p className="text-white font-medium mt-2">{postReservationAction.giftText}</p>
-                                <p className="text-zinc-400 text-xs mt-2">
-                                    Únete al programa de lealtad gratis para reclamarlo en tu visita.
-                                </p>
-                            </div>
-                            <Button
-                                onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}?claim_gift=true`}
-                                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl py-6 shadow-xl shadow-amber-500/20"
-                            >
-                                Reclamar Regalo Ahora
-                            </Button>
-                        </div>
-                    )}
-
-                    {postReservationAction?.action === 'OFFER_JOIN' && (
-                        <div className="space-y-4 py-4">
-                            <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto">
-                                <Sparkles className="w-8 h-8 text-purple-400" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold">Reserva Confirmada</h2>
-                                <p className="text-zinc-300 text-sm mt-2">{postReservationAction.joinMessage}</p>
-                            </div>
-                            <Button
-                                onClick={() => window.location.href = `/programs/${postReservationAction.programId}`}
-                                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl py-6"
-                            >
-                                Ver Beneficios del Club
-                            </Button>
-                        </div>
-                    )}
-
-                    {/* Auto-redirect effect for members */}
-                    {postReservationAction?.action === 'REDIRECT_LOYALTY' && (
-                        <ClientSideEffect
-                            action={() => {
-                                setTimeout(() => window.location.href = `/programs/${postReservationAction.programId}`, 2000)
                             }}
                         />
                     )}
