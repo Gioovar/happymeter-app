@@ -678,92 +678,100 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <div className="py-4 space-y-4">
-                                {/* Customer Form */}
-                                <div className="space-y-3 p-3 bg-zinc-800/50 rounded-xl border border-white/5">
-                                    <div className="space-y-1">
-                                        <Label className="text-xs text-zinc-400">Nombre Completo</Label>
-                                        <Input
-                                            placeholder="Tu nombre"
-                                            className="bg-black/50 border-white/10 h-9"
-                                            value={customerForm.name}
-                                            onChange={(e) => setCustomerForm(prev => ({ ...prev, name: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-xs text-zinc-400">Correo Electrónico</Label>
-                                        <Input
-                                            placeholder="ejemplo@correo.com"
-                                            type="email"
-                                            className="bg-black/50 border-white/10 h-9"
-                                            value={customerForm.email}
-                                            onChange={(e) => setCustomerForm(prev => ({ ...prev, email: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-xs text-zinc-400">Celular (WhatsApp/SMS)</Label>
-                                        <Input
-                                            placeholder="55 1234 5678"
-                                            type="tel"
-                                            className="bg-black/50 border-white/10 h-9"
-                                            value={customerForm.phone}
-                                            onChange={(e) => setCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl">
-                                    <div className="flex items-center gap-3">
-                                        <Users className="w-5 h-5 text-zinc-400" />
-                                        <div>
-                                            <p className="text-sm font-medium">Total Personas</p>
-                                            <p className="text-xs text-zinc-500">Capacidad máxima</p>
+                            <form
+                                onSubmit={(e) => {
+                                    confirmReservation(e as any)
+                                }}
+                                className="contents"
+                            >
+                                <div className="py-4 space-y-4">
+                                    {/* Customer Form */}
+                                    <div className="space-y-3 p-3 bg-zinc-800/50 rounded-xl border border-white/5">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-zinc-400">Nombre Completo</Label>
+                                            <Input
+                                                placeholder="Tu nombre"
+                                                className="bg-black/50 border-white/10 h-9"
+                                                value={customerForm.name}
+                                                onChange={(e) => setCustomerForm(prev => ({ ...prev, name: e.target.value }))}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-zinc-400">Correo Electrónico</Label>
+                                            <Input
+                                                placeholder="ejemplo@correo.com"
+                                                type="email"
+                                                className="bg-black/50 border-white/10 h-9"
+                                                value={customerForm.email}
+                                                onChange={(e) => setCustomerForm(prev => ({ ...prev, email: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-zinc-400">Celular (WhatsApp/SMS)</Label>
+                                            <Input
+                                                placeholder="55 1234 5678"
+                                                type="tel"
+                                                className="bg-black/50 border-white/10 h-9"
+                                                value={customerForm.phone}
+                                                onChange={(e) => setCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
+                                            />
                                         </div>
                                     </div>
-                                    <span className="text-sm font-bold">{totalCapacity}</span>
-                                </div>
 
-                                <button
-                                    className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl w-full hover:bg-zinc-800 transition"
-                                    onClick={() => setIsDatePickerOpen(true)}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Calendar className="w-5 h-5 text-zinc-400" />
-                                        <div className="text-left">
-                                            <p className="text-sm font-medium text-white">Fecha y Hora</p>
-                                            <p className="text-xs text-zinc-500">
-                                                {selectedDate ? format(selectedDate, "PPP p", { locale: es }) : "Fecha no seleccionada"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-md">Editar</span>
-                                </button>
-
-                                {totalPrice > 0 && (
-                                    <div className="flex items-center justify-between p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                                    <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl">
                                         <div className="flex items-center gap-3">
-                                            <DollarSign className="w-5 h-5 text-indigo-400" />
+                                            <Users className="w-5 h-5 text-zinc-400" />
                                             <div>
-                                                <p className="text-sm font-bold text-indigo-100">Costo Total</p>
-                                                <p className="text-xs text-indigo-300">Reserva de {selectedTables.length} mesas</p>
+                                                <p className="text-sm font-medium">Total Personas</p>
+                                                <p className="text-xs text-zinc-500">Capacidad máxima</p>
                                             </div>
                                         </div>
-                                        <span className="text-lg font-bold text-white">${totalPrice}</span>
+                                        <span className="text-sm font-bold">{totalCapacity}</span>
                                     </div>
-                                )}
-                            </div>
 
-                            <DialogFooter>
-                                <Button
-                                    type="button"
-                                    className="w-full bg-white text-black hover:bg-zinc-200 rounded-xl py-6 text-base font-bold"
-                                    onClick={confirmReservation}
-                                    disabled={isBooking}
-                                >
-                                    {isBooking ? "Confirmando..." : "Confirmar Reserva"}
-                                    {!isBooking && <Check className="w-4 h-4 ml-2" />}
-                                </Button>
-                            </DialogFooter>
+                                    <button
+                                        type="button"
+                                        className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl w-full hover:bg-zinc-800 transition"
+                                        onClick={() => setIsDatePickerOpen(true)}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Calendar className="w-5 h-5 text-zinc-400" />
+                                            <div className="text-left">
+                                                <p className="text-sm font-medium text-white">Fecha y Hora</p>
+                                                <p className="text-xs text-zinc-500">
+                                                    {selectedDate ? format(selectedDate, "PPP p", { locale: es }) : "Fecha no seleccionada"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-md">Editar</span>
+                                    </button>
+
+                                    {totalPrice > 0 && (
+                                        <div className="flex items-center justify-between p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                                            <div className="flex items-center gap-3">
+                                                <DollarSign className="w-5 h-5 text-indigo-400" />
+                                                <div>
+                                                    <p className="text-sm font-bold text-indigo-100">Costo Total</p>
+                                                    <p className="text-xs text-indigo-300">Reserva de {selectedTables.length} mesas</p>
+                                                </div>
+                                            </div>
+                                            <span className="text-lg font-bold text-white">${totalPrice}</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <DialogFooter>
+                                    <Button
+                                        type="submit"
+                                        className="w-full bg-white text-black hover:bg-zinc-200 rounded-xl py-6 text-base font-bold"
+                                        disabled={isBooking}
+                                    >
+                                        {isBooking ? "Confirmando..." : "Confirmar Reserva"}
+                                        {!isBooking && <Check className="w-4 h-4 ml-2" />}
+                                    </Button>
+                                </DialogFooter>
+                            </form>
                         </DialogContent>
                     </Dialog>
                 )}
