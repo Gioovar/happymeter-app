@@ -190,12 +190,14 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
             }
 
             {
-                (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') && (
+                /* Link to Chains/Branches - Visible for everyone except purely Staff/Creators restricted modes, 
+                   but for simplicity, we show it to standard users who might want to upgrade. */
+                (!isCreator && userRole !== 'STAFF' && userRole !== 'OPERATOR') && (
                     <div className="px-4 pb-3">
                         <Link
                             href="/chains"
                             onClick={() => toggleMobileMenu(false)}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group mb-2"
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group"
                         >
                             <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
                             <div className="flex flex-col">
@@ -203,6 +205,13 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                                 <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
                             </div>
                         </Link>
+                    </div>
+                )
+            }
+
+            {
+                (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') && (
+                    <div className="px-4 pb-3">
                         <Link
                             href="/admin"
                             onClick={() => toggleMobileMenu(false)}
