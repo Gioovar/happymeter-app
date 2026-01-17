@@ -1474,7 +1474,7 @@ export async function getCustomerReservations(programId: string, phone: string, 
         // 2. Find Active Reservations for this Owner
         // Match by Phone OR Email
         const now = new Date()
-        now.setHours(now.getHours() - 2) // Allow showing reservations from 2 hours ago (e.g. currently seated)
+        now.setDate(now.getDate() - 2) // Allow showing reservations from up to 2 days ago (history)
 
         const reservations = await prisma.reservation.findMany({
             where: {
