@@ -792,6 +792,7 @@ model LoyaltyCustomer {
   name            String?
   username        String?  // Requested by user
   email           String?
+  photoUrl        String?  // Profile picture
   birthday        DateTime? // For birthday rewards
   
   // OTP Verification

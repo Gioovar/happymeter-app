@@ -9,7 +9,7 @@ import { setLoyaltySession, getLoyaltySessionToken, clearLoyaltySession } from "
 
 // --- Authentication & Session ---
 
-export async function authenticateLoyaltyCustomer(programId: string, phone: string, name?: string) {
+export async function authenticateLoyaltyCustomer(programId: string, phone: string, profile?: { name?: string, email?: string, photoUrl?: string }) {
     try {
         if (!phone) return { success: false, error: "Teléfono requerido" }
 
@@ -31,18 +31,35 @@ export async function authenticateLoyaltyCustomer(programId: string, phone: stri
                 data: {
                     programId,
                     phone: safePhone,
-                    name: name || undefined,
+                    name: profile?.name,
+                    email: profile?.email,
+                    photoUrl: profile?.photoUrl,
                     magicToken: randomUUID(),
                     joinDate: new Date()
                 }
             })
         } else {
-            // Update name if provided and missing
-            if (name && !customer.name) {
-                customer = await prisma.loyaltyCustomer.update({
-                    where: { id: customer.id },
-                    data: { name }
-                })
+            // Update profile if provided
+            if (profile) {
+                const updateData: any = {}
+                if (profile.name && !customer.name) updateData.name = profile.name
+                if (profile.email && !customer.email) updateData.email = profile.email
+                if (profile.photoUrl && !customer.photoUrl) updateData.photoUrl = profile.photoUrl
+
+                // Allow updating if not empty? Or strictly if missing?
+                // User requirement: "que se llene su perfil". Implies filling missing data.
+                // Let's allow overwrite if explicitly sent? Or just fill gaps.
+                // Re-reading: "que se llene su perfil" -> usually means filling it out.
+                // I'll stick to "fill if missing" OR "always update if provided in this explicit auth flow".
+                // Since they are explicitly entering data in the form, they probably want to save it.
+                // But let's be safe and merge.
+
+                if (Object.keys(updateData).length > 0) {
+                    customer = await prisma.loyaltyCustomer.update({
+                        where: { id: customer.id },
+                        data: updateData
+                    })
+                }
             }
         }
 
@@ -252,14 +269,25 @@ export async function getPublicLoyaltyProgramInfo(programId: string) {
     try {
         const program = await prisma.loyaltyProgram.findUnique({
             where: { id: programId },
-            select: {
-                businessName: true,
-                logoUrl: true,
-                themeColor: true,
-                cardDesign: true
+            include: {
+                user: {
+                    select: {
+                        businessName: true,
+                        photoUrl: true
+                    }
+                }
             }
         })
-        return program
+
+        if (!program) return null
+
+        return {
+            id: program.id,
+            businessName: program.user?.businessName || program.businessName,
+            logoUrl: program.user?.photoUrl || program.logoUrl,
+            themeColor: program.themeColor,
+            cardDesign: program.cardDesign
+        }
     } catch (error) {
         return null
     }
