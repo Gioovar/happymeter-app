@@ -101,28 +101,43 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
     }, [claimGift, customer, params.programId, router, searchParams])
 
 
-    // 3. Auto-Open Profile Form if 'action=signup'
+    // 3. Auto-Open Profile Form if 'action=signup' ONLY if missing data
     useEffect(() => {
         if (customer && searchParams.get("action") === 'signup') {
-            // Pre-fill from usage if missing in customer, or just open for review
-            if (!showProfileForm) {
-                // We reuse the onEditProfile logic or just set state here?
-                // Better to set state to ensure fields are populated
-                setName(customer.name || searchParams.get("name") || "")
-                setEmail(customer.email || searchParams.get("email") || "")
-                setPhone(customer.phone || searchParams.get("phone") || "")
-                setUsername(customer.username || "")
-                if (customer.birthday) {
-                    setBirthday(new Date(customer.birthday).toISOString().split('T')[0])
+            const isProfileComplete =
+                customer.name &&
+                customer.email &&
+                customer.phone &&
+                customer.birthday
+
+            if (isProfileComplete) {
+                // If complete, remove param and don't show form
+                const newParams = new URLSearchParams(searchParams.toString())
+                newParams.delete("action")
+                router.replace(`/loyalty/${params.programId}?${newParams.toString()}`)
+            } else {
+                // Pre-fill and show form
+                if (!showProfileForm) {
+                    setName(customer.name || searchParams.get("name") || "")
+                    setEmail(customer.email || searchParams.get("email") || "")
+                    setPhone(customer.phone || searchParams.get("phone") || "")
+                    setUsername(customer.username || "")
+                    if (customer.birthday) {
+                        setBirthday(new Date(customer.birthday).toISOString().split('T')[0])
+                    }
+                    setShowProfileForm(true)
                 }
-                setShowProfileForm(true)
             }
         }
-    }, [customer, searchParams])
+    }, [customer, searchParams, showProfileForm, params.programId, router])
 
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!name) return toast.error("Nombre requerido")
+
+        // Validation: All fields required
+        if (!name || !email || !phone || !birthday) {
+            return toast.error("Por favor completa todos los campos")
+        }
 
         setIsSubmitting(true)
         const res = await updateLoyaltyProfile(params.programId, customer.magicToken, {
@@ -139,10 +154,10 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
             setCustomer(res.customer)
             setShowProfileForm(false)
 
-            // Remove 'action=signup' from URL to prevent re-opening
+            // Remove 'action=signup' from URL
             const newParams = new URLSearchParams(searchParams.toString())
             newParams.delete("action")
-            // Also delete pre-fill params just in case
+            // Also delete pre-fill params
             newParams.delete("name")
             newParams.delete("email")
             newParams.delete("phone")
@@ -194,7 +209,7 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-xl">
                             <form onSubmit={handleUpdateProfile} className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Nombre Completo</label>
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Nombre Completo <span className="text-red-500">*</span></label>
                                     <div className="relative group">
                                         <User className="absolute left-4 top-4 w-5 h-5 text-gray-500 group-focus-within:text-violet-400 transition-colors" />
                                         <input
@@ -204,29 +219,32 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                                             placeholder="Ej. Juan Pérez"
                                             className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 transition-all font-medium"
                                             autoFocus
+                                            required
                                         />
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Tu Celular</label>
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Tu Celular <span className="text-red-500">*</span></label>
                                     <input
                                         type="tel"
                                         value={phone}
                                         onChange={e => setPhone(e.target.value)}
                                         placeholder="55 1234 5678"
                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 transition-all font-medium"
+                                        required
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Correo Electrónico</label>
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Correo Electrónico <span className="text-red-500">*</span></label>
                                     <input
                                         type="email"
                                         value={email}
                                         onChange={e => setEmail(e.target.value)}
                                         placeholder="correo@ejemplo.com"
                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 transition-all font-medium"
+                                        required
                                     />
                                 </div>
 
@@ -245,7 +263,7 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Cumpleaños</label>
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Cumpleaños <span className="text-red-500">*</span></label>
                                     <div className="relative group">
                                         <Calendar className="absolute left-4 top-4 w-5 h-5 text-gray-500 group-focus-within:text-violet-400 transition-colors pointer-events-none" />
                                         <input
@@ -254,6 +272,7 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                                             onChange={e => setBirthday(e.target.value)}
                                             style={{ colorScheme: 'dark' }}
                                             className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 h-[58px] text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 transition-all font-medium appearance-none text-left"
+                                            required
                                         />
                                     </div>
                                 </div>
@@ -269,7 +288,7 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={!name || isSubmitting}
+                                        disabled={!name || !email || !phone || !birthday || isSubmitting}
                                         className="flex-1 bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {isSubmitting ? <Loader2 className="animate-spin" /> : "Guardar"}
