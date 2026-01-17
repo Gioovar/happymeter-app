@@ -124,8 +124,13 @@ model UserSettings {
   processZones        ProcessZone[]
   
   // Reservations
+  // Chain Management
+  ownedChains         Chain[]
+  branchOf            ChainBranch[]
+
   floorPlans          FloorPlan[]
 }
+
 
 model FloorPlan {
   id        String   @id @default(uuid())
@@ -798,6 +803,7 @@ model LoyaltyCustomer {
   // OTP Verification
   otpCode         String?
   otpExpiresAt    DateTime?
+
   isPhoneVerified Boolean  @default(false)
 
   joinDate        DateTime @default(now())
@@ -1000,3 +1006,35 @@ enum ProcessEvidenceStatus {
   ON_TIME
   DELAYED
 }
+
+// --- Chain Dashboard System ---
+
+model Chain {
+  id          String   @id @default(uuid())
+  name        String
+  ownerId     String   // UserSettings.userId of the Chain Owner
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  branches    ChainBranch[]
+  owner       UserSettings @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
+
+  @@index([ownerId])
+}
+
+model ChainBranch {
+  id          String   @id @default(uuid())
+  chainId     String
+  branchId    String   // UserSettings.userId of the Branch
+  name        String?  // Display name for the branch
+  slug        String?  // For potential URL usage
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  chain       Chain        @relation(fields: [chainId], references: [id], onDelete: Cascade)
+  branch      UserSettings @relation(fields: [branchId], references: [userId], onDelete: Cascade)
+
+  @@unique([chainId, branchId])
+  @@index([branchId])
+}
+
