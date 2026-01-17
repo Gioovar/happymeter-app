@@ -1,4 +1,3 @@
-```javascript
 "use client"
 
 import { useState, useRef } from "react"
@@ -17,7 +16,7 @@ interface LoyaltyAuthFormProps {
 export function LoyaltyAuthForm({ programId, businessName, logoUrl, onSuccess }: LoyaltyAuthFormProps) {
     const [step, setStep] = useState<'PHONE' | 'PROFILE'>('PHONE')
     const [phone, setPhone] = useState("")
-    
+
     // Profile Data
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
@@ -38,18 +37,18 @@ export function LoyaltyAuthForm({ programId, businessName, logoUrl, onSuccess }:
             // Actually, the new signature is `(id, phone, profile ?)`.
             // If we call with JUST phone, it will find or create (without name).
             // But we want to SHOW the profile form if name is missing.
-            
+
             // Strategy: 
             // 1. Call auth with JUST phone. verify response.
             // 2. If customer exists AND has name => Login Success.
             // 3. If customer exists (or created) BUT has NO name => Show Profile Form.
-            
+
             const res = await authenticateLoyaltyCustomer(programId, phone)
             if (res.success && res.customer) {
                 if (!res.customer.name) {
                     setStep('PROFILE')
                 } else {
-                    toast.success(`¡Hola de nuevo, ${ res.customer.name } !`)
+                    toast.success(`¡Hola de nuevo, ${res.customer.name} !`)
                     onSuccess(res.customer)
                 }
             } else {
@@ -95,7 +94,7 @@ export function LoyaltyAuthForm({ programId, businessName, logoUrl, onSuccess }:
                 email: email || undefined,
                 photoUrl: photoUrl || undefined
             })
-            
+
             if (res.success) {
                 toast.success("¡Perfil completado!")
                 onSuccess(res.customer)
@@ -116,7 +115,7 @@ export function LoyaltyAuthForm({ programId, businessName, logoUrl, onSuccess }:
             <div className="absolute -top-20 -right-20 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="w-full max-w-md relative z-10 animate-in fade-in zoom-in-95 duration-500">
-                
+
                 {/* Header / Logo */}
                 <div className="text-center mb-10">
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 shadow-2xl shadow-indigo-500/25 mb-6 overflow-hidden ring-4 ring-black/50">
@@ -173,10 +172,10 @@ export function LoyaltyAuthForm({ programId, businessName, logoUrl, onSuccess }:
                         </form>
                     ) : (
                         <form onSubmit={handleSubmitProfile} className="relative z-10 space-y-5 animate-in slide-in-from-right-8 duration-300">
-                             
-                             {/* Photo Upload */}
-                             <div className="flex justify-center mb-2">
-                                <div 
+
+                            {/* Photo Upload */}
+                            <div className="flex justify-center mb-2">
+                                <div
                                     onClick={() => fileInputRef.current?.click()}
                                     className="relative w-24 h-24 rounded-full bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/10 hover:border-indigo-500/50 transition-all overflow-hidden group/photo"
                                 >
@@ -185,24 +184,24 @@ export function LoyaltyAuthForm({ programId, businessName, logoUrl, onSuccess }:
                                     ) : (
                                         <Camera className="w-8 h-8 text-gray-500 group-hover/photo:text-indigo-400 transition-colors" />
                                     )}
-                                    
+
                                     {isUploading && (
                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                                             <Loader2 className="w-6 h-6 text-white animate-spin" />
                                         </div>
                                     )}
-                                    <input 
-                                        type="file" 
-                                        ref={fileInputRef} 
-                                        className="hidden" 
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
                                         accept="image/*"
                                         onChange={handleFileSelect}
                                     />
                                     {!photoUrl && <div className="absolute bottom-2 text-[8px] text-gray-500 uppercase font-bold tracking-wider">Foto (Opcional)</div>}
                                 </div>
-                             </div>
+                            </div>
 
-                             <div className="space-y-4">
+                            <div className="space-y-4">
                                 {/* Name Input */}
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Tu Nombre <span className="text-indigo-400">*</span></label>
@@ -246,16 +245,15 @@ export function LoyaltyAuthForm({ programId, businessName, logoUrl, onSuccess }:
                         </form>
                     )}
                 </div>
-                
+
                 {/* Footer Link */}
                 <div className="mt-8 text-center">
-                     <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-600">
                         Powered by <span className="text-white font-bold">HappyMeter</span>
-                     </p>
+                    </p>
                 </div>
 
             </div>
         </div>
     )
 }
-```
