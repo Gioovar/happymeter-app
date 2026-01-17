@@ -103,6 +103,25 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     // Pinch State
     const lastDist = useRef<number | null>(null)
 
+    // Restore state from storage if exists (Handle Page Reloads)
+    useEffect(() => {
+        try {
+            const saved = sessionStorage.getItem('reservation_receipt')
+            if (saved) {
+                const { data, timestamp } = JSON.parse(saved)
+                // Valid for 15 minutes
+                if (Date.now() - timestamp < 1000 * 60 * 15) {
+                    setPostReservationAction(data)
+                    setBookingStep('SUCCESS')
+                    setIsConfirmOpen(false)
+                    setIsBooking(false)
+                } else {
+                    sessionStorage.removeItem('reservation_receipt')
+                }
+            }
+        } catch (e) { console.error(e) }
+    }, [])
+
     // Fit content logic
     useEffect(() => {
         if (!realContainerRef.current || !currentFloor.tables || currentFloor.tables.length === 0) return
@@ -234,15 +253,22 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                     setBookingStep('SEARCH')
                 } else {
                     // Determine Action
-                    // Even if no action is returned (e.g. no loyalty program), we treat it as SUCCESS
-                    setPostReservationAction(res.action ? res : {
+                    const actionData = res.action ? res : {
                         action: 'OFFER_JOIN',
                         programId: programId,
                         joinMessage: "Únete a nuestro programa para obtener recompensas."
-                    })
+                    }
+
+                    setPostReservationAction(actionData)
                     setIsConfirmOpen(false)
                     setSelectedTables([])
                     setCustomerForm({ name: '', phone: '', email: '' })
+
+                    // PERSIST STATE (Fix Page Reload/Reset issues)
+                    sessionStorage.setItem('reservation_receipt', JSON.stringify({
+                        data: actionData,
+                        timestamp: Date.now()
+                    }))
 
                     // CRITICAL: Move to SUCCESS step, DO NOT go to SEARCH
                     setBookingStep('SUCCESS')
@@ -262,10 +288,12 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     }
 
     const handleSearch = async () => {
+        // Clear previous receipt to allow new reservation
+        sessionStorage.removeItem('reservation_receipt')
+
         // Basic validation
         if (!selectedDate || !selectedTime) return
 
-        setIsBooking(true) // Re-use loading state
         setIsBooking(true) // Re-use loading state
 
         // Construct full date in Client Timezone (Local)
