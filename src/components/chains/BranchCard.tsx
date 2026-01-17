@@ -6,6 +6,7 @@ import { Building2, ExternalLink, Loader2 } from 'lucide-react'
 import { enterBranch } from '@/actions/chain'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useClerk } from '@clerk/nextjs'
 
 interface BranchCardProps {
     branch: {
@@ -21,6 +22,7 @@ interface BranchCardProps {
 
 export default function BranchCard({ branch, isCurrent }: BranchCardProps) {
     const [loading, setLoading] = useState(false)
+    const { signOut } = useClerk()
 
     const handleEnter = async () => {
         if (isCurrent) return // Already here
@@ -29,8 +31,18 @@ export default function BranchCard({ branch, isCurrent }: BranchCardProps) {
         try {
             const res = await enterBranch(branch.branch.userId)
             if (res.success && res.url) {
-                // Redirect to the token URL which logs them in and then redirects
-                window.location.href = res.url
+                // Critical: Sign out first to ensure the new token becomes the ACTIVE session
+                // We pass a callback to signOut to execute the redirect afterwards? 
+                // Clerk signOut is async.
+
+                // Note: signOut() might reload the page or redirect to sign-in.
+                // We want to redirect to the *token URL* instead.
+                // So we shouldn't use default signOut redirect.
+
+                await signOut({ redirectUrl: res.url })
+
+                // Fallback if signOut redirect doesn't trigger immediately
+                // window.location.href = res.url
             } else {
                 throw new Error(res.error || 'Error desconocido')
             }
