@@ -54,6 +54,7 @@ export async function createChain(name: string) {
 }
 
 export async function addBranch(chainId: string, data: { name: string, email?: string, password?: string }) {
+    console.log('[Chain] Starting addBranch', { chainId, name: data.name });
     try {
         const user = await currentUser()
         if (!user) throw new Error('Unauthorized')
@@ -72,63 +73,87 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         const client = await clerkClient()
         let clerkUserId: string;
 
-        // ESTRATEGIA ROBUSTA: Email de sistema
-        // Usamos un dominio "ficticio" pero válido sintácticamente para uso interno
-        // Esto evita errores con emails reales, alias, o validaciones de dominio
-        const cleanName = data.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15);
-        const uniqueId = Math.random().toString(36).substring(2, 8);
+        // ESTRATEGIA: Owner Email Aliasing (user+branch@...)
+        // Esto garantiza que el dominio es válido y que el usuario recibe notificaciones.
+        let baseEmail = 'noreply@happymeters.com'; // Fallback
 
-        // Si el usuario proporcionó email, úsalo. Si no, genera uno de sistema.
+        // Intentar obtener el email principal del usuario
+        const primaryEmailObj = user.emailAddresses.find(e => e.id === user.primaryEmailAddressId) || user.emailAddresses[0];
+        if (primaryEmailObj) {
+            baseEmail = primaryEmailObj.emailAddress;
+        }
+
         const isPlaceholder = !data.email || data.email.trim() === '';
+        let emailToUse = data.email;
 
-        // Formato: branch-empresa-x8d9@branches.happymeter.app
-        const systemEmail = `branch-${cleanName}-${uniqueId}@branches.happymeter.app`;
-        const emailToUse = isPlaceholder ? systemEmail : data.email!;
+        if (isPlaceholder) {
+            // Generar alias: usuario+sucursalX@gmail.com
+            const [localPart, domainPart] = baseEmail.split('@');
+            // Limpiar nombre de sucursal
+            const cleanBranchName = data.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10);
+            const uniqueId = Math.random().toString(36).substring(2, 6);
 
-        // Password seguro generado para cumplir cualquier política
-        const pswd = `Branch${Math.random().toString(36).slice(2)}!A1`;
+            // Si el email original ya tenía un '+', lo respetamos o lo cortamos? 
+            // Mejor cortarlo para evitar `user+tag+tag@`
+            const cleanLocalPart = localPart.split('+')[0];
+
+            emailToUse = `${cleanLocalPart}+${cleanBranchName}${uniqueId}@${domainPart}`;
+        }
+
+        // Password FUERTE generado
+        // Mix de mayusculas, minusculas, numeros y simbolos
+        const pswd = `Br@nch-${Math.random().toString(36).slice(2).toUpperCase()}!${Math.random().toString(36).slice(2)}`;
+
+        console.log('[Chain] Creating Clerk user', { emailToUse });
 
         try {
-            // Prepare payload standard
-            const clerkPayload: any = {
-                emailAddress: [emailToUse],
+            // Configuración explícita para evitar errores de validación
+            // NO usamos skipPasswordRequirement: true porque a veces falla si el password es débil
+            // Mejor enviamos un password fuerte
+            const newUser = await client.users.createUser({
+                emailAddress: [emailToUse!],
+                password: data.password || pswd,
                 firstName: data.name,
-                password: data.password || pswd, // Enviamos password siempre
-                skipPasswordRequirement: false, // No saltamos validación, cumplimos con ella
+                skipPasswordRequirement: false,
                 publicMetadata: {
                     isBranch: true,
                     chainId: chain.id,
-                    isPlaceholder: isPlaceholder,
                     managedBy: user.id
                 }
-            };
-
-            // Try creating new user
-            const newUser = await client.users.createUser(clerkPayload);
+            });
             clerkUserId = newUser.id
+            console.log('[Chain] Clerk user created', { clerkUserId });
 
         } catch (e: any) {
-            console.error('Clerk Create Error FULL:', JSON.stringify(e, null, 2));
-            const msg = e.errors?.[0]?.message || e.message || 'Error creating branch user';
+            console.error('[Chain] Clerk Create Error:', JSON.stringify(e, null, 2));
 
+            // Manejo de errores específicos
             if (e.errors?.[0]?.code === 'form_identifier_exists') {
                 throw new Error(`El email ${emailToUse} ya está registrado.`)
             }
+            if (e.errors?.[0]?.code === 'form_password_pwned') {
+                throw new Error(`Password inseguro. Intenta de nuevo.`)
+            }
 
-            throw new Error(`Error de Clerk: ${msg}`)
+            const msg = e.errors?.[0]?.message || e.message || 'Error desconocido al crear usuario';
+            throw new Error(`Error Clerk: ${msg}`)
         }
 
         // 2. Create UserSettings in DB for the new branch
+        // Aseguramos que los campos coincidan con el schema
+        console.log('[Chain] Creating UserSettings');
         await prisma.userSettings.create({
             data: {
                 userId: clerkUserId,
                 businessName: data.name,
                 plan: 'FREE',
                 isOnboarded: true,
+                // Opcional: Copiar settings del padre? Por ahora default.
             }
         })
 
         // 3. Link to Chain
+        console.log('[Chain] Linking to Chain');
         await prisma.chainBranch.create({
             data: {
                 chainId: chain.id,
@@ -141,8 +166,7 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         revalidatePath('/chains')
         return { success: true }
     } catch (error: any) {
-        console.error('Error adding branch:', error)
-        // Ensure serialization of error
+        console.error('[Chain] Error adding branch:', error)
         return { success: false, error: error.message || String(error) }
     }
 }
