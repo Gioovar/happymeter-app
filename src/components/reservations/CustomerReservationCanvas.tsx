@@ -652,15 +652,46 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
                 <DialogContent className="w-[95vw] max-w-sm bg-zinc-900 border border-white/10 text-white rounded-3xl p-6 text-center">
                     {postReservationAction?.action === 'REDIRECT_LOYALTY' && (
-                        <div className="space-y-4 py-4">
-                            <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                                <Sparkles className="w-8 h-8 text-indigo-400" />
+                        <div className="space-y-6 py-4">
+                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
+                                <Check className="w-8 h-8 text-green-400" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold">¡Reserva Confirmada!</h2>
-                                <p className="text-zinc-400 text-sm mt-2">Ya eres socio de {postReservationAction.businessName}.</p>
-                                <p className="text-white text-sm font-medium mt-1">Redirigiendo a tu tarjeta...</p>
+                                <h2 className="text-xl font-bold">¡Reserva Registrada!</h2>
+                                <p className="text-zinc-300 text-sm mt-4">
+                                    Hemos enviado tu <span className="text-white font-bold">Código QR de acceso</span> a:
+                                </p>
+                                <div className="flex justify-center gap-4 mt-3 mb-4">
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
+                                            <span className="text-lg">📧</span>
+                                        </div>
+                                        <span className="text-[10px] text-zinc-500">Correo</span>
+                                    </div>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
+                                            <span className="text-lg">💬</span>
+                                        </div>
+                                        <span className="text-[10px] text-zinc-500">SMS</span>
+                                    </div>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
+                                            <span className="text-lg text-green-500">📱</span>
+                                        </div>
+                                        <span className="text-[10px] text-zinc-500">WhatsApp</span>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-zinc-500 max-w-[250px] mx-auto">
+                                    Por favor revisa tus mensajes para ver los detalles y el código único.
+                                </p>
                             </div>
+
+                            <Button
+                                onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}`}
+                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl py-6"
+                            >
+                                Ir a mi Tarjeta Digital
+                            </Button>
                         </div>
                     )}
 
@@ -689,30 +720,28 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
                     {postReservationAction?.action === 'OFFER_JOIN' && (
                         <div className="space-y-4 py-4">
-                            <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto">
-                                <Sparkles className="w-8 h-8 text-purple-400" />
+                            <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto">
+                                <Check className="w-8 h-8 text-indigo-400" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold">Reserva Confirmada</h2>
-                                <p className="text-zinc-300 text-sm mt-2">{postReservationAction.joinMessage}</p>
+                                <h2 className="text-xl font-bold">¡Reserva Registrada!</h2>
+                                <p className="text-zinc-400 text-xs mt-2 px-2">
+                                    Revisa tu correo y WhatsApp para ver tu código QR.
+                                </p>
+                                <div className="my-4 h-px bg-white/10 w-1/2 mx-auto" />
+                                <p className="text-zinc-300 text-sm font-medium mb-1">¿Aún no tienes tarjeta?</p>
+                                <p className="text-zinc-500 text-xs">{postReservationAction.joinMessage}</p>
                             </div>
                             <Button
                                 onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}`}
                                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl py-6"
                             >
-                                Ver Beneficios del Club
+                                Obtener Tarjeta Digital Gratis
                             </Button>
                         </div>
                     )}
 
-                    {/* Auto-redirect effect for members */}
-                    {postReservationAction?.action === 'REDIRECT_LOYALTY' && (
-                        <ClientSideEffect
-                            action={() => {
-                                setTimeout(() => window.location.href = `/loyalty/${postReservationAction.programId}`, 2000)
-                            }}
-                        />
-                    )}
+
                 </DialogContent>
             </Dialog>
         </div>
