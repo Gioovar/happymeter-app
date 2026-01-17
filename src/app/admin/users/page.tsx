@@ -230,6 +230,39 @@ export default function AdminUsersPage() {
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                                                         </a>
+                                                        <button
+                                                            onClick={async () => {
+                                                                if (!confirm(`¿Convertir a ${user.name} en Cadena?`)) return;
+                                                                // Import dynamically or use standard fetch if server action is problematic in client component without proper setup
+                                                                // But here we can use a small inline fetch or import the action if we change file to use server actions
+                                                                // Since this is 'use client', we should better wrap the action or use a route handler.
+                                                                // Or just call the action if nextjs allows (it does).
+                                                                // We need to import it. Let's assume we imported it or use a fetch wrapper.
+                                                                // BUT I haven't added the import. 
+                                                                // Let's us a simple fetch wrapper to a new API route OR add the import.
+                                                                // Since I can't add imports easily with replace_file_content at top AND here, I'll rely on a new api route for safety/ease
+                                                                // OR I can use the manual upgrade API I created!
+                                                                // It takes email. I have user.email.
+
+                                                                try {
+                                                                    const res = await fetch('/api/admin/manual-upgrade', {
+                                                                        method: 'POST',
+                                                                        headers: { 'Content-Type': 'application/json' },
+                                                                        body: JSON.stringify({ email: user.email })
+                                                                    })
+                                                                    const data = await res.json()
+                                                                    if (data.success) {
+                                                                        alert('Usuario actualizado a Cadena exitosamente')
+                                                                    } else {
+                                                                        alert('Error: ' + (data.error || data.message))
+                                                                    }
+                                                                } catch (e) { console.error(e); alert('Error de conexión') }
+                                                            }}
+                                                            className="p-2 rounded-lg hover:bg-orange-500/10 text-gray-500 hover:text-orange-400 transition"
+                                                            title="Upgrade to Chain (Cadena)"
+                                                        >
+                                                            <div className="flex items-center justify-center font-bold text-xs border border-current w-4 h-4 rounded">C</div>
+                                                        </button>
                                                     </div>
 
                                                     <button
