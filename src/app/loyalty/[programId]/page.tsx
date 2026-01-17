@@ -138,6 +138,17 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
             toast.success("¡Perfil actualizado!")
             setCustomer(res.customer)
             setShowProfileForm(false)
+
+            // Remove 'action=signup' from URL to prevent re-opening
+            const newParams = new URLSearchParams(searchParams.toString())
+            newParams.delete("action")
+            // Also delete pre-fill params just in case
+            newParams.delete("name")
+            newParams.delete("email")
+            newParams.delete("phone")
+
+            router.replace(`/loyalty/${params.programId}?${newParams.toString()}`)
+
             setTimeout(() => setShowInstallPrompt(true), 1500)
         } else {
             toast.error(res.error)
