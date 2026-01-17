@@ -1459,3 +1459,53 @@ export async function claimWelcomeGift(programId: string, customerId: string) {
         return { success: false, error: "Error al reclamar el regalo." }
     }
 }
+// --- Customer Reservations ---
+
+export async function getCustomerReservations(programId: string, phone: string, email?: string | null) {
+    try {
+        // 1. Get Program Owner ID
+        const program = await prisma.loyaltyProgram.findUnique({
+            where: { id: programId },
+            select: { userId: true }
+        })
+
+        if (!program) return { success: false, error: "Programa no encontrado" }
+
+        // 2. Find Active Reservations for this Owner
+        // Match by Phone OR Email
+        const now = new Date()
+        now.setHours(now.getHours() - 2) // Allow showing reservations from 2 hours ago (e.g. currently seated)
+
+        const reservations = await prisma.reservation.findMany({
+            where: {
+                // Link through tables -> floorPlan -> user
+                table: {
+                    floorPlan: {
+                        userId: program.userId
+                    }
+                },
+                // Active status
+                status: 'CONFIRMED',
+                date: {
+                    gte: now
+                },
+                // Match customer
+                OR: [
+                    { customerPhone: phone }, // Strict match on phone
+                    ...(email ? [{ customerEmail: email }] : [])
+                ]
+            },
+            include: {
+                table: true
+            },
+            orderBy: {
+                date: 'asc'
+            }
+        })
+
+        return { success: true, reservations }
+    } catch (error) {
+        console.error("Error fetching customer reservations:", error)
+        return { success: false, error: "Error al cargar reservaciones" }
+    }
+}

@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { QRCodeSVG } from "qrcode.react"
-import { unlockReward, getMemberLoyaltyPrograms, getLoyaltyNotifications, markNotificationsAsRead } from "@/actions/loyalty"
+import { unlockReward, getMemberLoyaltyPrograms, getLoyaltyNotifications, markNotificationsAsRead, getCustomerReservations } from "@/actions/loyalty"
 import { toast } from "sonner"
 import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar, Bell, QrCode, Trophy } from "lucide-react"
 import { InstallPwa } from "@/components/pwa/InstallPwa"
 import { cn } from "@/lib/utils"
 import { useClerk, useUser } from "@clerk/nextjs"
 import Link from "next/link"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 interface CustomerLoyaltyCardProps {
     customer: any // Prisma type with relations
@@ -34,16 +36,31 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
     const [showNotifications, setShowNotifications] = useState(false)
     const [mounted, setMounted] = useState(false)
 
+    // Reservations State
+    const [myReservations, setMyReservations] = useState<any[]>([])
+    const [showReservationsModal, setShowReservationsModal] = useState(false)
+    const [selectedReservation, setSelectedReservation] = useState<any | null>(null)
+
     useEffect(() => {
         setMounted(true)
     }, [])
+
+    // Load reservations
+    useEffect(() => {
+        if (customer && customer.programId) {
+            getCustomerReservations(customer.programId, customer.phone, customer.email).then(res => {
+                if (res.success && res.reservations) {
+                    setMyReservations(res.reservations)
+                }
+            })
+        }
+    }, [customer])
 
     // Load notifications on mount
     useEffect(() => {
         if (customer?.id && customer?.programId) {
             getLoyaltyNotifications(customer.programId, customer.id).then(res => {
                 if (res.success && res.notifications) {
-                    console.log("Notifications loaded:", res.notifications.length)
                     setNotifications(res.notifications)
                     setUnreadCount(res.unreadCount || 0)
                 } else {
@@ -280,6 +297,117 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                     ) : (
                                         <p className="font-mono text-sm font-bold text-gray-900 tracking-widest">{customer.magicToken}</p>
                                     )}
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+
+                    {/* RESERVATIONS MODAL & BUTTON */}
+                    {/* Render Button Here if Reservations Exist */}
+                    {myReservations.length > 0 && (
+                        <div className="mb-4">
+                            <button
+                                onClick={() => setShowReservationsModal(true)}
+                                className="w-full py-4 bg-zinc-900 border border-white/10 rounded-2xl flex items-center justify-between px-6 hover:bg-zinc-800 transition-colors group relative overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                        <Calendar className="w-5 h-5" />
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="font-bold text-white text-base">Mis Reservaciones</div>
+                                        <div className="text-xs text-indigo-400 font-medium">
+                                            {myReservations.length} {myReservations.length === 1 ? "activa" : "activas"}
+                                        </div>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-white transition-colors" />
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Reservations List Modal */}
+                    {showReservationsModal && createPortal(
+                        <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex flex-col animate-in fade-in duration-200">
+                            <div className="p-4 flex items-center justify-between border-b border-white/10">
+                                <h2 className="text-lg font-bold">Mis Reservaciones</h2>
+                                <button onClick={() => setShowReservationsModal(false)} className="p-2 bg-zinc-800 rounded-full">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                                {myReservations.map((res: any) => (
+                                    <div
+                                        key={res.id}
+                                        onClick={() => setSelectedReservation(res)}
+                                        className="bg-zinc-900 border border-white/10 rounded-2xl p-4 flex justify-between items-center active:scale-[0.98] transition-transform"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex flex-col items-center justify-center w-14 h-14 bg-zinc-800 rounded-xl border border-white/5">
+                                                <span className="text-xs font-bold text-red-400 uppercase">{format(new Date(res.date), 'MMM', { locale: es })}</span>
+                                                <span className="text-xl font-bold">{format(new Date(res.date), 'd')}</span>
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-lg">{format(new Date(res.date), 'h:mm a')}</div>
+                                                <div className="text-xs text-zinc-400 flex items-center gap-1">
+                                                    <User className="w-3 h-3" /> {res.partySize} personas • {res.table?.label || "Mesa"}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <QrCode className="w-6 h-6 text-white/50" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+
+                    {/* Reservation Detail/QR Modal */}
+                    {selectedReservation && createPortal(
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/90 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setSelectedReservation(null)}>
+                            <div className="bg-white p-8 rounded-3xl w-full max-w-sm relative text-center shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setSelectedReservation(null)} className="absolute top-4 right-4 text-black/50 hover:text-black">
+                                    <X className="w-6 h-6" />
+                                </button>
+
+                                <h3 className="text-xl font-bold text-black mb-1">Tu Reservación</h3>
+                                <p className="text-zinc-500 text-sm mb-6">Muestra este código al llegar</p>
+
+                                <div className="bg-white p-2 rounded-xl border-2 border-black/10 mx-auto w-fit mb-6">
+                                    <QRCodeSVG
+                                        /* 
+                                            QR Content: 
+                                            We can encode a URL for checking in the reservation directly from admin panel? 
+                                            Or just raw JSON data? 
+                                            The requirement implies "codigo qr unico de esa reservacion".
+                                            Format: "RESERVATION:{id}"
+                                        */
+                                        value={`https://happymeters.com/admin/reservations/checkin/${selectedReservation.id}`} // Or just ID
+                                        size={220}
+                                        level="H"
+                                        includeMargin={true}
+                                    />
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                                        <span className="text-zinc-400 text-sm">Fecha</span>
+                                        <span className="font-bold text-black">{format(new Date(selectedReservation.date), 'PPP', { locale: es })}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                                        <span className="text-zinc-400 text-sm">Hora</span>
+                                        <span className="font-bold text-black">{format(new Date(selectedReservation.date), 'h:mm a')}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                                        <span className="text-zinc-400 text-sm">Mesa</span>
+                                        <span className="font-bold text-black">{selectedReservation.table?.label}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-2">
+                                        <span className="text-zinc-400 text-sm">Personas</span>
+                                        <span className="font-bold text-black">{selectedReservation.partySize} pax</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>,
