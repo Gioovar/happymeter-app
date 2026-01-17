@@ -193,6 +193,17 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                 (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') && (
                     <div className="px-4 pb-3">
                         <Link
+                            href="/chains"
+                            onClick={() => toggleMobileMenu(false)}
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group mb-2"
+                        >
+                            <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
+                                <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
+                            </div>
+                        </Link>
+                        <Link
                             href="/admin"
                             onClick={() => toggleMobileMenu(false)}
                             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-md hover:shadow-red-600/20 transition-all group"
