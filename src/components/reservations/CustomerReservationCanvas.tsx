@@ -219,7 +219,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
         const result = await createReservation(bookingData)
         setIsBooking(false)
 
-        if (result.success) {
+        if (result?.success) {
             const res = result as any
             if (isAdmin) {
                 toast.success("Reserva Creada (Admin)", {
@@ -244,7 +244,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             }
         } else {
             toast.error("Error al reservar", {
-                description: result.error || "Intenta de nuevo más tarde."
+                description: result?.error || "Intenta de nuevo más tarde."
             })
         }
     }
@@ -557,7 +557,17 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-xs text-zinc-400">Celular (Opcional)</Label>
+                                        <Label className="text-xs text-zinc-400">Correo Electrónico</Label>
+                                        <Input
+                                            placeholder="ejemplo@correo.com"
+                                            type="email"
+                                            className="bg-black/50 border-white/10 h-9"
+                                            value={customerForm.email}
+                                            onChange={(e) => setCustomerForm(prev => ({ ...prev, email: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-zinc-400">Celular (WhatsApp/SMS)</Label>
                                         <Input
                                             placeholder="55 1234 5678"
                                             type="tel"
