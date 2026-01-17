@@ -72,34 +72,29 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         const client = await clerkClient()
         let clerkUserId: string;
 
-        // Get owner email to use as base if needed
-        let baseEmail = 'noreply@happymeters.com';
-        if (user.emailAddresses && user.emailAddresses.length > 0) {
-            baseEmail = user.emailAddresses[0].emailAddress;
-        }
+        // ESTRATEGIA ROBUSTA: Email de sistema
+        // Usamos un dominio "ficticio" pero válido sintácticamente para uso interno
+        // Esto evita errores con emails reales, alias, o validaciones de dominio
+        const cleanName = data.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15);
+        const uniqueId = Math.random().toString(36).substring(2, 8);
 
-        // If email is provided, use it. If not, generate a sub-address of the owner.
+        // Si el usuario proporcionó email, úsalo. Si no, genera uno de sistema.
         const isPlaceholder = !data.email || data.email.trim() === '';
 
-        let emailToUse = data.email;
+        // Formato: branch-empresa-x8d9@branches.happymeter.app
+        const systemEmail = `branch-${cleanName}-${uniqueId}@branches.happymeter.app`;
+        const emailToUse = isPlaceholder ? systemEmail : data.email!;
 
-        if (isPlaceholder) {
-            // sub-addressing: user+branchX@domain.com
-            const [local, domain] = baseEmail.split('@');
-            const safeBranchName = data.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10);
-            const uniqueSuffix = Math.random().toString(36).substring(2, 6);
-
-            // Handle existing +
-            const cleanLocal = local.includes('+') ? local.split('+')[0] : local;
-            emailToUse = `${cleanLocal}+${safeBranchName}-${uniqueSuffix}@${domain}`;
-        }
+        // Password seguro generado para cumplir cualquier política
+        const pswd = `Branch${Math.random().toString(36).slice(2)}!A1`;
 
         try {
-            // Prepare payload - SIMPLIFIED to avoid "missing data" errors
+            // Prepare payload standard
             const clerkPayload: any = {
                 emailAddress: [emailToUse],
                 firstName: data.name,
-                skipPasswordRequirement: true, // CRITICAL: Tell Clerk we intentionally don't want a password
+                password: data.password || pswd, // Enviamos password siempre
+                skipPasswordRequirement: false, // No saltamos validación, cumplimos con ella
                 publicMetadata: {
                     isBranch: true,
                     chainId: chain.id,
@@ -108,27 +103,19 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
                 }
             };
 
-            // Only include password if explicitly provided by user (future proofing)
-            if (data.password && data.password.length >= 8) {
-                clerkPayload.password = data.password;
-                clerkPayload.skipPasswordRequirement = false;
-            }
-
             // Try creating new user
             const newUser = await client.users.createUser(clerkPayload);
             clerkUserId = newUser.id
 
         } catch (e: any) {
-            console.error('Clerk Create Error:', JSON.stringify(e, null, 2));
-            // Parse Clerk error details
-            const paramName = e.errors?.[0]?.meta?.paramName || '';
+            console.error('Clerk Create Error FULL:', JSON.stringify(e, null, 2));
             const msg = e.errors?.[0]?.message || e.message || 'Error creating branch user';
 
             if (e.errors?.[0]?.code === 'form_identifier_exists') {
                 throw new Error(`El email ${emailToUse} ya está registrado.`)
             }
 
-            throw new Error(`Error de Clerk: ${msg} ${paramName ? `(${paramName})` : ''}`)
+            throw new Error(`Error de Clerk: ${msg}`)
         }
 
         // 2. Create UserSettings in DB for the new branch
@@ -155,7 +142,8 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         return { success: true }
     } catch (error: any) {
         console.error('Error adding branch:', error)
-        return { success: false, error: String(error.message || error) }
+        // Ensure serialization of error
+        return { success: false, error: error.message || String(error) }
     }
 }
 
@@ -174,8 +162,6 @@ export async function getChainDetails() {
                             select: {
                                 userId: true,
                                 businessName: true
-                                // We can't select email here reliably as it's not in UserSettings by default in this schema version
-                                // But let's assume we use display name
                             }
                         }
                     }
@@ -196,9 +182,6 @@ export async function enterBranch(branchUserId: string) {
         const user = await currentUser()
         if (!user) throw new Error('Unauthorized')
 
-        // Verify that the current user owns the chain that this branch belongs to
-        // OR that the current user IS the branch (re-authing?) - no, this is for owner impersonation
-
         const branchRelation = await prisma.chainBranch.findFirst({
             where: { branchId: branchUserId },
             include: { chain: true }
@@ -210,17 +193,13 @@ export async function enterBranch(branchUserId: string) {
             throw new Error('Unauthorized: You do not own this branch')
         }
 
-        // Generate Token
-        // Using the same logic as admin impersonation
         const client = await clerkClient()
         const signInToken = await client.signInTokens.createSignInToken({
             userId: branchUserId,
             expiresInSeconds: 60,
         })
 
-        // Construct URL
         const tokenUrl = new URL(signInToken.url)
-
         return { success: true, url: tokenUrl.toString() }
 
     } catch (error) {
