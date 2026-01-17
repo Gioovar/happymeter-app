@@ -7,15 +7,38 @@ export async function GET() {
     console.time('Surveys API Total')
     try {
         const { userId } = await auth()
+        if (!userId) return new NextResponse("Unauthorized", { status: 401 })
 
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 })
+        // --- Context Switching Logic ---
+        let targetUserId = userId;
+
+        // Check for 'branchId' query param to support delegated access
+        // We use 'req.url' to get search params in Next.js App Router API
+        const { searchParams } = new URL(req.url);
+        const branchId = searchParams.get('branchId');
+
+        if (branchId) {
+            // Security Check: Verify I own this branch
+            const isOwner = await prisma.chainBranch.findFirst({
+                where: {
+                    branchId: branchId,
+                    chain: { ownerId: userId }
+                }
+            });
+
+            if (!isOwner) {
+                return new NextResponse("Unauthorized: You do not own this branch", { status: 403 })
+            }
+
+            // Valid context switch
+            targetUserId = branchId;
         }
+        // -------------------------------
 
         console.time('DB Fetch Surveys')
         const surveys = await prisma.survey.findMany({
             where: {
-                userId: userId
+                userId: targetUserId
             },
             orderBy: {
                 createdAt: 'desc'
@@ -126,6 +149,21 @@ export async function POST(req: Request) {
             return new NextResponse("Unauthorized", { status: 401 })
         }
 
+        // --- Context Switching Logic for POST ---
+        let targetUserId = userId;
+        const { searchParams } = new URL(req.url);
+        const branchId = searchParams.get('branchId');
+
+        if (branchId) {
+            const isOwner = await prisma.chainBranch.findFirst({
+                where: { branchId: branchId, chain: { ownerId: userId } }
+            });
+            if (!isOwner) return new NextResponse("Unauthorized Branch Access", { status: 403 })
+            targetUserId = branchId;
+        }
+        // ----------------------------------------
+
+
         const body = await req.json()
         const { title, description, questions, bannerUrl, googleMapsUrl, hexColor, socialConfig, recoveryConfig, alertConfig, type = 'SATISFACTION' } = body
 
@@ -139,13 +177,13 @@ export async function POST(req: Request) {
 
         // Get User Plan
         let userSettings = await prisma.userSettings.findUnique({
-            where: { userId }
+            where: { userId: targetUserId }
         })
 
         if (!userSettings) {
             userSettings = await prisma.userSettings.create({
                 data: {
-                    userId,
+                    userId: targetUserId,
                     plan: 'FREE'
                 }
             })
@@ -161,7 +199,7 @@ export async function POST(req: Request) {
 
         const currentCount = await prisma.survey.count({
             where: {
-                userId,
+                userId: targetUserId,
                 type: type // Check count for specific type
             }
         })
@@ -176,7 +214,7 @@ export async function POST(req: Request) {
         console.log('[SURVEYS_POST] Creating survey in DB...')
         const survey = await prisma.survey.create({
             data: {
-                userId,
+                userId: targetUserId,
                 title,
                 description,
                 type,
