@@ -22,6 +22,17 @@ export async function authenticateLoyaltyCustomer(programId: string, phone: stri
                     programId,
                     phone: safePhone
                 }
+            },
+            include: {
+                program: {
+                    include: {
+                        rewards: { where: { isActive: true }, orderBy: { costInVisits: 'asc' } },
+                        promotions: { where: { isActive: true } },
+                        tiers: { orderBy: { order: 'asc' } }
+                    }
+                },
+                redemptions: { include: { reward: true } },
+                tier: true
             }
         })
 
@@ -36,6 +47,17 @@ export async function authenticateLoyaltyCustomer(programId: string, phone: stri
                     photoUrl: profile?.photoUrl,
                     magicToken: randomUUID(),
                     joinDate: new Date()
+                },
+                include: {
+                    program: {
+                        include: {
+                            rewards: { where: { isActive: true }, orderBy: { costInVisits: 'asc' } },
+                            promotions: { where: { isActive: true } },
+                            tiers: { orderBy: { order: 'asc' } }
+                        }
+                    },
+                    redemptions: { include: { reward: true } },
+                    tier: true
                 }
             })
         } else {
@@ -57,7 +79,18 @@ export async function authenticateLoyaltyCustomer(programId: string, phone: stri
                 if (Object.keys(updateData).length > 0) {
                     customer = await prisma.loyaltyCustomer.update({
                         where: { id: customer.id },
-                        data: updateData
+                        data: updateData,
+                        include: {
+                            program: {
+                                include: {
+                                    rewards: { where: { isActive: true }, orderBy: { costInVisits: 'asc' } },
+                                    promotions: { where: { isActive: true } },
+                                    tiers: { orderBy: { order: 'asc' } }
+                                }
+                            },
+                            redemptions: { include: { reward: true } },
+                            tier: true
+                        }
                     })
                 }
             }
@@ -68,7 +101,18 @@ export async function authenticateLoyaltyCustomer(programId: string, phone: stri
             const newToken = randomUUID()
             customer = await prisma.loyaltyCustomer.update({
                 where: { id: customer.id },
-                data: { magicToken: newToken }
+                data: { magicToken: newToken },
+                include: {
+                    program: {
+                        include: {
+                            rewards: { where: { isActive: true }, orderBy: { costInVisits: 'asc' } },
+                            promotions: { where: { isActive: true } },
+                            tiers: { orderBy: { order: 'asc' } }
+                        }
+                    },
+                    redemptions: { include: { reward: true } },
+                    tier: true
+                }
             })
         }
 
@@ -1251,6 +1295,17 @@ export async function updateLoyaltyProfile(programId: string, magicToken: string
                 email: data.email,
                 username: data.username,
                 birthday: data.birthday,
+            },
+            include: {
+                program: {
+                    include: {
+                        rewards: { where: { isActive: true }, orderBy: { costInVisits: 'asc' } },
+                        promotions: { where: { isActive: true } },
+                        tiers: { orderBy: { order: 'asc' } }
+                    }
+                },
+                redemptions: { include: { reward: true } },
+                tier: true
             }
         })
 
