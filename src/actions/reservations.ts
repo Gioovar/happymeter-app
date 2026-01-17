@@ -3,6 +3,14 @@
 import { auth } from "@clerk/nextjs/server"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import QRCode from 'qrcode'
+import { resend } from "@/lib/resend"
+import { sendSMS } from "@/lib/sms"
+import { sendWhatsAppNotification } from "@/lib/whatsapp"
+import { ReservationConfirmationEmail } from "@/emails/ReservationConfirmation"import QRCode from 'qrcode'
+import { resend } from "@/lib/resend"
+import { sendSMS } from "@/lib/sms"
+import { ReservationConfirmationEmail } from "@/emails/ReservationConfirmation"
 
 export async function getFloorPlan() {
     try {
@@ -530,6 +538,11 @@ export async function createReservation(data: {
         // No auth check needed here as this is public customer facing (or use anonymous session if needed)
         // Ideally we should validate captcha or rate limit
 
+        // Capture the first reservation ID created
+        let newReservationId: string | null = null;
+        let reservationDate: Date | null = null;
+        let reservationTableId: string | null = null;
+
         await prisma.$transaction(async (tx) => {
             for (const res of data.reservations) {
                 // simple check for double booking
@@ -545,7 +558,7 @@ export async function createReservation(data: {
                     throw new Error(`Mesa ya reservada para esta hora`)
                 }
 
-                await tx.reservation.create({
+                const created = await tx.reservation.create({
                     data: {
                         tableId: res.tableId,
                         date: res.date,
@@ -556,78 +569,102 @@ export async function createReservation(data: {
                         status: 'CONFIRMED'
                     }
                 })
+
+                if (!newReservationId) {
+                    newReservationId = created.id
+                    reservationDate = created.date
+                    reservationTableId = created.tableId
+                }
             }
         })
 
         revalidatePath('/dashboard/reservations')
 
-        // [POST-RESERVATION LOGIC] Check for Loyalty Program & potential actions
-        // We do this after the transaction to not block the reservation itself
-        try {
-            const firstTableId = data.reservations[0]?.tableId
-            if (firstTableId) {
-                // Determine owner from table -> floorPlan -> user
-                // We need to fetch table info first
-                const tableInfo = await prisma.table.findUnique({
-                    where: { id: firstTableId },
-                    include: { floorPlan: { select: { userId: true } } }
-                })
-
-                if (tableInfo?.floorPlan?.userId) {
-                    const program = await prisma.loyaltyProgram.findUnique({
-                        where: { userId: tableInfo.floorPlan.userId }
+        // [NOTIFICATIONS] Async send (Email + SMS + WhatsApp)
+        if (newReservationId && reservationDate && reservationTableId) {
+            (async () => {
+                try {
+                    // Fetch details for notifications (Business Name, Table Name)
+                    // Ensure we fetch userSettings to get loyalty programs
+                    const tableInfo = await prisma.table.findUnique({
+                        where: { id: reservationTableId! },
+                        include: { floorPlan: { include: { userSettings: { include: { loyaltyPrograms: true } } } } }
                     })
 
-                    if (program) {
-                        // Check if customer is already a member
-                        const whereClause: any[] = []
-                        if (data.customer.phone) whereClause.push({ phone: data.customer.phone })
-                        if (data.customer.email) whereClause.push({ email: data.customer.email })
+                    // Fallback business name lookup
+                    let businessName = "HappyMeters Place"
+                    let loyaltyUrl = ""
 
-                        let isMember = false
-                        if (whereClause.length > 0) {
-                            const member = await prisma.loyaltyCustomer.findFirst({
-                                where: {
-                                    programId: program.id,
-                                    OR: whereClause
-                                }
-                            })
-                            if (member) isMember = true
-                        }
+                    if (tableInfo?.floorPlan?.userSettings) {
+                        const settings = tableInfo.floorPlan.userSettings
+                        if (settings.businessName) businessName = settings.businessName
 
-                        if (isMember) {
-                            return {
-                                success: true,
-                                action: 'REDIRECT_LOYALTY',
-                                programId: program.id,
-                                businessName: program.businessName
-                            }
-                        } else if (program.enableFirstVisitGift) {
-                            return {
-                                success: true,
-                                action: 'OFFER_GIFT',
-                                programId: program.id,
-                                businessName: program.businessName,
-                                giftText: program.firstVisitGiftText || "¡Tienes un regalo de bienvenida!"
-                            }
-                        } else {
-                            // Default action: Suggest joining
-                            return {
-                                success: true,
-                                action: 'OFFER_JOIN',
-                                programId: program.id,
-                                businessName: program.businessName,
-                                joinMessage: `Únete al club de ${program.businessName} y recibe recompensas.`
-                            }
+                        // Find loyalty program
+                        const program = settings.loyaltyPrograms?.[0]
+                        if (program) {
+                            // Construct URL (assume production domain or localhost)
+                            const domain = process.env.NEXT_PUBLIC_APP_URL || "https://happymeters.app"
+                            loyaltyUrl = `${domain}/loyalty/${program.id}`
                         }
                     }
+
+                    // 1. Generate QR Code
+                    const qrData = `RESERVATION:${newReservationId}`
+                    const qrCodeUrl = await QRCode.toDataURL(qrData)
+
+                    const dateStr = new Date(reservationDate!).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                    const timeStr = new Date(reservationDate!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+
+                    // 2. EMAIL (Resend)
+                    if (data.customer.email) {
+                        await resend.emails.send({
+                            from: 'Reservas <noreply@happymeters.app>',
+                            to: [data.customer.email],
+                            subject: `Confirmación de Reserva - ${businessName}`,
+                            react: ReservationConfirmationEmail({
+                                customerName: data.customer.name,
+                                businessName: businessName,
+                                date: dateStr,
+                                time: timeStr,
+                                pax: data.reservations[0].partySize,
+                                table: tableInfo?.label || "Mesa",
+                                qrCodeUrl: qrCodeUrl,
+                                reservationId: newReservationId!,
+                                loyaltyUrl: loyaltyUrl || undefined
+                            })
+                        })
+                    }
+
+                    // 3. SMS (Twilio)
+                    if (data.customer.phone) {
+                        const shortDate = new Date(reservationDate!).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+                        const shortTime = new Date(reservationDate!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+                        let smsBody = `Reserva confirmada en ${businessName}. ${shortDate} ${shortTime}, ${data.reservations[0].partySize} pers. Muestra este código: ${newReservationId}.`
+                        if (loyaltyUrl) smsBody += ` Únete al club: ${loyaltyUrl}`
+
+                        await sendSMS(data.customer.phone, smsBody)
+                    }
+
+                    // 4. WHATSAPP (Meta)
+                    if (data.customer.phone) {
+                        // Using 'reservation_confirmed_v1' placeholder template.
+
+                        await sendWhatsAppNotification(data.customer.phone, 'reservation_confirmed_v1', {
+                            1: data.customer.name,
+                            2: businessName,
+                            3: `${dateStr} a las ${timeStr}`,
+                            4: newReservationId!, // Unique Code
+                            5: loyaltyUrl || "https://happymeters.app" // Loyalty Link
+                        })
+                    }
+
+                } catch (notifyError) {
+                    console.error("Notification Error:", notifyError)
                 }
-            }
-        } catch (loyaltyError) {
-            console.error("Error checking loyalty status:", loyaltyError)
+            })()
         }
 
-        return { success: true }
+        // [POST-RESERVATION LOGIC] Check for Loyalty Program & potential actions
     } catch (error: any) {
         console.error("Error creating reservation:", error)
         return { success: false, error: error.message || "Error al crear la reserva" }
