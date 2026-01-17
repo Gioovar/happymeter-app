@@ -587,22 +587,26 @@ export async function createReservation(data: {
         revalidatePath('/dashboard/reservations')
 
         // [NOTIFICATIONS] Async send (Email + SMS + WhatsApp)
-        if (newReservationId && reservationDate && reservationTableId) {
+        // Fetch details for notifications and return (Business Name, Table Name)
+        // Ensure we fetch user to get loyalty programs
+        let tableInfo: any = null
+        if (reservationTableId) {
+            tableInfo = await prisma.table.findUnique({
+                where: { id: reservationTableId },
+                include: { floorPlan: { include: { user: { include: { loyaltyProgram: true } } } } }
+            })
+        }
+
+        // [NOTIFICATIONS] Async send (Email + SMS + WhatsApp)
+        if (newReservationId && reservationDate && tableInfo) {
             (async () => {
                 try {
-                    // Fetch details for notifications (Business Name, Table Name)
-                    // Ensure we fetch user to get loyalty programs
-                    const tableInfo = await prisma.table.findUnique({
-                        where: { id: reservationTableId! },
-                        include: { floorPlan: { include: { user: { include: { loyaltyProgram: true } } } } }
-                    })
-
                     // Fallback business name lookup
                     let businessName = "HappyMeters Place"
                     let loyaltyUrl = ""
 
                     // Safely access nested properties
-                    const fp = (tableInfo as any)?.floorPlan
+                    const fp = tableInfo?.floorPlan
                     if (fp?.user) {
                         const settings = fp.user
                         if (settings.businessName) businessName = settings.businessName
@@ -672,7 +676,21 @@ export async function createReservation(data: {
             })()
         }
 
-        // [POST-RESERVATION LOGIC] Check for Loyalty Program & potential actions
+        // [POST-RESERVATION LOGIC] Return success with Action
+        const program = tableInfo?.floorPlan?.user?.loyaltyProgram
+        const businessName = tableInfo?.floorPlan?.user?.businessName || program?.businessName
+
+        if (program) {
+            return {
+                success: true,
+                action: 'REDIRECT_LOYALTY', // Use this to show the specific popup we customized
+                programId: program.id,
+                businessName: businessName || "HappyMeters",
+                joinMessage: "Únete a nuestro programa de lealtad"
+            }
+        }
+
+        return { success: true }
     } catch (error: any) {
         console.error("Error creating reservation:", error)
         return { success: false, error: error.message || "Error al crear la reserva" }
