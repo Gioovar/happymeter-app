@@ -5,6 +5,96 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { randomUUID } from "crypto"
 import QRCode from 'qrcode'
+import { setLoyaltySession, getLoyaltySessionToken, clearLoyaltySession } from "@/lib/loyalty-auth"
+
+// --- Authentication & Session ---
+
+export async function authenticateLoyaltyCustomer(programId: string, phone: string, name?: string) {
+    try {
+        if (!phone) return { success: false, error: "Teléfono requerido" }
+
+        const safePhone = phone.replace(/\s/g, '').trim()
+
+        // 1. Find or Create Customer
+        let customer = await prisma.loyaltyCustomer.findUnique({
+            where: {
+                programId_phone: {
+                    programId,
+                    phone: safePhone
+                }
+            }
+        })
+
+        if (!customer) {
+            // Create new
+            customer = await prisma.loyaltyCustomer.create({
+                data: {
+                    programId,
+                    phone: safePhone,
+                    name: name || undefined,
+                    magicToken: randomUUID(),
+                    joinDate: new Date()
+                }
+            })
+        } else {
+            // Update name if provided and missing
+            if (name && !customer.name) {
+                customer = await prisma.loyaltyCustomer.update({
+                    where: { id: customer.id },
+                    data: { name }
+                })
+            }
+        }
+
+        // 2. Ensure magicToken exists (migration safety)
+        if (!customer.magicToken) {
+            const newToken = randomUUID()
+            customer = await prisma.loyaltyCustomer.update({
+                where: { id: customer.id },
+                data: { magicToken: newToken }
+            })
+        }
+
+        // 3. Set Session Cookie
+        await setLoyaltySession(customer.magicToken!)
+
+        return { success: true, customer }
+    } catch (error) {
+        console.error("Auth Error:", error)
+        return { success: false, error: "Error de autenticación" }
+    }
+}
+
+export async function getLoyaltySession() {
+    try {
+        const token = await getLoyaltySessionToken()
+        if (!token) return null
+
+        const customer = await prisma.loyaltyCustomer.findUnique({
+            where: { magicToken: token },
+            include: {
+                program: {
+                    include: {
+                        rewards: { where: { isActive: true }, orderBy: { costInVisits: 'asc' } },
+                        promotions: { where: { isActive: true } },
+                        tiers: { orderBy: { order: 'asc' } }
+                    }
+                },
+                redemptions: { include: { reward: true } },
+                tier: true
+            }
+        })
+
+        return customer
+    } catch (error) {
+        return null
+    }
+}
+
+export async function logoutLoyaltyCustomer() {
+    await clearLoyaltySession()
+    return { success: true }
+}
 
 // --- Program Management (Owner) ---
 

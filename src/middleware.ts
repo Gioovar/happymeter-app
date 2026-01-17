@@ -13,6 +13,7 @@ export default clerkMiddleware(async (auth, req) => {
         req.nextUrl.pathname.startsWith('/sign-in') ||
         req.nextUrl.pathname.startsWith('/sso-callback') ||
         req.nextUrl.pathname.startsWith('/ops') || // Manage Ops auth manually for custom login
+        req.nextUrl.pathname.startsWith('/loyalty') || // Public Loyalty Access
         req.nextUrl.pathname.startsWith('/api/setup-admin') ||
         req.nextUrl.pathname === '/robots.txt' ||
         req.nextUrl.pathname === '/sitemap.xml' ||
