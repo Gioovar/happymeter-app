@@ -52,7 +52,7 @@ export async function createChain(name: string) {
 }
 
 export async function addBranch(chainId: string, data: { name: string, email?: string }) {
-    console.log('[Chain] Starting addBranch SIMPLE', { chainId, name: data.name });
+    console.log('[Chain] Starting addBranch PAYLOAD FIX 2', { chainId, name: data.name });
     try {
         const user = await currentUser()
         if (!user) throw new Error('Unauthorized')
@@ -69,31 +69,34 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         const client = await clerkClient()
         let clerkUserId: string;
 
-        // ESTRATEGIA DEFINITIVA: "System User"
-        // No usamos alias. Usamos un email de sistema que JAMAS fallará.
-        // El usuario ni se entera.
+        // ESTRATEGIA DEFINITIVA: "System User" (Branches.happymeter.app)
 
         const isPlaceholder = !data.email || data.email.trim() === '';
 
-        // Limpieza agresiva del nombre para evitar caracteres raros en email
+        // Limpieza agresiva del nombre
         const safeName = data.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15);
         const uniqueId = Math.random().toString(36).substring(2, 9);
 
-        // Email: branch-nombre-id@branches.happymeter.app (Dominio dummy seguro)
+        // Email de sistema interno
         const systemEmail = `branch-${safeName}-${uniqueId}@branches.happymeter.app`;
+        const systemUsername = `branch_${safeName}_${uniqueId}`; // Username backup
 
         const emailToUse = isPlaceholder ? systemEmail : data.email!;
 
-        // Password que cumple CUALQUIER política (Upper+Lower+Number+Symbol, 12 chars)
-        const safePassword = `B${Math.random().toString(36).slice(2, 8).toUpperCase()}!${Math.random().toString(36).slice(2, 8)}7`;
+        // Password MUY FUERTE generado (Cumple requisitos: 12 chars, Upper, Lower, Number, Symbol)
+        // Ejemplo: Br@nch-XyZ1...
+        const safePassword = `B${Math.random().toString(36).slice(2, 6).toUpperCase()}r${Math.random().toString(36).slice(2, 6)}!${Math.floor(Math.random() * 100)}`;
 
         try {
+            // Intentamos enviar TODOS los campos posibles para evitar "missing data"
+            // Algunos Clerk instances requieren username, otras first/last name. Enviamos todo.
             const clerkPayload: any = {
                 emailAddress: [emailToUse],
-                firstName: data.name,
-                // Siempre enviamos password para evitar "missing data" o "password required" errors
+                username: isPlaceholder ? systemUsername : undefined, // Solo enviamos username si es sistema (evitar colisión si es email real)
+                firstName: data.name.slice(0, 20), // Truncate por si acaso
+                lastName: 'Sucursal', // Apellido dummy por si es requerido
                 password: safePassword,
-                skipPasswordRequirement: false,
+                skipPasswordRequirement: false, // Enviamos un pass válido
                 publicMetadata: {
                     isBranch: true,
                     chainId: chain.id,
@@ -102,7 +105,11 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
                 }
             };
 
-            console.log('[Chain] Creating Clerk User with payload', { email: emailToUse });
+            // Remove username if undefined (aunque JSON stringify lo quita, Clerk lib puede quejarse)
+            if (!clerkPayload.username) delete clerkPayload.username;
+
+            console.log('[Chain] Creating User Payload:', { email: emailToUse, username: clerkPayload.username });
+
             const newUser = await client.users.createUser(clerkPayload);
             clerkUserId = newUser.id
             console.log('[Chain] OK Clerk ID:', clerkUserId);
@@ -110,22 +117,24 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         } catch (e: any) {
             console.error('[Chain] FAIL Clerk Create:', JSON.stringify(e, null, 2));
 
-            // Si falla Clerk, devolvemos error amigable
-            // Si es "form_identifier_exists", pedimos otro email
-            if (e.errors?.[0]?.code === 'form_identifier_exists') {
+            // Análisis de error profundo
+            const errorCode = e.errors?.[0]?.code;
+            const errorParam = e.errors?.[0]?.meta?.paramName;
+            const errorMsg = e.errors?.[0]?.message;
+
+            if (errorCode === 'form_identifier_exists') {
                 throw new Error(`El email ${emailToUse} ya existe.`)
             }
 
-            // Si es "password_pwned", reintentamos (muy raro con random)
-            if (e.errors?.[0]?.code === 'form_password_pwned') {
-                throw new Error('Error interno de seguridad (Pass). Intenta de nuevo.')
+            // Si falta dato específico
+            if (errorMsg && errorMsg.includes('missing')) {
+                throw new Error(`Error Clerk (Faltan datos): ${errorParam || errorMsg}`)
             }
 
-            throw new Error(`Error al crear usuario de sucursal: ${e.errors?.[0]?.message || e.message}`)
+            throw new Error(`Error al crear usuario de sucursal: ${errorMsg || e.message}`)
         }
 
         // 2. Create UserSettings
-        console.log('[Chain] Creating UserSettings');
         try {
             await prisma.userSettings.create({
                 data: {
@@ -133,18 +142,20 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
                     businessName: data.name,
                     plan: 'FREE',
                     isOnboarded: true,
-                    // Defaults seguros
+                    // Set defaults to avoid null constraints
+                    isPhoneVerified: false,
+                    hasSeenTour: false,
+                    maxSurveys: 3
                 }
             })
         } catch (dbError: any) {
-            console.error('[Chain] FAIL DB Create UserSettings:', dbError);
-            // Intentar borrar el usuario de Clerk para no dejar basura?
-            // await client.users.deleteUser(clerkUserId).catch(() => {});
-            throw new Error(`Error base de datos: ${dbError.message}`)
+            // Si falla DB, intentamos rollback del usuario Clerk
+            console.error('[Chain] FAIL DB Create:', dbError);
+            try { await client.users.deleteUser(clerkUserId) } catch { }
+            throw new Error(`Error guardando en base de datos: ${dbError.message}`)
         }
 
         // 3. Link to Chain
-        console.log('[Chain] Linking');
         await prisma.chainBranch.create({
             data: {
                 chainId: chain.id,
