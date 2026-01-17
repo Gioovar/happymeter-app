@@ -46,9 +46,7 @@ export default function CreateBranchModal({ chainId, isFirstChain = false, trigg
 
                 const res = await addBranch(chainId, {
                     name: formData.name,
-                    email: formData.email,
-                    // Password generated or handled securely ideally, for now assuming action handles default or we simple ask user to reset
-                    password: 'ChangeMe123!' // Placeholder secure password generation needed in real app or email invite flow
+                    email: formData.email
                 })
 
                 if (!res.success) throw new Error(res.error)

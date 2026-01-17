@@ -85,9 +85,11 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
             // Try creating new user
             const newUser = await client.users.createUser({
                 emailAddress: [emailToUse],
-                password: data.password || (isPlaceholder ? `P-${Math.random().toString(36)}!` : undefined),
+                // Only set password if explicitly provided and not empty
+                password: data.password && data.password.length >= 8 ? data.password : undefined,
                 firstName: data.name,
-                skipPasswordRequirement: !data.password && !isPlaceholder,
+                // Skip password if no password provided (always true for now from UI)
+                skipPasswordRequirement: !data.password || data.password.length < 8,
                 publicMetadata: {
                     isBranch: true,
                     chainId: chain.id,
