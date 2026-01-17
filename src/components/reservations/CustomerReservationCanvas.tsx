@@ -653,7 +653,18 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                 </DialogContent>
             </Dialog>
             {/* Success / Post-Reservation Modal */}
-            <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
+            <Dialog
+                open={isSuccessModalOpen}
+                onOpenChange={(open) => {
+                    // Only handle CLOSING manually
+                    if (!open && postReservationAction?.programId) {
+                        // If user closes manually, redirect to loyalty root or just close?
+                        // User said: "Si el usuario decide cerrar el pop-up manualmente, entonces sí debe regresarlo al programa de lealtad."
+                        window.location.href = `/loyalty/${postReservationAction.programId}`
+                    }
+                    setIsSuccessModalOpen(open)
+                }}
+            >
                 <DialogContent className="w-[95vw] max-w-sm bg-zinc-900 border border-white/10 text-white rounded-3xl p-6 text-center">
                     {postReservationAction?.action === 'REDIRECT_LOYALTY' && (
                         <div className="space-y-6 py-4">
@@ -691,7 +702,18 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                             </div>
 
                             <Button
-                                onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}`}
+                                onClick={() => {
+                                    // Pass current form data to pre-fill loyalty signup if needed
+                                    const params = new URLSearchParams()
+                                    if (customerForm.name) params.set('name', customerForm.name)
+                                    if (customerForm.phone) params.set('phone', customerForm.phone)
+                                    if (customerForm.email) params.set('email', customerForm.email)
+                                    // Add action flag to trigger "Complete Profile" flow if logic exists on loyalty page, 
+                                    // or just relying on pre-fill is enough for the user to hit "Join".
+                                    params.set('action', 'signup')
+
+                                    window.location.href = `/loyalty/${postReservationAction.programId}?${params.toString()}`
+                                }}
                                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl py-6"
                             >
                                 Ir a mi Tarjeta Digital
@@ -737,7 +759,15 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                 <p className="text-zinc-500 text-xs">{postReservationAction.joinMessage}</p>
                             </div>
                             <Button
-                                onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}`}
+                                onClick={() => {
+                                    const params = new URLSearchParams()
+                                    if (customerForm.name) params.set('name', customerForm.name)
+                                    if (customerForm.phone) params.set('phone', customerForm.phone)
+                                    if (customerForm.email) params.set('email', customerForm.email)
+                                    params.set('action', 'signup')
+
+                                    window.location.href = `/loyalty/${postReservationAction.programId}?${params.toString()}`
+                                }}
                                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl py-6"
                             >
                                 Obtener Tarjeta Digital Gratis

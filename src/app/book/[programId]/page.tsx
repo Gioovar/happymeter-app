@@ -11,7 +11,13 @@ const CustomerReservationCanvas = dynamic(
     }
 )
 
-export default async function ReservationPage({ params }: { params: { programId: string } }) {
+export default async function ReservationPage({
+    params,
+    searchParams
+}: {
+    params: { programId: string }
+    searchParams: { [key: string]: string | string[] | undefined }
+}) {
     const { programId } = params
     console.log(`[ReservationPage] accessing programId: ${programId}`)
 
@@ -32,11 +38,18 @@ export default async function ReservationPage({ params }: { params: { programId:
         return notFound()
     }
 
-    const userData = user ? {
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-        email: user.emailAddresses[0]?.emailAddress,
-        phone: user.phoneNumbers[0]?.phoneNumber
-    } : undefined
+    // Helper to get string from searchParam
+    const getParam = (key: string) => {
+        const val = searchParams[key]
+        if (Array.isArray(val)) return val[0]
+        return val || ''
+    }
+
+    const userData = {
+        name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : getParam('name'),
+        email: user ? user.emailAddresses[0]?.emailAddress : getParam('email'),
+        phone: user ? user.phoneNumbers[0]?.phoneNumber : getParam('phone')
+    }
 
     // Default to first floor for compatibility if needed, but passing all is better
     return (
