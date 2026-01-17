@@ -81,9 +81,6 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         // If email is provided, use it. If not, generate a sub-address of the owner.
         const isPlaceholder = !data.email || data.email.trim() === '';
 
-        // Generate a strong random password to avoid policy errors 
-        const placeholderPassword = `Br@nch-${Math.random().toString(36).slice(2)}!${Math.random().toString(36).slice(2).toUpperCase()}`;
-
         let emailToUse = data.email;
 
         if (isPlaceholder) {
@@ -98,33 +95,40 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         }
 
         try {
-            // Try creating new user
-            const newUser = await client.users.createUser({
-                emailAddress: [emailToUse!],
-                password: data.password || placeholderPassword,
+            // Prepare payload - SIMPLIFIED to avoid "missing data" errors
+            const clerkPayload: any = {
+                emailAddress: [emailToUse],
                 firstName: data.name,
-                skipPasswordRequirement: false, // Provide password explicitly to avoid ambiguity
+                skipPasswordRequirement: true, // CRITICAL: Tell Clerk we intentionally don't want a password
                 publicMetadata: {
                     isBranch: true,
                     chainId: chain.id,
                     isPlaceholder: isPlaceholder,
                     managedBy: user.id
                 }
-            })
+            };
+
+            // Only include password if explicitly provided by user (future proofing)
+            if (data.password && data.password.length >= 8) {
+                clerkPayload.password = data.password;
+                clerkPayload.skipPasswordRequirement = false;
+            }
+
+            // Try creating new user
+            const newUser = await client.users.createUser(clerkPayload);
             clerkUserId = newUser.id
+
         } catch (e: any) {
             console.error('Clerk Create Error:', JSON.stringify(e, null, 2));
-            // Parse Clerk error
+            // Parse Clerk error details
+            const paramName = e.errors?.[0]?.meta?.paramName || '';
             const msg = e.errors?.[0]?.message || e.message || 'Error creating branch user';
 
             if (e.errors?.[0]?.code === 'form_identifier_exists') {
                 throw new Error(`El email ${emailToUse} ya está registrado.`)
             }
-            if (e.errors?.[0]?.code === 'form_password_pwned') {
-                throw new Error(`La contraseña es muy común. Por favor intenta otra.`)
-            }
 
-            throw new Error(`Error de Clerk: ${msg}`)
+            throw new Error(`Error de Clerk: ${msg} ${paramName ? `(${paramName})` : ''}`)
         }
 
         // 2. Create UserSettings in DB for the new branch
