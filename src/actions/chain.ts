@@ -138,13 +138,13 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         try {
             await prisma.userSettings.create({
                 data: {
+                    userId: clerkUserId,
                     businessName: data.name,
                     plan: 'ENTERPRISE', // Unrestricted as requested
                     isOnboarded: true,
                     // Set defaults to avoid null constraints
                     isPhoneVerified: false,
                     hasSeenTour: false,
-                    // Deleted maxSurveys limit
                 }
             })
         } catch (dbError: any) {
@@ -155,21 +155,22 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         }
 
         // 3. Link to Chain
-        data: {
-            chainId: chain.id,
+        await prisma.chainBranch.create({
+            data: {
+                chainId: chain.id,
                 branchId: clerkUserId,
-                    name: data.name,
-                        slug: safeName, // Guarda el slug para usar en URLs
-                            order: chain.branches.length + 1
-        }
-    })
+                name: data.name,
+                slug: safeName, // Guarda el slug para usar en URLs
+                order: chain.branches.length + 1
+            }
+        })
 
-    revalidatePath('/chains')
-    return { success: true }
-} catch (error: any) {
-    console.error('[Chain] CRITICAL ERROR:', error)
-    return { success: false, error: error.message || String(error) }
-}
+        revalidatePath('/chains')
+        return { success: true }
+    } catch (error: any) {
+        console.error('[Chain] CRITICAL ERROR:', error)
+        return { success: false, error: error.message || String(error) }
+    }
 }
 
 export async function getChainDetails() {
