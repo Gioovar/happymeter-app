@@ -235,7 +235,13 @@ export async function getProgramFloorPlan(programId: string) {
     try {
         const program = await prisma.loyaltyProgram.findUnique({
             where: { id: programId },
-            select: { userId: true, businessName: true }
+            select: {
+                userId: true,
+                businessName: true,
+                user: {
+                    select: { businessName: true }
+                }
+            }
         })
 
         if (!program) return { success: false, error: "Negocio no encontrado" }
@@ -256,7 +262,10 @@ export async function getProgramFloorPlan(programId: string) {
 
         if (!floorPlans || floorPlans.length === 0) return { success: false, error: "No hay mapa configurado" }
 
-        return { success: true, floorPlans: JSON.parse(JSON.stringify(floorPlans)), businessName: program.businessName }
+        // Prioritize UserSettings business name if available, otherwise fallback to LoyaltyProgram name
+        const displayName = program.user?.businessName || program.businessName || "Reservación"
+
+        return { success: true, floorPlans: JSON.parse(JSON.stringify(floorPlans)), businessName: displayName }
     } catch (error) {
         console.error("Error fetching program floor plan:", error)
         return { success: false, error: "Error al cargar el mapa" }
@@ -582,22 +591,24 @@ export async function createReservation(data: {
             (async () => {
                 try {
                     // Fetch details for notifications (Business Name, Table Name)
-                    // Ensure we fetch userSettings to get loyalty programs
+                    // Ensure we fetch user to get loyalty programs
                     const tableInfo = await prisma.table.findUnique({
                         where: { id: reservationTableId! },
-                        include: { floorPlan: { include: { userSettings: { include: { loyaltyPrograms: true } } } } }
+                        include: { floorPlan: { include: { user: { include: { loyaltyProgram: true } } } } }
                     })
 
                     // Fallback business name lookup
                     let businessName = "HappyMeters Place"
                     let loyaltyUrl = ""
 
-                    if (tableInfo?.floorPlan?.userSettings) {
-                        const settings = tableInfo.floorPlan.userSettings
+                    // Safely access nested properties
+                    const fp = (tableInfo as any)?.floorPlan
+                    if (fp?.user) {
+                        const settings = fp.user
                         if (settings.businessName) businessName = settings.businessName
 
                         // Find loyalty program
-                        const program = settings.loyaltyPrograms?.[0]
+                        const program = settings.loyaltyProgram
                         if (program) {
                             // Construct URL (assume production domain or localhost)
                             const domain = process.env.NEXT_PUBLIC_APP_URL || "https://happymeters.app"

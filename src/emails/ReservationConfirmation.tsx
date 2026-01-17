@@ -25,6 +25,7 @@ interface ReservationConfirmationEmailProps {
     table: string;
     qrCodeUrl: string; // Data URL (base64)
     reservationId: string;
+    loyaltyUrl?: string;
 }
 
 export const ReservationConfirmationEmail = ({
@@ -36,6 +37,7 @@ export const ReservationConfirmationEmail = ({
     table,
     qrCodeUrl,
     reservationId,
+    loyaltyUrl,
 }: ReservationConfirmationEmailProps) => {
     return (
         <Html>
@@ -91,6 +93,20 @@ export const ReservationConfirmationEmail = ({
                             />
                             <Text className="text-[10px] text-zinc-400 mt-2">ID: {reservationId}</Text>
                         </Section>
+
+                        {loyaltyUrl && (
+                            <Section className="text-center my-6 p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
+                                <Text className="text-indigo-900 text-[14px] leading-[24px] mb-4 font-medium">
+                                    ¡Únete a nuestro Club de Lealtad y gana premios!
+                                </Text>
+                                <Link
+                                    href={loyaltyUrl}
+                                    className="bg-indigo-600 text-white rounded px-6 py-3 text-[14px] font-bold no-underline inline-block"
+                                >
+                                    Obtener Tarjeta Digital
+                                </Link>
+                            </Section>
+                        )}
 
                         <Section className="text-center mt-6">
                             <Text className="text-[#666666] text-[12px] leading-[24px]">
