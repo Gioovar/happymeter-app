@@ -53,7 +53,7 @@ export async function createChain(name: string) {
     }
 }
 
-export async function addBranch(chainId: string, data: { name: string, email: string, password?: string }) {
+export async function addBranch(chainId: string, data: { name: string, email?: string, password?: string }) {
     try {
         const user = await currentUser()
         if (!user) throw new Error('Unauthorized')
@@ -70,29 +70,36 @@ export async function addBranch(chainId: string, data: { name: string, email: st
 
         // 1. Create Clerk User
         const client = await clerkClient()
-
-        // Check if user exists
         let clerkUserId: string;
+
+        // If email is provided, use it. If not, generate a placeholder.
+        const isPlaceholder = !data.email || data.email.trim() === '';
+        // Use a clean slug for the email alias
+        const safeName = data.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const randomSuffix = Math.random().toString(36).substring(2, 7);
+        const emailToUse = isPlaceholder
+            ? `branch-${safeName}-${randomSuffix}@full-access-placeholder.com` // Dummy domain, ensures uniqueness
+            : data.email!;
 
         try {
             // Try creating new user
             const newUser = await client.users.createUser({
-                emailAddress: [data.email],
-                password: data.password || undefined, // Optional if we want to just invite them later, but for now we create fully
+                emailAddress: [emailToUse],
+                password: data.password || (isPlaceholder ? `P-${Math.random().toString(36)}!` : undefined),
                 firstName: data.name,
-                skipPasswordRequirement: !data.password,
+                skipPasswordRequirement: !data.password && !isPlaceholder,
                 publicMetadata: {
                     isBranch: true,
-                    chainId: chain.id
+                    chainId: chain.id,
+                    isPlaceholder: isPlaceholder
                 }
             })
             clerkUserId = newUser.id
         } catch (e: any) {
-            // If user already exists (maybe they want to link an existing account?)
-            // For this MVP, we will fail if email strictly exists to avoid taking over accounts
+            // Logic for existing users
             if (e.errors?.[0]?.code === 'form_identifier_exists') {
-                // Optional: Handle linking logic here in future
-                throw new Error('User with this email already exists. Linking existing users not yet supported.')
+                // Improve error message for the user
+                throw new Error(`El email ${emailToUse} ya está registrado. Por favor usa un email diferente para el encargado de esta sucursal, o déjalo vacío para asignarlo después.`)
             }
             throw e
         }
@@ -102,8 +109,8 @@ export async function addBranch(chainId: string, data: { name: string, email: st
             data: {
                 userId: clerkUserId,
                 businessName: data.name,
-                plan: 'FREE', // Or inherit checks?
-                isOnboarded: true, // Auto-onboard as branch
+                plan: 'FREE',
+                isOnboarded: true,
             }
         })
 
@@ -119,9 +126,9 @@ export async function addBranch(chainId: string, data: { name: string, email: st
 
         revalidatePath('/chains')
         return { success: true }
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error adding branch:', error)
-        return { success: false, error: String(error) }
+        return { success: false, error: String(error.message || error) }
     }
 }
 

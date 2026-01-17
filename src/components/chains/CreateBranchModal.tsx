@@ -105,16 +105,15 @@ export default function CreateBranchModal({ chainId, isFirstChain = false, trigg
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Email de Administración</Label>
+                                <Label>Email del Encargado (Opcional)</Label>
                                 <Input
                                     type="email"
                                     placeholder="sucursal.norte@empresa.com"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    required
                                 />
                                 <p className="text-sm text-muted-foreground">
-                                    Se creará una cuenta nueva para esta sucursal.
+                                    Déjalo vacío si tú administrarás esta sucursal por ahora. Podrás invitar a un gerente después.
                                 </p>
                             </div>
                         </>
