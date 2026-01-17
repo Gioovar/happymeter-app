@@ -375,122 +375,127 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                         </DialogContent>
                     </Dialog>
 
-                    {/* Success Modal (Duplicated to ensure persistence if state resets to SEARCH) */}
-                    <Dialog
-                        open={isSuccessModalOpen}
-                        onOpenChange={setIsSuccessModalOpen}
-                    >
-                        <DialogContent
-                            className="w-[95vw] max-w-sm bg-zinc-900 border border-white/10 text-white rounded-3xl p-6 text-center"
-                            disableOutsideClick={true}
-                        >
-                            {postReservationAction?.action === 'REDIRECT_LOYALTY' && (
-                                <div className="space-y-6 py-4">
-                                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
-                                        <Check className="w-8 h-8 text-green-400" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-xl font-bold">¡Reserva Registrada!</h2>
-                                        <p className="text-zinc-300 text-sm mt-4">
-                                            Hemos enviado tu <span className="text-white font-bold">Código QR de acceso</span> a:
-                                        </p>
-                                        <div className="flex justify-center gap-4 mt-3 mb-4">
-                                            <div className="flex flex-col items-center gap-1">
-                                                <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
-                                                    <span className="text-lg">📧</span>
-                                                </div>
-                                                <span className="text-[10px] text-zinc-500">Correo</span>
+
+                </div>
+            </div>
+        )
+    }
+
+    // SUCCESS STEP UI (Full Page)
+    if (bookingStep === 'SUCCESS') {
+        return (
+            <div className={cn("h-[100dvh] bg-zinc-950 flex items-center justify-center p-4", className)}>
+                <div className="w-full max-w-sm bg-zinc-900 border border-white/10 text-white rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+                    {/* Background Glow */}
+                    <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-green-500/20 to-transparent pointer-events-none" />
+
+                    <div className="relative z-10">
+                        {(!postReservationAction?.action || postReservationAction?.action === 'REDIRECT_LOYALTY') && (
+                            <div className="space-y-6 py-4">
+                                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+                                    <Check className="w-10 h-10 text-green-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold">¡Reserva Registrada!</h2>
+                                    <p className="text-zinc-300 text-sm mt-4">
+                                        Hemos enviado tu <span className="text-white font-bold">Código QR de acceso</span> a:
+                                    </p>
+                                    <div className="flex justify-center gap-6 mt-4 mb-6">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
+                                                <span className="text-xl">📧</span>
                                             </div>
-                                            <div className="flex flex-col items-center gap-1">
-                                                <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
-                                                    <span className="text-lg">💬</span>
-                                                </div>
-                                                <span className="text-[10px] text-zinc-500">SMS</span>
-                                            </div>
-                                            <div className="flex flex-col items-center gap-1">
-                                                <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
-                                                    <span className="text-lg text-green-500">📱</span>
-                                                </div>
-                                                <span className="text-[10px] text-zinc-500">WhatsApp</span>
-                                            </div>
+                                            <span className="text-xs text-zinc-500">Correo</span>
                                         </div>
-                                        <p className="text-xs text-zinc-500 max-w-[250px] mx-auto">
-                                            Por favor revisa tus mensajes para ver los detalles y el código único.
-                                        </p>
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
+                                                <span className="text-xl">💬</span>
+                                            </div>
+                                            <span className="text-xs text-zinc-500">SMS</span>
+                                        </div>
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
+                                                <span className="text-xl text-green-500">📱</span>
+                                            </div>
+                                            <span className="text-xs text-zinc-500">WhatsApp</span>
+                                        </div>
                                     </div>
-
-                                    <Button
-                                        onClick={() => {
-                                            const params = new URLSearchParams()
-                                            if (customerForm.name) params.set('name', customerForm.name)
-                                            if (customerForm.phone) params.set('phone', customerForm.phone)
-                                            if (customerForm.email) params.set('email', customerForm.email)
-                                            params.set('action', 'signup')
-
-                                            window.location.href = `/loyalty/${postReservationAction.programId}?${params.toString()}`
-                                        }}
-                                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl py-6"
-                                    >
-                                        Ir a mi Tarjeta Digital
-                                    </Button>
+                                    <p className="text-xs text-zinc-500 max-w-[250px] mx-auto leading-relaxed">
+                                        Por favor revisa tus mensajes para ver los detalles y el código único de tu reservación.
+                                    </p>
                                 </div>
-                            )}
 
-                            {postReservationAction?.action === 'OFFER_GIFT' && (
-                                <div className="space-y-4 py-4">
-                                    <div className="w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(245,158,11,0.3)]">
-                                        <Gift className="w-10 h-10 text-amber-400" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
-                                            ¡Regalo Desbloqueado!
-                                        </h2>
-                                        <p className="text-white font-medium mt-2">{postReservationAction.giftText}</p>
-                                        <p className="text-zinc-400 text-xs mt-2">
-                                            Únete al programa de lealtad gratis para reclamarlo en tu visita.
-                                        </p>
-                                    </div>
-                                    <Button
-                                        onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}?claim_gift=true`}
-                                        className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl py-6 shadow-xl shadow-amber-500/20"
-                                    >
-                                        Reclamar Regalo Ahora
-                                    </Button>
+                                <Button
+                                    onClick={() => {
+                                        const params = new URLSearchParams()
+                                        if (customerForm.name) params.set('name', customerForm.name)
+                                        if (customerForm.phone) params.set('phone', customerForm.phone)
+                                        if (customerForm.email) params.set('email', customerForm.email)
+                                        params.set('action', 'signup')
+
+                                        window.location.href = `/loyalty/${postReservationAction?.programId || programId}?${params.toString()}`
+                                    }}
+                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl py-6 text-lg shadow-lg shadow-indigo-500/20"
+                                >
+                                    Ir a mi Tarjeta Digital
+                                </Button>
+                            </div>
+                        )}
+
+                        {postReservationAction?.action === 'OFFER_GIFT' && (
+                            <div className="space-y-4 py-4">
+                                <div className="w-24 h-24 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(245,158,11,0.4)]">
+                                    <Gift className="w-12 h-12 text-amber-400" />
                                 </div>
-                            )}
-
-                            {postReservationAction?.action === 'OFFER_JOIN' && (
-                                <div className="space-y-4 py-4">
-                                    <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto">
-                                        <Check className="w-8 h-8 text-indigo-400" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-xl font-bold">¡Reserva Registrada!</h2>
-                                        <p className="text-zinc-400 text-xs mt-2 px-2">
-                                            Revisa tu correo y WhatsApp para ver tu código QR.
-                                        </p>
-                                        <div className="my-4 h-px bg-white/10 w-1/2 mx-auto" />
-                                        <p className="text-zinc-300 text-sm font-medium mb-1">¿Aún no tienes tarjeta?</p>
-                                        <p className="text-zinc-500 text-xs">{postReservationAction.joinMessage}</p>
-                                    </div>
-                                    <Button
-                                        onClick={() => {
-                                            const params = new URLSearchParams()
-                                            if (customerForm.name) params.set('name', customerForm.name)
-                                            if (customerForm.phone) params.set('phone', customerForm.phone)
-                                            if (customerForm.email) params.set('email', customerForm.email)
-                                            params.set('action', 'signup')
-
-                                            window.location.href = `/loyalty/${postReservationAction.programId}?${params.toString()}`
-                                        }}
-                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl py-6"
-                                    >
-                                        Obtener Tarjeta Digital Gratis
-                                    </Button>
+                                <div>
+                                    <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
+                                        ¡Regalo Desbloqueado!
+                                    </h2>
+                                    <p className="text-white font-medium mt-3 text-lg">{postReservationAction.giftText}</p>
+                                    <p className="text-zinc-400 text-xs mt-3">
+                                        Únete al programa de lealtad gratis para reclamarlo en tu visita.
+                                    </p>
                                 </div>
-                            )}
-                        </DialogContent>
-                    </Dialog>
+                                <Button
+                                    onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}?claim_gift=true`}
+                                    className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl py-6 shadow-xl shadow-amber-500/20 text-lg mt-4"
+                                >
+                                    Reclamar Regalo Ahora
+                                </Button>
+                            </div>
+                        )}
+
+                        {postReservationAction?.action === 'OFFER_JOIN' && (
+                            <div className="space-y-4 py-4">
+                                <div className="w-20 h-20 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <Check className="w-10 h-10 text-indigo-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold">¡Reserva Registrada!</h2>
+                                    <p className="text-zinc-400 text-sm mt-2 px-2">
+                                        Revisa tu correo y WhatsApp para ver tu código QR.
+                                    </p>
+                                    <div className="my-6 h-px bg-white/10 w-2/3 mx-auto" />
+                                    <p className="text-zinc-300 text-base font-medium mb-2">¿Aún no tienes tarjeta?</p>
+                                    <p className="text-zinc-500 text-xs mb-6">{postReservationAction.joinMessage}</p>
+                                </div>
+                                <Button
+                                    onClick={() => {
+                                        const params = new URLSearchParams()
+                                        if (customerForm.name) params.set('name', customerForm.name)
+                                        if (customerForm.phone) params.set('phone', customerForm.phone)
+                                        if (customerForm.email) params.set('email', customerForm.email)
+                                        params.set('action', 'signup')
+
+                                        window.location.href = `/loyalty/${postReservationAction.programId}?${params.toString()}`
+                                    }}
+                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl py-6 text-lg shadow-lg shadow-purple-500/20"
+                                >
+                                    Obtener Tarjeta Digital Gratis
+                                </Button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         )
@@ -766,127 +771,6 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                         showYear={false}
                         includeTime={true}
                     />
-                </DialogContent>
-            </Dialog>
-            {/* Success / Post-Reservation Modal */}
-            <Dialog
-                open={isSuccessModalOpen}
-                onOpenChange={setIsSuccessModalOpen}
-            >
-                <DialogContent
-                    className="w-[95vw] max-w-sm bg-zinc-900 border border-white/10 text-white rounded-3xl p-6 text-center"
-                    disableOutsideClick={true}
-                >
-                    {postReservationAction?.action === 'REDIRECT_LOYALTY' && (
-                        <div className="space-y-6 py-4">
-                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
-                                <Check className="w-8 h-8 text-green-400" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold">¡Reserva Registrada!</h2>
-                                <p className="text-zinc-300 text-sm mt-4">
-                                    Hemos enviado tu <span className="text-white font-bold">Código QR de acceso</span> a:
-                                </p>
-                                <div className="flex justify-center gap-4 mt-3 mb-4">
-                                    <div className="flex flex-col items-center gap-1">
-                                        <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
-                                            <span className="text-lg">📧</span>
-                                        </div>
-                                        <span className="text-[10px] text-zinc-500">Correo</span>
-                                    </div>
-                                    <div className="flex flex-col items-center gap-1">
-                                        <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
-                                            <span className="text-lg">💬</span>
-                                        </div>
-                                        <span className="text-[10px] text-zinc-500">SMS</span>
-                                    </div>
-                                    <div className="flex flex-col items-center gap-1">
-                                        <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
-                                            <span className="text-lg text-green-500">📱</span>
-                                        </div>
-                                        <span className="text-[10px] text-zinc-500">WhatsApp</span>
-                                    </div>
-                                </div>
-                                <p className="text-xs text-zinc-500 max-w-[250px] mx-auto">
-                                    Por favor revisa tus mensajes para ver los detalles y el código único.
-                                </p>
-                            </div>
-
-                            <Button
-                                onClick={() => {
-                                    // Pass current form data to pre-fill loyalty signup if needed
-                                    const params = new URLSearchParams()
-                                    if (customerForm.name) params.set('name', customerForm.name)
-                                    if (customerForm.phone) params.set('phone', customerForm.phone)
-                                    if (customerForm.email) params.set('email', customerForm.email)
-                                    // Add action flag to trigger "Complete Profile" flow if logic exists on loyalty page, 
-                                    // or just relying on pre-fill is enough for the user to hit "Join".
-                                    params.set('action', 'signup')
-
-                                    window.location.href = `/loyalty/${postReservationAction.programId}?${params.toString()}`
-                                }}
-                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl py-6"
-                            >
-                                Ir a mi Tarjeta Digital
-                            </Button>
-                        </div>
-                    )}
-
-                    {postReservationAction?.action === 'OFFER_GIFT' && (
-                        <div className="space-y-4 py-4">
-                            <div className="w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(245,158,11,0.3)]">
-                                <Gift className="w-10 h-10 text-amber-400" />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
-                                    ¡Regalo Desbloqueado!
-                                </h2>
-                                <p className="text-white font-medium mt-2">{postReservationAction.giftText}</p>
-                                <p className="text-zinc-400 text-xs mt-2">
-                                    Únete al programa de lealtad gratis para reclamarlo en tu visita.
-                                </p>
-                            </div>
-                            <Button
-                                onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}?claim_gift=true`}
-                                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl py-6 shadow-xl shadow-amber-500/20"
-                            >
-                                Reclamar Regalo Ahora
-                            </Button>
-                        </div>
-                    )}
-
-                    {postReservationAction?.action === 'OFFER_JOIN' && (
-                        <div className="space-y-4 py-4">
-                            <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto">
-                                <Check className="w-8 h-8 text-indigo-400" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold">¡Reserva Registrada!</h2>
-                                <p className="text-zinc-400 text-xs mt-2 px-2">
-                                    Revisa tu correo y WhatsApp para ver tu código QR.
-                                </p>
-                                <div className="my-4 h-px bg-white/10 w-1/2 mx-auto" />
-                                <p className="text-zinc-300 text-sm font-medium mb-1">¿Aún no tienes tarjeta?</p>
-                                <p className="text-zinc-500 text-xs">{postReservationAction.joinMessage}</p>
-                            </div>
-                            <Button
-                                onClick={() => {
-                                    const params = new URLSearchParams()
-                                    if (customerForm.name) params.set('name', customerForm.name)
-                                    if (customerForm.phone) params.set('phone', customerForm.phone)
-                                    if (customerForm.email) params.set('email', customerForm.email)
-                                    params.set('action', 'signup')
-
-                                    window.location.href = `/loyalty/${postReservationAction.programId}?${params.toString()}`
-                                }}
-                                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl py-6"
-                            >
-                                Obtener Tarjeta Digital Gratis
-                            </Button>
-                        </div>
-                    )}
-
-
                 </DialogContent>
             </Dialog>
         </div>
