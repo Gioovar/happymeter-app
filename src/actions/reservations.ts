@@ -7,9 +7,6 @@ import QRCode from 'qrcode'
 import { resend } from "@/lib/resend"
 import { sendSMS } from "@/lib/sms"
 import { sendWhatsAppNotification } from "@/lib/whatsapp"
-import { ReservationConfirmationEmail } from "@/emails/ReservationConfirmation"import QRCode from 'qrcode'
-import { resend } from "@/lib/resend"
-import { sendSMS } from "@/lib/sms"
 import { ReservationConfirmationEmail } from "@/emails/ReservationConfirmation"
 
 export async function getFloorPlan() {
