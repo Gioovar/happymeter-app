@@ -678,14 +678,14 @@ export async function createReservation(data: {
 
         // [POST-RESERVATION LOGIC] Return success with Action
         const program = tableInfo?.floorPlan?.user?.loyaltyProgram
-        const businessName = tableInfo?.floorPlan?.user?.businessName || program?.businessName
 
         if (program) {
+            const businessName = program.businessName || tableInfo?.floorPlan?.user?.businessName || "HappyMeters"
             return {
                 success: true,
-                action: 'REDIRECT_LOYALTY', // Use this to show the specific popup we customized
+                action: 'REDIRECT_LOYALTY',
                 programId: program.id,
-                businessName: businessName || "HappyMeters",
+                businessName: businessName,
                 joinMessage: "Únete a nuestro programa de lealtad"
             }
         }
