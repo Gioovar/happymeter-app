@@ -225,9 +225,11 @@ export async function enterBranch(branchUserId: string) {
             expiresInSeconds: 60,
         })
 
+        // Force redirect to dashboard
         const tokenUrl = new URL(signInToken.url)
-        return { success: true, url: tokenUrl.toString() }
+        tokenUrl.searchParams.append('redirect_url', '/dashboard')
 
+        return { success: true, url: tokenUrl.toString() }
     } catch (error) {
         console.error('Error entering branch:', error)
         return { success: false, error: String(error) }
