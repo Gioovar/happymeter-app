@@ -1278,21 +1278,39 @@ export async function verifyLoyaltyOtp(programId: string, phone: string, code: s
 export async function updateLoyaltyProfile(programId: string, magicToken: string, data: {
     name: string
     email?: string
+    phone?: string
     username?: string
     birthday?: Date
 }) {
     try {
         const customer = await prisma.loyaltyCustomer.findUnique({
-            where: { magicToken }
+            where: { magicToken },
+            include: { program: true }
         })
 
         if (!customer) return { success: false, error: "Sesión inválida" }
+
+        // Check Phone Uniqueness if changing
+        if (data.phone && data.phone !== customer.phone) {
+            const existing = await prisma.loyaltyCustomer.findUnique({
+                where: {
+                    programId_phone: {
+                        programId: customer.programId,
+                        phone: data.phone
+                    }
+                }
+            })
+            if (existing) {
+                return { success: false, error: "Este número ya está registrado en este programa." }
+            }
+        }
 
         const updated = await prisma.loyaltyCustomer.update({
             where: { id: customer.id },
             data: {
                 name: data.name,
                 email: data.email,
+                phone: data.phone,
                 username: data.username,
                 birthday: data.birthday,
             },

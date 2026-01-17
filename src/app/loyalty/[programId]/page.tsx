@@ -21,6 +21,8 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
 
     // Profile Data
     const [name, setName] = useState("")
+    const [email, setEmail] = useState("")
+    const [phone, setPhone] = useState("")
     const [username, setUsername] = useState("")
     const [birthday, setBirthday] = useState("")
 
@@ -99,6 +101,25 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
     }, [claimGift, customer, params.programId, router, searchParams])
 
 
+    // 3. Auto-Open Profile Form if 'action=signup'
+    useEffect(() => {
+        if (customer && searchParams.get("action") === 'signup') {
+            // Pre-fill from usage if missing in customer, or just open for review
+            if (!showProfileForm) {
+                // We reuse the onEditProfile logic or just set state here?
+                // Better to set state to ensure fields are populated
+                setName(customer.name || searchParams.get("name") || "")
+                setEmail(customer.email || searchParams.get("email") || "")
+                setPhone(customer.phone || searchParams.get("phone") || "")
+                setUsername(customer.username || "")
+                if (customer.birthday) {
+                    setBirthday(new Date(customer.birthday).toISOString().split('T')[0])
+                }
+                setShowProfileForm(true)
+            }
+        }
+    }, [customer, searchParams])
+
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!name) return toast.error("Nombre requerido")
@@ -106,6 +127,8 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
         setIsSubmitting(true)
         const res = await updateLoyaltyProfile(params.programId, customer.magicToken, {
             name,
+            email,
+            phone,
             username: username || name,
             birthday: birthday ? new Date(birthday) : undefined
         })
@@ -135,6 +158,11 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                 programId={params.programId}
                 businessName={programInfo?.businessName || "Programa Rewards"}
                 logoUrl={programInfo?.logoUrl}
+                initialData={{
+                    name: searchParams.get("name") || undefined,
+                    phone: searchParams.get("phone") || undefined,
+                    email: searchParams.get("email") || undefined
+                }}
                 onSuccess={(newCustomer) => {
                     setCustomer(newCustomer)
                     // If just joined, maybe trigger PWA prompt
@@ -167,6 +195,28 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                                             autoFocus
                                         />
                                     </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Tu Celular</label>
+                                    <input
+                                        type="tel"
+                                        value={phone}
+                                        onChange={e => setPhone(e.target.value)}
+                                        placeholder="55 1234 5678"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 transition-all font-medium"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Correo Electrónico</label>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        placeholder="correo@ejemplo.com"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 transition-all font-medium"
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
@@ -217,7 +267,7 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                             </form>
                         </div>
                     </div>
-                </div>
+                </div >
             ) : (
                 <CustomerLoyaltyCard
                     customer={customer}
@@ -225,6 +275,8 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                     className="min-h-screen"
                     onEditProfile={() => {
                         setName(customer.name || "")
+                        setEmail(customer.email || "")
+                        setPhone(customer.phone || "")
                         setUsername(customer.username || "")
                         if (customer.birthday) {
                             const d = new Date(customer.birthday)
@@ -242,8 +294,9 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                     )}
                     <PromotionsSlider promotions={customer.program?.promotions || []} />
                 </CustomerLoyaltyCard>
-            )}
-        </div>
+            )
+            }
+        </div >
     )
 }
 

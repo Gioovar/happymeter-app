@@ -11,15 +11,20 @@ interface LoyaltyAuthFormProps {
     businessName: string
     logoUrl?: string | null
     onSuccess: (customer: any) => void
+    initialData?: {
+        phone?: string
+        name?: string
+        email?: string
+    }
 }
 
-export function LoyaltyAuthForm({ programId, businessName, logoUrl, onSuccess }: LoyaltyAuthFormProps) {
+export function LoyaltyAuthForm({ programId, businessName, logoUrl, onSuccess, initialData }: LoyaltyAuthFormProps) {
     const [step, setStep] = useState<'PHONE' | 'PROFILE'>('PHONE')
-    const [phone, setPhone] = useState("")
+    const [phone, setPhone] = useState(initialData?.phone || "")
 
     // Profile Data
-    const [name, setName] = useState("")
-    const [email, setEmail] = useState("")
+    const [name, setName] = useState(initialData?.name || "")
+    const [email, setEmail] = useState(initialData?.email || "")
     const [isUploading, setIsUploading] = useState(false)
     const [photoUrl, setPhotoUrl] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
