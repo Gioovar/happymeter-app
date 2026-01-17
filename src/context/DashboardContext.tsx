@@ -62,7 +62,8 @@ const defaultStats: StatsData = {
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)
 
-export function DashboardProvider({ children }: { children: React.ReactNode }) {
+// Add branchId to Props
+export function DashboardProvider({ children, branchId }: { children: React.ReactNode, branchId?: string }) {
     const { userId } = useAuth()
 
     // State
@@ -81,17 +82,20 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     const fetchData = useCallback(async () => {
         if (!userId) return
 
-        console.log('Fetching Dashboard Data...')
+        console.log('Fetching Dashboard Data...', { branchId })
         const now = new Date()
 
         // Parallel fetching
         setLoadingSurveys(true)
         setLoadingAnalytics(true)
 
+        // Build query string if branchId exists
+        const queryParams = branchId ? `?branchId=${branchId}` : ''
+
         try {
             const [surveysRes, analyticsRes] = await Promise.all([
-                fetch('/api/surveys', { cache: 'no-store' }),
-                fetch('/api/analytics', { cache: 'no-store' })
+                fetch(`/api/surveys${queryParams}`, { cache: 'no-store' }),
+                fetch(`/api/analytics${queryParams}`, { cache: 'no-store' })
             ])
 
             if (surveysRes.ok) {
