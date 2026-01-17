@@ -230,8 +230,12 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                 setCustomerForm({ name: '', phone: '', email: '' })
                 setBookingStep('SEARCH')
             } else if (res.action) {
+                // Success with strict popup action
                 setPostReservationAction(res)
-                setIsSuccessModalOpen(true)
+                setIsConfirmOpen(false) // Close the confirm dialog
+                setSelectedTables([])   // Clear selection/cart
+                setCustomerForm({ name: '', phone: '', email: '' }) // Clear form
+                setIsSuccessModalOpen(true) // Open success dialog
             } else {
                 toast.success("¡Reserva Confirmada!", {
                     description: "Te esperamos. Hemos guardado tu lugar.",
