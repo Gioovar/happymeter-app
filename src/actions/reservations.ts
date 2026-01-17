@@ -599,37 +599,39 @@ export async function createReservation(data: {
 
         // [NOTIFICATIONS] Async send (Email + SMS + WhatsApp)
         if (newReservationId && reservationDate && tableInfo) {
-            (async () => {
-                try {
-                    // Fallback business name lookup
-                    let businessName = "HappyMeters Place"
-                    let loyaltyUrl = ""
+            try {
+                // Fallback business name lookup
+                let businessName = "HappyMeters Place"
+                let loyaltyUrl = ""
 
-                    // Safely access nested properties
-                    const fp = tableInfo?.floorPlan
-                    if (fp?.user) {
-                        const settings = fp.user
-                        if (settings.businessName) businessName = settings.businessName
+                // Safely access nested properties
+                const fp = tableInfo?.floorPlan
+                if (fp?.user) {
+                    const settings = fp.user
+                    if (settings.businessName) businessName = settings.businessName
 
-                        // Find loyalty program
-                        const program = settings.loyaltyProgram
-                        if (program) {
-                            // Construct URL (assume production domain or localhost)
-                            const domain = process.env.NEXT_PUBLIC_APP_URL || "https://www.happymeters.com"
-                            loyaltyUrl = `${domain}/loyalty/${program.id}`
-                        }
+                    // Find loyalty program
+                    const program = settings.loyaltyProgram
+                    if (program) {
+                        // Construct URL (assume production domain or localhost)
+                        const domain = process.env.NEXT_PUBLIC_APP_URL || "https://www.happymeters.com"
+                        loyaltyUrl = `${domain}/loyalty/${program.id}`
                     }
+                }
 
-                    // 1. Generate QR Code
-                    const qrData = `RESERVATION:${newReservationId}`
-                    const qrCodeUrl = await QRCode.toDataURL(qrData)
+                // 1. Generate QR Code
+                const qrData = `RESERVATION:${newReservationId}`
+                const qrCodeUrl = await QRCode.toDataURL(qrData)
 
-                    const dateStr = new Date(reservationDate!).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-                    const timeStr = new Date(reservationDate!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+                const dateStr = new Date(reservationDate!).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                const timeStr = new Date(reservationDate!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 
-                    // 2. EMAIL (Resend)
-                    if (data.customer.email) {
-                        await resend.emails.send({
+                const notificationPromises = []
+
+                // 2. EMAIL (Resend)
+                if (data.customer.email) {
+                    notificationPromises.push(
+                        resend.emails.send({
                             from: 'Reservas <noreply@happymeters.app>',
                             to: [data.customer.email],
                             subject: `Confirmación de Reserva - ${businessName}`,
@@ -645,35 +647,38 @@ export async function createReservation(data: {
                                 loyaltyUrl: loyaltyUrl || undefined
                             })
                         })
-                    }
+                    )
+                }
 
-                    // 3. SMS (Twilio)
-                    if (data.customer.phone) {
-                        const shortDate = new Date(reservationDate!).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
-                        const shortTime = new Date(reservationDate!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-                        let smsBody = `Reserva confirmada en ${businessName}. ${shortDate} ${shortTime}, ${data.reservations[0].partySize} pers. Muestra este código: ${newReservationId}.`
-                        if (loyaltyUrl) smsBody += ` Únete al club: ${loyaltyUrl}`
+                // 3. SMS (Twilio)
+                if (data.customer.phone) {
+                    const shortDate = new Date(reservationDate!).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+                    const shortTime = new Date(reservationDate!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+                    let smsBody = `Reserva confirmada en ${businessName}. ${shortDate} ${shortTime}, ${data.reservations[0].partySize} pers. Muestra este código: ${newReservationId}.`
+                    if (loyaltyUrl) smsBody += ` Únete al club: ${loyaltyUrl}`
 
-                        await sendSMS(data.customer.phone, smsBody)
-                    }
+                    notificationPromises.push(sendSMS(data.customer.phone, smsBody))
+                }
 
-                    // 4. WHATSAPP (Meta)
-                    if (data.customer.phone) {
-                        // Using 'reservation_confirmed_v1' placeholder template.
-
-                        await sendWhatsAppNotification(data.customer.phone, 'reservation_confirmed_v1', {
+                // 4. WHATSAPP (Meta) - Only if explicitly integrated
+                if (data.customer.phone) {
+                    notificationPromises.push(
+                        sendWhatsAppNotification(data.customer.phone, 'reservation_confirmed_v1', {
                             1: data.customer.name,
                             2: businessName,
                             3: `${dateStr} a las ${timeStr}`,
                             4: newReservationId!, // Unique Code
                             5: loyaltyUrl || "https://happymeters.app" // Loyalty Link
                         })
-                    }
-
-                } catch (notifyError) {
-                    console.error("Notification Error:", notifyError)
+                    )
                 }
-            })()
+
+                // Await all notifications to ensure delivery in serverless environment
+                await Promise.allSettled(notificationPromises)
+
+            } catch (notifyError) {
+                console.error("Notification Error:", notifyError)
+            }
         }
 
         // [POST-RESERVATION LOGIC] Return success with Action

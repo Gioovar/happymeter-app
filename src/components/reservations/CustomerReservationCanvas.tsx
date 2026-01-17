@@ -56,7 +56,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
     const [selectedTables, setSelectedTables] = useState<Table[]>([])
     // New Flow States
-    const [bookingStep, setBookingStep] = useState<'SEARCH' | 'SELECT' | 'CONFIRM'>('SEARCH')
+    const [bookingStep, setBookingStep] = useState<'SEARCH' | 'SELECT' | 'CONFIRM' | 'SUCCESS'>('SEARCH')
     const [occupiedTableIds, setOccupiedTableIds] = useState<string[]>([])
     const [selectedTime, setSelectedTime] = useState("14:00") // Default time
     const [partySize, setPartySize] = useState(2)
@@ -229,22 +229,21 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                 setSelectedTables([])
                 setCustomerForm({ name: '', phone: '', email: '' })
                 setBookingStep('SEARCH')
-            } else if (res.action) {
-                // Success with strict popup action
-                setPostReservationAction(res)
-                setIsConfirmOpen(false) // Close the confirm dialog
-                setSelectedTables([])   // Clear selection/cart
-                setCustomerForm({ name: '', phone: '', email: '' }) // Clear form
-                setIsSuccessModalOpen(true) // Open success dialog
             } else {
-                toast.success("¡Reserva Confirmada!", {
-                    description: "Te esperamos. Hemos guardado tu lugar.",
-                    duration: 5000
+                // Determine Action
+                // Even if no action is returned (e.g. no loyalty program), we treat it as SUCCESS
+                setPostReservationAction(res.action ? res : {
+                    action: 'OFFER_JOIN',
+                    programId: programId,
+                    joinMessage: "Únete a nuestro programa para obtener recompensas."
                 })
                 setIsConfirmOpen(false)
                 setSelectedTables([])
                 setCustomerForm({ name: '', phone: '', email: '' })
-                setBookingStep('SEARCH')
+
+                // CRITICAL: Move to SUCCESS step, DO NOT go to SEARCH
+                setBookingStep('SUCCESS')
+                setIsSuccessModalOpen(true)
             }
         } else {
             toast.error("Error al reservar", {
