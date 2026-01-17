@@ -418,6 +418,18 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
         )
     }
 
+    const handleExit = (url?: string) => {
+        sessionStorage.removeItem('reservation_receipt')
+        if (url) {
+            window.location.href = url
+        } else {
+            setPostReservationAction(null)
+            setBookingStep('SEARCH')
+            setSelectedTables([])
+            setCustomerForm({ name: '', phone: '', email: '' })
+        }
+    }
+
     // SUCCESS STEP UI (Full Page)
     if (bookingStep === 'SUCCESS') {
         return (
@@ -425,6 +437,14 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                 <div className="w-full max-w-sm bg-zinc-900 border border-white/10 text-white rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
                     {/* Background Glow */}
                     <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-green-500/20 to-transparent pointer-events-none" />
+
+                    {/* Close/Reset Button */}
+                    <button
+                        onClick={() => handleExit()}
+                        className="absolute top-4 right-4 z-50 p-2 bg-black/40 hover:bg-black/60 rounded-full text-zinc-400 hover:text-white transition-colors"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                    </button>
 
                     <div className="relative z-10">
                         {(!postReservationAction?.action || postReservationAction?.action === 'REDIRECT_LOYALTY') && (
@@ -462,20 +482,29 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     </p>
                                 </div>
 
-                                <Button
-                                    onClick={() => {
-                                        const params = new URLSearchParams()
-                                        if (customerForm.name) params.set('name', customerForm.name)
-                                        if (customerForm.phone) params.set('phone', customerForm.phone)
-                                        if (customerForm.email) params.set('email', customerForm.email)
-                                        params.set('action', 'signup')
+                                <div className="space-y-3">
+                                    <Button
+                                        onClick={() => {
+                                            const params = new URLSearchParams()
+                                            if (customerForm.name) params.set('name', customerForm.name)
+                                            if (customerForm.phone) params.set('phone', customerForm.phone)
+                                            if (customerForm.email) params.set('email', customerForm.email)
+                                            params.set('action', 'signup')
 
-                                        window.location.href = `/loyalty/${postReservationAction?.programId || programId}?${params.toString()}`
-                                    }}
-                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl py-6 text-lg shadow-lg shadow-indigo-500/20"
-                                >
-                                    Ir a mi Tarjeta Digital
-                                </Button>
+                                            handleExit(`/loyalty/${postReservationAction?.programId || programId}?${params.toString()}`)
+                                        }}
+                                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl py-6 text-lg shadow-lg shadow-indigo-500/20"
+                                    >
+                                        Ir a mi Tarjeta Digital
+                                    </Button>
+
+                                    <button
+                                        onClick={() => handleExit()}
+                                        className="text-xs text-zinc-500 hover:text-white underline decoration-zinc-700 underline-offset-4"
+                                    >
+                                        Hacer otra reservación
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -494,7 +523,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     </p>
                                 </div>
                                 <Button
-                                    onClick={() => window.location.href = `/loyalty/${postReservationAction.programId}?claim_gift=true`}
+                                    onClick={() => handleExit(`/loyalty/${postReservationAction.programId}?claim_gift=true`)}
                                     className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl py-6 shadow-xl shadow-amber-500/20 text-lg mt-4"
                                 >
                                     Reclamar Regalo Ahora
@@ -516,20 +545,29 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     <p className="text-zinc-300 text-base font-medium mb-2">¿Aún no tienes tarjeta?</p>
                                     <p className="text-zinc-500 text-xs mb-6">{postReservationAction.joinMessage}</p>
                                 </div>
-                                <Button
-                                    onClick={() => {
-                                        const params = new URLSearchParams()
-                                        if (customerForm.name) params.set('name', customerForm.name)
-                                        if (customerForm.phone) params.set('phone', customerForm.phone)
-                                        if (customerForm.email) params.set('email', customerForm.email)
-                                        params.set('action', 'signup')
+                                <div className="space-y-3">
+                                    <Button
+                                        onClick={() => {
+                                            const params = new URLSearchParams()
+                                            if (customerForm.name) params.set('name', customerForm.name)
+                                            if (customerForm.phone) params.set('phone', customerForm.phone)
+                                            if (customerForm.email) params.set('email', customerForm.email)
+                                            params.set('action', 'signup')
 
-                                        window.location.href = `/loyalty/${postReservationAction.programId}?${params.toString()}`
-                                    }}
-                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl py-6 text-lg shadow-lg shadow-purple-500/20"
-                                >
-                                    Obtener Tarjeta Digital Gratis
-                                </Button>
+                                            handleExit(`/loyalty/${postReservationAction.programId}?${params.toString()}`)
+                                        }}
+                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl py-6 text-lg shadow-lg shadow-purple-500/20"
+                                    >
+                                        Obtener Tarjeta Digital Gratis
+                                    </Button>
+
+                                    <button
+                                        onClick={() => handleExit()}
+                                        className="text-xs text-zinc-500 hover:text-white underline decoration-zinc-700 underline-offset-4"
+                                    >
+                                        Hacer otra reservación
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
