@@ -655,17 +655,12 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             {/* Success / Post-Reservation Modal */}
             <Dialog
                 open={isSuccessModalOpen}
-                onOpenChange={(open) => {
-                    // Only handle CLOSING manually
-                    if (!open && postReservationAction?.programId) {
-                        // If user closes manually, redirect to loyalty root or just close?
-                        // User said: "Si el usuario decide cerrar el pop-up manualmente, entonces sí debe regresarlo al programa de lealtad."
-                        window.location.href = `/loyalty/${postReservationAction.programId}`
-                    }
-                    setIsSuccessModalOpen(open)
-                }}
+                onOpenChange={setIsSuccessModalOpen}
             >
-                <DialogContent className="w-[95vw] max-w-sm bg-zinc-900 border border-white/10 text-white rounded-3xl p-6 text-center">
+                <DialogContent
+                    className="w-[95vw] max-w-sm bg-zinc-900 border border-white/10 text-white rounded-3xl p-6 text-center"
+                    disableOutsideClick={true}
+                >
                     {postReservationAction?.action === 'REDIRECT_LOYALTY' && (
                         <div className="space-y-6 py-4">
                             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">

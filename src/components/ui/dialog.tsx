@@ -35,7 +35,11 @@ export const Dialog: React.FC<DialogProps> = ({ open = false, onOpenChange, chil
     )
 }
 
-export const DialogContent: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => {
+export const DialogContent: React.FC<{
+    children: React.ReactNode
+    className?: string
+    disableOutsideClick?: boolean
+}> = ({ children, className, disableOutsideClick }) => {
     const { open, onOpenChange } = useContext(DialogContext)
 
     if (!open) return null
@@ -43,16 +47,21 @@ export const DialogContent: React.FC<{ children: React.ReactNode, className?: st
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className={cn("relative bg-[#111] border border-white/10 rounded-xl w-full shadow-2xl animate-in zoom-in-95 duration-200", className)} onClick={(e) => e.stopPropagation()}>
-                <button
-                    onClick={() => onOpenChange(false)}
-                    className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition"
-                >
-                    <X className="w-4 h-4" />
-                </button>
+                {!disableOutsideClick && (
+                    <button
+                        onClick={() => onOpenChange(false)}
+                        className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
                 {children}
             </div>
             {/* Backdrop click to close */}
-            <div className="absolute inset-0 -z-10" onClick={() => onOpenChange(false)} />
+            <div
+                className="absolute inset-0 -z-10"
+                onClick={() => !disableOutsideClick && onOpenChange(false)}
+            />
         </div>
     )
 }

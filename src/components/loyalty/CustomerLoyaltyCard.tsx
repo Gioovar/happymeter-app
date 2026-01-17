@@ -290,7 +290,13 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                     {/* Action Buttons */}
                     <div className="grid grid-cols-2 gap-4">
                         <button
-                            onClick={() => window.location.href = `/book/${program.id}`}
+                            onClick={() => {
+                                const params = new URLSearchParams()
+                                if (customer.name) params.append("name", customer.name)
+                                if (customer.phone) params.append("phone", customer.phone)
+                                if (customer.email) params.append("email", customer.email)
+                                window.location.href = `/book/${program.id}?${params.toString()}`
+                            }}
                             className="bg-[#1a1a24] hover:bg-[#20202b] text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] border border-white/5"
                         >
                             <Calendar className="w-6 h-6 text-violet-400" />
