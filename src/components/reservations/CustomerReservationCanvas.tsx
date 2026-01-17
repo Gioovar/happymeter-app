@@ -195,7 +195,10 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     const totalPrice = selectedTables.reduce((acc, t) => acc + (t.reservationPrice || 0), 0)
     const tableLabels = selectedTables.map(t => t.label).join(", ")
 
-    const confirmReservation = async () => {
+    const confirmReservation = async (e?: React.MouseEvent) => {
+        e?.preventDefault()
+        e?.stopPropagation()
+
         if (selectedTables.length === 0) return
         if (!customerForm.name) {
             toast.error("Faltan datos", { description: "Por favor ingresa tu nombre." })
@@ -216,39 +219,45 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             customer: customerForm
         }
 
-        const result = await createReservation(bookingData)
-        setIsBooking(false)
+        try {
+            const result = await createReservation(bookingData)
 
-        if (result?.success) {
-            const res = result as any
-            if (isAdmin) {
-                toast.success("Reserva Creada (Admin)", {
-                    description: "La reserva se ha guardado correctamente.",
-                })
-                setIsConfirmOpen(false)
-                setSelectedTables([])
-                setCustomerForm({ name: '', phone: '', email: '' })
-                setBookingStep('SEARCH')
+            if (result?.success) {
+                const res = result as any
+                if (isAdmin) {
+                    toast.success("Reserva Creada (Admin)", {
+                        description: "La reserva se ha guardado correctamente.",
+                    })
+                    setIsConfirmOpen(false)
+                    setSelectedTables([])
+                    setCustomerForm({ name: '', phone: '', email: '' })
+                    setBookingStep('SEARCH')
+                } else {
+                    // Determine Action
+                    // Even if no action is returned (e.g. no loyalty program), we treat it as SUCCESS
+                    setPostReservationAction(res.action ? res : {
+                        action: 'OFFER_JOIN',
+                        programId: programId,
+                        joinMessage: "Únete a nuestro programa para obtener recompensas."
+                    })
+                    setIsConfirmOpen(false)
+                    setSelectedTables([])
+                    setCustomerForm({ name: '', phone: '', email: '' })
+
+                    // CRITICAL: Move to SUCCESS step, DO NOT go to SEARCH
+                    setBookingStep('SUCCESS')
+                    setIsSuccessModalOpen(true)
+                }
             } else {
-                // Determine Action
-                // Even if no action is returned (e.g. no loyalty program), we treat it as SUCCESS
-                setPostReservationAction(res.action ? res : {
-                    action: 'OFFER_JOIN',
-                    programId: programId,
-                    joinMessage: "Únete a nuestro programa para obtener recompensas."
+                toast.error("Error al reservar", {
+                    description: result?.error || "Intenta de nuevo más tarde."
                 })
-                setIsConfirmOpen(false)
-                setSelectedTables([])
-                setCustomerForm({ name: '', phone: '', email: '' })
-
-                // CRITICAL: Move to SUCCESS step, DO NOT go to SEARCH
-                setBookingStep('SUCCESS')
-                setIsSuccessModalOpen(true)
             }
-        } else {
-            toast.error("Error al reservar", {
-                description: result?.error || "Intenta de nuevo más tarde."
-            })
+        } catch (err) {
+            console.error("Client reservation error:", err)
+            toast.error("Error inesperado", { description: "Hubo un problema de conexión. Intenta de nuevo." })
+        } finally {
+            setIsBooking(false)
         }
     }
 
@@ -746,6 +755,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
                             <DialogFooter>
                                 <Button
+                                    type="button"
                                     className="w-full bg-white text-black hover:bg-zinc-200 rounded-xl py-6 text-base font-bold"
                                     onClick={confirmReservation}
                                     disabled={isBooking}
