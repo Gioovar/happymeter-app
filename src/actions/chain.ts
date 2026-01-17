@@ -72,38 +72,59 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
         const client = await clerkClient()
         let clerkUserId: string;
 
-        // If email is provided, use it. If not, generate a placeholder.
+        // Get owner email to use as base if needed
+        let baseEmail = 'noreply@happymeters.com';
+        if (user.emailAddresses && user.emailAddresses.length > 0) {
+            baseEmail = user.emailAddresses[0].emailAddress;
+        }
+
+        // If email is provided, use it. If not, generate a sub-address of the owner.
         const isPlaceholder = !data.email || data.email.trim() === '';
-        // Use a clean slug for the email alias
-        const safeName = data.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const randomSuffix = Math.random().toString(36).substring(2, 7);
-        const emailToUse = isPlaceholder
-            ? `branch-${safeName}-${randomSuffix}@full-access-placeholder.com` // Dummy domain, ensures uniqueness
-            : data.email!;
+
+        // Generate a strong random password to avoid policy errors 
+        const placeholderPassword = `Br@nch-${Math.random().toString(36).slice(2)}!${Math.random().toString(36).slice(2).toUpperCase()}`;
+
+        let emailToUse = data.email;
+
+        if (isPlaceholder) {
+            // sub-addressing: user+branchX@domain.com
+            const [local, domain] = baseEmail.split('@');
+            const safeBranchName = data.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10);
+            const uniqueSuffix = Math.random().toString(36).substring(2, 6);
+
+            // Handle existing +
+            const cleanLocal = local.includes('+') ? local.split('+')[0] : local;
+            emailToUse = `${cleanLocal}+${safeBranchName}-${uniqueSuffix}@${domain}`;
+        }
 
         try {
             // Try creating new user
             const newUser = await client.users.createUser({
-                emailAddress: [emailToUse],
-                // Only set password if explicitly provided and not empty
-                password: data.password && data.password.length >= 8 ? data.password : undefined,
+                emailAddress: [emailToUse!],
+                password: data.password || placeholderPassword,
                 firstName: data.name,
-                // Skip password if no password provided (always true for now from UI)
-                skipPasswordRequirement: !data.password || data.password.length < 8,
+                skipPasswordRequirement: false, // Provide password explicitly to avoid ambiguity
                 publicMetadata: {
                     isBranch: true,
                     chainId: chain.id,
-                    isPlaceholder: isPlaceholder
+                    isPlaceholder: isPlaceholder,
+                    managedBy: user.id
                 }
             })
             clerkUserId = newUser.id
         } catch (e: any) {
-            // Logic for existing users
+            console.error('Clerk Create Error:', JSON.stringify(e, null, 2));
+            // Parse Clerk error
+            const msg = e.errors?.[0]?.message || e.message || 'Error creating branch user';
+
             if (e.errors?.[0]?.code === 'form_identifier_exists') {
-                // Improve error message for the user
-                throw new Error(`El email ${emailToUse} ya está registrado. Por favor usa un email diferente para el encargado de esta sucursal, o déjalo vacío para asignarlo después.`)
+                throw new Error(`El email ${emailToUse} ya está registrado.`)
             }
-            throw e
+            if (e.errors?.[0]?.code === 'form_password_pwned') {
+                throw new Error(`La contraseña es muy común. Por favor intenta otra.`)
+            }
+
+            throw new Error(`Error de Clerk: ${msg}`)
         }
 
         // 2. Create UserSettings in DB for the new branch
@@ -194,19 +215,7 @@ export async function enterBranch(branchUserId: string) {
         })
 
         // Construct URL
-        // We can't easily get the base URL here in server action without headers hack or hardcoding
-        // But for redirect, we can return the token URL and let client handle, or cleaner:
-        // Use relative path for redirect_url parameter inside the token
-
-        // Note: signInToken.url is a full URL to Clerk.
-        // We can append redirect_url to it.
         const tokenUrl = new URL(signInToken.url)
-        // Redirect to dashboard after login
-        // We need the APP_URL env var or similar. 
-        // For now, let's assume we return the direct clerk URL, and let Clerk handle default redirect or we append it if we know the domain.
-
-        // Better: let's verify if we need to pass redirect_url. 
-        // Usually Clerk redirects to after-sign-in path.
 
         return { success: true, url: tokenUrl.toString() }
 
