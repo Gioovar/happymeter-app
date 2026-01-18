@@ -8,10 +8,13 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useClerk } from '@clerk/nextjs'
 
+import { useRouter } from 'next/navigation'
+
 interface BranchCardProps {
     branch: {
         id: string
         name: string | null
+        slug?: string | null
         branch: {
             userId: string
             businessName: string | null
@@ -25,13 +28,19 @@ interface BranchCardProps {
 export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId }: BranchCardProps) {
     const [loading, setLoading] = useState(false)
     const { signOut, client, setActive, openSignIn } = useClerk()
+    const router = useRouter()
 
     // Smart Session Detection
-    const ownerSession = client?.sessions?.find(s => s.user.id === ownerId);
+    const ownerSession = client?.sessions?.find((s: any) => s.user.id === ownerId);
     const hasOwnerSession = !!ownerSession;
 
     const handleEnter = async () => {
-        if (isCurrent) return // Already here
+        // Case 0: Already here -> Just Navigate to Dashboard
+        if (isCurrent) {
+            const targetUrl = branch.slug ? `/dashboard/${branch.slug}` : '/dashboard';
+            router.push(targetUrl);
+            return;
+        }
 
         // Case 1: Smart Switch (Already logged in as Owner)
         if (!isOwner && hasOwnerSession && setActive) {
@@ -97,12 +106,14 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId 
                     className="w-full"
                     variant={isCurrent ? "outline" : "default"}
                     onClick={handleEnter}
-                    disabled={isCurrent || loading}
+                    disabled={loading}
                 >
                     {loading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                     ) : isCurrent ? (
-                        'Seleccionado'
+                        <>
+                            Ir al Dashboard <ExternalLink className="w-4 h-4 ml-2" />
+                        </>
                     ) : (!isOwner && hasOwnerSession) ? (
                         'Cambiar a Dueño'
                     ) : !isOwner ? (
