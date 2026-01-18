@@ -89,6 +89,7 @@ export default async function ChainsPage() {
                         branch={branch}
                         isCurrent={branch.branch.userId === user.id}
                         isOwner={isOwner}
+                        ownerId={ownedChain.ownerId}
                     />
                 ))}
             </div>

@@ -19,15 +19,31 @@ interface BranchCardProps {
     }
     isCurrent: boolean
     isOwner?: boolean
+    ownerId?: string
 }
 
-export default function BranchCard({ branch, isCurrent, isOwner = true }: BranchCardProps) {
+export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId }: BranchCardProps) {
     const [loading, setLoading] = useState(false)
-    const { signOut } = useClerk()
+    const { signOut, client, setActive } = useClerk()
+
+    // Smart Session Detection
+    const ownerSession = client?.sessions?.find(s => s.user.id === ownerId);
+    const hasOwnerSession = !!ownerSession;
 
     const handleEnter = async () => {
         if (isCurrent) return // Already here
-        if (!isOwner) return // Security check
+
+        // Smart Switch: If we are not owner internally but have the session, verify/switch to it first
+        if (!isOwner && hasOwnerSession && setActive) {
+            setLoading(true)
+            await setActive({ session: ownerSession.id })
+            // After switch (refresh), the page will reload and user will be Owner.
+            // But if they clicked "Administrar" a specific branch, they might want to go there directly.
+            // For now, simpler is "Switch to Owner" behavior.
+            return
+        }
+
+        if (!isOwner && !hasOwnerSession) return // Locked
 
         setLoading(true)
         try {
@@ -74,12 +90,14 @@ export default function BranchCard({ branch, isCurrent, isOwner = true }: Branch
                     className="w-full"
                     variant={isCurrent ? "outline" : "default"}
                     onClick={handleEnter}
-                    disabled={isCurrent || loading || !isOwner}
+                    disabled={isCurrent || loading || (!isOwner && !hasOwnerSession)}
                 >
                     {loading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                     ) : isCurrent ? (
                         'Seleccionado'
+                    ) : (!isOwner && hasOwnerSession) ? (
+                        'Cambiar a Dueño'
                     ) : !isOwner ? (
                         'Requiere Cuenta Dueño'
                     ) : (
