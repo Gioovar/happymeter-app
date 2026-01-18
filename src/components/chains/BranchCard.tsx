@@ -24,7 +24,7 @@ interface BranchCardProps {
 
 export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId }: BranchCardProps) {
     const [loading, setLoading] = useState(false)
-    const { signOut, client, setActive } = useClerk()
+    const { signOut, client, setActive, openSignIn } = useClerk()
 
     // Smart Session Detection
     const ownerSession = client?.sessions?.find(s => s.user.id === ownerId);
@@ -33,24 +33,31 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId 
     const handleEnter = async () => {
         if (isCurrent) return // Already here
 
-        // Smart Switch: If we are not owner internally but have the session, verify/switch to it first
+        // Case 1: Smart Switch (Already logged in as Owner)
         if (!isOwner && hasOwnerSession && setActive) {
             setLoading(true)
             await setActive({ session: ownerSession.id })
-            // After switch (refresh), the page will reload and user will be Owner.
-            // But if they clicked "Administrar" a specific branch, they might want to go there directly.
-            // For now, simpler is "Switch to Owner" behavior.
             return
         }
 
-        if (!isOwner && !hasOwnerSession) return // Locked
+        // Case 2: Locked (Need to log in as Owner)
+        if (!isOwner && !hasOwnerSession) {
+            // Trigger Clerk Login Modal
+            openSignIn({
+                afterSignInUrl: '/chains',
+                appearance: {
+                    variables: { colorPrimary: '#8b5cf6' }
+                }
+            })
+            return
+        }
 
+        // Case 3: Enter Branch (Standard flow)
         setLoading(true)
         try {
             const res = await enterBranch(branch.branch.userId)
             if (res.success && res.url) {
                 // Optimized: Redirect directly to token URL to allow Clerk Multi-Session
-                // This enables the "Switch Account" feature in the UserProfile menu
                 window.location.href = res.url
             } else {
                 throw new Error(res.error || 'Error desconocido')
@@ -90,7 +97,7 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId 
                     className="w-full"
                     variant={isCurrent ? "outline" : "default"}
                     onClick={handleEnter}
-                    disabled={isCurrent || loading || (!isOwner && !hasOwnerSession)}
+                    disabled={isCurrent || loading}
                 >
                     {loading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -99,7 +106,7 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId 
                     ) : (!isOwner && hasOwnerSession) ? (
                         'Cambiar a Dueño'
                     ) : !isOwner ? (
-                        'Requiere Cuenta Dueño'
+                        'Loguear como Dueño'
                     ) : (
                         <>
                             Administrar <ExternalLink className="w-4 h-4 ml-2" />
