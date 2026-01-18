@@ -31,18 +31,9 @@ export default function BranchCard({ branch, isCurrent }: BranchCardProps) {
         try {
             const res = await enterBranch(branch.branch.userId)
             if (res.success && res.url) {
-                // Critical: Sign out first to ensure the new token becomes the ACTIVE session
-                // We pass a callback to signOut to execute the redirect afterwards? 
-                // Clerk signOut is async.
-
-                // Note: signOut() might reload the page or redirect to sign-in.
-                // We want to redirect to the *token URL* instead.
-                // So we shouldn't use default signOut redirect.
-
-                await signOut({ redirectUrl: res.url })
-
-                // Fallback if signOut redirect doesn't trigger immediately
-                // window.location.href = res.url
+                // Optimized: Redirect directly to token URL to allow Clerk Multi-Session
+                // This enables the "Switch Account" feature in the UserProfile menu
+                window.location.href = res.url
             } else {
                 throw new Error(res.error || 'Error desconocido')
             }
