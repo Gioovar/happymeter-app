@@ -12,8 +12,9 @@ export default async function ChainsPage() {
 
     const chains = await getChainDetails() || []
 
-    // Check if user is an owner of at least one chain
-    const ownedChain = chains.find(c => c.ownerId === user.id)
+    // Check for ownership OR membership
+    const ownedChain = chains.find(c => c.ownerId === user.id) || chains.find(c => c.branches.some(b => b.branchId === user.id))
+    const isOwner = ownedChain?.ownerId === user.id
 
     if (!ownedChain) {
         return (
@@ -71,10 +72,13 @@ export default async function ChainsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">{ownedChain.name}</h1>
-                    <p className="text-muted-foreground">Dashboard de Cadenas</p>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <p>Dashboard de Cadenas</p>
+                        {!isOwner && <span className="px-2 py-0.5 bg-muted rounded-full text-xs">Vista de Sucursal</span>}
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <CreateBranchModal chainId={ownedChain.id} />
+                    {isOwner && <CreateBranchModal chainId={ownedChain.id} />}
                 </div>
             </div>
 
@@ -84,6 +88,7 @@ export default async function ChainsPage() {
                         key={branch.id}
                         branch={branch}
                         isCurrent={branch.branch.userId === user.id}
+                        isOwner={isOwner}
                     />
                 ))}
             </div>

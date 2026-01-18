@@ -179,7 +179,12 @@ export async function getChainDetails() {
         if (!user) return null
 
         const chains = await prisma.chain.findMany({
-            where: { ownerId: user.id },
+            where: {
+                OR: [
+                    { ownerId: user.id },
+                    { branches: { some: { branchId: user.id } } }
+                ]
+            },
             include: {
                 branches: {
                     orderBy: { order: 'asc' },

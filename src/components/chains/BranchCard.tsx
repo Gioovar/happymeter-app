@@ -18,14 +18,16 @@ interface BranchCardProps {
         }
     }
     isCurrent: boolean
+    isOwner?: boolean
 }
 
-export default function BranchCard({ branch, isCurrent }: BranchCardProps) {
+export default function BranchCard({ branch, isCurrent, isOwner = true }: BranchCardProps) {
     const [loading, setLoading] = useState(false)
     const { signOut } = useClerk()
 
     const handleEnter = async () => {
         if (isCurrent) return // Already here
+        if (!isOwner) return // Security check
 
         setLoading(true)
         try {
@@ -72,12 +74,14 @@ export default function BranchCard({ branch, isCurrent }: BranchCardProps) {
                     className="w-full"
                     variant={isCurrent ? "outline" : "default"}
                     onClick={handleEnter}
-                    disabled={isCurrent || loading}
+                    disabled={isCurrent || loading || !isOwner}
                 >
                     {loading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                     ) : isCurrent ? (
                         'Seleccionado'
+                    ) : !isOwner ? (
+                        'Requiere Cuenta Dueño'
                     ) : (
                         <>
                             Administrar <ExternalLink className="w-4 h-4 ml-2" />
