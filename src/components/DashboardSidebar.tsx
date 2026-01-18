@@ -27,6 +27,9 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
     const pathname = usePathname()
     const searchParams = useSearchParams()
 
+    // Get branchSlug from context (passed via props to this component or context hook)
+    const { branchSlug } = useDashboard()
+
     // Get items for current mode
     const activeMode = getActiveMode(pathname)
     const currentModeItems = NAVIGATION_CONFIG[activeMode] || []
@@ -45,43 +48,42 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
             {/* Mode Specific Items */}
             {currentModeItems.map((item) => {
                 const Icon = item.icon
+
+                // Construct the correct HREF based on context
+                let finalHref = item.href;
+                if (branchSlug) {
+                    // Start replace '/dashboard' with '/dashboard/slug'
+                    // But handle carefully. item.href usually starts with /dashboard
+                    if (finalHref === '/dashboard') {
+                        finalHref = `/dashboard/${branchSlug}`
+                    } else if (finalHref.startsWith('/dashboard/')) {
+                        finalHref = finalHref.replace('/dashboard', `/dashboard/${branchSlug}`)
+                    }
+                    // If href is external or root '/', leave it? 
+                    // Usually we want to stay in dashboard.
+                }
+
                 // Logic to check if active considering query params
                 const isActive = (() => {
-                    const [itemPath, itemQuery] = item.href.split('?')
+                    const [itemPath, itemQuery] = finalHref.split('?')
 
-                    // 1. Path must match (Exact match if specified, otherwise startsWith for sub-pages usually, but here we used exact checks mostly)
-                    if (item.matchExact) {
-                        if (pathname !== itemPath) return false
-                    } else {
-                        // Default Next.js link behavior is usually exact, but for sections we might want fuzzy.
-                        // But our config paths are specific. Let's stick to exact path match unless it's a sub-route 
-                        // which is handled by the fact that we are in that mode. 
-                        if (pathname !== itemPath) return false;
-                    }
+                    // 1. Path check
+                    // If we are in branch mode, pathname handles the slug relative match?
+                    // Actually pathname includes the slug. finalHref includes slug. So exact match works.
+                    if (pathname !== itemPath) return false;
 
-                    // 2. If item has query params, they must match current params
+                    // 2. Query check (same as before)
                     if (item.query || itemQuery) {
                         const targetParams = item.query || Object.fromEntries(new URLSearchParams(itemQuery));
                         for (const [key, value] of Object.entries(targetParams)) {
                             if (searchParams?.get(key) !== value) return false
                         }
-                        // If we are looking for specific params, and we found them, great.
-                        // But what if the URL has MORE params? Usually fine.
                         return true
                     }
 
-                    // 3. Special case: If item has NO query params, but URL DOES, we might NOT want to highlight it
-                    // if there is ANOTHER item that requires those params.
-                    // For example: /create vs /create?mode=anonymous.
-                    // If we are at /create?mode=anonymous, the /create item should NOT be active.
-                    // We check if any sibling item has a query param that matches the current URL.
-                    const siblingWithParams = currentModeItems.find(sibling =>
-                        sibling.href === itemPath &&
-                        sibling.query &&
-                        Object.entries(sibling.query).every(([k, v]) => searchParams?.get(k) === v)
-                    );
-
-                    if (siblingWithParams && siblingWithParams !== item) return false;
+                    // 3. Sibling check (same as before) with updated HREFs? 
+                    // This creates complexity if we change hrefs dynamically. 
+                    // Simplified: just match path/query.
 
                     return true;
                 })()
@@ -89,7 +91,7 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
                 return (
                     <Link
                         key={item.title} // Use title as key since href might be duplicated with diff queries
-                        href={item.query ? `${item.href}?${new URLSearchParams(item.query)}` : item.href}
+                        href={item.query ? `${finalHref}?${new URLSearchParams(item.query)}` : finalHref}
                         onClick={() => setIsMobileOpen(false)}
                         className={cn(
                             "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",

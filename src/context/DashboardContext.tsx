@@ -40,11 +40,12 @@ interface DashboardContextType {
     statsData: StatsData
     loadingSurveys: boolean
     loadingAnalytics: boolean
-    lastUpdated: Date | null
     refreshData: () => Promise<void>
     setSurveys: (surveys: Survey[]) => void // Allow local updates (e.g. optimistic delete)
+    lastUpdated: Date | null
     isMobileMenuOpen: boolean
     toggleMobileMenu: (val: boolean) => void
+    branchSlug?: string
 }
 
 const defaultStats: StatsData = {
@@ -63,7 +64,7 @@ const defaultStats: StatsData = {
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)
 
 // Add branchId to Props
-export function DashboardProvider({ children, branchId }: { children: React.ReactNode, branchId?: string }) {
+export function DashboardProvider({ children, branchId, branchSlug }: { children: React.ReactNode, branchId?: string, branchSlug?: string }) {
     const { userId } = useAuth()
 
     // State
@@ -165,7 +166,8 @@ export function DashboardProvider({ children, branchId }: { children: React.Reac
             refreshData: fetchData,
             setSurveys,
             isMobileMenuOpen,
-            toggleMobileMenu: setIsMobileMenuOpen
+            toggleMobileMenu: setIsMobileMenuOpen,
+            branchSlug
         }}>
             {children}
         </DashboardContext.Provider>
