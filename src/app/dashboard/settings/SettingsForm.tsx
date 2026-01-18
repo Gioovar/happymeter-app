@@ -6,13 +6,16 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import PhoneInput from '@/components/PhoneInput'
 
-export function SettingsForm({ userSettings }: { userSettings: any }) {
+export function SettingsForm({ userSettings, branchId }: { userSettings: any, branchId?: string }) {
     const [loading, setLoading] = useState(false)
     const [phone, setPhone] = useState(userSettings.phone || '')
 
     const handleSubmit = async (formData: FormData) => {
         setLoading(true)
         try {
+            if (branchId) {
+                formData.append('branchId', branchId)
+            }
             const result = await updateSettings(formData)
             if (result.success) {
                 toast.success('Configuración actualizada correctamente')

@@ -8,48 +8,56 @@ import { PLAN_LIMITS } from '@/lib/plans'
 
 import { sendInvitationEmail } from '@/lib/email'
 
-export async function getTeamData() {
+export async function getTeamData(branchId?: string) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
-    // Get members of MY team
+    let effectiveOwnerId = userId
+
+    // If branchId is provided, we need to verify if the current user has access to it.
+    // Access is allowed if:
+    // 1. Current user is the owner of the Chain that owns the Branch.
+    // 2. Current user IS the branch (already handled by default if userId matches, but passed branchId might differ).
+
+    if (branchId && branchId !== userId) {
+        // Verify Chain Ownership
+        // Find the branch and check if its chain's owner is the current user
+        const branch = await prisma.chainBranch.findFirst({
+            where: {
+                branchId: branchId,
+                chain: {
+                    ownerId: userId
+                }
+            }
+        })
+
+        if (!branch) {
+            // Check if it's just the user trying to view themselves (redundant but safe)
+            if (branchId !== userId) {
+                throw new Error('Unauthorized access to branch team')
+            }
+        } else {
+            effectiveOwnerId = branchId
+        }
+    }
+
+    // Get members of the target team (Branch or My Team)
     const members = await prisma.teamMember.findMany({
-        where: { ownerId: userId },
+        where: { ownerId: effectiveOwnerId },
         include: { user: true }
     })
 
-    // Get pending invitations I sent
+    // Get pending invitations
     const invitations = await prisma.teamInvitation.findMany({
-        where: { inviterId: userId }
+        where: { inviterId: effectiveOwnerId }
     })
 
-    // Determine MY role in this workspace (assuming I am viewing my own workspace or the one I'm context of)
-    // For MVP, simplistic view: 
-    // If I am the owner, my role is OWNER.
-    // If I am a member, `getTeamData` logic above was `where: { ownerId: userId }` which implies I AM THE OWNER.
-    // Wait, if I am a member viewing the team, I shouldn't see `where: { ownerId: userId }` (which finds members OF me).
-    // I should see members of the workspace I am currently IN.
+    // Determine role
+    // If I am the effective owner (userId === effectiveOwnerId), I am OWNER.
+    // If I successfully passed the Chain check (userId owns the chain), I am effectively an OWNER/ADMIN of the branch too.
+    const isOwner = userId === effectiveOwnerId || (branchId === effectiveOwnerId)
 
-    // Fixing `getTeamData` to support "View As Member" context would require a Workspace Switcher.
-    // Given current scope, we are assuming "My Team" page manages MY downstream team.
-    // So `userId` IS the ownerId. So I am always the OWNER in this view.
-
-    // BUT the user asked "si el pone un administrador extra...".
-    // This implies the Admin can log in and see THIS dashboard.
-    // So `getTeamData` needs to handle "What workspace am I viewing?".
-    // For now, let's assume `userId` is the Current Viewer.
-    // If I am an Admin, I am viewing someone else's workspace.
-    // This requires a `workspaceId` param or context.
-
-    // Current Implementation Limitation:
-    // The current `getTeamData` only returns members where `ownerId = ME`.
-    // It does NOT support me viewing a team I am a member of.
-    // I need to fix this if we want Admins to manage the team.
-
-    // For this step, I will stick to the Owner view permission since I haven't built the Workspace Switcher.
-    // However, I will return `isOwner: true` to help the UI.
-
-    return { members, invitations, isOwner: true, currentUserRole: 'OWNER' }
+    return { members, invitations, isOwner, currentUserRole: 'OWNER' }
 }
 
 export async function inviteMember(formData: FormData) {
@@ -58,12 +66,27 @@ export async function inviteMember(formData: FormData) {
 
     const email = formData.get('email') as string
     const role = formData.get('role') as 'ADMIN' | 'EDITOR' | 'OBSERVER' | 'OPERATOR'
+    const branchId = formData.get('branchId') as string | undefined
 
     if (!email) throw new Error('Email requerido')
 
-    // Check Plan Limits
+    let targetOwnerId = userId
+
+    if (branchId && branchId !== userId) {
+        // Verify Chain Ownership
+        const branch = await prisma.chainBranch.findFirst({
+            where: {
+                branchId: branchId,
+                chain: { ownerId: userId }
+            }
+        })
+        if (!branch) throw new Error('Unauthorized access to branch')
+        targetOwnerId = branchId
+    }
+
+    // Check Plan Limits (Check limits of the TARGET OWNER i.e. the branch or the user)
     const userSettings = await prisma.userSettings.findUnique({
-        where: { userId }
+        where: { userId: targetOwnerId }
     })
 
     // Default to FREE if no settings (safe fallback)
@@ -71,8 +94,8 @@ export async function inviteMember(formData: FormData) {
     const currentPlan = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE
     const maxMembers = currentPlan.limits.teamMembers
 
-    const currentMembers = await prisma.teamMember.count({ where: { ownerId: userId } })
-    const pendingInvites = await prisma.teamInvitation.count({ where: { inviterId: userId } })
+    const currentMembers = await prisma.teamMember.count({ where: { ownerId: targetOwnerId } })
+    const pendingInvites = await prisma.teamInvitation.count({ where: { inviterId: targetOwnerId } })
 
     if ((currentMembers + pendingInvites) >= maxMembers) {
         throw new Error(`Has alcanzado el límite de ${maxMembers} empleados para tu plan ${currentPlan.name}.`)
@@ -80,7 +103,7 @@ export async function inviteMember(formData: FormData) {
 
     // Check existing invite
     const existingInvite = await prisma.teamInvitation.findFirst({
-        where: { email, inviterId: userId }
+        where: { email, inviterId: targetOwnerId }
     })
 
     if (existingInvite) {
@@ -100,7 +123,7 @@ export async function inviteMember(formData: FormData) {
                 where: {
                     userId_ownerId: {
                         userId: existingUser.id,
-                        ownerId: userId
+                        ownerId: targetOwnerId
                     }
                 }
             });
@@ -114,7 +137,7 @@ export async function inviteMember(formData: FormData) {
             await prisma.teamMember.create({
                 data: {
                     userId: existingUser.id,
-                    ownerId: userId,
+                    ownerId: targetOwnerId,
                     role: role
                 }
             });
@@ -129,6 +152,8 @@ export async function inviteMember(formData: FormData) {
             await sendTeamAddedEmail(email, teamName, role, inviterName);
 
             revalidatePath('/dashboard/team');
+            // Also revalidate branch path if possible, but generic is hard. 
+            // We rely on the client to refresh or the generic revalidate to hit the cache.
             return { success: true, message: 'Usuario agregado directamente (ya tenía cuenta).' };
         }
     } catch (error: any) {
@@ -147,7 +172,7 @@ export async function inviteMember(formData: FormData) {
         data: {
             email,
             role,
-            inviterId: userId,
+            inviterId: targetOwnerId,
             token
         }
     })

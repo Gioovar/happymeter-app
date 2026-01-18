@@ -11,13 +11,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Trash2, Mail, Loader2, UserPlus, Shield } from 'lucide-react'
 
-export default function TeamManager({ initialData }: { initialData: any }) {
+export default function TeamManager({ initialData, branchId }: { initialData: any, branchId?: string }) {
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
 
     async function handleInvite(formData: FormData) {
         setLoading(true)
         try {
+            if (branchId) {
+                formData.append('branchId', branchId)
+            }
             await inviteMember(formData)
             toast.success('Invitación enviada')
             setOpen(false)

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { startOfDay, endOfDay } from 'date-fns'
+import { verifySurveyAccess } from '@/lib/survey-access'
 
 export async function GET(
     req: Request,
@@ -14,6 +15,12 @@ export async function GET(
         // Unwrap params (it's a Promise in Next.js 15+ usually, but checking type safety)
         const { surveyId } = await params
 
+        // Security Check (Direct or Chain Owner)
+        const survey = await verifySurveyAccess(surveyId, userId)
+        if (!survey) {
+            return new NextResponse("Unauthorized or Not Found", { status: 403 })
+        }
+
         const { searchParams } = new URL(req.url)
         const from = searchParams.get('from')
         const to = searchParams.get('to')
@@ -22,8 +29,7 @@ export async function GET(
 
         // Build filtering criteria
         let whereClause: any = {
-            surveyId: surveyId,
-            survey: { userId: userId } // Ensure ownership
+            surveyId: surveyId
         }
 
         // Date Filter

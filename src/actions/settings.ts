@@ -9,6 +9,21 @@ export async function updateSettings(formData: FormData) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
+    const branchId = formData.get('branchId') as string | undefined
+    let targetUserId = userId
+
+    if (branchId && branchId !== userId) {
+        // Verify Chain Ownership
+        const branch = await prisma.chainBranch.findFirst({
+            where: {
+                branchId: branchId,
+                chain: { ownerId: userId }
+            }
+        })
+        if (!branch) throw new Error('Unauthorized access to branch settings')
+        targetUserId = branchId
+    }
+
     const businessName = formData.get('businessName') as string
     const industry = formData.get('industry') as string
     const phone = formData.get('phone') as string
@@ -30,7 +45,7 @@ export async function updateSettings(formData: FormData) {
 
     try {
         await prisma.userSettings.upsert({
-            where: { userId },
+            where: { userId: targetUserId },
             update: {
                 businessName,
                 industry,
@@ -39,7 +54,7 @@ export async function updateSettings(formData: FormData) {
                 notificationPreferences
             },
             create: {
-                userId,
+                userId: targetUserId,
                 businessName,
                 industry,
                 phone,
@@ -52,7 +67,7 @@ export async function updateSettings(formData: FormData) {
 
         // Sync to Loyalty Program if exists
         try {
-            const program = await prisma.loyaltyProgram.findUnique({ where: { userId } })
+            const program = await prisma.loyaltyProgram.findUnique({ where: { userId: targetUserId } })
             if (program) {
                 await prisma.loyaltyProgram.update({
                     where: { id: program.id },
@@ -64,8 +79,6 @@ export async function updateSettings(formData: FormData) {
         }
 
         revalidatePath('/dashboard/settings')
-        // revalidatePath('/dashboard') // Validation optimization: Avoid refreshing unrelated dashboard components
-
         return { success: true }
     } catch (error: any) {
         console.error('SERVER ACTION ERROR:', error)

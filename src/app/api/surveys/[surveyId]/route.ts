@@ -44,6 +44,8 @@ export async function GET(
     }
 }
 
+import { verifySurveyAccess } from '@/lib/survey-access'
+
 export async function DELETE(
     req: Request,
     { params }: { params: Promise<{ surveyId: string }> }
@@ -56,7 +58,12 @@ export async function DELETE(
 
         const { surveyId } = await params
 
-        const survey = await prisma.survey.delete({
+        const survey = await verifySurveyAccess(surveyId, userId)
+        if (!survey) {
+            return new NextResponse("Unauthorized or Not Found", { status: 403 })
+        }
+
+        await prisma.survey.delete({
             where: {
                 id: surveyId
             }
@@ -80,16 +87,18 @@ export async function PATCH(
         }
 
         const { surveyId } = await params
+
+        const survey = await verifySurveyAccess(surveyId, userId)
+        if (!survey) {
+            return new NextResponse("Unauthorized or Not Found", { status: 403 })
+        }
+
         const body = await req.json()
         const { title, description, questions, bannerUrl, googleMapsUrl, hexColor, socialConfig, recoveryConfig } = body
 
-        if (title !== undefined && !title) { // Only check required if it's being updated/set? Actually title is required.
-            // If title is missing in body, it might be a partial update. Retrieve current if needed?
-            // But existing code just checks !title. Let's keep it but ensure we handle partials if intended. 
-            // Ideally we shouldn't break existing logic.
+        if (title !== undefined && !title) {
+            // Title is required
         }
-
-        // ... (Verification logic)
 
         // Update survey
         await prisma.survey.update({
@@ -116,16 +125,9 @@ export async function PATCH(
                     select: { id: true }
                 })
                 const currentIds = currentQuestions.map(q => q.id)
-
-                // Identify incoming questions IDs (filter out new ones that are temporary)
-                // We assume if an ID exists in DB, it's an update. If not, or if it's a temp ID, it's a create.
-                // However, the frontend might send "173..." as ID for new questions.
-                // We must be careful: check if the incoming ID actually exists in the DB.
                 const incomingIds = questions
                     .map((q: any) => q.id)
                     .filter((id: string) => currentIds.includes(id))
-
-                // Determine deletions (In DB but not in incoming valid IDs)
                 const toDelete = currentIds.filter(id => !incomingIds.includes(id))
 
                 if (toDelete.length > 0) {
@@ -134,10 +136,8 @@ export async function PATCH(
                     })
                 }
 
-                // Update or Create
                 for (const [index, q] of questions.entries()) {
                     if (q.id && currentIds.includes(q.id)) {
-                        // Update existing
                         await tx.question.update({
                             where: { id: q.id },
                             data: {
@@ -149,7 +149,6 @@ export async function PATCH(
                             }
                         })
                     } else {
-                        // Create new
                         await tx.question.create({
                             data: {
                                 surveyId,
@@ -165,12 +164,12 @@ export async function PATCH(
             })
         }
 
-        const survey = await prisma.survey.findUnique({
+        const updatedSurvey = await prisma.survey.findUnique({
             where: { id: surveyId },
             include: { questions: { orderBy: { order: 'asc' } } }
         })
 
-        return NextResponse.json(survey)
+        return NextResponse.json(updatedSurvey)
     } catch (error) {
         console.error('[SURVEY_PATCH]', error)
         return new NextResponse("Internal Error", { status: 500 })
