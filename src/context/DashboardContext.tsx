@@ -45,7 +45,9 @@ interface DashboardContextType {
     lastUpdated: Date | null
     isMobileMenuOpen: boolean
     toggleMobileMenu: (val: boolean) => void
+    toggleMobileMenu: (val: boolean) => void
     branchSlug?: string
+    branchId?: string
 }
 
 const defaultStats: StatsData = {
@@ -167,7 +169,8 @@ export function DashboardProvider({ children, branchId, branchSlug }: { children
             setSurveys,
             isMobileMenuOpen,
             toggleMobileMenu: setIsMobileMenuOpen,
-            branchSlug
+            branchSlug,
+            branchId
         }}>
             {children}
         </DashboardContext.Provider>
