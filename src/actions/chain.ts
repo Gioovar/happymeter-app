@@ -232,7 +232,10 @@ export async function enterBranch(branchUserId: string) {
 
         // Force redirect to absolute dashboard URL to avoid "accounts.domain" 404s
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com';
-        const redirectUrl = `${baseUrl}/dashboard`;
+
+        // Fix: Redirect to specific branch slug to ensure correct context
+        const targetPath = branchRelation.slug ? `/dashboard/${branchRelation.slug}` : '/dashboard';
+        const redirectUrl = `${baseUrl}${targetPath}`;
 
         const tokenUrl = new URL(signInToken.url)
         tokenUrl.searchParams.append('redirect_url', redirectUrl)
