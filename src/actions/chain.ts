@@ -246,3 +246,75 @@ export async function enterBranch(branchUserId: string) {
         return { success: false, error: String(error) }
     }
 }
+
+export async function deleteBranch(branchUserId: string) {
+    try {
+        const user = await currentUser()
+        if (!user) throw new Error('Unauthorized')
+
+        // 1. Verify Ownership
+        const branchRelation = await prisma.chainBranch.findFirst({
+            where: { branchId: branchUserId },
+            include: { chain: true }
+        })
+
+        if (!branchRelation) throw new Error('Branch not found')
+
+        if (branchRelation.chain.ownerId !== user.id) {
+            throw new Error('Unauthorized: You do not own this branch')
+        }
+
+        // 2. Database Cleanup (Transaction)
+        await prisma.$transaction(async (tx) => {
+            // Delete the link first
+            await tx.chainBranch.deleteMany({
+                where: {
+                    chainId: branchRelation.chainId,
+                    branchId: branchUserId
+                }
+            })
+
+            // Delete UserSettings (This cascades to FloorPlans, Loyalty, etc. based on schema)
+            // Note: Schema says onDelete: Cascade for most things linked to UserSettings via userId
+            await tx.userSettings.delete({
+                where: { userId: branchUserId }
+            })
+
+            // Explicitly delete Survey if not cascaded (Survey has userId, but relation might not cascade if not connected to userSettings directly in prisma schema sometimes.
+            // Looking at schema: Survey has userId but NO relation field to UserSettings. So we MUST delete manually.
+            await tx.survey.deleteMany({
+                where: { userId: branchUserId }
+            })
+
+            // Delete ChatThreads
+            await tx.chatThread.deleteMany({
+                where: { userId: branchUserId }
+            })
+
+            // Delete AI Insights
+            await tx.aIInsight.deleteMany({
+                where: { userId: branchUserId }
+            })
+
+            // Delete Notifications
+            await tx.notification.deleteMany({
+                where: { userId: branchUserId }
+            })
+        })
+
+        // 3. Clerk User Cleanup
+        try {
+            const client = await clerkClient()
+            await client.users.deleteUser(branchUserId)
+        } catch (clerkError) {
+            console.error('Error deleting Clerk user (might be already gone or permission issue):', clerkError)
+            // We don't block the success of the DB cleanup if Clerk fails, but ideally it should succeed.
+        }
+
+        revalidatePath('/chains')
+        return { success: true }
+    } catch (error: any) {
+        console.error('Error deleting branch:', error)
+        return { success: false, error: error.message || String(error) }
+    }
+}

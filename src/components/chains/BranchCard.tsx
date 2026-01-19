@@ -7,8 +7,8 @@ import { enterBranch } from '@/actions/chain'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useClerk } from '@clerk/nextjs'
-
 import { useRouter } from 'next/navigation'
+import { DeleteBranchDialog } from './DeleteBranchDialog'
 
 interface BranchCardProps {
     branch: {
@@ -79,6 +79,15 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId 
 
     return (
         <Card className={`group relative overflow-hidden transition-all duration-300 border-white/5 bg-black/40 backdrop-blur-xl hover:-translate-y-1 hover:shadow-2xl hover:shadow-violet-500/10 ${isCurrent ? 'ring-1 ring-violet-500/50 border-violet-500/20 shadow-[0_0_30px_-10px_rgba(139,92,246,0.2)]' : 'hover:border-white/10'}`}>
+            {isOwner && (
+                <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <DeleteBranchDialog
+                        branchId={branch.branch.userId}
+                        branchName={branch.name || branch.branch.businessName || "Sucursal"}
+                    />
+                </div>
+            )}
+
             {/* Background Gradient Mesh */}
             <div className={`absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-fuchsia-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
 
@@ -124,12 +133,12 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId 
             <CardFooter className="relative pt-2">
                 <Button
                     className={`w-full h-11 font-medium text-sm transition-all duration-300 rounded-xl ${isCurrent
-                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 border-0'
-                            : (!isOwner && hasOwnerSession)
-                                ? 'bg-amber-600/10 hover:bg-amber-600/20 text-amber-500 border border-amber-600/20'
-                                : !isOwner
-                                    ? 'bg-white/5 text-gray-500 border border-white/5 cursor-not-allowed'
-                                    : 'bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20'
+                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 border-0'
+                        : (!isOwner && hasOwnerSession)
+                            ? 'bg-amber-600/10 hover:bg-amber-600/20 text-amber-500 border border-amber-600/20'
+                            : !isOwner
+                                ? 'bg-white/5 text-gray-500 border border-white/5 cursor-not-allowed'
+                                : 'bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20'
                         }`}
                     variant={isCurrent ? "default" : "outline"}
                     onClick={handleEnter}
