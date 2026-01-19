@@ -68,7 +68,6 @@ export default async function ChainsPage() {
     }
 
     return (
-    return (
         <div className="min-h-[calc(100vh-64px)] relative bg-[#0a0a0a] overflow-hidden">
             {/* Ambient Background Effects */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-[120px] pointer-events-none" />
