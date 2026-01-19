@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Check, Sparkles, Users } from 'lucide-react'
+import { Check, Sparkles, Users, Info, X } from 'lucide-react'
 import Link from 'next/link'
 
 const ADDONS = {
@@ -10,27 +10,60 @@ const ADDONS = {
         name: 'Lealtad',
         monthly: 699,
         annual: 599,
-        features: ['App de Lealtad', 'Menú Digital', 'Tarjeta Digital', 'Niveles VIP']
+        features: ['App de Lealtad', 'Menú Digital', 'Tarjeta Digital', 'Niveles VIP'],
+        fullFeatures: [
+            'Programa de Lealtad por Visitas y Puntos',
+            'Menú Digital Interactivo',
+            'App para Staff (Gestión de Puntos)',
+            'Escáner de Códigos QR',
+            'Micrositio para Clientes',
+            'Gestión de Reglas y Premios',
+            'Historial de Clientes y Promociones',
+            'Tarjeta Digital (Apple/Google Wallet)',
+            'Niveles VIP y Recompensas',
+            'Juegos para elevar ventas (Ruleta, Raspa y Gana)'
+        ]
     },
     PROCESSES: {
         id: 'processes',
         name: 'Procesos',
         monthly: 799,
         annual: 699,
-        features: ['Flujos y Tareas', 'Supervisión IA', 'Evidencia Video', 'Reportes Staff']
+        features: ['Flujos y Tareas', 'Supervisión IA', 'Evidencia Video', 'Reportes Staff'],
+        fullFeatures: [
+            'Gestión de Flujos de Trabajo e Incidencias',
+            'Supervisión de Tareas con IA',
+            'Captura de Evidencia en Video',
+            'Notificaciones de Tareas Pendientes',
+            'Reportes de Desempeño de Empleados',
+            'Control de Órdenes y Cumplimiento',
+            'Automatización de Procesos Operativos'
+        ]
     },
     RESERVATIONS: {
         id: 'reservations',
         name: 'Reservaciones',
         monthly: 699,
         annual: 599,
-        features: ['Mapa de Mesas', 'Hostess App', 'Motor de Reservas', 'Recordatorios']
+        features: ['Mapa de Mesas', 'Hostess App', 'Motor de Reservas', 'Recordatorios'],
+        fullFeatures: [
+            'Sistema de Reservaciones Inteligente',
+            'Mapa Digital Exacto (Desde Foto)',
+            'Asignación y Bloqueo de Mesas',
+            'Cobro por Mesas VIP',
+            'Lista de Reservas por Día',
+            'Confirmación Automática (WhatsApp/SMS)',
+            'App para Hostess',
+            'Link y QR de Reservas',
+            'Integración con Google Business y Calendar'
+        ]
     }
 }
 
 export default function PricingTeaser() {
     const [isAnnual, setIsAnnual] = React.useState(true)
     const [selectedAddons, setSelectedAddons] = React.useState<string[]>([])
+    const [viewingAddon, setViewingAddon] = React.useState<string | null>(null)
 
     const toggleAddon = (id: string) => {
         setSelectedAddons(prev =>
@@ -53,8 +86,47 @@ export default function PricingTeaser() {
     const addonPriceFinal = addonPriceRaw - discountAmount
     const totalPrice = basePrice + addonPriceFinal
 
+    const viewingAddonData = viewingAddon ? Object.values(ADDONS).find(a => a.id === viewingAddon) : null
+
     return (
-        <section className="py-24 bg-[#0a0a0a] border-t border-white/5">
+        <section className="py-24 bg-[#0a0a0a] border-t border-white/5 relative">
+            {/* Modal Overlay */}
+            {viewingAddonData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setViewingAddon(null)}>
+                    <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={() => setViewingAddon(null)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        <h3 className="text-2xl font-bold text-white mb-2">{viewingAddonData.name}</h3>
+                        <div className="h-1 w-12 bg-blue-500 rounded-full mb-6" />
+                        <ul className="space-y-3">
+                            {viewingAddonData.fullFeatures.map((feature, idx) => (
+                                <li key={idx} className="flex items-start gap-3 text-gray-300 text-sm">
+                                    <Check className="w-5 h-5 text-blue-500 shrink-0" />
+                                    {feature}
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="mt-8 pt-6 border-t border-white/10">
+                            <button
+                                onClick={() => {
+                                    if (!selectedAddons.includes(viewingAddonData.id)) {
+                                        toggleAddon(viewingAddonData.id)
+                                    }
+                                    setViewingAddon(null)
+                                }}
+                                className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition"
+                            >
+                                {selectedAddons.includes(viewingAddonData.id) ? 'Cerrar' : 'Agregar al Plan'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Inversión transparente</h2>
@@ -188,6 +260,16 @@ export default function PricingTeaser() {
                                                     {isSelected && <Check className="w-3 h-3 text-white" />}
                                                 </div>
                                                 <span className={`font-bold ${isSelected ? 'text-white' : 'text-gray-400'}`}>{addon.name}</span>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setViewingAddon(addon.id)
+                                                    }}
+                                                    className="p-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition"
+                                                    title="Ver beneficios"
+                                                >
+                                                    <Info className="w-4 h-4" />
+                                                </button>
                                             </div>
                                             <div className="text-right">
                                                 <span className={`block font-bold ${isSelected ? 'text-white' : 'text-gray-500'}`}>${price}</span>
