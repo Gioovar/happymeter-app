@@ -9,6 +9,7 @@ import { addBranch, createChain } from '@/actions/chain'
 import { Loader2, Plus, Store } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { BranchPurchaseModal } from './BranchPurchaseModal'
 
 interface CreateBranchModalProps {
     chainId?: string
@@ -28,6 +29,11 @@ export default function CreateBranchModal({ chainId, isFirstChain = false, trigg
         chainName: '' // Only for first chain creation
     })
 
+    const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+
+    // Helper to calculate current branch count if needed, 
+    // but the server action is the final authority.
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
@@ -36,7 +42,14 @@ export default function CreateBranchModal({ chainId, isFirstChain = false, trigg
             if (isFirstChain) {
                 // 1. Create Chain
                 const res = await createChain(formData.chainName)
-                if (!res.success) throw new Error(res.error)
+                if (!res.success) {
+                    if (res.error === 'LIMIT_REACHED' || (res as any).code === 'LIMIT_REACHED') {
+                        setOpen(false)
+                        setShowPurchaseModal(true)
+                        return // Stop here
+                    }
+                    throw new Error(res.error)
+                }
 
                 toast.success('Cadena creada exitosamente')
                 router.refresh()
@@ -50,7 +63,14 @@ export default function CreateBranchModal({ chainId, isFirstChain = false, trigg
                     email: formData.email
                 })
 
-                if (!res.success) throw new Error(res.error)
+                if (!res.success) {
+                    if (res.error === 'LIMIT_REACHED' || (res as any).code === 'LIMIT_REACHED') {
+                        setOpen(false)
+                        setShowPurchaseModal(true)
+                        return // Stop here
+                    }
+                    throw new Error(res.error)
+                }
 
                 toast.success('Sucursal creada exitosamente')
                 router.refresh()
@@ -159,6 +179,20 @@ export default function CreateBranchModal({ chainId, isFirstChain = false, trigg
                     </div>
                 </form>
             </DialogContent>
+
+            <BranchPurchaseModal
+                open={showPurchaseModal}
+                onOpenChange={setShowPurchaseModal}
+                onSuccess={() => {
+                    // When purchase done, maybe reopen the create modal or just refresh?
+                    // User probably wants to try creating again.
+                    // Let's verify flow.
+                    router.refresh()
+                    // Ideally we reopen the "Create Branch" modal?
+                    // For now just stay closed and let them click + again, now with higher limit.
+                }}
+                currentBranchCount={0} // We don't really use this prop for validation in modal, just display maybe? Pass 0 for now.
+            />
         </Dialog>
     )
 }

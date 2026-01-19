@@ -27,6 +27,42 @@ export async function createChain(name: string) {
         const user = await currentUser()
         if (!user) throw new Error('Unauthorized')
 
+        // Limit Check
+        const settings = await prisma.userSettings.findUnique({
+            where: { userId: user.id },
+            select: { maxBranches: true }
+        })
+
+        const ownedChainsCount = await prisma.chain.count({
+            where: { ownerId: user.id }
+        })
+
+        // If we treat "Chains" as "Branches" for the owner (since each chain has a main branch)
+        // or if we just count total branches across all chains.
+        // Let's simplify: 1 Chain = 1 "Main Branch". 
+        // Real check is Total Branches Owned.
+
+        const limit = settings?.maxBranches ?? 1
+
+        // For createChain, we are creating the FIRST branch of a new chain.
+        // Effectively, if I have 1 chain with 1 branch, I have 1 branch.
+        // If I create another chain, I have 2 branches total.
+
+        // Let's count total branches owned directly or indirectly
+        // Actually "createChain" creates a NEW chain. 
+        // Logic: Can I create a new chain? Yes, if I haven't hit my limit of "Business Units".
+
+        // STRICT CHECK: Count all branches where I am the effective owner via Chain
+        const totalBranchesOwned = await prisma.chainBranch.count({
+            where: {
+                chain: { ownerId: user.id }
+            }
+        })
+
+        if (totalBranchesOwned >= limit) {
+            return { success: false, error: 'LIMIT_REACHED', code: 'LIMIT_REACHED' }
+        }
+
         const chain = await prisma.chain.create({
             data: {
                 name,
@@ -64,6 +100,24 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
 
         if (!chain || chain.ownerId !== user.id) {
             throw new Error('Unauthorized to add branch to this chain')
+        }
+
+        // Limit Check
+        const settings = await prisma.userSettings.findUnique({
+            where: { userId: user.id },
+            select: { maxBranches: true }
+        })
+
+        const limit = settings?.maxBranches ?? 1
+
+        const totalBranchesOwned = await prisma.chainBranch.count({
+            where: {
+                chain: { ownerId: user.id }
+            }
+        })
+
+        if (totalBranchesOwned >= limit) {
+            return { success: false, error: 'LIMIT_REACHED', code: 'LIMIT_REACHED' }
         }
 
         const client = await clerkClient()

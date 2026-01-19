@@ -85,6 +85,7 @@ model UserSettings {
   userId              String    @unique
   plan                String    @default("FREE")
   maxSurveys          Int       @default(3)
+  maxBranches         Int       @default(1) // Controls how many branches this user can own
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   businessName        String?
