@@ -14,9 +14,10 @@ interface CreateBranchModalProps {
     chainId?: string
     isFirstChain?: boolean // If true, we are upgrading the user to a chain
     trigger?: React.ReactNode
+    triggerClassName?: string
 }
 
-export default function CreateBranchModal({ chainId, isFirstChain = false, trigger }: CreateBranchModalProps) {
+export default function CreateBranchModal({ chainId, isFirstChain = false, trigger, triggerClassName }: CreateBranchModalProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const router = useRouter()
@@ -65,7 +66,11 @@ export default function CreateBranchModal({ chainId, isFirstChain = false, trigg
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                {trigger || (
+                {trigger ? trigger : triggerClassName ? (
+                    <button className={triggerClassName}>
+                        <span className="sr-only">Crear Sucursal</span>
+                    </button>
+                ) : (
                     <Button>
                         <Plus className="w-4 h-4 mr-2" />
                         {isFirstChain ? 'Crear Cadena' : 'Nueva Sucursal'}
