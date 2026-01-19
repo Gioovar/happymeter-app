@@ -1,15 +1,31 @@
 'use client'
 
-import { Check, Sparkles } from 'lucide-react'
+import React from 'react'
+import { Check, Sparkles, Users } from 'lucide-react'
 import Link from 'next/link'
 
 export default function PricingTeaser() {
+    const [isAnnual, setIsAnnual] = React.useState(true)
+
     return (
         <section className="py-24 bg-[#0a0a0a] border-t border-white/5">
             <div className="max-w-7xl mx-auto px-6">
-                <div className="text-center mb-16">
+                <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Inversión transparente</h2>
-                    <p className="text-gray-400 text-lg">Sin contratos forzosos. Cancela cuando quieras.</p>
+                    <p className="text-gray-400 text-lg mb-8">Sin contratos forzosos. Cancela cuando quieras.</p>
+
+                    {/* Toggle */}
+                    <div className="flex items-center justify-center gap-4">
+                        <span className={`text-sm font-medium ${!isAnnual ? 'text-white' : 'text-gray-500'}`}>Mensual</span>
+                        <button
+                            onClick={() => setIsAnnual(!isAnnual)}
+                            className="relative w-14 h-8 bg-white/10 rounded-full p-1 transition-colors hover:bg-white/20"
+                        >
+                            <div className={`w-6 h-6 bg-violet-600 rounded-full shadow-lg transform transition-transform ${isAnnual ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
+                        <span className={`text-sm font-medium ${isAnnual ? 'text-white' : 'text-gray-500'}`}>Anual</span>
+                        {isAnnual && <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full animate-pulse">Ahorra hasta 15%</span>}
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -49,7 +65,7 @@ export default function PricingTeaser() {
                         </Link>
                     </div>
 
-                    {/* Growth Tier (Highlighted) */}
+                    {/* Growth Tier (UPDATED) */}
                     <div className="relative p-8 rounded-3xl bg-[#1a1a1a] border border-violet-500 flex flex-col shadow-2xl shadow-violet-500/10 scale-105 z-10">
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
                             Recomendado
@@ -57,37 +73,47 @@ export default function PricingTeaser() {
                         <div className="mb-6">
                             <h3 className="text-xl font-bold text-white mb-2">Growth 1K</h3>
                             <div className="flex items-baseline gap-1">
-                                <span className="text-5xl font-bold text-white tracking-tight">$24</span>
-                                <span className="text-gray-400 text-sm">/mes</span>
+                                <span className="text-5xl font-bold text-white tracking-tight">
+                                    {isAnnual ? '$399' : '$450'}
+                                </span>
+                                <span className="text-gray-400 text-sm">MXN/mes</span>
                             </div>
-                            <p className="text-violet-300 text-xs mt-1 font-medium">Facturado $290 anual</p>
-                            <p className="text-gray-400 text-sm mt-4">Para negocios individuales que quieren vender más.</p>
+                            {isAnnual ? (
+                                <p className="text-green-400 text-xs mt-1 font-medium transform">Ahorra $51 al mes pagando anual</p>
+                            ) : (
+                                <p className="text-gray-500 text-xs mt-1 font-medium">Pago mensual sin plazo forzoso</p>
+                            )}
+                            <p className="text-gray-400 text-sm mt-4">Para negocios que quieren operar de forma activa y continua.</p>
                         </div>
                         <ul className="space-y-4 mb-8 flex-1">
                             <li className="flex items-center gap-3 text-white font-medium text-sm">
-                                <div className="p-1 rounded-full bg-violet-500/20 text-violet-400 shrink-0"><Check className="w-3 h-3" /></div>
-                                1 Encuesta Activa
-                            </li>
-                            <li className="flex items-center gap-3 text-white font-medium text-sm">
-                                <div className="p-1 rounded-full bg-violet-500/20 text-violet-400 shrink-0"><Check className="w-3 h-3" /></div>
-                                1,000 Respuestas/mes
-                            </li>
-                            <li className="flex items-center gap-3 text-white font-medium text-sm">
                                 <div className="p-1 rounded-full bg-violet-500/20 text-violet-400 shrink-0"><Sparkles className="w-3 h-3" /></div>
-                                Recuperación de Clientes (IA)
+                                Asistente de IA (Acceso Completo)
                             </li>
                             <li className="flex items-center gap-3 text-white font-medium text-sm">
                                 <div className="p-1 rounded-full bg-violet-500/20 text-violet-400 shrink-0"><Check className="w-3 h-3" /></div>
-                                Alertas Crisis Staff
+                                Encuestas, Buzón y Feedback
+                            </li>
+                            <li className="flex items-center gap-3 text-white font-medium text-sm">
+                                <div className="p-1 rounded-full bg-violet-500/20 text-violet-400 shrink-0"><Users className="w-3 h-3" /></div>
+                                Gestión de Equipo y Accesos
                             </li>
                             <li className="flex items-center gap-3 text-white font-medium text-sm">
                                 <div className="p-1 rounded-full bg-violet-500/20 text-violet-400 shrink-0"><Check className="w-3 h-3" /></div>
-                                Catálogo de Juegos (Dados/Cartas)
+                                Analítica y Reportes
+                            </li>
+                            <li className="flex items-center gap-3 text-white font-medium text-sm">
+                                <div className="p-1 rounded-full bg-violet-500/20 text-violet-400 shrink-0"><Check className="w-3 h-3" /></div>
+                                Campañas (Meta / WhatsApp)
+                            </li>
+                            <li className="flex items-center gap-3 text-white font-medium text-sm">
+                                <div className="p-1 rounded-full bg-violet-500/20 text-violet-400 shrink-0"><Check className="w-3 h-3" /></div>
+                                Acceso Academia HappyMeter
                             </li>
                         </ul>
-                        <Link href="/pricing?checkout=true&plan=GROWTH&interval=month">
+                        <Link href={`/pricing?checkout=true&plan=GROWTH&interval=${isAnnual ? 'year' : 'month'}`}>
                             <button className="w-full py-3.5 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-500 transition shadow-lg shadow-violet-600/20">
-                                Elegir Growth
+                                👉 Activar Growth 1K
                             </button>
                         </Link>
                     </div>
