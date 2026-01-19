@@ -60,7 +60,7 @@ export function DeleteBranchDialog({ branchId, branchName }: DeleteBranchDialogP
                     <Trash2 className="w-4 h-4" />
                 </Button>
             </DialogTrigger>
-            <DialogContent className="bg-zinc-950 border-white/10 text-white sm:max-w-md">
+            <DialogContent className="bg-zinc-950 border-white/10 text-white sm:max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-red-500">
                         <AlertTriangle className="w-5 h-5" />
@@ -75,44 +75,46 @@ export function DeleteBranchDialog({ branchId, branchName }: DeleteBranchDialogP
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="py-4">
-                    <label className="text-xs text-gray-500 mb-2 block">
-                        Escribe <strong className="text-white">ELIMINAR</strong> para confirmar:
-                    </label>
-                    <input
-                        type="text"
-                        value={confirmText}
-                        onChange={(e) => setConfirmText(e.target.value)}
-                        className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors placeholder:text-gray-700"
-                        placeholder="ELIMINAR"
-                    />
-                </div>
+                <div className="p-6 pt-0">
+                    <div className="py-4">
+                        <label className="text-xs text-gray-500 mb-2 block">
+                            Escribe <strong className="text-white">ELIMINAR</strong> para confirmar:
+                        </label>
+                        <input
+                            type="text"
+                            value={confirmText}
+                            onChange={(e) => setConfirmText(e.target.value)}
+                            className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500/50 transition-colors placeholder:text-gray-700"
+                            placeholder="ELIMINAR"
+                        />
+                    </div>
 
-                <DialogFooter>
-                    <Button
-                        variant="ghost"
-                        onClick={() => setOpen(false)}
-                        disabled={loading}
-                        className="text-gray-400 hover:text-white hover:bg-white/5"
-                    >
-                        Cancelar
-                    </Button>
-                    <Button
-                        variant="destructive"
-                        onClick={handleDelete}
-                        disabled={loading || confirmText !== 'ELIMINAR'}
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                    >
-                        {loading ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Eliminando...
-                            </>
-                        ) : (
-                            'Eliminar Definitivamente'
-                        )}
-                    </Button>
-                </DialogFooter>
+                    <DialogFooter>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setOpen(false)}
+                            disabled={loading}
+                            className="text-gray-400 hover:text-white hover:bg-white/5"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={loading || confirmText !== 'ELIMINAR'}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Eliminando...
+                                </>
+                            ) : (
+                                'Eliminar Definitivamente'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </div>
             </DialogContent>
         </Dialog>
     )
