@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams, useParams } from 'next/navigation'
 import { Menu, X, Home, LogOut, Settings, LayoutDashboard, Shield, Store, Calendar, HelpCircle, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
@@ -27,8 +27,9 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
     const pathname = usePathname()
     const searchParams = useSearchParams()
 
-    // Get branchSlug from context (passed via props to this component or context hook)
-    const { branchSlug } = useDashboard()
+    // Get branchSlug from params (URL source of truth)
+    const params = useParams()
+    const branchSlug = params?.branchSlug as string
 
     // Get items for current mode
     const activeMode = getActiveMode(pathname)
@@ -113,6 +114,8 @@ import { useDashboard } from '@/context/DashboardContext'
 
 export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: boolean, userRole?: string }) {
     const { isMobileMenuOpen, toggleMobileMenu } = useDashboard()
+    const params = useParams()
+    const branchSlug = params?.branchSlug as string
     const [isModeSelectorOpen, setIsModeSelectorOpen] = useState(false)
     const pathname = usePathname() // Safe to use here without Suspense in Layout generally, but safer to keep high
 
@@ -120,7 +123,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
         <>
             <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#111]">
                 <div>
-                    <Link href="/dashboard" className="block hover:opacity-90 transition-opacity">
+                    <Link href={branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'} className="block hover:opacity-90 transition-opacity">
                         <BrandLogo className="mb-1" />
                     </Link>
                     <p className="text-xs text-gray-500 mt-1">Panel de Usuario</p>
@@ -142,7 +145,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
 
             <div className="px-4 pb-2 pt-2">
                 <Link
-                    href="/dashboard/chat"
+                    href={branchSlug ? `/dashboard/${branchSlug}/chat` : `/dashboard/chat`}
                     id="nav-item-ai-chat"
                     onClick={() => toggleMobileMenu(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
@@ -292,7 +295,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                     <span className="text-sm font-medium">Ir al Inicio</span>
                 </Link>
                 <Link
-                    href="/dashboard/settings"
+                    href={branchSlug ? `/dashboard/${branchSlug}/settings` : '/dashboard/settings'}
                     onClick={() => toggleMobileMenu(false)}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-white/5 cursor-pointer transition text-gray-400 hover:text-white"
                 >
@@ -360,7 +363,7 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                                             return (
                                                 <Link
                                                     key={mode.id}
-                                                    href={mode.href}
+                                                    href={branchSlug ? mode.href.replace('/dashboard', `/dashboard/${branchSlug}`) : mode.href}
                                                     onClick={() => setIsModeSelectorOpen(false)}
                                                     className={cn(
                                                         "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 items-start",

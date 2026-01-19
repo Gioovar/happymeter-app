@@ -9,9 +9,29 @@ import { sendSMS } from "@/lib/sms"
 import { sendWhatsAppNotification } from "@/lib/whatsapp"
 import { ReservationConfirmationEmail } from "@/emails/ReservationConfirmation"
 
-export async function getFloorPlan() {
+// Helper to resolve and verify access
+async function resolveEffectiveUserId(currentUserId: string, targetBranchId?: string) {
+    if (!targetBranchId) return currentUserId
+    if (targetBranchId === currentUserId) return currentUserId
+
+    // Verify ownership: Does the current user own the chain that contains this branch?
+    const branch = await prisma.chainBranch.findFirst({
+        where: {
+            branchId: targetBranchId,
+            chain: { ownerId: currentUserId }
+        }
+    })
+
+    if (!branch) {
+        console.error(`Unauthorized access attempt: User ${currentUserId} -> Branch ${targetBranchId}`)
+        throw new Error("Unauthorized Branch Access")
+    }
+    return targetBranchId
+}
+
+export async function getFloorPlan(branchId?: string) {
     try {
-        const plans = await getFloorPlans()
+        const plans = await getFloorPlans(branchId)
         return plans[0] || null
     } catch (error) {
         console.error("Error in getFloorPlan:", error)
@@ -19,16 +39,19 @@ export async function getFloorPlan() {
     }
 }
 
-export async function getFloorPlans() {
+export async function getFloorPlans(branchId?: string) {
     try {
         const { userId } = await auth()
         if (!userId) {
             console.error("getFloorPlans: No user session found")
             return []
         }
+
+        const effectiveUserId = await resolveEffectiveUserId(userId, branchId)
+
         // Find UserSettings id from userId
         let userSettings = await prisma.userSettings.findUnique({
-            where: { userId },
+            where: { userId: effectiveUserId },
             select: { userId: true }
         })
         // ...
@@ -38,7 +61,7 @@ export async function getFloorPlans() {
             console.log("⚠️ UserSettings missing for reservations, auto-creating...")
             userSettings = await prisma.userSettings.create({
                 data: {
-                    userId,
+                    userId: effectiveUserId,
                     plan: 'FREE',
                 }
             })
@@ -46,7 +69,7 @@ export async function getFloorPlans() {
 
         // Fetch all floor plans
         let floorPlans = await prisma.floorPlan.findMany({
-            where: { userId },
+            where: { userId: effectiveUserId },
             include: { tables: true },
             orderBy: { createdAt: 'asc' }
         })
@@ -55,7 +78,7 @@ export async function getFloorPlans() {
             console.log("Creating new default floor plan...")
             const defaultPlan = await prisma.floorPlan.create({
                 data: {
-                    userId,
+                    userId: effectiveUserId,
                     name: "Piso 1",
                     tables: {
                         create: [
@@ -77,14 +100,16 @@ export async function getFloorPlans() {
     }
 }
 
-export async function createFloorPlan(name: string) {
+export async function createFloorPlan(name: string, branchId?: string) {
     try {
         const { userId } = await auth()
         if (!userId) throw new Error("Unauthorized")
 
+        const effectiveUserId = await resolveEffectiveUserId(userId, branchId)
+
         const newPlan = await prisma.floorPlan.create({
             data: {
-                userId,
+                userId: effectiveUserId,
                 name,
                 isConfigured: true
             },
@@ -99,19 +124,21 @@ export async function createFloorPlan(name: string) {
     }
 }
 
-export async function deleteFloorPlan(floorPlanId: string) {
+export async function deleteFloorPlan(floorPlanId: string, branchId?: string) {
     try {
         const { userId } = await auth()
         if (!userId) throw new Error("Unauthorized")
 
+        const effectiveUserId = await resolveEffectiveUserId(userId, branchId)
+
         // Check if there are other floors
-        const count = await prisma.floorPlan.count({ where: { userId } })
+        const count = await prisma.floorPlan.count({ where: { userId: effectiveUserId } })
         if (count <= 1) {
             return { success: false, error: "Cannot delete the last floor plan." }
         }
 
         await prisma.floorPlan.delete({
-            where: { id: floorPlanId, userId }
+            where: { id: floorPlanId, userId: effectiveUserId }
         })
 
         revalidatePath('/dashboard/reservations')
@@ -122,13 +149,15 @@ export async function deleteFloorPlan(floorPlanId: string) {
     }
 }
 
-export async function updateFloorMetadata(floorPlanId: string, data: { name: string, width: number, height: number }) {
+export async function updateFloorMetadata(floorPlanId: string, data: { name: string, width: number, height: number }, branchId?: string) {
     try {
         const { userId } = await auth()
         if (!userId) throw new Error("Unauthorized")
 
+        const effectiveUserId = await resolveEffectiveUserId(userId, branchId)
+
         const updated = await prisma.floorPlan.update({
-            where: { id: floorPlanId, userId },
+            where: { id: floorPlanId, userId: effectiveUserId },
             data: {
                 name: data.name,
                 physicalWidth: data.width,
@@ -143,13 +172,15 @@ export async function updateFloorMetadata(floorPlanId: string, data: { name: str
     }
 }
 
-export async function saveFloorPlan(floorPlanId: string, tables: any[]) {
+export async function saveFloorPlan(floorPlanId: string, tables: any[], branchId?: string) {
     const { userId } = await auth()
     if (!userId) throw new Error("Unauthorized")
 
+    const effectiveUserId = await resolveEffectiveUserId(userId, branchId)
+
     // Verify ownership
     const floorPlan = await prisma.floorPlan.findFirst({
-        where: { id: floorPlanId, userId }
+        where: { id: floorPlanId, userId: effectiveUserId }
     })
 
     if (!floorPlan) throw new Error("Floor plan not found")

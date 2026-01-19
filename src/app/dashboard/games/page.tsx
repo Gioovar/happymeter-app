@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { Utensils, Wine, ShoppingBag, Coffee, Hotel, MoreHorizontal, ArrowRight } from 'lucide-react'
 
 const industries = [
@@ -57,16 +57,22 @@ const industries = [
 
 export default function GamesHubPage() {
     const router = useRouter()
+    const params = useParams()
+    const branchSlug = params?.branchSlug as string
+
+    const getPath = (sub: string) => {
+        return branchSlug ? `/dashboard/${branchSlug}/games/${sub}` : `/dashboard/games/${sub}`
+    }
 
     const handleSelect = (id: string) => {
         if (id === 'bars') {
-            router.push('/dashboard/games/bars')
+            router.push(getPath('bars'))
         } else if (id === 'restaurants') {
-            router.push('/dashboard/games/restaurants')
+            router.push(getPath('restaurants'))
         } else if (id === 'cafes') {
-            router.push('/dashboard/games/cafes')
+            router.push(getPath('cafes'))
         } else if (id === 'hotels') {
-            router.push('/dashboard/games/hotels')
+            router.push(getPath('hotels'))
         } else {
             alert("¡Próximamente! Estamos trabajando en los juegos para esta categoría.")
         }

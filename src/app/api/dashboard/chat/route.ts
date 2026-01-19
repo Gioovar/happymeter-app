@@ -7,30 +7,53 @@ import { getGeminiModel } from '@/lib/gemini'
 export async function POST(req: Request) {
     try {
         const body = await req.json()
-        const { messages, threadId, audio } = body
+        const { messages, threadId, audio, branchId } = body
         const { userId } = await auth()
 
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 })
         }
 
-        // 1. Parallel Fetch of Context Data
+        const referer = req.headers.get('referer') || ''
+        // Regex to check if we are in a branch route (e.g. /dashboard/portales/chat)
+        // We exclude /dashboard/chat (Global)
+        const isBranchRoute = /\/dashboard\/[^/]+\/chat/.test(referer) && !referer.endsWith('/dashboard/chat')
+
+        // STRICT ISOLATION GUARD:
+        // If user is in a branch view, we MUST have a branchId. 
+        // We forbid falling back to 'userId' (Owner) to prevent data leakage.
+        if (isBranchRoute && !branchId) {
+            console.error(`[AI_ISOLATION_GUARD] Blocked request. Referer: ${referer}, but branchId missing.`)
+            return NextResponse.json({
+                role: 'assistant',
+                content: "⚠️ **Error de Contexto**: No puedo identificar la sucursal actual. Por favor recarga la página para asegurar el aislamiento de datos."
+            })
+        }
+
+        const targetUserId = branchId || userId
+
+        console.log(`[AI_CHAT_DEBUG] Request for Thread: ${threadId}`)
+        console.log(`[AI_CHAT_DEBUG] Incoming BranchID: ${branchId} (Type: ${typeof branchId})`)
+        console.log(`[AI_CHAT_DEBUG] Authenticated UserId: ${userId}`)
+        console.log(`[AI_CHAT_DEBUG] Resolved TargetUserId: ${targetUserId}`)
+
+        // 1. Parallel Fetch of Context Data (Scoped to Target Branch)
         const now = new Date()
         const startOfWeek = new Date(now.setDate(now.getDate() - 7))
 
         const [userSettings, insights, aggregateStats, recentResponses] = await Promise.all([
             // Fetch User Settings
             prisma.userSettings.findUnique({
-                where: { userId }
+                where: { userId: targetUserId }
             }),
             // Fetch Long-Term Memory (AI Insights)
             prisma.aIInsight.findMany({
-                where: { userId, isActive: true },
+                where: { userId: targetUserId, isActive: true },
                 select: { content: true }
             }),
             // Fetch Stats
             prisma.survey.findMany({
-                where: { userId },
+                where: { userId: targetUserId },
                 include: {
                     _count: { select: { responses: true } },
                     responses: {
@@ -42,7 +65,7 @@ export async function POST(req: Request) {
             // Fetch Recent Qualitative Feedback (Last 20 responses)
             prisma.response.findMany({
                 where: {
-                    survey: { userId }
+                    survey: { userId: targetUserId }
                 },
                 take: 20,
                 orderBy: { createdAt: 'desc' },
@@ -57,6 +80,12 @@ export async function POST(req: Request) {
                 }
             })
         ])
+
+        console.log(`[AI_CHAT_DEBUG] Context Found:`)
+        console.log(`- Surveys: ${aggregateStats.length}`)
+        console.log(`- Insights: ${insights.length}`)
+        console.log(`- Recent Responses: ${recentResponses.length}`)
+
 
         const businessName = (userSettings as any)?.businessName || "Tu Negocio"
         const industry = (userSettings as any)?.industry || "Comercio General"
@@ -164,7 +193,7 @@ export async function POST(req: Request) {
         if (threadId) {
             const lastUserMsg = messages[messages.length - 1]
             // Async learning (fire and forget)
-            extractInsights(userId, threadId, lastUserMsg.content).catch(console.error)
+            extractInsights(targetUserId, threadId, lastUserMsg.content).catch(console.error)
 
             await prisma.chatMessage.create({
                 data: {
