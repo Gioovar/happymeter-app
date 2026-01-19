@@ -131,7 +131,7 @@ export default function PricingTeaser() {
             {/* Comparison Table Modal */}
             {showComparison && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setShowComparison(false)}>
-                    <div className="bg-[#111] border border-white/10 rounded-3xl p-8 max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                    <div className="bg-[#0a0a0a] border border-blue-500/20 rounded-3xl p-8 max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-blue-500/20 relative" onClick={e => e.stopPropagation()}>
                         <button
                             onClick={() => setShowComparison(false)}
                             className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition"
@@ -146,15 +146,15 @@ export default function PricingTeaser() {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {Object.values(ADDONS).map((addon) => (
-                                <div key={addon.id} className="bg-white/5 rounded-2xl p-6 border border-white/5 hover:border-blue-500/30 transition duration-300">
+                                <div key={addon.id} className="bg-white/5 rounded-2xl p-6 border border-white/5 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/20 transition duration-300 group">
                                     <div className="flex items-center gap-3 mb-6">
-                                        <h4 className="text-xl font-bold text-white">{addon.name}</h4>
+                                        <h4 className="text-xl font-bold text-white group-hover:text-blue-400 transition">{addon.name}</h4>
                                         <span className="text-xs font-bold px-2 py-1 rounded bg-blue-500/20 text-blue-400 uppercase tracking-wide">Módulo</span>
                                     </div>
                                     <ul className="space-y-4">
                                         {addon.fullFeatures.map((feature, idx) => (
                                             <li key={idx} className="flex items-start gap-3 text-sm text-gray-300">
-                                                <div className="min-w-[4px] h-[4px] bg-gray-500 rounded-full mt-2" />
+                                                <div className="min-w-[4px] h-[4px] bg-gray-500 rounded-full mt-2 group-hover:bg-blue-500 transition" />
                                                 {feature}
                                             </li>
                                         ))}
@@ -166,7 +166,7 @@ export default function PricingTeaser() {
                         <div className="mt-12 text-center">
                             <button
                                 onClick={() => setShowComparison(false)}
-                                className="px-8 py-3 rounded-xl bg-white text-black font-bold hover:bg-gray-200 transition"
+                                className="px-8 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-600/20"
                             >
                                 Entendido
                             </button>
