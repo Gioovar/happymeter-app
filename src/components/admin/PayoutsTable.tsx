@@ -34,8 +34,15 @@ export default function PayoutsTable() {
             // Better to make a quick GET endpoint in /api/admin/payouts as well.
             const res = await fetch('/api/admin/payouts')
             if (res.ok) {
-                const data = await res.json()
-                setCommissions(data.commissions || [])
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const data = await res.json()
+                    setCommissions(data.commissions || [])
+                } else {
+                    console.error("Received non-JSON response from /api/admin/payouts")
+                }
+            } else {
+                console.error("Failed to fetch payouts:", res.status, res.statusText)
             }
         } catch (error) {
             console.error('Failed to load commissions', error)

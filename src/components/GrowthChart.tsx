@@ -34,8 +34,11 @@ export default function GrowthChart() {
             try {
                 const res = await fetch(`/api/analytics/growth?range=${range}`)
                 if (res.ok) {
-                    const json = await res.json()
-                    setData(json)
+                    const contentType = res.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const json = await res.json()
+                        setData(json)
+                    }
                 }
             } catch (error) {
                 console.error("Failed to load growth stats", error)
