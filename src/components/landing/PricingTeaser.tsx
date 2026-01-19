@@ -63,7 +63,31 @@ const ADDONS = {
 export default function PricingTeaser() {
     const [isAnnual, setIsAnnual] = React.useState(true)
     const [selectedAddons, setSelectedAddons] = React.useState<string[]>([])
+    const [viewingAddon, setViewingAddon] = React.useState<string | null>(null)
     const [showComparison, setShowComparison] = React.useState(false)
+
+    const toggleAddon = (id: string) => {
+        setSelectedAddons(prev =>
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        )
+    }
+
+    // Pricing Calculation
+    const basePrice = isAnnual ? 399 : 450
+    const addonPriceRaw = selectedAddons.reduce((acc, id) => {
+        const addon = Object.values(ADDONS).find(a => a.id === id)
+        return acc + (isAnnual ? addon!.annual : addon!.monthly)
+    }, 0)
+
+    let discountRate = 0
+    if (selectedAddons.length === 2) discountRate = 0.15
+    if (selectedAddons.length === 3) discountRate = 0.20
+
+    const discountAmount = addonPriceRaw * discountRate
+    const addonPriceFinal = addonPriceRaw - discountAmount
+    const totalPrice = basePrice + addonPriceFinal
+
+    const viewingAddonData = viewingAddon ? Object.values(ADDONS).find(a => a.id === viewingAddon) : null
 
     return (
         <section className="py-24 bg-[#0a0a0a] border-t border-white/5 relative">
