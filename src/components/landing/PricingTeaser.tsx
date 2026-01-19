@@ -144,12 +144,38 @@ export default function PricingTeaser() {
                             <p className="text-gray-400">Detalle completo de cada módulo disponible para agregar a tu plan.</p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {/* Base Module: Encuestas */}
+                            <div className="bg-white/5 rounded-2xl p-6 border border-white/5 hover:border-violet-500/50 hover:shadow-lg hover:shadow-violet-500/20 transition duration-300 group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition">
+                                    <Sparkles className="w-24 h-24 text-violet-500" />
+                                </div>
+                                <div className="flex items-center gap-3 mb-6 relative">
+                                    <h4 className="text-xl font-bold text-white group-hover:text-violet-400 transition">Encuestas</h4>
+                                    <span className="text-[10px] font-bold px-2 py-1 rounded bg-violet-500/20 text-violet-400 uppercase tracking-wide">Base</span>
+                                </div>
+                                <ul className="space-y-4 relative">
+                                    {[
+                                        'Asistente de IA (Acceso Completo)',
+                                        'Encuestas, Buzón y Feedback',
+                                        'Gestión de Equipo y Accesos',
+                                        'Analítica y Reportes',
+                                        'Campañas (Meta / WhatsApp)'
+                                    ].map((feature, idx) => (
+                                        <li key={idx} className="flex items-start gap-3 text-sm text-gray-300">
+                                            <div className="min-w-[4px] h-[4px] bg-gray-500 rounded-full mt-2 group-hover:bg-violet-500 transition" />
+                                            {feature}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            {/* Add-ons */}
                             {Object.values(ADDONS).map((addon) => (
                                 <div key={addon.id} className="bg-white/5 rounded-2xl p-6 border border-white/5 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/20 transition duration-300 group">
                                     <div className="flex items-center gap-3 mb-6">
                                         <h4 className="text-xl font-bold text-white group-hover:text-blue-400 transition">{addon.name}</h4>
-                                        <span className="text-xs font-bold px-2 py-1 rounded bg-blue-500/20 text-blue-400 uppercase tracking-wide">Módulo</span>
+                                        <span className="text-[10px] font-bold px-2 py-1 rounded bg-blue-500/20 text-blue-400 uppercase tracking-wide">Módulo</span>
                                     </div>
                                     <ul className="space-y-4">
                                         {addon.fullFeatures.map((feature, idx) => (
