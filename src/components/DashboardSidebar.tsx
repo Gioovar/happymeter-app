@@ -111,8 +111,9 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
 }
 
 import { useDashboard } from '@/context/DashboardContext'
+import CreateBranchModal from './chains/CreateBranchModal'
 
-export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: boolean, userRole?: string }) {
+export default function DashboardSidebar({ isCreator, userRole, hasChain }: { isCreator?: boolean, userRole?: string, hasChain?: boolean }) {
     const { isMobileMenuOpen, toggleMobileMenu } = useDashboard()
     const params = useParams()
     const branchSlug = params?.branchSlug as string
@@ -199,17 +200,35 @@ export default function DashboardSidebar({ isCreator, userRole }: { isCreator?: 
                    but for simplicity, we show it to standard users who might want to upgrade. */
                 (!isCreator && userRole !== 'STAFF' && userRole !== 'OPERATOR') && (
                     <div className="px-4 pb-3">
-                        <Link
-                            href="/chains"
-                            onClick={() => toggleMobileMenu(false)}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group"
-                        >
-                            <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
-                                <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
-                            </div>
-                        </Link>
+                        {hasChain ? (
+                            <Link
+                                href="/chains"
+                                onClick={() => toggleMobileMenu(false)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group"
+                            >
+                                <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
+                                    <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
+                                </div>
+                            </Link>
+                        ) : (
+                            <CreateBranchModal
+                                isFirstChain={true}
+                                trigger={
+                                    <button
+                                        onClick={() => toggleMobileMenu(false)}
+                                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group text-left"
+                                    >
+                                        <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
+                                            <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
+                                        </div>
+                                    </button>
+                                }
+                            />
+                        )}
                     </div>
                 )
             }

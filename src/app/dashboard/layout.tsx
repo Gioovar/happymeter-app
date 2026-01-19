@@ -46,6 +46,12 @@ export default async function DashboardLayout({
         console.error('Failed to fetch data in layout:', error)
     }
 
+    // Check if user has any chain association
+    const ownedChain = await prisma.chain.findFirst({
+        where: { ownerId: userId }
+    })
+    const hasChain = !!ownedChain
+
     // WAITER/OPERATOR PROTECTION: 
     // If user has no settings (not an owner) but IS a team member with OPERATOR role,
     // they should ONLY be allowing in /ops. Redirect them.
@@ -54,7 +60,7 @@ export default async function DashboardLayout({
             where: { userId }
         })
         if (member && (member.role as string) === 'OPERATOR') {
-            // Use import { redirect } from "next/navigation" (already imported)
+            // ...
             // We need to ensure we don't redirect if we are already in /ops (but this is /dashboard layout so it's safe)
             const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
             if (!userSettings) {
@@ -68,7 +74,7 @@ export default async function DashboardLayout({
             <div className="flex min-h-screen bg-[#0a0a0a]">
                 {!hasSeenTour && <Suspense fallback={null}><FeatureTour /></Suspense>}
                 <Suspense fallback={<div className="w-64 bg-[#111] h-screen border-r border-white/10 hidden md:flex" />}>
-                    <DashboardSidebar isCreator={!!affiliateProfile} userRole={realRole} />
+                    <DashboardSidebar isCreator={!!affiliateProfile} userRole={realRole} hasChain={hasChain} />
                 </Suspense>
                 <main className="flex-1 overflow-y-auto h-screen relative">
                     {/* Top Header for Desktop */}
