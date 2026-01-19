@@ -14,14 +14,17 @@ const ActivityFeed = () => {
                 // We use the main stats endpoint which includes logs
                 const res = await fetch('/api/admin/stats')
                 if (res.ok) {
-                    const data = await res.json()
-                    if (data.recentLogs) {
-                        const mapped = data.recentLogs.map((log: any) => ({
-                            type: convertActionToType(log.action),
-                            message: `${log.action}: ${log.details || ''}`,
-                            time: new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                        }))
-                        setActivities(mapped)
+                    const contentType = res.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const data = await res.json()
+                        if (data.recentLogs) {
+                            const mapped = data.recentLogs.map((log: any) => ({
+                                type: convertActionToType(log.action),
+                                message: `${log.action}: ${log.details || ''}`,
+                                time: new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            }))
+                            setActivities(mapped)
+                        }
                     }
                 }
             } catch (e) {

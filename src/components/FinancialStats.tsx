@@ -31,8 +31,11 @@ export default function FinancialStats() {
             try {
                 const res = await fetch('/api/analytics/financial?range=30d')
                 if (res.ok) {
-                    const json = await res.json()
-                    setData(json)
+                    const contentType = res.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const json = await res.json()
+                        setData(json)
+                    }
                 }
             } catch (error) {
                 console.error("Failed to load financial stats", error)
