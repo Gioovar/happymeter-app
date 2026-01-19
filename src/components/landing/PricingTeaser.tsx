@@ -23,25 +23,23 @@ export default function PricingTeaser() {
                             </div>
                             <p className="text-gray-500 text-sm mt-2">Prueba el poder de HappyMeter por 7 días.</p>
                         </div>
-                        <p className="text-violet-400 text-xs font-bold uppercase mb-4 tracking-wide">Incluye todo lo de Growth:</p>
+                        <p className="text-violet-400 text-xs font-bold uppercase mb-4 tracking-wide">Incluye IA y herramientas clave:</p>
                         <ul className="space-y-4 mb-8 flex-1">
-                            <li className="flex items-center gap-3 text-gray-300 text-sm">
-                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Acceso Total (7 días)
+                            <li className="flex flex-col gap-1 text-gray-300 text-sm">
+                                <span className="flex items-center gap-3 font-bold text-white"><Sparkles className="w-4 h-4 text-violet-500" /> Encuestas con IA</span>
+                                <span className="ml-7 text-xs text-gray-400">IA propia, Satisfacción y Staff (Max 50 respuestas c/u)</span>
                             </li>
-                            <li className="flex items-center gap-3 text-gray-300 text-sm">
-                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Max 50 respuestas
+                            <li className="flex flex-col gap-1 text-gray-300 text-sm">
+                                <span className="flex items-center gap-3 font-bold text-white"><Check className="w-4 h-4 text-violet-500" /> Programa de Lealtad</span>
+                                <span className="ml-7 text-xs text-gray-400">1 programa activo para fidelizar clientes</span>
                             </li>
-                            <li className="flex items-center gap-3 text-gray-300 text-sm">
-                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> 1 Programa de Lealtad
+                            <li className="flex flex-col gap-1 text-gray-300 text-sm">
+                                <span className="flex items-center gap-3 font-bold text-white"><Check className="w-4 h-4 text-violet-500" /> Supervisión y Procesos</span>
+                                <span className="ml-7 text-xs text-gray-400">1 flujo de supervisión, 1 tarea asignada</span>
                             </li>
-                            <li className="flex items-center gap-3 text-gray-300 text-sm">
-                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> 1 Flujo de Supervisión
-                            </li>
-                            <li className="flex items-center gap-3 text-gray-300 text-sm">
-                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Catálogo de Juegos
-                            </li>
-                            <li className="flex items-center gap-3 text-gray-300 text-sm">
-                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Alertas en Vivo
+                            <li className="flex flex-col gap-1 text-gray-300 text-sm">
+                                <span className="flex items-center gap-3 font-bold text-white"><Check className="w-4 h-4 text-violet-500" /> Sistema de Reservaciones</span>
+                                <span className="ml-7 text-xs text-gray-400">Acceso completo por 7 días (Bloqueo automático)</span>
                             </li>
                         </ul>
                         <Link href="/sign-up">
