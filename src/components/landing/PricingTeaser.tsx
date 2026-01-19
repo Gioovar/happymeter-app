@@ -63,34 +63,11 @@ const ADDONS = {
 export default function PricingTeaser() {
     const [isAnnual, setIsAnnual] = React.useState(true)
     const [selectedAddons, setSelectedAddons] = React.useState<string[]>([])
-    const [viewingAddon, setViewingAddon] = React.useState<string | null>(null)
-
-    const toggleAddon = (id: string) => {
-        setSelectedAddons(prev =>
-            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-        )
-    }
-
-    // Pricing Calculation
-    const basePrice = isAnnual ? 399 : 450
-    const addonPriceRaw = selectedAddons.reduce((acc, id) => {
-        const addon = Object.values(ADDONS).find(a => a.id === id)
-        return acc + (isAnnual ? addon!.annual : addon!.monthly)
-    }, 0)
-
-    let discountRate = 0
-    if (selectedAddons.length === 2) discountRate = 0.15
-    if (selectedAddons.length === 3) discountRate = 0.20
-
-    const discountAmount = addonPriceRaw * discountRate
-    const addonPriceFinal = addonPriceRaw - discountAmount
-    const totalPrice = basePrice + addonPriceFinal
-
-    const viewingAddonData = viewingAddon ? Object.values(ADDONS).find(a => a.id === viewingAddon) : null
+    const [showComparison, setShowComparison] = React.useState(false)
 
     return (
         <section className="py-24 bg-[#0a0a0a] border-t border-white/5 relative">
-            {/* Modal Overlay */}
+            {/* Module Detail Modal */}
             {viewingAddonData && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setViewingAddon(null)}>
                     <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl relative" onClick={e => e.stopPropagation()}>
@@ -121,6 +98,53 @@ export default function PricingTeaser() {
                                 className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition"
                             >
                                 {selectedAddons.includes(viewingAddonData.id) ? 'Cerrar' : 'Agregar al Plan'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Comparison Table Modal */}
+            {showComparison && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setShowComparison(false)}>
+                    <div className="bg-[#111] border border-white/10 rounded-3xl p-8 max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={() => setShowComparison(false)}
+                            className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+
+                        <div className="text-center mb-10">
+                            <h3 className="text-3xl font-bold text-white mb-4">Tabla de Funciones Power 3X</h3>
+                            <p className="text-gray-400">Detalle completo de cada módulo disponible para agregar a tu plan.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {Object.values(ADDONS).map((addon) => (
+                                <div key={addon.id} className="bg-white/5 rounded-2xl p-6 border border-white/5 hover:border-blue-500/30 transition duration-300">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <h4 className="text-xl font-bold text-white">{addon.name}</h4>
+                                        <span className="text-xs font-bold px-2 py-1 rounded bg-blue-500/20 text-blue-400 uppercase tracking-wide">Módulo</span>
+                                    </div>
+                                    <ul className="space-y-4">
+                                        {addon.fullFeatures.map((feature, idx) => (
+                                            <li key={idx} className="flex items-start gap-3 text-sm text-gray-300">
+                                                <div className="min-w-[4px] h-[4px] bg-gray-500 rounded-full mt-2" />
+                                                {feature}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-12 text-center">
+                            <button
+                                onClick={() => setShowComparison(false)}
+                                className="px-8 py-3 rounded-xl bg-white text-black font-bold hover:bg-gray-200 transition"
+                            >
+                                Entendido
                             </button>
                         </div>
                     </div>
@@ -320,9 +344,12 @@ export default function PricingTeaser() {
                 </div>
 
                 <div className="mt-12 text-center">
-                    <Link href="/pricing" className="text-violet-400 hover:text-white transition underline text-sm">
-                        Ver comparación detallada de planes
-                    </Link>
+                    <button
+                        onClick={() => setShowComparison(true)}
+                        className="text-violet-400 hover:text-white transition underline text-sm"
+                    >
+                        Ver tabla detallada de funciones por módulo
+                    </button>
                 </div>
             </div>
         </section>
