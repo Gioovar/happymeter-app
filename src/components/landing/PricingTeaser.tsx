@@ -265,10 +265,10 @@ export default function PricingTeaser() {
                                                         e.stopPropagation()
                                                         setViewingAddon(addon.id)
                                                     }}
-                                                    className="p-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition"
-                                                    title="Ver beneficios"
+                                                    className="px-2 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 hover:bg-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider transition flex items-center gap-1"
                                                 >
-                                                    <Info className="w-4 h-4" />
+                                                    <Info className="w-3 h-3" />
+                                                    Beneficios
                                                 </button>
                                             </div>
                                             <div className="text-right">
