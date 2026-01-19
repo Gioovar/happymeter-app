@@ -32,6 +32,12 @@ export default function PricingTeaser() {
                                 <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Max 50 respuestas
                             </li>
                             <li className="flex items-center gap-3 text-gray-300 text-sm">
+                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> 1 Programa de Lealtad
+                            </li>
+                            <li className="flex items-center gap-3 text-gray-300 text-sm">
+                                <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> 1 Flujo de Supervisión
+                            </li>
+                            <li className="flex items-center gap-3 text-gray-300 text-sm">
                                 <Check className="w-4 h-4 text-violet-500 flex-shrink-0" /> Catálogo de Juegos
                             </li>
                             <li className="flex items-center gap-3 text-gray-300 text-sm">
