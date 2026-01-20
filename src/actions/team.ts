@@ -67,6 +67,7 @@ export async function inviteMember(formData: FormData) {
     const email = formData.get('email') as string
     const role = formData.get('role') as 'ADMIN' | 'EDITOR' | 'OBSERVER' | 'OPERATOR'
     const branchId = formData.get('branchId') as string | undefined
+    const branchSlug = formData.get('branchSlug') as string | undefined
 
     if (!email) throw new Error('Email requerido')
 
@@ -82,6 +83,16 @@ export async function inviteMember(formData: FormData) {
         })
         if (!branch) throw new Error('Unauthorized access to branch')
         targetOwnerId = branchId
+    } else if (branchSlug) {
+        // Resolve Branch ID from Slug
+        const branch = await prisma.chainBranch.findFirst({
+            where: {
+                slug: branchSlug,
+                chain: { ownerId: userId }
+            }
+        })
+        if (!branch) throw new Error('Sucursal no encontrada o sin acceso')
+        targetOwnerId = branch.branchId
     }
 
     // Check Plan Limits (Check limits of the TARGET OWNER i.e. the branch or the user)

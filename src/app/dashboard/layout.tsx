@@ -113,6 +113,7 @@ export default async function DashboardLayout({
                         hasChain={hasChain}
                         userPlan={userPlan}
                         user={userData}
+                    // We will let Sidebar handle resolutions or passing slug
                     />
                 </Suspense>
                 <main className="flex-1 overflow-y-auto h-screen relative">
