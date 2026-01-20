@@ -7,6 +7,7 @@ import { useAuth } from '@clerk/nextjs'
 import { Check, Sparkles, Zap, Building2, ArrowLeft, Loader2, Globe, BarChart, ShieldCheck, Info } from 'lucide-react'
 import { PRICING } from '@/lib/plans'
 import { toast } from 'sonner'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 
 export default function PricingPage() {
@@ -322,9 +323,36 @@ function SmartPlanCard({ basePrice, loading, onSelect }: { basePrice: number, lo
                             <span className="font-bold text-white">Lealtad</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20" onClick={(e) => { e.stopPropagation(); toast.info('Beneficios de Lealtad...') }}>
-                                <Info className="w-3 h-3" /> BENEFICIOS
-                            </button>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button onClick={(e) => e.stopPropagation()} className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20 transition-colors">
+                                        <Info className="w-3 h-3" /> BENEFICIOS
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent side="top" className="bg-[#111] border border-white/20 text-white p-4 w-60">
+                                    <h4 className="font-bold text-violet-400 mb-2 flex items-center gap-2">
+                                        <Sparkles className="w-4 h-4" /> Lealtad 3.0
+                                    </h4>
+                                    <ul className="space-y-2 text-xs text-gray-300">
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Tarjeta Digital (Apple/Google Wallet)
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Niveles de Usuarios (Bronce/Plata/Oro)
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Seguimiento de Visitas y Puntos
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Premios Configurables
+                                        </li>
+                                    </ul>
+                                </PopoverContent>
+                            </Popover>
                             <span className="font-bold text-gray-400">${MODULE_PRICES.loyalty}</span>
                         </div>
                     </div>
@@ -345,9 +373,36 @@ function SmartPlanCard({ basePrice, loading, onSelect }: { basePrice: number, lo
                             <span className="font-bold text-white">Procesos</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20" onClick={(e) => { e.stopPropagation(); toast.info('Beneficios de Procesos...') }}>
-                                <Info className="w-3 h-3" /> BENEFICIOS
-                            </button>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button onClick={(e) => e.stopPropagation()} className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20 transition-colors">
+                                        <Info className="w-3 h-3" /> BENEFICIOS
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent side="top" className="bg-[#111] border border-white/20 text-white p-4 w-60">
+                                    <h4 className="font-bold text-blue-400 mb-2 flex items-center gap-2">
+                                        <ShieldCheck className="w-4 h-4" /> Control Total
+                                    </h4>
+                                    <ul className="space-y-2 text-xs text-gray-300">
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Checklists de Apertura y Cierre
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Evidencia Fotográfica Obligatoria
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Reporte de Incidentes
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Auditoría Remota
+                                        </li>
+                                    </ul>
+                                </PopoverContent>
+                            </Popover>
                             <span className="font-bold text-gray-400">${MODULE_PRICES.processes}</span>
                         </div>
                     </div>
@@ -368,9 +423,36 @@ function SmartPlanCard({ basePrice, loading, onSelect }: { basePrice: number, lo
                             <span className="font-bold text-white">Reservaciones</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20" onClick={(e) => { e.stopPropagation(); toast.info('Beneficios de Reservaciones...') }}>
-                                <Info className="w-3 h-3" /> BENEFICIOS
-                            </button>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button onClick={(e) => e.stopPropagation()} className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20 transition-colors">
+                                        <Info className="w-3 h-3" /> BENEFICIOS
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent side="top" className="bg-[#111] border border-white/20 text-white p-4 w-60">
+                                    <h4 className="font-bold text-fuchsia-400 mb-2 flex items-center gap-2">
+                                        <Globe className="w-4 h-4" /> Motor de Reservas
+                                    </h4>
+                                    <ul className="space-y-2 text-xs text-gray-300">
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Widget para Web y Redes
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Gestión Visual de Mesas
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Recordatorios por WhatsApp
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                            Cobro de No-Shows (Stripe)
+                                        </li>
+                                    </ul>
+                                </PopoverContent>
+                            </Popover>
                             <span className="font-bold text-gray-500">${MODULE_PRICES.reservations}</span>
                         </div>
                     </div>
