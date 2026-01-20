@@ -17,14 +17,38 @@ export async function POST(req: Request) {
             where: { userId }
         })
 
-        if (!userSettings?.stripeCustomerId) {
-            return new NextResponse('No active subscription found', { status: 404 })
+        let stripeCustomerId = userSettings?.stripeCustomerId
+
+        if (!stripeCustomerId) {
+            // Create a new Stripe Customer if one doesn't exist
+            const customer = await stripe.customers.create({
+                email: user.emailAddresses[0].emailAddress,
+                name: `${user.firstName} ${user.lastName}`,
+                metadata: {
+                    userId: userId
+                }
+            })
+
+            stripeCustomerId = customer.id
+
+            // Save the new Stripe Customer ID to database
+            await prisma.userSettings.upsert({
+                where: { userId },
+                create: {
+                    userId,
+                    stripeCustomerId,
+                    plan: 'FREE', // Default plan
+                    interval: 'month'
+                },
+                update: {
+                    stripeCustomerId
+                }
+            })
         }
 
         // Generate the Portal Session
-        // This allows them to update pmt methods, cancel subs, view invoices
         const session = await stripe.billingPortal.sessions.create({
-            customer: userSettings.stripeCustomerId,
+            customer: stripeCustomerId,
             return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'}/dashboard/settings`,
         })
 
