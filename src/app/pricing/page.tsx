@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@clerk/nextjs'
-import { Check, Sparkles, Zap, Building2, ArrowLeft, Loader2, Globe, BarChart, ShieldCheck } from 'lucide-react'
+import { Check, Sparkles, Zap, Building2, ArrowLeft, Loader2, Globe, BarChart, ShieldCheck, Info } from 'lucide-react'
 import { PRICING } from '@/lib/plans'
 import { toast } from 'sonner'
 
@@ -24,30 +24,23 @@ export default function PricingPage() {
         }
     }, [searchParams])
 
-    // Auto-checkout effect for returning users from Sign Up
+    // Auto-checkout effect
     useEffect(() => {
         const checkoutPending = searchParams.get('checkout') === 'true'
         const planKey = searchParams.get('plan')
         const paramInterval = searchParams.get('interval') as 'month' | 'year' | null
 
         if (userId && checkoutPending && planKey) {
-            // Clean URL implies we handled it, but let's just trigger first
             handleCheckout(planKey, paramInterval || undefined)
-
-            // Optional: Clean URL to prevent re-triggering on refresh? 
-            // For now, let's leave it, as the checkout redirects away anyway.
         }
     }, [userId, searchParams])
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const handleCheckout = useCallback(async (planKey: string, intervalParam?: 'month' | 'year') => {
+    const handleCheckout = useCallback(async (planKey: string, intervalParam?: 'month' | 'year', customPrice?: number) => {
         const selectedInterval = intervalParam || interval
 
-        // 1. Auth Check: If not logged in, redirect to Sign Up with intent
         if (!userId) {
             toast.error('Necesitas crear una cuenta para suscribirte.')
-
-            // Set cookies for robust redirect after OAuth
             document.cookie = `signup_intent=checkout; path=/; max-age=3600`
             document.cookie = `checkout_plan=${planKey}; path=/; max-age=3600`
             if (selectedInterval) {
@@ -82,12 +75,13 @@ export default function PricingPage() {
                 },
                 body: JSON.stringify({
                     plan: planKey,
-                    interval: selectedInterval
+                    interval: selectedInterval,
+                    // If we were handling custom pricing backend-side, we'd pass modules here
+                    // modules: ... 
                 }),
             })
 
             if (!res.ok) {
-                // Determine if it is a 401 to handle gracefully (though client check catches most)
                 if (res.status === 401) {
                     toast.error('Sesión expirada. Por favor inicia sesión nuevamente.')
                     router.push('/sign-in')
@@ -118,7 +112,7 @@ export default function PricingPage() {
                 '1 Encuesta de prueba (7 días)',
                 'Max 50 respuestas',
                 'Visualización básica de feedback',
-                'Microjuego Básico (Sin premios)', // Added hook
+                'Microjuego Básico (Sin premios)',
                 'Sin branding personalizado'
             ],
             cta: 'Comenzar Prueba',
@@ -138,66 +132,19 @@ export default function PricingPage() {
                 'Contacto Directo con 1 Clic (WhatsApp)',
                 'Generación de Base de Datos Propia',
                 'Recuperación Auto. de Clientes Insatisfechos',
-                'Alertas de Staff (Crisis en Tiempo Real)', // New
-                'Análisis de Sentimiento con IA (Básico)', // New
+                'Alertas de Staff (Crisis en Tiempo Real)',
+                'Análisis de Sentimiento con IA (Básico)',
                 'Marketing con Base de Datos (Meta Ads)',
                 'Reportes Detallados y Exportación',
                 'Microjuegos para Clientes (Premios)',
                 'QR Personalizable con Logo'
             ],
             cta: 'Elegir Growth',
-            popular: true,
+            popular: false, // Changed to false as New Power is likely the 'Smart' choice
             gradient: 'from-violet-600 to-fuchsia-600',
             border: 'border-violet-500'
         },
-        {
-            key: 'POWER',
-            name: 'Power 3X',
-            price: interval === 'month' ? `$${PRICING.POWER.monthly}` : `$${Math.round(PRICING.POWER.yearly / 12)}`,
-            billingText: interval === 'year' ? `Facturado $${PRICING.POWER.yearly} anual` : 'Facturado mensualmente',
-            description: 'Automatización total para PyMEs en expansión.',
-            features: [
-                '3 Encuestas Activas',
-                'Respuestas Ilimitadas',
-                'Chat con Analista de Negocio (IA)', // New
-                'Campañas de WhatsApp Masivas', // New
-                'Segmentación Inteligente para Meta Ads',
-                'CRM: Base de Datos de Clientes',
-                'Reportes con IA (Sentimiento y Tendencias)',
-                'Microjuegos Premium (Ruleta/Raspa y Gana)',
-                'Marca Blanca (Sin logo HappyMeter)',
-                'Acceso Multi-usuario (3 Asientos)',
-                'Soporte Prioritario por Chat'
-            ],
-            cta: 'Elegir Power',
-            popular: false,
-            gradient: 'from-blue-600 to-cyan-600',
-            border: 'border-blue-500'
-        },
-        // Row 2
-        {
-            key: 'CHAIN',
-            name: 'Chain Master',
-            price: interval === 'month' ? `$${PRICING.CHAIN.monthly}` : `$${Math.round(PRICING.CHAIN.yearly / 12)}`,
-            billingText: interval === 'year' ? `Facturado $${PRICING.CHAIN.yearly} anual` : 'Facturado mensualmente',
-            description: 'Control centralizado para cadenas y franquicias.',
-            features: [
-                'Hasta 100 Encuestas Activas',
-                'Dashboard Comparativo Multi-Sucursal',
-                'IA Analista Corporativo (Comparativo)', // New
-                'Campañas WhatsApp Centralizadas',
-                'Microjuegos Personalizados por Sucursal',
-                'API para Integración CRM/POS',
-                'Reportes Ejecutivos Automated',
-                'Gestión de Roles y Permisos',
-                'SLA Garantizado 99.9%',
-                'Auditoría de Cambios (Logs)'
-            ],
-            cta: 'Elegir Chain',
-            popular: false,
-            gradient: 'from-emerald-600 to-teal-600',
-            border: 'border-emerald-500'
-        },
+        // Power 3X & Chain Master removed/replaced
         {
             key: 'ENTERPRISE',
             name: 'Infinity',
@@ -206,7 +153,7 @@ export default function PricingPage() {
             description: 'Infraestructura dedicada a tu medida.',
             features: [
                 'Todo lo de Chain Master Ilimitado',
-                'Gamificación y Microjuegos a Medida', // Added
+                'Gamificación y Microjuegos a Medida',
                 'Desarrollo de Integraciones a Medida',
                 'Soporte Técnico Dedicado 24/7',
                 'Onboarding Personalizado y Capacitación',
@@ -220,6 +167,9 @@ export default function PricingPage() {
     ]
 
     const visiblePlans = userId ? plans.filter(p => p.key !== 'FREE') : plans
+
+    // Smart Plan Props
+    const basePrice = 399
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 font-sans pb-20">
@@ -260,24 +210,40 @@ export default function PricingPage() {
                 </div>
 
                 {/* Plans Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    {/* First 3 Plans */}
-                    {visiblePlans.slice(0, 3).map((plan) => (
-                        <PlanCard key={plan.key} plan={plan} interval={interval} loading={loadingPlan === plan.key} onSelect={() => handleCheckout(plan.key)} />
-                    ))}
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 items-start">
 
-                {/* Additional Tier Headline */}
-                <div className="text-center mb-8 mt-16">
-                    <h2 className="text-2xl font-bold text-white mb-2">Para Operaciones Masivas</h2>
-                    <p className="text-gray-400">Escala a cientos de sucursales con control total.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                    {/* Remaining Plans */}
-                    {visiblePlans.slice(3).map((plan) => (
-                        <PlanCard key={plan.key} plan={plan} interval={interval} loading={loadingPlan === plan.key} onSelect={() => handleCheckout(plan.key)} />
+                    {/* Standard Plans (FREE & GROWTH) */}
+                    {visiblePlans.filter(p => p.key !== 'ENTERPRISE').map((plan) => (
+                        <PlanCard
+                            key={plan.key}
+                            plan={plan}
+                            interval={interval}
+                            loading={loadingPlan === plan.key}
+                            onSelect={() => handleCheckout(plan.key)}
+                        />
                     ))}
+
+                    {/* Smart Power 3X Plan (Replaces Old Power & Chain) */}
+                    <SmartPlanCard
+                        basePrice={basePrice}
+                        loading={loadingPlan === 'POWER'}
+                        onSelect={() => handleCheckout('POWER')}
+                    />
+
+                    {/* Enterprise - Moved to bottom or last slot depending on layout provided in prompt
+                        The Prompt implied removing Power & Chain and putting the new one. 
+                        Usually Enterprise sits at the end. 
+                    */}
+                    {visiblePlans.filter(p => p.key === 'ENTERPRISE').map((plan) => (
+                        <PlanCard
+                            key={plan.key}
+                            plan={plan}
+                            interval={interval}
+                            loading={loadingPlan === plan.key}
+                            onSelect={() => handleCheckout(plan.key)}
+                        />
+                    ))}
+
                 </div>
 
                 <div className="mt-24 mb-16 text-center max-w-4xl mx-auto px-4">
@@ -291,6 +257,151 @@ export default function PricingPage() {
                     <p className="text-gray-500 text-sm">
                         ¿Dudas sobre qué plan elegir? <a href="#" className="text-violet-400 hover:underline">Habla con un experto</a>
                     </p>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function SmartPlanCard({ basePrice, loading, onSelect }: { basePrice: number, loading: boolean, onSelect: () => void }) {
+    // State for Toggles
+    const [modules, setModules] = useState({
+        loyalty: false,
+        processes: false,
+        reservations: false
+    })
+
+    const MODULE_PRICES = {
+        loyalty: 599,
+        processes: 699,
+        reservations: 599
+    }
+
+    const calculateTotal = () => {
+        let total = basePrice
+        if (modules.loyalty) total += MODULE_PRICES.loyalty
+        if (modules.processes) total += MODULE_PRICES.processes
+        if (modules.reservations) total += MODULE_PRICES.reservations
+        return total
+    }
+
+    const toggleModule = (key: keyof typeof modules) => {
+        setModules(prev => ({ ...prev, [key]: !prev[key] }))
+    }
+
+    return (
+        <div className="relative p-1 rounded-3xl bg-gradient-to-b from-blue-600 to-transparent transition duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/20 h-full">
+            {/* Badge */}
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1.5 rounded-full bg-[#1e40af] text-white text-xs font-bold uppercase tracking-wider shadow-lg z-10 border border-blue-400/30">
+                PLAN INTELIGENTE
+            </div>
+
+            <div className="bg-[#050505] rounded-[22px] p-8 h-full flex flex-col relative overflow-hidden">
+                <div className="mb-6 relative z-10">
+                    <h3 className="text-3xl font-bold mb-2 text-white">Power 3X</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                        Arma tu propio sistema. Incluye todo lo de <strong className="text-white">Growth 1K</strong> + Módulos:
+                    </p>
+                </div>
+
+                {/* Modules Selection */}
+                <div className="space-y-3 mb-8 flex-1">
+                    {/* Module: Lealtad */}
+                    <div
+                        onClick={() => toggleModule('loyalty')}
+                        className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-center justify-between group ${modules.loyalty
+                                ? 'bg-blue-600/10 border-blue-500'
+                                : 'bg-[#111] border-white/10 hover:border-white/20'
+                            }`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${modules.loyalty ? 'bg-blue-500 border-blue-500' : 'border-gray-600'
+                                }`}>
+                                {modules.loyalty && <Check className="w-3 h-3 text-white" />}
+                            </div>
+                            <span className="font-bold text-white">Lealtad</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20" onClick={(e) => { e.stopPropagation(); toast.info('Beneficios de Lealtad...') }}>
+                                <Info className="w-3 h-3" /> BENEFICIOS
+                            </button>
+                            <span className="font-bold text-gray-400">${MODULE_PRICES.loyalty}</span>
+                        </div>
+                    </div>
+
+                    {/* Module: Procesos */}
+                    <div
+                        onClick={() => toggleModule('processes')}
+                        className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-center justify-between group ${modules.processes
+                                ? 'bg-blue-600/10 border-blue-500'
+                                : 'bg-[#111] border-white/10 hover:border-white/20'
+                            }`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${modules.processes ? 'bg-blue-500 border-blue-500' : 'border-gray-600'
+                                }`}>
+                                {modules.processes && <Check className="w-3 h-3 text-white" />}
+                            </div>
+                            <span className="font-bold text-white">Procesos</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20" onClick={(e) => { e.stopPropagation(); toast.info('Beneficios de Procesos...') }}>
+                                <Info className="w-3 h-3" /> BENEFICIOS
+                            </button>
+                            <span className="font-bold text-gray-400">${MODULE_PRICES.processes}</span>
+                        </div>
+                    </div>
+
+                    {/* Module: Reservaciones */}
+                    <div
+                        onClick={() => toggleModule('reservations')}
+                        className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-center justify-between group ${modules.reservations
+                                ? 'bg-blue-600/10 border-blue-500'
+                                : 'bg-[#111] border-white/10 hover:border-white/20'
+                            }`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${modules.reservations ? 'bg-blue-500 border-blue-500' : 'border-gray-600'
+                                }`}>
+                                {modules.reservations && <Check className="w-3 h-3 text-white" />}
+                            </div>
+                            <span className="font-bold text-white">Reservaciones</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20" onClick={(e) => { e.stopPropagation(); toast.info('Beneficios de Reservaciones...') }}>
+                                <Info className="w-3 h-3" /> BENEFICIOS
+                            </button>
+                            <span className="font-bold text-gray-500">${MODULE_PRICES.reservations}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Summary & CTA */}
+                <div className="bg-black/40 rounded-xl p-4 border border-white/10 space-y-3">
+                    <div className="flex items-center justify-between text-sm text-gray-400 border-b border-white/5 pb-2">
+                        <span>Base (Growth 1K)</span>
+                        <span>${basePrice}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-white">
+                        <span className="font-bold text-lg">Total Mensual</span>
+                        <span className="text-3xl font-bold">${calculateTotal()}</span>
+                    </div>
+                </div>
+
+                <div className="mt-6">
+                    <button
+                        onClick={onSelect}
+                        disabled={loading}
+                        className="w-full py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {loading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <>
+                                👉 Armar Plan Power
+                            </>
+                        )}
+                    </button>
                 </div>
             </div>
         </div>
