@@ -4,7 +4,21 @@ import { useState } from 'react'
 import { Loader2, CreditCard } from 'lucide-react'
 import { toast } from 'sonner' // Assuming you have sonner or use your toast lib
 
-export default function PortalButton() {
+interface PortalButtonProps {
+    text?: string
+    variant?: 'primary' | 'danger' | 'outline' | 'ghost'
+    className?: string
+    icon?: React.ReactNode
+    showSync?: boolean
+}
+
+export default function PortalButton({
+    text = 'Gestionar Pagos',
+    variant = 'primary',
+    className,
+    icon,
+    showSync = true
+}: PortalButtonProps) {
     const [isLoading, setIsLoading] = useState(false)
 
     const handlePortal = async () => {
@@ -55,25 +69,38 @@ export default function PortalButton() {
         }
     }
 
+    // Style mapping
+    const variants = {
+        primary: "bg-white/10 hover:bg-white/20 text-white border-white/5",
+        danger: "bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border-red-500/10",
+        outline: "bg-transparent hover:bg-white/5 text-gray-400 hover:text-white border-white/10",
+        ghost: "bg-transparent hover:bg-white/5 text-gray-400 hover:text-white border-transparent"
+    }
+
+    const baseClass = "px-5 py-2.5 font-bold rounded-xl transition flex items-center gap-2 group border"
+    const variantClass = variants[variant] || variants.primary
+
     return (
         <div className="flex gap-2">
             <button
                 onClick={handlePortal}
                 disabled={isLoading}
-                className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition flex items-center gap-2 group border border-white/5"
+                className={`${baseClass} ${variantClass} ${className || ''}`}
             >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4 text-violet-400 group-hover:text-white transition" />}
-                Gestionar Pagos
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (icon || <CreditCard className="w-4 h-4 text-violet-400 group-hover:text-white transition" />)}
+                {text}
             </button>
 
-            <button
-                onClick={handleSync}
-                disabled={isLoading}
-                className="px-5 py-2.5 bg-transparent hover:bg-white/5 text-gray-400 hover:text-white font-medium rounded-xl transition text-sm border border-white/10"
-                title="Usar si el plan no se actualiza automáticamente"
-            >
-                ↻ Sincronizar
-            </button>
+            {showSync && (
+                <button
+                    onClick={handleSync}
+                    disabled={isLoading}
+                    className="px-5 py-2.5 bg-transparent hover:bg-white/5 text-gray-400 hover:text-white font-medium rounded-xl transition text-sm border border-white/10"
+                    title="Usar si el plan no se actualiza automáticamente"
+                >
+                    ↻ Sincronizar
+                </button>
+            )}
         </div>
     )
 }

@@ -50,9 +50,21 @@ export default function SettingsView({ userSettings, branchId }: SettingsViewPro
                         )}
                     </div>
 
-                    <div className="flex gap-4">
-                        <PortalButton />
-                        <Link href="/pricing" className="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl transition">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <PortalButton
+                            text="Métodos de Pago"
+                            variant="primary"
+                            showSync={true} // Only show sync button once
+                        />
+
+                        <PortalButton
+                            text="Cancelar Suscripción"
+                            variant="danger"
+                            showSync={false}
+                            icon={<Settings className="w-4 h-4 text-red-400 group-hover:text-red-300" />}
+                        />
+
+                        <Link href="/pricing" className="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl transition flex items-center justify-center">
                             Ver Planes
                         </Link>
                     </div>
