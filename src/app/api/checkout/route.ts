@@ -112,7 +112,8 @@ export async function POST(req: Request) {
                 addons: addons.join(','),
                 affiliateRef: affiliateRef,
             },
-            allow_promotion_codes: true, // Enabled for Admin/God Mode coupons
+            // If we have auto-applied discounts (Power Plan), we CANNOT allow other codes.
+            allow_promotion_codes: discounts ? undefined : true,
             success_url: `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${origin}/dashboard?payment=cancelled`,
         })
