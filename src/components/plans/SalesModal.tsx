@@ -326,7 +326,7 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
                         <div className="border-t border-white/10 pt-4 mb-2">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-gray-500 line-through text-xs md:text-sm font-medium">Precio real: ${finalRealTotal.toLocaleString()}</span>
-                                <span className="text-[10px] md:text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30 font-bold">AHORRAS 70%</span>
+                                <span className="text-xs bg-[#3f1515] text-[#ff8080] px-3 py-1 rounded-full border border-red-500/30 font-bold tracking-wide shadow-sm">AHORRAS 70%</span>
                             </div>
 
                             <div className="flex justify-between items-end">
