@@ -4,10 +4,66 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@clerk/nextjs'
-import { Check, Sparkles, Zap, Building2, ArrowLeft, Loader2, Globe, BarChart, ShieldCheck, Info } from 'lucide-react'
+import { Check, Sparkles, Zap, Building2, ArrowLeft, Loader2, Globe, BarChart, ShieldCheck, Info, X } from 'lucide-react'
 import { PRICING } from '@/lib/plans'
 import { toast } from 'sonner'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+
+const ADDONS = {
+    LOYALTY: {
+        id: 'loyalty',
+        name: 'Lealtad',
+        monthly: 699,
+        annual: 599,
+        features: ['App de Lealtad', 'Menú Digital', 'Tarjeta Digital', 'Niveles VIP'],
+        fullFeatures: [
+            'Programa de Lealtad por Visitas y Puntos',
+            'Menú Digital Interactivo',
+            'App para Staff (Gestión de Puntos)',
+            'Escáner de Códigos QR',
+            'Micrositio para Clientes',
+            'Gestión de Reglas y Premios',
+            'Historial de Clientes y Promociones',
+            'Tarjeta Digital (Apple/Google Wallet)',
+            'Niveles VIP y Recompensas',
+            'Juegos para elevar ventas (Ruleta, Raspa y Gana)'
+        ]
+    },
+    PROCESSES: {
+        id: 'processes',
+        name: 'Procesos',
+        monthly: 799,
+        annual: 699,
+        features: ['Flujos y Tareas', 'Supervisión IA', 'Evidencia Video', 'Reportes Staff'],
+        fullFeatures: [
+            'Gestión de Flujos de Trabajo e Incidencias',
+            'Supervisión de Tareas con IA',
+            'Captura de Evidencia en Video',
+            'Notificaciones de Tareas Pendientes',
+            'Reportes de Desempeño de Empleados',
+            'Control de Órdenes y Cumplimiento',
+            'Automatización de Procesos Operativos'
+        ]
+    },
+    RESERVATIONS: {
+        id: 'reservations',
+        name: 'Reservaciones',
+        monthly: 699,
+        annual: 599,
+        features: ['Mapa de Mesas', 'Hostess App', 'Motor de Reservas', 'Recordatorios'],
+        fullFeatures: [
+            'Sistema de Reservaciones Inteligente',
+            'Mapa Digital Exacto (Desde Foto)',
+            'Asignación y Bloqueo de Mesas',
+            'Cobro por Mesas VIP',
+            'Lista de Reservas por Día',
+            'Confirmación Automática (WhatsApp/SMS)',
+            'App para Hostess',
+            'Link y QR de Reservas',
+            'Integración con Google Business y Calendar'
+        ]
+    }
+}
 
 
 export default function PricingPage() {
@@ -124,8 +180,8 @@ export default function PricingPage() {
         {
             key: 'GROWTH',
             name: 'Growth 1K',
-            price: interval === 'month' ? `$${PRICING.GROWTH.monthly}` : `$${Math.round(PRICING.GROWTH.yearly / 12)}`,
-            billingText: interval === 'year' ? `Facturado $${PRICING.GROWTH.yearly} anual` : 'Facturado mensualmente',
+            price: interval === 'month' ? `$450` : `$399`, // Updated to match Home Page logic
+            billingText: interval === 'year' ? `Ahorra $51 al mes pagando anual` : 'Pago mensual sin plazo forzoso', // Updated text
             description: 'Para negocios individuales que quieren vender más.',
             features: [
                 '1 Encuesta Activa',
@@ -141,11 +197,10 @@ export default function PricingPage() {
                 'QR Personalizable con Logo'
             ],
             cta: 'Elegir Growth',
-            popular: false, // Changed to false as New Power is likely the 'Smart' choice
+            popular: false,
             gradient: 'from-violet-600 to-fuchsia-600',
             border: 'border-violet-500'
         },
-        // Power 3X & Chain Master removed/replaced
         {
             key: 'ENTERPRISE',
             name: 'Infinity',
@@ -169,8 +224,6 @@ export default function PricingPage() {
 
     const visiblePlans = userId ? plans.filter(p => p.key !== 'FREE') : plans
 
-    // Smart Plan Props
-    const basePrice = 399
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 font-sans pb-20">
@@ -205,7 +258,7 @@ export default function PricingPage() {
                         </div>
                         <span className={`text-sm font-bold flex items-center gap-2 ${interval === 'year' ? 'text-white' : 'text-gray-500'}`}>
                             Anual
-                            <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20">AHORRA 2 meses</span>
+                            <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20">AHORRA 20%</span>
                         </span>
                     </div>
                 </div>
@@ -224,18 +277,14 @@ export default function PricingPage() {
                         />
                     ))}
 
-                    {/* Smart Power 3X Plan (Replaces Old Power & Chain) */}
+                    {/* Smart Power 3X Plan (Updated to match Home Page Logic) */}
                     <SmartPlanCard
-                        basePrice={basePrice}
                         interval={interval}
                         loading={loadingPlan === 'POWER'}
                         onSelect={() => handleCheckout('POWER')}
                     />
 
-                    {/* Enterprise - Moved to bottom or last slot depending on layout provided in prompt
-                        The Prompt implied removing Power & Chain and putting the new one. 
-                        Usually Enterprise sits at the end. 
-                    */}
+                    {/* Enterprise */}
                     {visiblePlans.filter(p => p.key === 'ENTERPRISE').map((plan) => (
                         <PlanCard
                             key={plan.key}
@@ -265,249 +314,167 @@ export default function PricingPage() {
     )
 }
 
-function SmartPlanCard({ basePrice, interval, loading, onSelect }: { basePrice: number, interval: 'month' | 'year', loading: boolean, onSelect: () => void }) {
+function SmartPlanCard({ interval, loading, onSelect }: { interval: 'month' | 'year', loading: boolean, onSelect: () => void }) {
     // State for Toggles
-    const [modules, setModules] = useState({
-        loyalty: false,
-        processes: false,
-        reservations: false
-    })
+    const [selectedAddons, setSelectedAddons] = useState<string[]>([])
+    const [viewingAddon, setViewingAddon] = useState<string | null>(null)
 
-    const MODULE_PRICES = {
-        loyalty: 599,
-        processes: 699,
-        reservations: 599
+    const isAnnual = interval === 'year'
+    const basePrice = isAnnual ? 399 : 450 // Base price from logic (Growth 1K)
+
+    const toggleAddon = (id: string) => {
+        setSelectedAddons(prev =>
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        )
     }
 
-    const calculateTotal = () => {
-        let total = basePrice
-        if (modules.loyalty) total += MODULE_PRICES.loyalty
-        if (modules.processes) total += MODULE_PRICES.processes
-        if (modules.reservations) total += MODULE_PRICES.reservations
+    // Pricing Calculation Logic (Matches PricingTeaser)
+    const addonPriceRaw = selectedAddons.reduce((acc, id) => {
+        const addon = Object.values(ADDONS).find(a => a.id === id)
+        return acc + (isAnnual ? addon!.annual : addon!.monthly)
+    }, 0)
 
-        // Annual Discount Logic: Pay 10 months, get 12
-        // We display the monthly *equivalent*
-        if (interval === 'year') {
-            const annualTotal = total * 10
-            return Math.round(annualTotal / 12)
-        }
+    let discountRate = 0
+    if (selectedAddons.length === 2) discountRate = 0.15
+    if (selectedAddons.length === 3) discountRate = 0.20
 
-        return total
-    }
+    const discountAmount = addonPriceRaw * discountRate
+    const addonPriceFinal = addonPriceRaw - discountAmount
+    const totalPrice = basePrice + addonPriceFinal
 
-    const currentTotal = calculateTotal()
-    const annualBilled = interval === 'year' ? (currentTotal * 12) : null // Or strictly total * 10, which matches currentTotal * 12 roughly due to rounding
-
-    const toggleModule = (key: keyof typeof modules) => {
-        setModules(prev => ({ ...prev, [key]: !prev[key] }))
-    }
+    const viewingAddonData = viewingAddon ? Object.values(ADDONS).find(a => a.id === viewingAddon) : null
 
     return (
-        <div className="relative p-1 rounded-3xl bg-gradient-to-b from-blue-600 to-transparent transition duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/20 h-full">
-            {/* Badge */}
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1.5 rounded-full bg-[#1e40af] text-white text-xs font-bold uppercase tracking-wider shadow-lg z-10 border border-blue-400/30">
-                PLAN INTELIGENTE
-            </div>
-
-            <div className="bg-[#050505] rounded-[22px] p-8 h-full flex flex-col relative overflow-hidden">
-                <div className="mb-6 relative z-10">
-                    <h3 className="text-3xl font-bold mb-2 text-white">Power 3X</h3>
-                    <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                        Arma tu propio sistema. Incluye todo lo de <strong className="text-white">Growth 1K</strong> + Módulos:
-                    </p>
-                </div>
-
-                {/* Modules Selection */}
-                <div className="space-y-3 mb-8 flex-1">
-                    {/* Module: Lealtad */}
-                    <div
-                        onClick={() => toggleModule('loyalty')}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-center justify-between group ${modules.loyalty
-                            ? 'bg-blue-600/10 border-blue-500'
-                            : 'bg-[#111] border-white/10 hover:border-white/20'
-                            }`}
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${modules.loyalty ? 'bg-blue-500 border-blue-500' : 'border-gray-600'
-                                }`}>
-                                {modules.loyalty && <Check className="w-3 h-3 text-white" />}
-                            </div>
-                            <span className="font-bold text-white">Lealtad</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <button onClick={(e) => e.stopPropagation()} className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20 transition-colors">
-                                        <Info className="w-3 h-3" /> BENEFICIOS
-                                    </button>
-                                </PopoverTrigger>
-                                <PopoverContent side="top" className="bg-[#111] border border-white/20 text-white p-4 w-60">
-                                    <h4 className="font-bold text-violet-400 mb-2 flex items-center gap-2">
-                                        <Sparkles className="w-4 h-4" /> Lealtad 3.0
-                                    </h4>
-                                    <ul className="space-y-2 text-xs text-gray-300">
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Tarjeta Digital (Apple/Google Wallet)
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Niveles de Usuarios (Bronce/Plata/Oro)
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Seguimiento de Visitas y Puntos
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Premios Configurables
-                                        </li>
-                                    </ul>
-                                </PopoverContent>
-                            </Popover>
-                            <span className="font-bold text-gray-400">${MODULE_PRICES.loyalty}</span>
-                        </div>
-                    </div>
-
-                    {/* Module: Procesos */}
-                    <div
-                        onClick={() => toggleModule('processes')}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-center justify-between group ${modules.processes
-                            ? 'bg-blue-600/10 border-blue-500'
-                            : 'bg-[#111] border-white/10 hover:border-white/20'
-                            }`}
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${modules.processes ? 'bg-blue-500 border-blue-500' : 'border-gray-600'
-                                }`}>
-                                {modules.processes && <Check className="w-3 h-3 text-white" />}
-                            </div>
-                            <span className="font-bold text-white">Procesos</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <button onClick={(e) => e.stopPropagation()} className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20 transition-colors">
-                                        <Info className="w-3 h-3" /> BENEFICIOS
-                                    </button>
-                                </PopoverTrigger>
-                                <PopoverContent side="top" className="bg-[#111] border border-white/20 text-white p-4 w-60">
-                                    <h4 className="font-bold text-blue-400 mb-2 flex items-center gap-2">
-                                        <ShieldCheck className="w-4 h-4" /> Control Total
-                                    </h4>
-                                    <ul className="space-y-2 text-xs text-gray-300">
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Checklists de Apertura y Cierre
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Evidencia Fotográfica Obligatoria
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Reporte de Incidentes
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Auditoría Remota
-                                        </li>
-                                    </ul>
-                                </PopoverContent>
-                            </Popover>
-                            <span className="font-bold text-gray-400">${MODULE_PRICES.processes}</span>
-                        </div>
-                    </div>
-
-                    {/* Module: Reservaciones */}
-                    <div
-                        onClick={() => toggleModule('reservations')}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-center justify-between group ${modules.reservations
-                            ? 'bg-blue-600/10 border-blue-500'
-                            : 'bg-[#111] border-white/10 hover:border-white/20'
-                            }`}
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${modules.reservations ? 'bg-blue-500 border-blue-500' : 'border-gray-600'
-                                }`}>
-                                {modules.reservations && <Check className="w-3 h-3 text-white" />}
-                            </div>
-                            <span className="font-bold text-white">Reservaciones</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <button onClick={(e) => e.stopPropagation()} className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-full border border-violet-500/20 flex items-center gap-1 hover:bg-violet-500/20 transition-colors">
-                                        <Info className="w-3 h-3" /> BENEFICIOS
-                                    </button>
-                                </PopoverTrigger>
-                                <PopoverContent side="top" className="bg-[#111] border border-white/20 text-white p-4 w-60">
-                                    <h4 className="font-bold text-fuchsia-400 mb-2 flex items-center gap-2">
-                                        <Globe className="w-4 h-4" /> Motor de Reservas
-                                    </h4>
-                                    <ul className="space-y-2 text-xs text-gray-300">
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Widget para Web y Redes
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Gestión Visual de Mesas
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Recordatorios por WhatsApp
-                                        </li>
-                                        <li className="flex gap-2">
-                                            <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            Cobro de No-Shows (Stripe)
-                                        </li>
-                                    </ul>
-                                </PopoverContent>
-                            </Popover>
-                            <span className="font-bold text-gray-500">${MODULE_PRICES.reservations}</span>
+        <div className="relative z-10">
+            {/* Module Detail Modal - Custom Implementation to match design */}
+            {viewingAddonData && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setViewingAddon(null)}>
+                    <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={() => setViewingAddon(null)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        <h3 className="text-2xl font-bold text-white mb-2">{viewingAddonData.name}</h3>
+                        <div className="h-1 w-12 bg-blue-500 rounded-full mb-6" />
+                        <ul className="space-y-3">
+                            {viewingAddonData.fullFeatures.map((feature, idx) => (
+                                <li key={idx} className="flex items-start gap-3 text-gray-300 text-sm">
+                                    <Check className="w-5 h-5 text-blue-500 shrink-0" />
+                                    {feature}
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="mt-8 pt-6 border-t border-white/10">
+                            <button
+                                onClick={() => setViewingAddon(null)}
+                                className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition"
+                            >
+                                Cerrar
+                            </button>
                         </div>
                     </div>
                 </div>
+            )}
 
-                {/* Summary & CTA */}
-                <div className="bg-black/40 rounded-xl p-4 border border-white/10 space-y-3">
-                    <div className="flex items-center justify-between text-sm text-gray-400 border-b border-white/5 pb-2">
-                        <span>Base (Growth 1K)</span>
-                        <span>${interval === 'year' ? Math.round((basePrice * 10) / 12) : basePrice}</span>
-                    </div>
-                    <div className="flex flex-col">
-                        <div className="flex items-center justify-between text-white">
-                            <span className="font-bold text-lg">Total Mensual</span>
-                            <span className="text-3xl font-bold">${currentTotal}</span>
-                        </div>
-                        {interval === 'year' && (
-                            <p className="text-xs text-green-400 text-right mt-1">
-                                Facturado ${currentTotal * 12} anual
-                            </p>
-                        )}
-                        {interval === 'month' && (
-                            <p className="text-xs text-gray-500 text-right mt-1">
-                                Facturado mensualmente
-                            </p>
-                        )}
-                    </div>
+
+            <div className="relative p-1 rounded-3xl bg-gradient-to-b from-blue-600 to-transparent transition duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/20 h-full">
+                {/* Badge */}
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1.5 rounded-full bg-[#1e40af] text-white text-xs font-bold uppercase tracking-wider shadow-lg z-10 border border-blue-400/30">
+                    PLAN INTELIGENTE
                 </div>
 
-                <div className="mt-6">
-                    <button
-                        onClick={onSelect}
-                        disabled={loading}
-                        className="w-full py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {loading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <>
-                                👉 Armar Plan Power
-                            </>
+                <div className="bg-[#050505] rounded-[22px] p-8 h-full flex flex-col relative overflow-hidden">
+                    <div className="mb-6 relative z-10">
+                        <h3 className="text-3xl font-bold mb-2 text-white">Power 3X</h3>
+                        <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                            Arma tu propio sistema. Incluye todo lo de <strong className="text-white">Growth 1K</strong> + Módulos:
+                        </p>
+                    </div>
+
+                    {/* Modules Selection */}
+                    <div className="space-y-3 mb-8 flex-1">
+                        {Object.values(ADDONS).map((addon) => {
+                            const isSelected = selectedAddons.includes(addon.id)
+                            const price = isAnnual ? addon.annual : addon.monthly
+                            return (
+                                <div
+                                    key={addon.id}
+                                    onClick={() => toggleAddon(addon.id)}
+                                    className={`cursor-pointer p-4 rounded-xl border transition-all duration-200 ${isSelected ? 'bg-blue-500/10 border-blue-500' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-500'}`}>
+                                                {isSelected && <Check className="w-3 h-3 text-white" />}
+                                            </div>
+                                            <span className={`font-bold ${isSelected ? 'text-white' : 'text-gray-400'}`}>{addon.name}</span>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setViewingAddon(addon.id)
+                                                }}
+                                                className="px-2 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 hover:bg-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider transition flex items-center gap-1"
+                                            >
+                                                <Info className="w-3 h-3" />
+                                                BENEFICIOS
+                                            </button>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className={`block font-bold ${isSelected ? 'text-white' : 'text-gray-500'}`}>${price}</span>
+                                        </div>
+                                    </div>
+                                    {/* Mini Features */}
+                                    {isSelected && (
+                                        <div className="mt-2 text-xs text-gray-400 pl-8">
+                                            {addon.features.join(', ')}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                    {/* Summary & CTA */}
+                    <div className="bg-black/40 rounded-xl p-4 border border-white/10 space-y-3">
+                        <div className="flex justify-between text-sm text-gray-400">
+                            <span>Base (Growth 1K)</span>
+                            <span>${basePrice}</span>
+                        </div>
+                        {selectedAddons.length > 0 && (
+                            <div className="flex justify-between text-sm text-gray-400">
+                                <span>Extra Módulos</span>
+                                <span>${addonPriceRaw}</span>
+                            </div>
                         )}
-                    </button>
+                        {discountAmount > 0 && (
+                            <div className="flex justify-between text-sm text-green-400 font-bold">
+                                <span>Descuento Multimodulo ({(discountRate * 100).toFixed(0)}%)</span>
+                                <span>-${discountAmount.toFixed(0)}</span>
+                            </div>
+                        )}
+                        <div className="border-t border-white/10 mt-2 pt-2 flex justify-between items-baseline">
+                            <span className="text-white font-bold">Total Mensual</span>
+                            <span className="text-3xl font-bold text-white">${totalPrice.toFixed(0)}</span>
+                        </div>
+                    </div>
+
+                    <div className="mt-6">
+                        <button
+                            onClick={onSelect}
+                            disabled={loading}
+                            className="w-full py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {loading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <>
+                                    👉 Armar Plan Power
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
