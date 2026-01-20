@@ -474,9 +474,10 @@ function SmartPlanCard({ interval, loading, onSelect }: { interval: 'month' | 'y
                         )}
                         <div className="border-t border-white/10 mt-2 pt-2">
                             {/* Launch Offer Price Comparison */}
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-gray-500 line-through text-xs">Precio real: ${totalRealPrice.toLocaleString()}</span>
-                                <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/20 font-bold">AHORRAS 70%</span>
+                            {/* Launch Offer Price Comparison */}
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-gray-400 line-through text-sm font-medium">Precio real: ${totalRealPrice.toLocaleString()}</span>
+                                <span className="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full border border-red-500/30 font-bold shadow-lg shadow-red-500/10">AHORRAS 70%</span>
                             </div>
 
                             <div className="flex justify-between items-baseline">
@@ -538,13 +539,7 @@ function PlanCard({ plan, interval, loading, onSelect }: any) {
             <div className="mb-6">
                 <h3 className="text-xl font-bold mb-2 text-white">{plan.name}</h3>
 
-                {/* Strikethrough Price for Growth */}
-                {plan.key === 'GROWTH' && (
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-gray-500 line-through text-sm">Precio real: $1,200</span>
-                        <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/20 font-bold"> AHORRAS 70%</span>
-                    </div>
-                )}
+
 
                 <div className="flex items-baseline gap-1 mb-1">
                     <span className="text-4xl font-bold text-white">{plan.price}</span>
@@ -583,7 +578,13 @@ function PlanCard({ plan, interval, loading, onSelect }: any) {
 
             {/* Footer Notes for Growth */}
             {plan.key === 'GROWTH' && (
-                <div className="mb-6 pt-4 border-t border-white/5 space-y-2">
+                <div className="mb-0 pt-4 border-t border-white/5 space-y-2">
+                    {/* Moved Real Price here for consistency */}
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-400 line-through text-sm font-medium">Precio real: $1,200</span>
+                        <span className="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full border border-red-500/30 font-bold shadow-lg shadow-red-500/10">AHORRAS 70%</span>
+                    </div>
+
                     <p className="flex items-center gap-2 text-[10px] text-gray-400">
                         <Building2 className="w-3 h-3 text-gray-500" />
                         💡 El precio mostrado es por lugar.
