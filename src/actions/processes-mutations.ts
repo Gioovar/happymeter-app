@@ -25,6 +25,45 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
 
     if (!data.name) throw new Error("Zone Name is required");
 
+    // LIMIT CHECK
+    const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
+    if (userSettings) {
+        const { isLimitReached, FREE_PLAN_LIMITS } = await import('@/lib/limits')
+
+        // 1. Check Zone Count
+        const existingZones = await prisma.processZone.count({ where: { userId } })
+        if (isLimitReached(existingZones, FREE_PLAN_LIMITS.MAX_PROCESS_FLOWS, userSettings.plan)) {
+            throw new Error("Límite de flujos alcanzado (Plan Gratuito: 1). Actualiza tu plan.")
+        }
+
+        // 2. Check Tasks Count (in this creation payload)
+        // If they try to create a zone with > 1 task
+        if (isLimitReached(data.tasks.length, FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED + 1, userSettings.plan)) {
+            // Logic: isLimitReached(2, 2, 'FREE') -> true. We want to allow 1. So if length >= 2...
+            // Wait, isLimitReached(val, limit) returns val >= limit.
+            // If MAX is 1. If length is 2. 2 >= 1? True. Blocked?
+            // My helper isLimitReached(current, limit) { return current >= limit }.
+            // If limit is 1. If I have 1, it returns true? No, I should be able to HAVE 1.
+            // Limit usually means "Max allowed". Usage < Limit is ok. Usage == Limit is full. Usage > Limit is bad.
+            // If I have 0, create 1 -> 1. 1 >= 1? True.
+            // The helper `isLimitReached` checks if current count ALREADY met the limit? 
+            // "Limit Reached" usually means "You are at capacity, cannot add more".
+            // So if current == limit, you CANNOT add more.
+            // currentZones = 0. limit = 1. isLimitReached(0, 1) -> false. Proceed.
+            // currentZones = 1. limit = 1. isLimitReached(1, 1) -> true. Block.
+            // That logic holds for "Adding New Item".
+
+            // For Tasks in Payload:
+            // If I send 2 tasks. Limit is 1.
+            // I should check if data.tasks.length > limit.
+            // Actually, strictly: data.tasks.length > 1.
+        }
+
+        if (userSettings.plan === 'FREE' && data.tasks.length > FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED) {
+            throw new Error("Límite de tareas alcanzado (Plan Gratuito: 1 tarea por flujo).")
+        }
+    }
+
     const zone = await prisma.processZone.create({
         data: {
             userId,
@@ -101,6 +140,33 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
     });
 
     if (!existingZone) throw new Error("Zone not found");
+
+    // LIMIT CHECK (Tasks)
+    const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
+    if (userSettings && userSettings.plan === 'FREE') {
+        const { FREE_PLAN_LIMITS } = await import('@/lib/limits')
+
+        // Count current tasks
+        const currentTaskCount = await prisma.processTask.count({ where: { zoneId: data.zoneId } })
+
+        // Calculate net change
+        // data.tasks contains: new tasks (no id), updates (id), deletes (id + deleted)
+        // We only care about the resulting total
+
+        let newTotal = currentTaskCount
+
+        for (const task of data.tasks) {
+            if (task.deleted && task.id) {
+                newTotal--
+            } else if (!task.id && !task.deleted) {
+                newTotal++
+            }
+        }
+
+        if (newTotal > FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED) {
+            throw new Error(`Límite de tareas excedido (Plan Gratuito: ${FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED}). Elimina tareas antes de agregar nuevas.`)
+        }
+    }
 
     // Transaction to update zone and sync tasks
     await prisma.$transaction(async (tx) => {

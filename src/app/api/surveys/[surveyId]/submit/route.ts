@@ -15,7 +15,36 @@ export async function POST(
             return new NextResponse("Survey ID required", { status: 400 })
         }
 
-        // ...
+        // Fetch Survey Owner and Plan
+        const survey = await prisma.survey.findUnique({
+            where: { id: surveyId },
+            include: {
+                // We need to fetch the owner's plan
+                // But Survey model has userId string, not relation to UserSettings directly?
+                // Schema check: Survey matches UserSettings via userId? 
+                // Actually Survey has userId. UserSettings has userId.
+            }
+        })
+
+        if (!survey) return new NextResponse("Survey not found", { status: 404 })
+
+        const ownerSettings = await prisma.userSettings.findUnique({
+            where: { userId: survey.userId }
+        })
+
+        if (!ownerSettings) {
+            // Should not happen, but proceed
+        } else {
+            const { checkLimit, isLimitReached, FREE_PLAN_LIMITS } = await import('@/lib/limits')
+            // Check Response Count
+            const currentCount = await prisma.response.count({
+                where: { surveyId: surveyId }
+            })
+
+            if (isLimitReached(currentCount, FREE_PLAN_LIMITS.MAX_SURVEY_RESPONSES, ownerSettings.plan)) {
+                return new NextResponse("Has alcanzado el límite de respuestas para el Plan Gratuito (50). Actualiza tu plan para recibir más.", { status: 403 })
+            }
+        }
 
         // Create the response
         const response = await prisma.response.create({

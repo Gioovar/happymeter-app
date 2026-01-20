@@ -42,12 +42,17 @@ export default async function BranchReservationsPage({ params }: { params: { bra
     const reservationsResult = await getDashboardReservations(new Date(), userId)
     const reservations = reservationsResult.success ? reservationsResult.reservations : []
 
-    // Fetch program
+    // Fetch program & UserSettings for Limit Check
     let program = null
+    let userSettings = null
     try {
-        program = await prisma.loyaltyProgram.findUnique({
-            where: { userId: userId }
-        })
+        const [prog, settings] = await Promise.all([
+            prisma.loyaltyProgram.findUnique({ where: { userId } }),
+            prisma.userSettings.findUnique({ where: { userId }, select: { createdAt: true, plan: true } })
+        ])
+        program = prog
+        userSettings = settings
+
         // No auto-create for branch? Maybe yes.
         if (!program) {
             program = await prisma.loyaltyProgram.create({
@@ -61,6 +66,8 @@ export default async function BranchReservationsPage({ params }: { params: { bra
     } catch (e) {
         console.error(e)
     }
+
+    /* Check Removed: Handled in layout.tsx */
 
     const setupLink = `/dashboard/${branchSlug}/reservations/setup`
 

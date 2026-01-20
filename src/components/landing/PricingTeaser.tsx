@@ -104,16 +104,21 @@ export default function PricingTeaser() {
                     interval: isAnnual ? 'year' : 'month'
                 })
             })
+
+            if (!response.ok) {
+                const errorText = await response.text()
+                throw new Error(errorText || 'Error en el servidor')
+            }
+
             const data = await response.json()
             if (data.url) {
                 window.location.href = data.url
             } else {
-                alert('Error al iniciar checkout. Por favor intenta de nuevo.')
-                setIsLoading(false)
+                throw new Error('No se recibió URL de redirección')
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Checkout error:', error)
-            alert('Error de conexión.')
+            alert(`Error: ${error.message}`)
             setIsLoading(false)
         }
     }

@@ -166,6 +166,17 @@ export async function createLoyaltyProgram(data: {
     themeColor?: string
 }) {
     try {
+        // LIMIT CHECK
+        const userSettings = await prisma.userSettings.findUnique({ where: { userId: data.userId } })
+        if (userSettings) {
+            const { isLimitReached, FREE_PLAN_LIMITS } = await import('@/lib/limits')
+            const existingPrograms = await prisma.loyaltyProgram.count({ where: { userId: data.userId, isActive: true } })
+
+            if (isLimitReached(existingPrograms, FREE_PLAN_LIMITS.MAX_LOYALTY_PROGRAMS, userSettings.plan)) {
+                return { success: false, error: "Límite de programas alcanzado (Plan Gratuito: 1). Actualiza tu plan." }
+            }
+        }
+
         const program = await prisma.loyaltyProgram.create({
             data: {
                 userId: data.userId,
