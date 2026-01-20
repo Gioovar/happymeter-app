@@ -408,16 +408,7 @@ function SmartPlanCard({ interval, loading, onSelect }: { interval: 'month' | 'y
                         <p className="text-gray-400 text-sm leading-relaxed mb-4">
                             Arma tu propio sistema. Incluye todo lo de <strong className="text-white">Growth 1K</strong> + Módulos:
                         </p>
-                        {/* Launch Offer Text */}
-                        <div className="space-y-1 mb-2">
-                            <div className="flex items-center gap-2">
-                                <span className="text-gray-500 line-through text-sm">Precio real: ${totalRealPrice.toLocaleString()}</span>
-                                <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/20 font-bold"> AHORRAS 70%</span>
-                            </div>
-                            <p className="text-gray-300 text-xs font-medium">
-                                🎉 Precio especial por lanzamiento
-                            </p>
-                        </div>
+
                     </div>
 
                     {/* Modules Selection */}
@@ -481,9 +472,17 @@ function SmartPlanCard({ interval, loading, onSelect }: { interval: 'month' | 'y
                                 <span>-${discountAmount.toFixed(0)}</span>
                             </div>
                         )}
-                        <div className="border-t border-white/10 mt-2 pt-2 flex justify-between items-baseline">
-                            <span className="text-white font-bold">Total Mensual</span>
-                            <span className="text-3xl font-bold text-white">${totalPrice.toFixed(0)}</span>
+                        <div className="border-t border-white/10 mt-2 pt-2">
+                            {/* Launch Offer Price Comparison */}
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-gray-500 line-through text-xs">Precio real: ${totalRealPrice.toLocaleString()}</span>
+                                <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/20 font-bold">AHORRAS 70%</span>
+                            </div>
+
+                            <div className="flex justify-between items-baseline">
+                                <span className="text-white font-bold">Total Mensual</span>
+                                <span className="text-3xl font-bold text-white">${totalPrice.toFixed(0)}</span>
+                            </div>
                         </div>
                     </div>
 
