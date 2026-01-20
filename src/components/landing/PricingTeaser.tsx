@@ -177,6 +177,11 @@ export default function PricingTeaser() {
                     <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Inversión transparente</h2>
                     <p className="text-gray-400 text-lg mb-8">Sin contratos forzosos. Cancela cuando quieras.</p>
 
+                    {/* Countdown Timer */}
+                    <div className="flex justify-center mb-10">
+                        <CountdownTimer />
+                    </div>
+
                     {/* Toggle */}
                     <div className="flex items-center justify-center gap-4">
                         <span className={`text-sm font-medium ${!isAnnual ? 'text-white' : 'text-gray-500'}`}>Mensual</span>
@@ -225,6 +230,75 @@ export default function PricingTeaser() {
                 </div>
             </div>
         </section>
+    )
+}
+
+function CountdownTimer() {
+    const [timeLeft, setTimeLeft] = React.useState({ days: 3, hours: 13, minutes: 58, seconds: 0 })
+    const [mounted, setMounted] = React.useState(false)
+
+    React.useEffect(() => {
+        setMounted(true)
+        const STORAGE_KEY = 'happy_launch_start_v2'
+        const DURATION = (3 * 24 * 60 * 60 * 1000) + (13 * 60 * 60 * 1000) + (58 * 60 * 1000) // 3d 13h 58m
+
+        let startTime = localStorage.getItem(STORAGE_KEY)
+        if (!startTime) {
+            startTime = Date.now().toString()
+            localStorage.setItem(STORAGE_KEY, startTime)
+        }
+
+        const endTime = parseInt(startTime) + DURATION
+
+        const interval = setInterval(() => {
+            const now = Date.now()
+            const diff = endTime - now
+
+            if (diff <= 0) {
+                // Determine what happens when it ends. For now, just hold at 00:00:00 or reset? 
+                // Let's hold at 0
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+                clearInterval(interval)
+                return
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+
+            setTimeLeft({ days, hours, minutes, seconds })
+        }, 1000)
+
+        return () => clearInterval(interval)
+    }, [])
+
+    if (!mounted) return null
+
+    return (
+        <div className="inline-flex flex-col items-center animate-in fade-in duration-700">
+            <p className="text-[#FF4D4D] font-bold tracking-widest text-xs uppercase mb-3 animate-pulse">🔥 Oferta de Lanzamiento termina en:</p>
+            <div className="flex items-center gap-4 text-white">
+                <TimeBox value={timeLeft.days} label="días" />
+                <span className="text-2xl font-bold text-gray-600 -mt-4">:</span>
+                <TimeBox value={timeLeft.hours} label="hrs" />
+                <span className="text-2xl font-bold text-gray-600 -mt-4">:</span>
+                <TimeBox value={timeLeft.minutes} label="min" />
+                <span className="text-2xl font-bold text-gray-600 -mt-4">:</span>
+                <TimeBox value={timeLeft.seconds} label="seg" isRed />
+            </div>
+        </div>
+    )
+}
+
+function TimeBox({ value, label, isRed = false }: { value: number, label: string, isRed?: boolean }) {
+    return (
+        <div className="flex flex-col items-center">
+            <div className={`text-3xl md:text-5xl font-mono font-bold leading-none ${isRed ? 'text-[#FF4D4D]' : 'text-white'}`}>
+                {value.toString().padStart(2, '0')}
+            </div>
+            <span className="text-[10px] uppercase tracking-wider text-gray-500 mt-2 font-medium">{label}</span>
+        </div>
     )
 }
 
