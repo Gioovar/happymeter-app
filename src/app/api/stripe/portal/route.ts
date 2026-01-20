@@ -38,7 +38,6 @@ export async function POST(req: Request) {
                     userId,
                     stripeCustomerId,
                     plan: 'FREE', // Default plan
-                    interval: 'month'
                 },
                 update: {
                     stripeCustomerId
