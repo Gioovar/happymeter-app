@@ -10,6 +10,7 @@ interface PortalButtonProps {
     className?: string
     icon?: React.ReactNode
     showSync?: boolean
+    onClick?: () => void
 }
 
 export default function PortalButton({
@@ -17,7 +18,8 @@ export default function PortalButton({
     variant = 'primary',
     className,
     icon,
-    showSync = true
+    showSync = true,
+    onClick
 }: PortalButtonProps) {
     const [isLoading, setIsLoading] = useState(false)
 
@@ -83,7 +85,7 @@ export default function PortalButton({
     return (
         <div className="flex gap-2">
             <button
-                onClick={handlePortal}
+                onClick={onClick || handlePortal}
                 disabled={isLoading}
                 className={`${baseClass} ${variantClass} ${className || ''}`}
             >
