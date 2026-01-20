@@ -15,6 +15,7 @@ const ADDONS = {
         name: 'Lealtad',
         monthly: 699,
         annual: 599,
+        realPrice: 1800,
         features: ['App de Lealtad', 'Menú Digital', 'Tarjeta Digital', 'Niveles VIP'],
         fullFeatures: [
             'Programa de Lealtad por Visitas y Puntos',
@@ -34,6 +35,7 @@ const ADDONS = {
         name: 'Procesos',
         monthly: 799,
         annual: 699,
+        realPrice: 1800,
         features: ['Flujos y Tareas', 'Supervisión IA', 'Evidencia Video', 'Reportes Staff'],
         fullFeatures: [
             'Gestión de Flujos de Trabajo e Incidencias',
@@ -50,6 +52,7 @@ const ADDONS = {
         name: 'Reservaciones',
         monthly: 699,
         annual: 599,
+        realPrice: 1800,
         features: ['Mapa de Mesas', 'Hostess App', 'Motor de Reservas', 'Recordatorios'],
         fullFeatures: [
             'Sistema de Reservaciones Inteligente',
@@ -321,6 +324,7 @@ function SmartPlanCard({ interval, loading, onSelect }: { interval: 'month' | 'y
 
     const isAnnual = interval === 'year'
     const basePrice = isAnnual ? 399 : 450 // Base price from logic (Growth 1K)
+    const baseRealPrice = 1500 // Real value of Base Plan
 
     const toggleAddon = (id: string) => {
         setSelectedAddons(prev =>
@@ -333,6 +337,14 @@ function SmartPlanCard({ interval, loading, onSelect }: { interval: 'month' | 'y
         const addon = Object.values(ADDONS).find(a => a.id === id)
         return acc + (isAnnual ? addon!.annual : addon!.monthly)
     }, 0)
+
+    // Real Price Calculation
+    const addonRealPriceRaw = selectedAddons.reduce((acc, id) => {
+        const addon = Object.values(ADDONS).find(a => a.id === id)
+        return acc + (addon!.realPrice || 0)
+    }, 0)
+
+    const totalRealPrice = baseRealPrice + addonRealPriceRaw
 
     let discountRate = 0
     if (selectedAddons.length === 2) discountRate = 0.15
@@ -381,16 +393,31 @@ function SmartPlanCard({ interval, loading, onSelect }: { interval: 'month' | 'y
 
             <div className="relative p-1 rounded-3xl bg-gradient-to-b from-blue-600 to-transparent transition duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/20 h-full">
                 {/* Badge */}
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1.5 rounded-full bg-[#1e40af] text-white text-xs font-bold uppercase tracking-wider shadow-lg z-10 border border-blue-400/30">
-                    PLAN INTELIGENTE
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10 w-full justify-center">
+                    <div className="px-6 py-1.5 rounded-full bg-[#1e40af] text-white text-xs font-bold uppercase tracking-wider shadow-lg border border-blue-400/30">
+                        PLAN INTELIGENTE
+                    </div>
+                    <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-red-600 to-orange-600 text-white text-xs font-bold uppercase tracking-wider shadow-lg border border-white/20 whitespace-nowrap">
+                        🔥 OFERTA
+                    </div>
                 </div>
 
                 <div className="bg-[#050505] rounded-[22px] p-8 h-full flex flex-col relative overflow-hidden">
                     <div className="mb-6 relative z-10">
                         <h3 className="text-3xl font-bold mb-2 text-white">Power 3X</h3>
-                        <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                        <p className="text-gray-400 text-sm leading-relaxed mb-4">
                             Arma tu propio sistema. Incluye todo lo de <strong className="text-white">Growth 1K</strong> + Módulos:
                         </p>
+                        {/* Launch Offer Text */}
+                        <div className="space-y-1 mb-2">
+                            <div className="flex items-center gap-2">
+                                <span className="text-gray-500 line-through text-sm">Precio real: ${totalRealPrice.toLocaleString()}</span>
+                                <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/20 font-bold"> AHORRAS 70%</span>
+                            </div>
+                            <p className="text-gray-300 text-xs font-medium">
+                                🎉 Precio especial por lanzamiento
+                            </p>
+                        </div>
                     </div>
 
                     {/* Modules Selection */}
@@ -474,6 +501,18 @@ function SmartPlanCard({ interval, loading, onSelect }: { interval: 'month' | 'y
                                 </>
                             )}
                         </button>
+                    </div>
+
+                    {/* Footer Notes for Launch Offer */}
+                    <div className="mt-6 pt-4 border-t border-white/5 space-y-2">
+                        <p className="flex items-center gap-2 text-[10px] text-gray-400">
+                            <Building2 className="w-3 h-3 text-gray-500" />
+                            💡 El precio mostrado es por lugar.
+                        </p>
+                        <p className="flex items-center gap-2 text-[10px] text-gray-400">
+                            <ShieldCheck className="w-3 h-3 text-gray-500" />
+                            💳 Cobro claro y transparente. Cancela cuando quieras.
+                        </p>
                     </div>
                 </div>
             </div>
