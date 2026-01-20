@@ -219,6 +219,8 @@ export default function PricingPage() {
         }
     ]
 
+    const visiblePlans = userId ? plans.filter(p => p.key !== 'FREE') : plans
+
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 font-sans pb-20">
             {/* Background Effects */}
@@ -260,7 +262,7 @@ export default function PricingPage() {
                 {/* Plans Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     {/* First 3 Plans */}
-                    {plans.slice(0, 3).map((plan) => (
+                    {visiblePlans.slice(0, 3).map((plan) => (
                         <PlanCard key={plan.key} plan={plan} interval={interval} loading={loadingPlan === plan.key} onSelect={() => handleCheckout(plan.key)} />
                     ))}
                 </div>
@@ -273,7 +275,7 @@ export default function PricingPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                     {/* Remaining Plans */}
-                    {plans.slice(3).map((plan) => (
+                    {visiblePlans.slice(3).map((plan) => (
                         <PlanCard key={plan.key} plan={plan} interval={interval} loading={loadingPlan === plan.key} onSelect={() => handleCheckout(plan.key)} />
                     ))}
                 </div>
