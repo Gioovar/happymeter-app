@@ -180,7 +180,10 @@ export default function DashboardSidebar({
                         {userPlan === 'FREE' ? (
                             <>
                                 <button
-                                    onClick={() => {
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
                                         toggleMobileMenu(false)
                                         setIsSalesModalOpen(true)
                                     }}
@@ -194,7 +197,10 @@ export default function DashboardSidebar({
                                 </button>
 
                                 <button
-                                    onClick={() => {
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
                                         toggleMobileMenu(false)
                                         setIsInviteModalOpen(true)
                                     }}
@@ -229,7 +235,10 @@ export default function DashboardSidebar({
                                         </div>
                                     </Link>
                                     <button
-                                        onClick={() => {
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
                                             toggleMobileMenu(false)
                                             setIsInviteModalOpen(true)
                                         }}
@@ -250,7 +259,12 @@ export default function DashboardSidebar({
                                         isFirstChain={true}
                                         trigger={
                                             <button
-                                                onClick={() => toggleMobileMenu(false)}
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    e.stopPropagation()
+                                                    toggleMobileMenu(false)
+                                                }}
                                                 className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group text-left mb-3"
                                             >
                                                 <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -262,7 +276,10 @@ export default function DashboardSidebar({
                                         }
                                     />
                                     <button
-                                        onClick={() => {
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
                                             toggleMobileMenu(false)
                                             setIsInviteModalOpen(true)
                                         }}
