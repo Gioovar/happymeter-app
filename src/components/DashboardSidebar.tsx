@@ -111,13 +111,15 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
 }
 
 import { useDashboard } from '@/context/DashboardContext'
+import SalesModal from '@/components/plans/SalesModal'
 import CreateBranchModal from './chains/CreateBranchModal'
 
-export default function DashboardSidebar({ isCreator, userRole, hasChain }: { isCreator?: boolean, userRole?: string, hasChain?: boolean }) {
+export default function DashboardSidebar({ isCreator, userRole, hasChain, userPlan = 'FREE' }: { isCreator?: boolean, userRole?: string, hasChain?: boolean, userPlan?: string }) {
     const { isMobileMenuOpen, toggleMobileMenu } = useDashboard()
     const params = useParams()
     const branchSlug = params?.branchSlug as string
     const [isModeSelectorOpen, setIsModeSelectorOpen] = useState(false)
+    const [isSalesModalOpen, setIsSalesModalOpen] = useState(false)
     const pathname = usePathname() // Safe to use here without Suspense in Layout generally, but safer to keep high
 
     const SidebarContent = () => (
@@ -127,7 +129,7 @@ export default function DashboardSidebar({ isCreator, userRole, hasChain }: { is
                     <Link href={branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'} className="block hover:opacity-90 transition-opacity">
                         <BrandLogo className="mb-1" />
                     </Link>
-                    <p className="text-xs text-gray-500 mt-1">Panel de Usuario</p>
+                    <p className="text-xs text-gray-500 mt-1">Panel de Usuario ({userPlan === 'FREE' ? 'Gratuito' : 'Pro'})</p>
                 </div>
 
                 {/* Desktop Notification Bell (Only visible when not mobile drawer close button) */}
@@ -196,38 +198,63 @@ export default function DashboardSidebar({ isCreator, userRole, hasChain }: { is
             }
 
             {
-                /* Link to Chains/Branches - Visible for everyone except purely Staff/Creators restricted modes, 
-                   but for simplicity, we show it to standard users who might want to upgrade. */
+                /* Link to Chains/Branches - Visible for everyone except purely Staff/Creators restricted modes.
+                   LOGIC:
+                   - If FREE Plan: Show "Activar Negocio" -> Opens Sales Modal
+                   - If PAID Plan: Show "Mis Sucursales" -> Goes to /chains (or Create Modal) 
+                */
                 (!isCreator && userRole !== 'STAFF' && userRole !== 'OPERATOR') && (
                     <div className="px-4 pb-3">
-                        {hasChain ? (
-                            <Link
-                                href="/chains"
-                                onClick={() => toggleMobileMenu(false)}
-                                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group"
-                            >
-                                <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
-                                    <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
-                                </div>
-                            </Link>
+                        {userPlan === 'FREE' ? (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        toggleMobileMenu(false)
+                                        setIsSalesModalOpen(true)
+                                    }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md hover:shadow-emerald-600/20 transition-all group text-left animate-pulse"
+                                >
+                                    <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Mejorar Plan</span>
+                                        <span className="text-xs font-bold leading-tight">Activar Negocio</span>
+                                    </div>
+                                </button>
+                                <SalesModal
+                                    isOpen={isSalesModalOpen}
+                                    onOpenChange={setIsSalesModalOpen}
+                                />
+                            </>
                         ) : (
-                            <CreateBranchModal
-                                isFirstChain={true}
-                                trigger={
-                                    <button
-                                        onClick={() => toggleMobileMenu(false)}
-                                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group text-left"
-                                    >
-                                        <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
-                                            <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
-                                        </div>
-                                    </button>
-                                }
-                            />
+                            hasChain ? (
+                                <Link
+                                    href="/chains"
+                                    onClick={() => toggleMobileMenu(false)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group"
+                                >
+                                    <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
+                                        <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <CreateBranchModal
+                                    isFirstChain={true}
+                                    trigger={
+                                        <button
+                                            onClick={() => toggleMobileMenu(false)}
+                                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group text-left"
+                                        >
+                                            <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
+                                                <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
+                                            </div>
+                                        </button>
+                                    }
+                                />
+                            )
                         )}
                     </div>
                 )

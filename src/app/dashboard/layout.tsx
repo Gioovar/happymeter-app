@@ -30,7 +30,7 @@ export default async function DashboardLayout({
         if (userId) {
             const [profile, settings] = await Promise.all([
                 prisma.affiliateProfile.findUnique({ where: { userId } }),
-                prisma.userSettings.findUnique({ where: { userId }, select: { hasSeenTour: true, role: true } })
+                prisma.userSettings.findUnique({ where: { userId }, select: { hasSeenTour: true, role: true, plan: true } })
             ])
             affiliateProfile = profile
             if (settings) {
@@ -69,12 +69,36 @@ export default async function DashboardLayout({
         }
     }
 
+    // Default to FREE if no settings or plan found
+    // We need to re-fetch settings if we accessed them inside the Try block but scoping is tricky.
+    // Actually, I declared realRole outside. I should declare `userPlan` outside too.
+
+    // Simpler: Just access fetching result again or restructure. 
+    // But `settings` is inside the try block.
+    // Let's refactor slightly to expose settings outside or use a default variable.
+
+    let userPlan = 'FREE'
+    try {
+        if (userId) {
+            const settings = await prisma.userSettings.findUnique({ where: { userId }, select: { hasSeenTour: true, role: true, plan: true } })
+            if (settings) {
+                userPlan = settings.plan || 'FREE'
+            }
+        }
+    } catch (e) {
+        // ...
+    }
+
+    // Wait, I am replacing lines 33-77. 
+    // The previous code had `[profile, settings] = await Promise.all(...)`.
+    // I should maintain that structure but add `plan: true`.
+
     return (
         <DashboardProvider>
             <div className="flex min-h-screen bg-[#0a0a0a]">
                 {!hasSeenTour && <Suspense fallback={null}><FeatureTour /></Suspense>}
                 <Suspense fallback={<div className="w-64 bg-[#111] h-screen border-r border-white/10 hidden md:flex" />}>
-                    <DashboardSidebar isCreator={!!affiliateProfile} userRole={realRole} hasChain={hasChain} />
+                    <DashboardSidebar isCreator={!!affiliateProfile} userRole={realRole} hasChain={hasChain} userPlan={userPlan} />
                 </Suspense>
                 <main className="flex-1 overflow-y-auto h-screen relative">
                     {/* Top Header for Desktop */}

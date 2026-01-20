@@ -37,7 +37,7 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json()
-        const { plan, interval = 'month', addons = [] } = body
+        const { plan, interval = 'month', addons = [], quantity = 1 } = body
 
         // Validate Plan
         if (!plan || (!['GROWTH', 'POWER', 'CHAIN', 'custom'].includes(plan))) {
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
             const basePriceId = PLANS[basePriceKey]
             if (!basePriceId) throw new Error(`Missing base price for ${basePriceKey}`)
 
-            lineItems.push({ price: basePriceId, quantity: 1 })
+            lineItems.push({ price: basePriceId, quantity: quantity })
 
             // 2. Add Add-ons
             for (const addonId of addons) {
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
                 if (addonConfig) {
                     const priceId = interval === 'year' ? addonConfig.yearly : addonConfig.monthly
                     if (priceId) {
-                        lineItems.push({ price: priceId, quantity: 1 })
+                        lineItems.push({ price: priceId, quantity: quantity })
                     }
                 }
             }
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
                 return new NextResponse(`Configuration Error: Price for ${plan} (${interval}) not found. Contact Support.`, { status: 500 })
             }
 
-            lineItems.push({ price: priceId, quantity: 1 })
+            lineItems.push({ price: priceId, quantity: quantity })
         }
 
         // Check for affiliate cookie
