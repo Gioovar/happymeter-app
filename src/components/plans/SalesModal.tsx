@@ -185,7 +185,13 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
                                                         {isSelected && <Check className="w-3 h-3 text-white" />}
                                                     </div>
                                                     <div>
-                                                        <span className={cn("font-medium text-sm block", isSelected ? "text-white" : "text-gray-400")}>{addon.name}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={cn("font-medium text-sm block", isSelected ? "text-white" : "text-gray-400")}>{addon.name}</span>
+                                                            <div className="px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-bold text-violet-300 flex items-center gap-1">
+                                                                <Info className="w-3 h-3" />
+                                                                BENEFICIOS
+                                                            </div>
+                                                        </div>
                                                         <span className="text-[10px] text-gray-500 hidden group-hover:block transition-all">{addon.features[0]}</span>
                                                     </div>
                                                 </div>
