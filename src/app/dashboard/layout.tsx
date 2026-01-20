@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from "next/navigation"
 import { prisma } from '@/lib/prisma'
 import DashboardSidebar from '@/components/DashboardSidebar'
@@ -93,12 +93,27 @@ export default async function DashboardLayout({
     // The previous code had `[profile, settings] = await Promise.all(...)`.
     // I should maintain that structure but add `plan: true`.
 
+    // Fetch User Data for Profile
+    const fullUser = await currentUser()
+    const userData = fullUser ? {
+        firstName: fullUser.firstName,
+        lastName: fullUser.lastName,
+        email: fullUser.emailAddresses[0]?.emailAddress,
+        imageUrl: fullUser.imageUrl,
+    } : null
+
     return (
         <DashboardProvider>
             <div className="flex min-h-screen bg-[#0a0a0a]">
                 {!hasSeenTour && <Suspense fallback={null}><FeatureTour /></Suspense>}
                 <Suspense fallback={<div className="w-64 bg-[#111] h-screen border-r border-white/10 hidden md:flex" />}>
-                    <DashboardSidebar isCreator={!!affiliateProfile} userRole={realRole} hasChain={hasChain} userPlan={userPlan} />
+                    <DashboardSidebar
+                        isCreator={!!affiliateProfile}
+                        userRole={realRole}
+                        hasChain={hasChain}
+                        userPlan={userPlan}
+                        user={userData}
+                    />
                 </Suspense>
                 <main className="flex-1 overflow-y-auto h-screen relative">
                     {/* Top Header for Desktop */}

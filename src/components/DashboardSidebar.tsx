@@ -114,7 +114,21 @@ import { useDashboard } from '@/context/DashboardContext'
 import SalesModal from '@/components/plans/SalesModal'
 import CreateBranchModal from './chains/CreateBranchModal'
 
-export default function DashboardSidebar({ isCreator, userRole, hasChain, userPlan = 'FREE' }: { isCreator?: boolean, userRole?: string, hasChain?: boolean, userPlan?: string }) {
+import UserProfile from './dashboard/UserProfile'
+
+export default function DashboardSidebar({
+    isCreator,
+    userRole,
+    hasChain,
+    userPlan = 'FREE',
+    user
+}: {
+    isCreator?: boolean,
+    userRole?: string,
+    hasChain?: boolean,
+    userPlan?: string,
+    user?: any
+}) {
     const { isMobileMenuOpen, toggleMobileMenu } = useDashboard()
     const params = useParams()
     const branchSlug = params?.branchSlug as string
@@ -331,29 +345,12 @@ export default function DashboardSidebar({ isCreator, userRole, hasChain, userPl
                 )
             }
 
-            <div className="p-4 border-t border-white/10 space-y-2 bg-[#111]">
-                <Link
-                    href="/"
-                    onClick={() => toggleMobileMenu(false)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-white/5 cursor-pointer transition text-gray-400 hover:text-white"
-                >
-                    <Home className="w-5 h-5" />
-                    <span className="text-sm font-medium">Ir al Inicio</span>
-                </Link>
-                <Link
-                    href={branchSlug ? `/dashboard/${branchSlug}/settings` : '/dashboard/settings'}
-                    onClick={() => toggleMobileMenu(false)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-white/5 cursor-pointer transition text-gray-400 hover:text-white"
-                >
-                    <Settings className="w-5 h-5" />
-                    <span className="text-sm font-medium">Configuración</span>
-                </Link>
-                <SignOutButton>
-                    <button className="w-full flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-500/10 text-gray-400 hover:text-red-400 cursor-pointer transition">
-                        <LogOut className="w-5 h-5" />
-                        <span className="text-sm font-medium">Cerrar Sesión</span>
-                    </button>
-                </SignOutButton>
+            <div className="p-4 border-t border-white/10 bg-[#111]">
+                <UserProfile
+                    user={user}
+                    plan={userPlan}
+                    onUpgrade={() => setIsSalesModalOpen(true)}
+                />
             </div>
         </>
     )
