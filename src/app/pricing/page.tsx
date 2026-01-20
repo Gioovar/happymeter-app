@@ -227,6 +227,7 @@ export default function PricingPage() {
                     {/* Smart Power 3X Plan (Replaces Old Power & Chain) */}
                     <SmartPlanCard
                         basePrice={basePrice}
+                        interval={interval}
                         loading={loadingPlan === 'POWER'}
                         onSelect={() => handleCheckout('POWER')}
                     />
@@ -264,7 +265,7 @@ export default function PricingPage() {
     )
 }
 
-function SmartPlanCard({ basePrice, loading, onSelect }: { basePrice: number, loading: boolean, onSelect: () => void }) {
+function SmartPlanCard({ basePrice, interval, loading, onSelect }: { basePrice: number, interval: 'month' | 'year', loading: boolean, onSelect: () => void }) {
     // State for Toggles
     const [modules, setModules] = useState({
         loyalty: false,
@@ -283,8 +284,19 @@ function SmartPlanCard({ basePrice, loading, onSelect }: { basePrice: number, lo
         if (modules.loyalty) total += MODULE_PRICES.loyalty
         if (modules.processes) total += MODULE_PRICES.processes
         if (modules.reservations) total += MODULE_PRICES.reservations
+
+        // Annual Discount Logic: Pay 10 months, get 12
+        // We display the monthly *equivalent*
+        if (interval === 'year') {
+            const annualTotal = total * 10
+            return Math.round(annualTotal / 12)
+        }
+
         return total
     }
+
+    const currentTotal = calculateTotal()
+    const annualBilled = interval === 'year' ? (currentTotal * 12) : null // Or strictly total * 10, which matches currentTotal * 12 roughly due to rounding
 
     const toggleModule = (key: keyof typeof modules) => {
         setModules(prev => ({ ...prev, [key]: !prev[key] }))
@@ -311,8 +323,8 @@ function SmartPlanCard({ basePrice, loading, onSelect }: { basePrice: number, lo
                     <div
                         onClick={() => toggleModule('loyalty')}
                         className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-center justify-between group ${modules.loyalty
-                                ? 'bg-blue-600/10 border-blue-500'
-                                : 'bg-[#111] border-white/10 hover:border-white/20'
+                            ? 'bg-blue-600/10 border-blue-500'
+                            : 'bg-[#111] border-white/10 hover:border-white/20'
                             }`}
                     >
                         <div className="flex items-center gap-3">
@@ -361,8 +373,8 @@ function SmartPlanCard({ basePrice, loading, onSelect }: { basePrice: number, lo
                     <div
                         onClick={() => toggleModule('processes')}
                         className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-center justify-between group ${modules.processes
-                                ? 'bg-blue-600/10 border-blue-500'
-                                : 'bg-[#111] border-white/10 hover:border-white/20'
+                            ? 'bg-blue-600/10 border-blue-500'
+                            : 'bg-[#111] border-white/10 hover:border-white/20'
                             }`}
                     >
                         <div className="flex items-center gap-3">
@@ -411,8 +423,8 @@ function SmartPlanCard({ basePrice, loading, onSelect }: { basePrice: number, lo
                     <div
                         onClick={() => toggleModule('reservations')}
                         className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-center justify-between group ${modules.reservations
-                                ? 'bg-blue-600/10 border-blue-500'
-                                : 'bg-[#111] border-white/10 hover:border-white/20'
+                            ? 'bg-blue-600/10 border-blue-500'
+                            : 'bg-[#111] border-white/10 hover:border-white/20'
                             }`}
                     >
                         <div className="flex items-center gap-3">
@@ -462,11 +474,23 @@ function SmartPlanCard({ basePrice, loading, onSelect }: { basePrice: number, lo
                 <div className="bg-black/40 rounded-xl p-4 border border-white/10 space-y-3">
                     <div className="flex items-center justify-between text-sm text-gray-400 border-b border-white/5 pb-2">
                         <span>Base (Growth 1K)</span>
-                        <span>${basePrice}</span>
+                        <span>${interval === 'year' ? Math.round((basePrice * 10) / 12) : basePrice}</span>
                     </div>
-                    <div className="flex items-center justify-between text-white">
-                        <span className="font-bold text-lg">Total Mensual</span>
-                        <span className="text-3xl font-bold">${calculateTotal()}</span>
+                    <div className="flex flex-col">
+                        <div className="flex items-center justify-between text-white">
+                            <span className="font-bold text-lg">Total Mensual</span>
+                            <span className="text-3xl font-bold">${currentTotal}</span>
+                        </div>
+                        {interval === 'year' && (
+                            <p className="text-xs text-green-400 text-right mt-1">
+                                Facturado ${currentTotal * 12} anual
+                            </p>
+                        )}
+                        {interval === 'month' && (
+                            <p className="text-xs text-gray-500 text-right mt-1">
+                                Facturado mensualmente
+                            </p>
+                        )}
                     </div>
                 </div>
 
