@@ -11,5 +11,7 @@ export default async function SettingsPage() {
         where: { userId }
     })
 
-    return <SettingsView userSettings={userSettings} />
+    const user = await currentUser()
+
+    return <SettingsView userSettings={userSettings} user={user} />
 }
