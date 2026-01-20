@@ -89,6 +89,35 @@ export default function PricingTeaser() {
 
     const viewingAddonData = viewingAddon ? Object.values(ADDONS).find(a => a.id === viewingAddon) : null
 
+    const [isLoading, setIsLoading] = React.useState(false)
+
+    const handleCheckout = async () => {
+        setIsLoading(true)
+        try {
+            const response = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    plan: 'custom',
+                    base: 'GROWTH',
+                    addons: selectedAddons,
+                    interval: isAnnual ? 'year' : 'month'
+                })
+            })
+            const data = await response.json()
+            if (data.url) {
+                window.location.href = data.url
+            } else {
+                alert('Error al iniciar checkout. Por favor intenta de nuevo.')
+                setIsLoading(false)
+            }
+        } catch (error) {
+            console.error('Checkout error:', error)
+            alert('Error de conexión.')
+            setIsLoading(false)
+        }
+    }
+
     return (
         <section className="py-24 bg-[#0a0a0a] border-t border-white/5 relative">
             {/* Module Detail Modal */}
@@ -384,11 +413,13 @@ export default function PricingTeaser() {
                             </div>
                         </div>
 
-                        <Link href={`/pricing/custom?checkout=true&base=growth&addons=${selectedAddons.join(',')}&interval=${isAnnual ? 'year' : 'month'}`}>
-                            <button className="w-full py-3.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-600/20">
-                                👉 Armar Plan Power
-                            </button>
-                        </Link>
+                        <button
+                            onClick={handleCheckout}
+                            disabled={isLoading}
+                            className="w-full py-3.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                        >
+                            {isLoading ? 'Cargando...' : '👉 Armar Plan Power'}
+                        </button>
                     </div>
 
                 </div>

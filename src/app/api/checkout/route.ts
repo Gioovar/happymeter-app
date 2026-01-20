@@ -12,6 +12,21 @@ const PLANS: Record<string, string | undefined> = {
     CHAIN_YEAR: process.env.STRIPE_PRICE_CHAIN_YEARLY
 }
 
+const ADDON_PRICES: Record<string, { monthly: string | undefined; yearly: string | undefined }> = {
+    loyalty: {
+        monthly: process.env.STRIPE_PRICE_ADDON_LOYALTY_MONTHLY,
+        yearly: process.env.STRIPE_PRICE_ADDON_LOYALTY_YEARLY
+    },
+    processes: {
+        monthly: process.env.STRIPE_PRICE_ADDON_PROCESSES_MONTHLY,
+        yearly: process.env.STRIPE_PRICE_ADDON_PROCESSES_YEARLY
+    },
+    reservations: {
+        monthly: process.env.STRIPE_PRICE_ADDON_RESERVATIONS_MONTHLY,
+        yearly: process.env.STRIPE_PRICE_ADDON_RESERVATIONS_YEARLY
+    },
+}
+
 export async function POST(req: Request) {
     try {
         const { userId } = await auth()
@@ -22,18 +37,56 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json()
-        const { plan, interval = 'month' } = body
+        const { plan, interval = 'month', addons = [] } = body
 
-        if (!plan || !['GROWTH', 'POWER', 'CHAIN'].includes(plan)) {
+        // Validate Plan
+        if (!plan || (!['GROWTH', 'POWER', 'CHAIN', 'custom'].includes(plan))) {
             return new NextResponse('Invalid plan', { status: 400 })
         }
 
-        const priceKey = `${plan}_${interval.toUpperCase()}`
-        const priceId = PLANS[priceKey]
+        const lineItems = []
+        let discounts = undefined
 
-        if (!priceId) {
-            console.error(`❌ [CHECKOUT_ERROR] Price ID missing for key: ${priceKey}. Verify Vercel Env Vars.`)
-            return new NextResponse(`Configuration Error: Price for ${plan} (${interval}) not found. Contact Support.`, { status: 500 })
+        if (plan === 'custom') {
+            // 1. Add Base Price (Growth)
+            const basePriceKey = `GROWTH_${interval.toUpperCase()}`
+            const basePriceId = PLANS[basePriceKey]
+            if (!basePriceId) throw new Error(`Missing base price for ${basePriceKey}`)
+
+            lineItems.push({ price: basePriceId, quantity: 1 })
+
+            // 2. Add Add-ons
+            for (const addonId of addons) {
+                const addonConfig = ADDON_PRICES[addonId]
+                if (addonConfig) {
+                    const priceId = interval === 'year' ? addonConfig.yearly : addonConfig.monthly
+                    if (priceId) {
+                        lineItems.push({ price: priceId, quantity: 1 })
+                    }
+                }
+            }
+
+            // 3. Apply Discount
+            // 2 Addons = 15% OFF, 3 Addons = 20% OFF
+            // The coupon code logic (15% vs 20%) is handled by assigning specific coupons in Stripe
+            // that are restricted to the ADD-ON products only.
+            if (addons.length === 2 && process.env.STRIPE_COUPON_POWER_15) {
+                discounts = [{ coupon: process.env.STRIPE_COUPON_POWER_15 }]
+            } else if (addons.length === 3 && process.env.STRIPE_COUPON_POWER_20) {
+                discounts = [{ coupon: process.env.STRIPE_COUPON_POWER_20 }]
+            }
+
+        } else {
+            // Standard Plan
+            const priceKey = `${plan}_${interval.toUpperCase()}`
+            const priceId = PLANS[priceKey]
+
+            if (!priceId) {
+                console.error(`❌ [CHECKOUT_ERROR] Price ID missing for key: ${priceKey}. Verify Vercel Env Vars.`)
+                return new NextResponse(`Configuration Error: Price for ${plan} (${interval}) not found. Contact Support.`, { status: 500 })
+            }
+
+            lineItems.push({ price: priceId, quantity: 1 })
         }
 
         // Check for affiliate cookie
@@ -47,12 +100,8 @@ export async function POST(req: Request) {
         const session = await stripe.checkout.sessions.create({
             mode: 'subscription',
             payment_method_types: ['card'],
-            line_items: [
-                {
-                    price: priceId,
-                    quantity: 1,
-                },
-            ],
+            line_items: lineItems,
+            discounts: discounts,
             // Use safe access (optional chaining) or undefined if no email
             customer_email: user.emailAddresses?.[0]?.emailAddress,
             client_reference_id: userId,
@@ -60,6 +109,7 @@ export async function POST(req: Request) {
                 userId: userId,
                 plan: plan,
                 interval: interval,
+                addons: addons.join(','),
                 affiliateRef: affiliateRef,
             },
             allow_promotion_codes: true, // Enabled for Admin/God Mode coupons
