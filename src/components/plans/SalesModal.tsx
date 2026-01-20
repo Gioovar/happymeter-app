@@ -12,6 +12,7 @@ const ADDONS = {
         name: 'Lealtad',
         monthly: 699,
         annual: 599,
+        realPrice: 1800,
         features: ['App de Lealtad', 'Menú Digital', 'Tarjeta Digital']
     },
     PROCESSES: {
@@ -19,6 +20,7 @@ const ADDONS = {
         name: 'Procesos',
         monthly: 799,
         annual: 699,
+        realPrice: 1800,
         features: ['Flujos y Tareas', 'Supervisión IA', 'Evidencia Video']
     },
     RESERVATIONS: {
@@ -26,6 +28,7 @@ const ADDONS = {
         name: 'Reservaciones',
         monthly: 699,
         annual: 599,
+        realPrice: 1800,
         features: ['Mapa de Mesas', 'Hostess App', 'Motor de Reservas']
     }
 }
@@ -46,6 +49,8 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
 
     // Prices
     const BASE_GROWTH_PRICE = isAnnual ? 399 : 450
+    const BASE_GROWTH_REAL_PRICE = 1500
+    // Growth Real Price is usually static, but for Power it's dynamic
 
     // Addon Prices (Only for Power)
     const calculateAddonPrice = () => {
@@ -54,6 +59,18 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
         selectedAddons.forEach(id => {
             const addon = Object.values(ADDONS).find(a => a.id === id)
             if (addon) total += isAnnual ? addon.annual : addon.monthly
+        })
+        return total
+    }
+
+    // Real Price Calculation
+    const calculateRealPrice = () => {
+        if (plan === 'GROWTH') return 1200 // Static real price for Growth as per Pricing Page
+
+        let total = BASE_GROWTH_REAL_PRICE
+        selectedAddons.forEach(id => {
+            const addon = Object.values(ADDONS).find(a => a.id === id)
+            if (addon) total += addon.realPrice
         })
         return total
     }
@@ -70,6 +87,10 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
     const discount = calculateDiscount(addonTotalRaw)
     const unitPrice = BASE_GROWTH_PRICE + (addonTotalRaw - discount)
     const finalTotal = unitPrice * quantity
+
+    // Calculate Total Real Price (for comparison)
+    const unitRealPrice = calculateRealPrice()
+    const finalRealTotal = unitRealPrice * quantity
 
     const toggleAddon = (id: string) => {
         setSelectedAddons(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
@@ -114,9 +135,13 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
             {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
             <DialogContent className="max-w-[1000px] w-full bg-[#0a0a0a] border-white/10 p-0 overflow-hidden max-h-[90vh] flex flex-col">
                 <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#111]">
-                    <div>
-                        <DialogTitle className="text-xl font-bold text-white">Activar Sistema HappyMeter</DialogTitle>
+                    <div className="flex-1">
+                        <DialogTitle className="text-xl font-bold text-white mb-1">Activar Sistema HappyMeter</DialogTitle>
                         <DialogDescription className="text-gray-400">Selecciona el plan ideal y el número de sucursales a activar.</DialogDescription>
+                    </div>
+                    {/* Countdown in Header */}
+                    <div className="hidden md:block">
+                        <CountdownTimer />
                     </div>
                 </div>
 
@@ -125,6 +150,11 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
                     {/* Left Column: Configuration */}
                     <div className="space-y-8">
 
+                        {/* Mobile Countdown */}
+                        <div className="md:hidden flex justify-center">
+                            <CountdownTimer />
+                        </div>
+
                         {/* 1. Select Plan */}
                         <div>
                             <h3 className="text-sm font-bold text-gray-500 uppercase mb-3 tracking-wider">1. Elige tu Plan</h3>
@@ -132,10 +162,15 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
                                 <button
                                     onClick={() => setPlan('GROWTH')}
                                     className={cn(
-                                        "p-4 rounded-xl border text-left transition-all",
+                                        "p-4 rounded-xl border text-left transition-all relative overflow-hidden",
                                         plan === 'GROWTH' ? "bg-violet-600/10 border-violet-500" : "bg-white/5 border-white/10 hover:bg-white/10"
                                     )}
                                 >
+                                    {/* Launch Offer Badge */}
+                                    <div className="absolute top-0 right-0 px-2 py-0.5 bg-gradient-to-r from-red-600 to-orange-600 text-[9px] font-bold text-white rounded-bl-lg shadow-sm z-10">
+                                        OFERTA
+                                    </div>
+
                                     <div className="flex items-center justify-between mb-2">
                                         <h4 className="font-bold text-white">Growth 1K</h4>
                                         {plan === 'GROWTH' && <div className="w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
@@ -151,7 +186,7 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
                                     )}
                                 >
                                     {/* Tag */}
-                                    <div className="absolute top-0 right-0 px-2 py-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-[10px] font-bold text-white rounded-bl-lg">
+                                    <div className="absolute top-0 right-0 px-2 py-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-[9px] font-bold text-white rounded-bl-lg z-10">
                                         Recomendado
                                     </div>
 
@@ -287,7 +322,13 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
                             </div>
                         </div>
 
-                        <div className="border-t border-white/10 pt-4 mb-6">
+                        {/* Real Price Comparison */}
+                        <div className="border-t border-white/10 pt-4 mb-2">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-gray-500 line-through text-xs md:text-sm font-medium">Precio real: ${finalRealTotal.toLocaleString()}</span>
+                                <span className="text-[10px] md:text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30 font-bold">AHORRAS 70%</span>
+                            </div>
+
                             <div className="flex justify-between items-end">
                                 <span className="text-sm font-bold text-gray-400 mb-1">Total a Pagar ({isAnnual ? 'Anual' : 'Mensual'})</span>
                                 <span className="text-4xl font-bold text-white tracking-tight">${finalTotal.toFixed(0)}</span>
@@ -323,5 +364,58 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
                 </div>
             </DialogContent>
         </Dialog>
+    )
+}
+
+function CountdownTimer() {
+    const [timeLeft, setTimeLeft] = useState({ days: 3, hours: 13, minutes: 58, seconds: 0 })
+    const [mounted, setMounted] = useState(false)
+
+    React.useEffect(() => {
+        setMounted(true)
+        const STORAGE_KEY = 'happy_launch_start_v2'
+        const DURATION = (3 * 24 * 60 * 60 * 1000) + (13 * 60 * 60 * 1000) + (58 * 60 * 1000) // 3d 13h 58m
+
+        let startTime = localStorage.getItem(STORAGE_KEY)
+        if (!startTime) {
+            startTime = Date.now().toString()
+            localStorage.setItem(STORAGE_KEY, startTime)
+        }
+
+        const endTime = parseInt(startTime) + DURATION
+
+        const interval = setInterval(() => {
+            const now = Date.now()
+            const diff = endTime - now
+
+            if (diff <= 0) {
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+                clearInterval(interval)
+                return
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+
+            setTimeLeft({ days, hours, minutes, seconds })
+        }, 1000)
+
+        return () => clearInterval(interval)
+    }, [])
+
+    if (!mounted) return null
+
+    return (
+        <div className="inline-flex items-center gap-3 bg-red-900/10 border border-red-500/20 rounded-lg py-1 px-3">
+            <span className="text-[#FF4D4D] font-bold text-[10px] md:text-xs uppercase animate-pulse shrink-0">🔥 Oferta termina en:</span>
+            <div className="flex items-center gap-1 text-white text-xs md:text-sm font-mono font-bold">
+                <span>{timeLeft.days}d</span>:
+                <span>{timeLeft.hours}h</span>:
+                <span>{timeLeft.minutes}m</span>:
+                <span className="text-[#FF4D4D]">{timeLeft.seconds}s</span>
+            </div>
+        </div>
     )
 }
