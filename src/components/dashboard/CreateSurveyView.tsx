@@ -10,6 +10,7 @@ import { compressImage } from '@/lib/image-compression'
 import { getUserProfile, updatePhoneNumber, sendTestWhatsApp } from '@/actions/settings'
 import AlertSettings from '@/components/AlertSettings'
 import RecoverySettings from '@/components/RecoverySettings'
+import { useDashboard } from '@/context/DashboardContext'
 
 // ... (Copy interfaces)
 type QuestionType = 'EMOJI' | 'TEXT' | 'RATING' | 'SELECT' | 'YES_NO' | 'IMAGE' | 'DATE'
@@ -51,6 +52,7 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
     const router = useRouter()
     const searchParams = useSearchParams()
     const mode = searchParams.get('mode')
+    const { chains } = useDashboard()
 
     // Initialize state based on mode
     const isAnonymousMode = mode === 'anonymous'
@@ -85,6 +87,23 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
             }).catch(err => console.error(err))
         } catch (e) { console.error(e) }
     }, [])
+
+    // Pre-fill Banner from Business Settings
+    useEffect(() => {
+        if (!banner && !bannerPreview && chains.length > 0) {
+            let targetBranch = null
+            if (branchId) {
+                targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === branchId)
+            } else {
+                // Default to first branch if available
+                targetBranch = chains[0]?.branches[0]
+            }
+
+            if (targetBranch?.branch?.bannerUrl) {
+                setBannerPreview(targetBranch.branch.bannerUrl)
+            }
+        }
+    }, [chains, branchId, banner, bannerPreview])
 
     const [questions, setQuestions] = useState<Question[]>(isAnonymousMode ? TEMPLATE_ANONYMOUS : TEMPLATE_STANDARD)
 
@@ -178,6 +197,9 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
                         reader.readAsDataURL(banner)
                     })
                 }
+            } else if (bannerPreview && bannerPreview.startsWith('http')) {
+                // Return existing URL if no new file selected
+                bannerUrl = bannerPreview
             }
 
             // Append branchId if present

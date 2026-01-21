@@ -52,6 +52,7 @@ export interface ChainBranch {
         userId: string
         businessName: string | null
         plan: string
+        bannerUrl?: string | null
     }
 }
 

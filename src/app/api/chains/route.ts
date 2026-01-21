@@ -22,7 +22,8 @@ export async function GET() {
                             select: {
                                 userId: true,
                                 businessName: true, // Use businessName from UserSettings
-                                plan: true
+                                plan: true,
+                                bannerUrl: true
                             }
                         }
                     },
