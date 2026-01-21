@@ -49,11 +49,17 @@ export function usePushNotifications() {
             console.log('Registering Service Worker...')
             const registration = await navigator.serviceWorker.register('/sw.js')
 
+            console.log('SW Registration state:', {
+                installing: registration.installing?.state,
+                waiting: registration.waiting?.state,
+                active: registration.active?.state
+            })
+
             console.log('Waiting for Service Worker Ready...')
-            // Timeout after 5 seconds if SW doesn't become ready
+            // Timeout after 15 seconds if SW doesn't become ready
             await Promise.race([
                 navigator.serviceWorker.ready,
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Service Worker ready timeout')), 5000))
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Service Worker ready timeout (15s)')), 15000))
             ])
             console.log('Service Worker Ready.')
 
