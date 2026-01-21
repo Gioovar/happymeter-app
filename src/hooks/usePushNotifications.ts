@@ -91,10 +91,10 @@ export function usePushNotifications() {
             setIsSubscribed(true)
             setPermission('granted')
 
-            return true
-        } catch (error) {
+            return { success: true }
+        } catch (error: any) {
             console.error('Failed to subscribe', error)
-            return false
+            return { success: false, error: error.message || 'Unknown error' }
         } finally {
             setLoading(false)
         }
