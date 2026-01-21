@@ -7,6 +7,7 @@ import DashboardSidebar from '@/components/DashboardSidebar'
 import ModeSelector from '@/components/ModeSelector'
 import { UserButton } from '@clerk/nextjs'
 import { DashboardProvider } from '@/context/DashboardContext'
+import { NotificationProvider } from '@/context/NotificationContext'
 import SuspendedOverlay from '@/components/common/SuspendedOverlay'
 
 import { processReferralCookie } from '@/lib/referral-service'
@@ -134,46 +135,48 @@ export default async function DashboardLayout({
 
     return (
         <DashboardProvider>
-            <div className="flex min-h-screen bg-[#0a0a0a]">
+            <NotificationProvider>
+                <div className="flex min-h-screen bg-[#0a0a0a]">
 
-                <Suspense fallback={<div className="w-64 bg-[#111] h-screen border-r border-white/10 hidden md:flex" />}>
-                    <DashboardSidebar
-                        isCreator={!!affiliateProfile}
-                        userRole={realRole}
-                        hasChain={hasChain}
-                        userPlan={userPlan}
-                        user={userData}
-                    // We will let Sidebar handle resolutions or passing slug
-                    />
-                </Suspense>
-                <main className="flex-1 overflow-y-auto h-screen relative">
-                    {/* Top Header for Desktop */}
-                    <div className="hidden md:flex justify-between items-center p-4 absolute top-0 right-0 z-30 w-full pointer-events-none">
-                        <div className="pointer-events-auto pl-4">
-                            <ModeSelector />
-                        </div>
-                        <div className="pointer-events-auto bg-[#111] border border-white/10 rounded-full px-4 py-2 flex items-center gap-4 shadow-xl">
-                            <div className="text-right hidden lg:block">
-                                <p className="text-xs text-gray-400 font-medium">Conectado como</p>
+                    <Suspense fallback={<div className="w-64 bg-[#111] h-screen border-r border-white/10 hidden md:flex" />}>
+                        <DashboardSidebar
+                            isCreator={!!affiliateProfile}
+                            userRole={realRole}
+                            hasChain={hasChain}
+                            userPlan={userPlan}
+                            user={userData}
+                        // We will let Sidebar handle resolutions or passing slug
+                        />
+                    </Suspense>
+                    <main className="flex-1 overflow-y-auto h-screen relative">
+                        {/* Top Header for Desktop */}
+                        <div className="hidden md:flex justify-between items-center p-4 absolute top-0 right-0 z-30 w-full pointer-events-none">
+                            <div className="pointer-events-auto pl-4">
+                                <ModeSelector />
                             </div>
-                            <UserButton
-                                afterSignOutUrl="/"
-                                appearance={{
-                                    elements: {
-                                        userButtonBox: "flex flex-row-reverse",
-                                        userButtonOuterIdentifier: "text-white font-bold text-sm",
-                                    }
-                                }}
-                                showName
-                            />
+                            <div className="pointer-events-auto bg-[#111] border border-white/10 rounded-full px-4 py-2 flex items-center gap-4 shadow-xl">
+                                <div className="text-right hidden lg:block">
+                                    <p className="text-xs text-gray-400 font-medium">Conectado como</p>
+                                </div>
+                                <UserButton
+                                    afterSignOutUrl="/"
+                                    appearance={{
+                                        elements: {
+                                            userButtonBox: "flex flex-row-reverse",
+                                            userButtonOuterIdentifier: "text-white font-bold text-sm",
+                                        }
+                                    }}
+                                    showName
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="pt-16 md:pt-20 px-4 md:px-8 pb-32">
-                        {children}
-                    </div>
-                </main>
-            </div>
+                        <div className="pt-16 md:pt-20 px-4 md:px-8 pb-32">
+                            {children}
+                        </div>
+                    </main>
+                </div>
+            </NotificationProvider>
         </DashboardProvider>
     )
 }

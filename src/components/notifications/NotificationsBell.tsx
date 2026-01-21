@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { toast } from 'sonner'
+import { useNotifications } from '@/context/NotificationContext'
 
 
 interface NotificationsBellProps {
