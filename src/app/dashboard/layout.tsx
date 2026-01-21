@@ -27,53 +27,53 @@ export default async function DashboardLayout({
     let affiliateProfile = null
     let hasSeenTour = false // Default to FALSE to ensure new users see the tour if settings fetch fails or is pending
 
+    let settings = null
+    let profile = null
+
     try {
         if (userId) {
-            const [profile, settings] = await Promise.all([
+            const [fetchedProfile, fetchedSettings] = await Promise.all([
                 prisma.affiliateProfile.findUnique({ where: { userId } }),
                 prisma.userSettings.findUnique({ where: { userId }, select: { hasSeenTour: true, role: true, plan: true, isActive: true, isOnboarded: true } })
             ])
-
-            // 1. Mandatory Onboarding Check
-            // If user exists but hasn't completed business setup, force them to /onboarding
-            if (settings && !settings.isOnboarded) {
-                redirect('/onboarding')
-            }
-
-            // Check for Account Suspension
-            let isSuspended = false
-            if (settings && (settings as any).isActive === false) {
-                isSuspended = true
-            } else {
-                // If not personally suspended, check if their Owner (if they are a team member) is suspended
-                // We check if this user is a member of any team where the owner handles the billing/access
-                const membership = await prisma.teamMember.findFirst({
-                    where: { userId },
-                    select: { owner: { select: { isActive: true } } }
-                })
-
-                if (membership && membership.owner && membership.owner.isActive === false) {
-                    isSuspended = true
-                }
-            }
-
-            if (isSuspended) {
-                return <SuspendedOverlay />
-            }
-
-
-            affiliateProfile = profile
-            if (settings) {
-                hasSeenTour = settings.hasSeenTour
-                realRole = settings.role || 'USER'
-            } else {
-                // If no settings found, it's likely a brand new user. 
-                // We should show the tour (hasSeenTour = false).
-                // (Already set to false by default above)
-            }
+            profile = fetchedProfile
+            settings = fetchedSettings
         }
     } catch (error) {
         console.error('Failed to fetch data in layout:', error)
+    }
+
+    // 1. Mandatory Onboarding Check & New User Handling
+    // If settings are missing (new user race condition) OR explicit not onboarded, redirect.
+    if (!settings || !settings.isOnboarded) {
+        redirect('/onboarding')
+    }
+
+    // Check for Account Suspension
+    // ... logic continues ...
+    let isSuspended = false
+    if (settings && (settings as any).isActive === false) {
+        isSuspended = true
+    } else {
+        // Checking owner suspension if applicable
+        const membership = await prisma.teamMember.findFirst({
+            where: { userId },
+            select: { owner: { select: { isActive: true } } }
+        })
+
+        if (membership && membership.owner && membership.owner.isActive === false) {
+            isSuspended = true
+        }
+    }
+
+    if (isSuspended) {
+        return <SuspendedOverlay />
+    }
+
+    affiliateProfile = profile
+    if (settings) {
+        hasSeenTour = settings.hasSeenTour
+        realRole = settings.role || 'USER'
     }
 
     // Check if user has any chain association
