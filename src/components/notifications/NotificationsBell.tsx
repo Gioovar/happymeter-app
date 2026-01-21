@@ -35,6 +35,22 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
+    // Listen for Service Worker messages (Sound)
+    useEffect(() => {
+        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+            const handleMessage = (event: MessageEvent) => {
+                if (event.data && event.data.type === 'PLAY_NOTIFICATION_SOUND') {
+                    const audio = new Audio(event.data.url)
+                    audio.volume = 1.0 // Ensure max volume
+                    audio.play().catch(e => console.error('Error playing notification sound:', e))
+                }
+            }
+            navigator.serviceWorker.addEventListener('message', handleMessage)
+            return () => navigator.serviceWorker.removeEventListener('message', handleMessage)
+        }
+    }, [])
+
+    // Fetch Notifications
     const fetchNotifications = async () => {
         try {
             const res = await fetch('/api/notifications')

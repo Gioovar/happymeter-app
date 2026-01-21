@@ -10,12 +10,12 @@ import BrandLogo from '@/components/BrandLogo'
 
 const menuItems = [
     {
-        title: 'Overview Global',
+        title: 'Resumen Global',
         href: '/admin',
         icon: LayoutDashboard
     },
     {
-        title: 'Tenants & Negocios',
+        title: 'Negocios y Inquilinos',
         href: '/admin/tenants',
         icon: Briefcase
     },
@@ -30,22 +30,22 @@ const menuItems = [
         icon: CreditCard
     },
     {
-        title: 'Global Analytics',
+        title: 'Analítica Global',
         href: '/admin/analytics',
         icon: BarChart2
     },
     {
-        title: 'Creators & Afiliados',
+        title: 'Creadores y Afiliados',
         href: '/admin/creators',
         icon: Award
     },
     {
-        title: 'Auditoría & Logs',
+        title: 'Auditoría y Logs',
         href: '/admin/audit',
         icon: ShieldAlert
     },
     {
-        title: 'Academy CMS',
+        title: 'Academia Contenido',
         href: '/admin/academy',
         icon: BookOpen
     },
