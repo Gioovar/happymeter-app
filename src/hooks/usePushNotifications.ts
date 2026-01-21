@@ -46,10 +46,19 @@ export function usePushNotifications() {
             }
 
             // Explicitly register service worker to prevent hanging if next-pwa failed
+            console.log('Registering Service Worker...')
             const registration = await navigator.serviceWorker.register('/sw.js')
-            await navigator.serviceWorker.ready // Wait for it to be active
+
+            console.log('Waiting for Service Worker Ready...')
+            // Timeout after 5 seconds if SW doesn't become ready
+            await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Service Worker ready timeout')), 5000))
+            ])
+            console.log('Service Worker Ready.')
 
             const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+            console.log('VAPID Key present:', !!vapidPublicKey)
 
             if (!vapidPublicKey) {
                 throw new Error('Missing VAPID Public Key')
@@ -58,7 +67,9 @@ export function usePushNotifications() {
             const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey)
 
             // Request permission explicitly first to ensure native prompt
+            console.log('Requesting Permission...')
             const permissionResult = await Notification.requestPermission()
+            console.log('Permission Result:', permissionResult)
             if (permissionResult !== 'granted') {
                 throw new Error('Permission not granted')
             }
