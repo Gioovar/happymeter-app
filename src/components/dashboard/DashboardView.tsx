@@ -22,6 +22,7 @@ import {
     Zap,
 } from 'lucide-react'
 import Link from 'next/link'
+import ExtraSurveyUpsellModal from '@/components/ExtraSurveyUpsellModal'
 import LaserBorder from '@/components/ui/LaserBorder'
 import PushToggle from '@/components/PushToggle'
 import HelpModal from '@/components/HelpModal'
@@ -93,7 +94,9 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
     const [upgradeMenuOpen, setUpgradeMenuOpen] = useState(false)
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+    const [upsellModalOpen, setUpsellModalOpen] = useState(false)
 
+    // ... existing greeting logic ...
     const getGreeting = () => {
         const hour = new Date().getHours()
         if (hour < 12) return 'Buenos días'
@@ -113,6 +116,43 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
         setIsRefreshing(false)
     }
 
+    const checkLimits = () => {
+        if (statsData.plan === 'ENTERPRISE') return true
+
+        // Remove early return for POWER/CHAIN so they are checked against strict limits
+        // if (statsData.plan === 'POWER' || statsData.plan === 'CHAIN') return true
+
+        // Dynamic Import of Limits (or hardcoded map for client-side speed)
+        // Simplified Map for Client
+        const LIMITS_MAP: any = {
+            FREE: 1,
+            GROWTH: 1,
+            POWER: 3,
+            CHAIN: 50
+        }
+
+        const planCode = (statsData.plan || 'FREE').toUpperCase()
+        const baseLimit = LIMITS_MAP[planCode] || 1
+        const activeSurveys = surveys.length
+        const extraSurveys = statsData.extraSurveys || 0
+
+        const totalLimit = baseLimit + extraSurveys
+
+        console.log('[CheckLimits]', { plan: planCode, baseLimit, activeSurveys, extraSurveys, totalLimit })
+
+        if (activeSurveys >= totalLimit) {
+            setUpsellModalOpen(true)
+            return false
+        }
+        return true
+    }
+
+    const handleCreateSurvey = () => {
+        if (checkLimits()) {
+            router.push(isBranchMode ? `${window.location.pathname}/create` : '/dashboard/create')
+        }
+    }
+
     const handleDelete = async (id: string) => {
         if (!window.confirm("¿Estás seguro de eliminar esta encuesta?")) return;
 
@@ -128,6 +168,7 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
         }
     }
 
+    // ... existing renderStars ...
     const renderStars = (rating: number) => {
         const fullStars = Math.floor(rating)
         const hasHalfStar = rating % 1 >= 0.5
@@ -197,6 +238,13 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 overflow-x-hidden">
+
+            <ExtraSurveyUpsellModal
+                isOpen={upsellModalOpen}
+                onClose={() => setUpsellModalOpen(false)}
+                currentPlanName={(statsData.plan || 'FREE').replace('_', ' ')}
+            />
+
             <div className={`fixed top-4 right-4 z-[60] flex items-center gap-3 px-4 py-3 bg-[#0a0a0a]/90 backdrop-blur-md border border-white/5 rounded-2xl shadow-2xl transition-all duration-500 ${isLoading ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
                 <div className="relative w-10 h-10 flex items-center justify-center">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-violet-500 via-fuchsia-500 to-transparent animate-spin [animation-duration:1s]" />
@@ -328,7 +376,7 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
 
                             <PushToggle />
                             <button
-                                onClick={() => router.push(isBranchMode ? `${window.location.pathname}/create` : '/dashboard/create')}
+                                onClick={handleCreateSurvey}
                                 className="group relative px-3 md:px-5 py-2.5 rounded-xl bg-white text-black font-bold hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center gap-2 overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
@@ -548,12 +596,12 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
                                     </div>
                                 ))}
 
-                                <Link href={isBranchMode ? `${window.location.pathname}/create` : "/dashboard/create"} className="group rounded-3xl border-2 border-dashed border-white/10 hover:border-violet-500/40 hover:bg-violet-500/5 transition duration-300 flex flex-col items-center justify-center p-8 min-h-[400px]">
+                                <div onClick={handleCreateSurvey} className="cursor-pointer group rounded-3xl border-2 border-dashed border-white/10 hover:border-violet-500/40 hover:bg-violet-500/5 transition duration-300 flex flex-col items-center justify-center p-8 min-h-[400px]">
                                     <div className="w-16 h-16 rounded-full bg-white/5 group-hover:bg-violet-500/20 flex items-center justify-center mb-4 transition duration-500 group-hover:scale-110">
                                         <Plus className="w-8 h-8 text-gray-400 group-hover:text-violet-400" />
                                     </div>
                                     <span className="font-bold text-gray-300 group-hover:text-white">Crear Nueva Encuesta</span>
-                                </Link>
+                                </div>
                             </div>
                         ) : (
                             <div className="rounded-3xl bg-white/5 border border-white/5 p-12 text-center">

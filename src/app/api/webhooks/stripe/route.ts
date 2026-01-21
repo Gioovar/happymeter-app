@@ -162,6 +162,31 @@ export async function POST(req: Request) {
                     subscriptionPeriodEnd: new Date((subscription as any).current_period_end * 1000)
                 }
             })
+
+
+            // --- EXTRA SURVEYS RECONCILIATION ---
+            const PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_EXTRA_SURVEY_PRICE_ID || process.env.STRIPE_EXTRA_SURVEY_PRICE_ID
+
+            if (PRICE_ID && subscription.items && subscription.items.data) {
+                let extraSurveysCount = 0
+
+                subscription.items.data.forEach((item: any) => {
+                    if (item.price.id === PRICE_ID) {
+                        extraSurveysCount += item.quantity || 0
+                    }
+                })
+
+                await prisma.userSettings.updateMany({
+                    where: { stripeSubscriptionId: subscription.id },
+                    data: {
+                        extraSurveys: extraSurveysCount
+                    }
+                })
+
+                console.log(`[WEBHOOK] Reconciled extra surveys for subscription ${subscription.id}: ${extraSurveysCount}`)
+            }
+            // ------------------------------------
+
         } catch (error) {
             console.error('Error syncing subscription status:', error)
             // Don't fail the webhook for this, just log it

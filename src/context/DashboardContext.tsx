@@ -33,6 +33,7 @@ export interface StatsData {
     worstFeedback: any[]
     surveysWithStats: { id: string, rating: string }[]
     plan?: string
+    extraSurveys?: number
     kpiChanges?: {
         totalResponses: number
         averageSatisfaction: number

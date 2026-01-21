@@ -207,9 +207,11 @@ export async function POST(req: Request) {
         const planCode = (userSettings.plan || 'FREE').toUpperCase() as keyof typeof PLAN_LIMITS
         const currentPlan = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE
 
-        const limit = type === 'STAFF'
+        const baseLimit = type === 'STAFF'
             ? currentPlan.limits.staffSurveys
             : currentPlan.limits.satisfactionSurveys
+
+        const limit = baseLimit + (userSettings.extraSurveys || 0)
 
         const currentCount = await prisma.survey.count({
             where: {
