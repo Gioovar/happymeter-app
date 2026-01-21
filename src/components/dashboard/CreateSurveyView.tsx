@@ -258,29 +258,35 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 pb-20 -mx-4 md:-mx-8">
             {/* Header */}
-            <header className="border-b border-white/5 bg-black/20 backdrop-blur-xl sticky top-0 z-50">
-                <nav className="w-full max-w-[1600px] mx-auto px-4 py-4 flex items-center justify-between">
+            <header className="border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
+                <nav className="w-full max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href={backLink}>
-                            <button className="p-2 rounded-lg hover:bg-white/10 transition text-gray-400 hover:text-white">
-                                <ArrowLeft className="w-5 h-5" />
-                            </button>
-                        </Link>
-                        <div className="flex items-center gap-2">
-                            {isAnonymousMode ? (
-                                <Shield className="w-5 h-5 text-slate-400" />
-                            ) : (
-                                <Image
-                                    src="/assets/branding/logo-white.png"
-                                    alt="HappyMeter Logo"
-                                    width={24}
-                                    height={24}
-                                    className="w-6 h-6 object-contain"
-                                />
-                            )}
-                            <span className="text-lg font-bold">
-                                {isAnonymousMode ? 'Nuevo Buzón Staff' : 'Nueva Encuesta'}
-                            </span>
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-fuchsia-600 blur-sm opacity-50 rounded-full"></div>
+                                <div className="relative w-10 h-10 bg-black border border-white/10 rounded-full flex items-center justify-center">
+                                    {isAnonymousMode ? (
+                                        <Shield className="w-5 h-5 text-gray-300" />
+                                    ) : (
+                                        <Image
+                                            src="/assets/branding/logo-white.png"
+                                            alt="HappyMeter Logo"
+                                            width={24}
+                                            height={24}
+                                            className="w-5 h-5 object-contain opacity-90"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col">
+                                <span className="text-xl font-bold text-white tracking-tight">
+                                    {isAnonymousMode ? 'Nuevo Buzón Staff' : 'Nueva Encuesta'}
+                                </span>
+                                <span className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">
+                                    {isAnonymousMode ? 'Confidencial' : 'Editor Visual'}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
