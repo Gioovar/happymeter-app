@@ -8,7 +8,7 @@ export default function PushToggle() {
     const { isSubscribed, loading, permission, subscribe } = usePushNotifications()
 
     const handleSubscribe = async () => {
-        toast('Por favor permite las notificaciones en tu navegador', { icon: '🔔' })
+        // toast('Por favor permite las notificaciones en tu navegador', { icon: '🔔' })
         const success = await subscribe()
         if (success) {
             toast.success('¡Notificaciones activadas!')

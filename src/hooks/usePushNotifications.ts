@@ -57,6 +57,12 @@ export function usePushNotifications() {
 
             const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey)
 
+            // Request permission explicitly first to ensure native prompt
+            const permissionResult = await Notification.requestPermission()
+            if (permissionResult !== 'granted') {
+                throw new Error('Permission not granted')
+            }
+
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: convertedVapidKey
