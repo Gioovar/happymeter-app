@@ -65,27 +65,20 @@ export function usePushNotifications() {
                 active: registration.active?.state
             })
 
-            // 3. Robust Wait for Active
-            const waitForActive = (reg: ServiceWorkerRegistration) => {
-                return new Promise<void>((resolve, reject) => {
-                    if (reg.active?.state === 'activated') return resolve()
+            // 3. Simple Polling for Active
+            const waitForActive = async (reg: ServiceWorkerRegistration) => {
+                let attempts = 0
+                while (attempts < 50) { // 5 seconds max (50 * 100ms)
+                    if (reg.active?.state === 'activated') return
+                    await new Promise(r => setTimeout(r, 100))
+                    attempts++
+                }
+                throw new Error('SW activation polling timeout')
+            }
 
-                    const serviceWorker = reg.installing || reg.waiting || reg.active
-                    if (!serviceWorker) {
-                        // Fallback to ready
-                        navigator.serviceWorker.ready.then(() => resolve())
-                        return
-                    }
-
-                    const timeout = setTimeout(() => reject(new Error('SW activation timeout')), 15000)
-
-                    serviceWorker.addEventListener('statechange', (e) => {
-                        if ((e.target as ServiceWorker).state === 'activated') {
-                            clearTimeout(timeout)
-                            resolve()
-                        }
-                    })
-                })
+            // Critical check before subscribing
+            if (!registration.active) {
+                throw new Error('Service Worker not active. Please refresh the page and try again.')
             }
 
             try {
