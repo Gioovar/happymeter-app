@@ -47,6 +47,16 @@ export function usePushNotifications() {
 
             // Explicitly register service worker to prevent hanging if next-pwa failed
             console.log('Registering Service Worker...')
+
+            // 1. Force unregister to clear stuck workers
+            if ('serviceWorker' in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations()
+                for (const reg of regs) {
+                    await reg.unregister()
+                    console.log('Unregistered existing SW')
+                }
+            }
+
             const registration = await navigator.serviceWorker.register('/sw.js')
 
             console.log('SW Registration state:', {
@@ -55,16 +65,34 @@ export function usePushNotifications() {
                 active: registration.active?.state
             })
 
-            console.log('Waiting for Service Worker Ready...')
+            // 3. Robust Wait for Active
+            const waitForActive = (reg: ServiceWorkerRegistration) => {
+                return new Promise<void>((resolve, reject) => {
+                    if (reg.active?.state === 'activated') return resolve()
+
+                    const serviceWorker = reg.installing || reg.waiting || reg.active
+                    if (!serviceWorker) {
+                        // Fallback to ready
+                        navigator.serviceWorker.ready.then(() => resolve())
+                        return
+                    }
+
+                    const timeout = setTimeout(() => reject(new Error('SW activation timeout')), 15000)
+
+                    serviceWorker.addEventListener('statechange', (e) => {
+                        if ((e.target as ServiceWorker).state === 'activated') {
+                            clearTimeout(timeout)
+                            resolve()
+                        }
+                    })
+                })
+            }
+
             try {
-                // Timeout after 5 seconds but don't fail, just warn
-                await Promise.race([
-                    navigator.serviceWorker.ready,
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('SW ready timeout')), 5000))
-                ])
-                console.log('Service Worker Ready.')
+                await waitForActive(registration)
+                console.log('Service Worker Active & Ready.')
             } catch (e) {
-                console.warn('Service Worker ready timed out, expecting registration to be sufficient.')
+                console.warn('SW activation wait failed, trying to proceed anyway:', e)
             }
 
             const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
