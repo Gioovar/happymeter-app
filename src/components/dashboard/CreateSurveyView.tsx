@@ -293,6 +293,14 @@ return (
                             <div className="relative w-10 h-10 bg-black border border-white/10 rounded-full flex items-center justify-center">
                                 {isAnonymousMode ? (
                                     <Shield className="w-5 h-5 text-gray-300" />
+                                ) : bannerPreview ? (
+                                    <div className="relative w-full h-full rounded-full overflow-hidden">
+                                        <img
+                                            src={bannerPreview}
+                                            alt="Business Logo"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
                                 ) : (
                                     <Image
                                         src="/assets/branding/logo-white.png"
