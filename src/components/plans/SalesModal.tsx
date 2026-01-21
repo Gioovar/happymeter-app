@@ -194,7 +194,7 @@ export default function SalesModal({ trigger, isOpen, onOpenChange, defaultPlan 
                                         <h4 className="font-bold text-white">Power 3X</h4>
                                         {plan === 'POWER' && <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-white" /></div>}
                                     </div>
-                                    <p className="text-xs text-gray-400">Modular y flexible.</p>
+                                    <p className="text-gray-400 text-xs mt-1">Elige tus herramientas.</p>
                                 </button>
                             </div>
                         </div>
