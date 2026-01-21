@@ -32,9 +32,27 @@ interface ResponseData {
 
 type FilterType = 'ALL' | 'GOOD' | 'NORMAL' | 'BAD' | 'STAFF'
 
+import { useSearchParams, useRouter } from 'next/navigation'
+
 export default function ResponsesClientPage({ initialResponses }: { initialResponses: any[] }) {
+    const searchParams = useSearchParams()
+    const router = useRouter()
+
+    // Auto-open from URL
+    const openId = searchParams.get('responseId')
+
     const [selectedResponse, setSelectedResponse] = useState<ResponseData | null>(null)
     const [filterType, setFilterType] = useState<FilterType>('ALL')
+
+    // Check URL on mount/update
+    useMemo(() => {
+        if (openId && initialResponses) {
+            const found = initialResponses.find(r => r.id === openId)
+            if (found) {
+                setSelectedResponse(found)
+            }
+        }
+    }, [openId, initialResponses])
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: undefined,
         to: undefined

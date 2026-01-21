@@ -24,7 +24,7 @@ import {
 import Link from 'next/link'
 import ExtraSurveyUpsellModal from '@/components/ExtraSurveyUpsellModal'
 import LaserBorder from '@/components/ui/LaserBorder'
-import PushToggle from '@/components/PushToggle'
+
 import HelpModal from '@/components/HelpModal'
 import AIReportModal from '@/components/AIReportModal'
 import AnalyticsChart from '@/components/AnalyticsChart'
@@ -384,7 +384,7 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
                                 <Zap className="w-5 h-5" />
                             </button>
 
-                            <PushToggle />
+
                             <button
                                 onClick={handleCreateSurvey}
                                 className="group relative px-3 md:px-5 py-2.5 rounded-xl bg-white text-black font-bold hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center gap-2 overflow-hidden"

@@ -7,6 +7,7 @@ import { Bell, Check, Trash2, X, AlertOctagon, Info, Megaphone, Loader2, Trophy,
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { toast } from 'sonner'
 
 
 interface NotificationsBellProps {
@@ -35,29 +36,66 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
-    // Listen for Service Worker messages (Sound)
+    // Sonnet Toast
     useEffect(() => {
-        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-            const handleMessage = (event: MessageEvent) => {
-                if (event.data && event.data.type === 'PLAY_NOTIFICATION_SOUND') {
-                    const audio = new Audio(event.data.url)
-                    audio.volume = 1.0 // Ensure max volume
-                    audio.play().catch(e => console.error('Error playing notification sound:', e))
-                }
-            }
-            navigator.serviceWorker.addEventListener('message', handleMessage)
-            return () => navigator.serviceWorker.removeEventListener('message', handleMessage)
-        }
+        // Preload audio
+        const audio = new Audio('/sounds/notification.mp3')
+        audio.load()
     }, [])
 
+    const playNotificationSound = () => {
+        const audio = new Audio('/sounds/notification.mp3')
+        audio.volume = 1.0
+        audio.play().catch(e => console.error('Error playing sound:', e))
+    }
+
+    // Ref to track last known notification ID to detect NEW ones
+    const lastNotificationIdRef = useRef<string | null>(null)
+
     // Fetch Notifications
-    const fetchNotifications = async () => {
+    const fetchNotifications = async (isPolling = false) => {
         try {
-            const res = await fetch('/api/notifications')
+            // Add timestamp to prevent caching
+            const res = await fetch(`/api/notifications?t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: { 'Pragma': 'no-cache' }
+            })
             if (res.ok) {
                 const data = await res.json()
-                setNotifications(data.notifications)
+                const newNotifications = data.notifications as any[]
+
+                // If polling and we have a new latest notification that is different from what we saw last time
+                if (isPolling && newNotifications.length > 0) {
+                    const latestId = newNotifications[0].id
+
+                    // Only trigger if we have a previous reference and it's different (and unread)
+                    if (lastNotificationIdRef.current && latestId !== lastNotificationIdRef.current) {
+                        const newNotif = newNotifications[0]
+                        if (!newNotif.isRead) {
+                            playNotificationSound()
+                            if (navigator.vibrate) navigator.vibrate([200, 100, 200])
+
+                            toast(newNotif.title, {
+                                description: newNotif.message,
+                                icon: '🔔',
+                                duration: 8000,
+                                action: {
+                                    label: 'Ver',
+                                    onClick: () => handleNotificationClick(newNotif)
+                                },
+                            })
+                        }
+                    }
+                }
+
+                // Update state
+                setNotifications(newNotifications)
                 setUnreadCount(data.unreadCount)
+
+                // Update ref to latest
+                if (newNotifications.length > 0) {
+                    lastNotificationIdRef.current = newNotifications[0].id
+                }
             }
         } catch (error) {
             console.error('Failed to fetch notifications', error)
@@ -65,9 +103,11 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
     }
 
     useEffect(() => {
-        fetchNotifications()
-        // Sondeo cada 60s
-        const interval = setInterval(fetchNotifications, 60000)
+        // Initial fetch
+        fetchNotifications(false)
+
+        // Polling every 3s (Pseudo-Realtime)
+        const interval = setInterval(() => fetchNotifications(true), 3000)
         return () => clearInterval(interval)
     }, [])
 
@@ -111,7 +151,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
         setIsOpen(false)
 
         if (notif.meta?.responseId) {
-            router.push(`/dashboard/responses/${notif.meta.responseId}?source=notification`)
+            router.push(`/dashboard/responses?responseId=${notif.meta.responseId}`)
         } else if (notif.meta?.url) { // Support custom URLs from Admin Push
             router.push(notif.meta.url)
         } else if (notif.type === 'ACHIEVEMENT') {
