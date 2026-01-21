@@ -41,7 +41,7 @@ export async function POST(req: Request) {
         const now = new Date()
         const startOfWeek = new Date(now.setDate(now.getDate() - 7))
 
-        const [userSettings, insights, aggregateStats, recentResponses] = await Promise.all([
+        const [userSettings, insights, aggregateStats, recentResponses, activePrograms, branchCount] = await Promise.all([
             // Fetch User Settings
             prisma.userSettings.findUnique({
                 where: { userId: targetUserId }
@@ -78,6 +78,14 @@ export async function POST(req: Request) {
                         }
                     }
                 }
+            }),
+            // Fetch Active Loyalty Programs
+            prisma.loyaltyProgram.count({
+                where: { userId: targetUserId, isActive: true }
+            }),
+            // Fetch Branch Count
+            prisma.chainBranch.count({
+                where: { chain: { ownerId: targetUserId } }
             })
         ])
 
@@ -85,49 +93,202 @@ export async function POST(req: Request) {
         console.log(`- Surveys: ${aggregateStats.length}`)
         console.log(`- Insights: ${insights.length}`)
         console.log(`- Recent Responses: ${recentResponses.length}`)
+        console.log(`- Active Programs: ${activePrograms}`)
+        console.log(`- Branch Count: ${branchCount}`)
 
 
         const businessName = (userSettings as any)?.businessName || "Tu Negocio"
         const industry = (userSettings as any)?.industry || "Comercio General"
-        const insightText = insights.map(i => `- ${i.content}`).join('\n')
+        const userPlan = (userSettings as any)?.plan || "FREE"
+        const insightText = insights.map((i: any) => `- ${i.content}`).join('\n')
 
         const totalSurveys = aggregateStats.length
-        const totalResponsesThisWeek = aggregateStats.reduce((acc, s) => acc + s.responses.length, 0)
-        const totalResponsesAllTime = aggregateStats.reduce((acc, s) => acc + s._count.responses, 0)
+        const totalResponsesThisWeek = aggregateStats.reduce((acc: number, s: any) => acc + s.responses.length, 0)
+        const totalResponsesAllTime = aggregateStats.reduce((acc: number, s: any) => acc + s._count.responses, 0)
+        const hasResponses = totalResponsesAllTime > 0
 
         // Format Recent Feedback for AI
-        const recentFeedbackText = recentResponses.map(r => {
+        const recentFeedbackText = recentResponses.map((r: any) => {
             const date = new Date(r.createdAt).toLocaleDateString()
-            const answersText = r.answers.map(a => {
+            const answersText = r.answers.map((a: any) => {
                 return `    * ${a.question.text}: "${a.value}"`
             }).join('\n')
             return `- [${date}]:\n${answersText}`
         }).join('\n\n')
 
-        // 2. Prepare System Prompt with Memory
-        let SYSTEM_PROMPT = `Actúa como el 'HappyMeter Analyst', experto en ${businessName} (${industry}).
-        
-        MEMORIA DE LARGO PLAZO:
-        ${insightText || "No hay insights previos."}
+        let SYSTEM_PROMPT = '';
 
-        DATOS ESTADÍSTICOS:
-        - Encuestas activas: ${totalSurveys}
-        - Respuestas (Total histórico): ${totalResponsesAllTime}
-        - Respuestas (Esta semana): ${totalResponsesThisWeek}
-        
-        FEEDBACK CUALITATIVO RECIENTE:
-        ${recentFeedbackText || "No hay respuestas recientes."}
-        
-        TUS REGLAS DE ORO (ESTILO DE RESPUESTA):
-        1. **SÉ CONCISO:** Ve al grano. Evita introducciones largas o saludos repetitivos como "Hola, soy tu analista".
-        2. **MODO CONSULTIVO:** Si el usuario pide un consejo general (ej. "¿Dame una promoción?"), NO respondas con una lista genérica. Primero haz una **pregunta aclaratoria** para entender su necesidad real.
-           - Ej. Usuario: "Quiero una promoción." -> Tú: "Claro, para darte la mejor opción, ¿qué día de la semana sientes que tienes menos rotación?"
-        3. **BASADO EN DATOS:** Si das una recomendación, justifícala con los *Datos Estadísticos* o *Feedback Cualitativo* que tienes arriba.
-        4. **FORMATO:** Usa viñetas y negritas para facilitar la lectura rápida.
-        5. **GENERACIÓN DE REPORTES:** Si el usuario solicita explícitamente generar, descargar o ver el reporte (ej. "dame el reporte del mes", "genera el PDF"), responde ÚNICAMENTE con la etiqueta: [[ACTION:GENERATE_REPORT]]. No agregues más texto si ese es el único pedido.
+        // --- ARBOL DE DECISIÓN (Priority Order) ---
 
-        OBJETIVO PRINCIPAL: Ayudar a ${businessName} a crecer basándote en la realidad de sus datos y giro.
+        // Rama 7: Usuario Bloqueado (Not implemented in this layer, usually Middleware, but safety check)
+        // if (userSettings.isBlocked) { ... }
+
+        if (totalSurveys === 0 && totalResponsesAllTime === 0 && activePrograms === 0) {
+            // --- RAMA 1: USARIO NUEVO (Onboarding Mode) ---
+            SYSTEM_PROMPT = `Actúa como 'HappyMeter Consultant', tu socio estratégico para arrancar ${businessName} (${industry}).
+            
+            ESTADO: NUEVO NEGOCIO (Sin configuración inicial).
+            
+            TU OBJETIVO:
+            No preguntes "¿qué quieres hacer?". TOMA EL MANDO.
+            Tu misión es educar sobre el VALOR de cada herramienta y guiar la configuración.
+            
+            MENSAJE INICIAL OBLIGATORIO:
+            "Bienvenido a HappyMeter 🚀
+            Vamos a configurar tu negocio paso a paso para que empieces a recibir clientes, opiniones y ventas."
+            
+            PLAN DE ACCIÓN (Explica el POR QUÉ de cada paso):
+            
+            **👉 Paso 1: Crea tu primera encuesta de satisfacción**
+            - **¿Para qué sirve?**: Medir la experiencia real del cliente y detectar fallos invisibles.
+            - **Resultados**: Mejora reputación y decisiones operativas.
+            - **Acción**: Ve a "Nueva Encuesta" y selecciona la plantilla básica.
+
+            **👉 Paso 2: Configura tu programa de lealtad**
+            - **¿Para qué sirve?**: Provocar que el cliente regrese 2 veces más rápido.
+            - **Estrategia**: Elige "Visitas" (simple) o "Puntos" (ticket alto).
+            - **Ejemplo**: "5 visitas = 1 Postre gratis".
+
+            **👉 Paso 3: Crea el mapa de tu negocio**
+            - **¿Para qué sirve?**: Identificar qué zonas (mesas/áreas) venden más o generan más quejas.
+            - **Acción**: Sube una foto de tu plano en "Espacios".
+
+            CIERRE MOTIVADOR:
+            "Esta configuración es la base de tu crecimiento. ¿Empezamos por la Encuesta?"
+            `
+
+        } else if (totalSurveys > 0 && totalResponsesAllTime === 0) {
+            // --- RAMA 2: ACTIVACIÓN (Encuestas listas, sin datos) ---
+            SYSTEM_PROMPT = `Actúa como 'HappyMeter Consultant', especialista en lanzamiento.
+            
+            ESTADO: INFRAESTRUCTURA LISTA, PERO INACTIVA (0 Respuestas).
+            
+            TU MENSAJE CLAVE:
+            "Tu encuesta ya está lista, ahora vamos a activarla para que empieces a recibir respuestas."
+            
+            GUÍA DE ACTIVACIÓN (Educativa):
+            
+            **1. El Poder del QR**
+            - Imprímelo y colócalo en cada mesa o mostrador.
+            - *Tip*: Un acrílico pequeño aumenta 40% la participación.
+
+            **2. Invitación Directa**
+            - Instruye a tu equipo: "Al entregar la cuenta, inviten amablemente a evaluar".
+            - *Por qué*: El cliente se siente valorado y escuchado.
+
+            **3. WhatsApp (El arma secreta)**
+            - Envía el link de la encuesta a tu base de datos hoy mismo.
+            
+            CTA (Acción):
+            "¿Quieres que te muestre dónde descargar tu QR oficial?"
+            `
+
+        } else if (!branchId && branchCount > 1) {
+            // --- RAMA 6: MULTI-SUCURSAL (Vista Global) ---
+            SYSTEM_PROMPT = `Actúa como 'HappyMeter Manager', supervisor de red para ${businessName}.
+            
+            ESTADO: VISTA GLOBAL (Tiene ${branchCount} sucursales).
+            
+            TU OBJETIVO:
+            Ofrecer una visión comparativa y ayudar a gestionar la complejidad.
+            
+            DATOS GLOBALES:
+            - Total Respuestas: ${totalResponsesAllTime}
+            
+            ACCIONES:
+            - Si pregunta por rendimiento, compara las sucursales (aunque no tengas el detalle aquí, sugiere ir a la vista de cada una).
+            - Pregunta: "¿Sobre cuál sucursal te gustaría profundizar hoy?"
+            `
+
+        } else {
+            // --- RAMA 3: ANÁLISIS (Standard Mode - Tiene respuestas) ---
+            SYSTEM_PROMPT = `Actúa como 'HappyMeter Analyst', experto en datos para ${businessName}.
+            
+            ESTADO: OPERACIÓN ACTIVA (${totalResponsesAllTime} respuestas históricas).
+            
+            MEMORIA:
+            ${insightText || "Sin insights previos."}
+            
+            FEEDBACK RECIENTE (Últimos 20):
+            ${recentFeedbackText}
+            
+            TU OBJETIVO:
+            Analizar patrones, resumir feedback y sugerir mejoras operativas.
+            
+            REGLAS:
+            1. **Identifica Patrones**: "He detectado que los clientes mencionan mucho..."
+            2. **Alerta Problemas**: Si ves quejas recientes, avisa prioritariamente.
+            3. **Sé Proactivo**: "Tu siguiente mejor acción sería..."
+            4. **Formato**: Usa viñetas claras.
+            5. **Reportes**: Si piden reporte, responde solo: [[ACTION:GENERATE_REPORT]].
+            `
+        }
+
+        // ... (End of Branch Logic)
+
+        // --- BASE DE CONOCIMIENTO EXPERTA (Global) ---
+        // Se anexa a cualquier rama para responder "Cómo implementar X" con nivel experto.
+
+        SYSTEM_PROMPT += `
+        
+        🧠 REGLAS DE RESPUESTA EXPERTA (Si preguntan "¿Cómo implementar...?"):
+        
+        TU INDUSTRIA ACTUAL: ${industry || "General"}
+        
+        USAS ESTAS ESTRATEGIAS SEGÚN EL GIRO:
+
+        === 1. PROGRAMA DE LEALTAD ===
+        Si preguntan por Lealtad, responde siguiendo esta estructura:
+        1. **Beneficio**: ¿Por qué sirve en su giro?
+        2. **Estrategia Recomendada**:
+           - 🍔 Restaurante/Bar: Lealtad por Visitas (Meta corta: 5-8 visitas). Recompensa: Consumo/Bebida.
+           - ☕ Cafetería: Sellos digitales (7 cafés = 1 gratis).
+           - 🏋️ Gym: Asistencia mensual. Recompensa: Clase exclusiva o descuento de producto.
+           - 🛍️ Retail: Puntos por compra.
+        3. **Implementación**: "Crear programa" -> "Definir regla" -> "Activar QR".
+        4. **Buenas Prácticas**: Premios alcanzables, personal capacitado.
+
+        === 2. RESERVACIONES ===
+        Si preguntan por Reservas:
+        1. **Beneficio**: Reduce mesas vacías y mejora ticket promedio.
+        2. **Estrategia**:
+           - 🍔 Restaurante: Tiempo límite (turnos) + Confirmación WhatsApp.
+           - 🍸 Bar/Antro: VIP, Control de aforo, Venta de mesas con anticipo.
+        3. **Implementación**: "Activar módulo" -> "Definir horarios/reglas" -> "Compartir Link".
+
+        === 3. TAREAS Y PROCESOS ===
+        Si preguntan por Tareas:
+        1. **Beneficio**: Estandariza operación y reduce errores.
+        2. **Ejemplos**:
+           - 🍔 Restaurante: Checklist de Apertura/Cierre, Limpieza de baños, Inventarios.
+           - 🏋️ Gym: Mantenimiento de equipo, Limpieza de pesas.
+           - 🛍️ Retail: Recepción de mercancía, Corte de caja.
+        3. **Implementación**: "Crear proceso" -> "Asignar responsable" -> "Monitorear".
+
+        ❌ REGLAS DE PERSONALIDAD:
+        - NUNCA respondas genérico.
+        - Actúa como Consultor de Negocio, Gerente Operativo y Estratega.
+        - NO actúes como Soporte Técnico pasivo.
         `
+
+        // RAMA 4: LÍMITES (Context Injection)
+        // Check limits based on plan hardcoded logic (mirroring frontend)
+        const LIMITS_MAP: any = { FREE: 1, GROWTH: 1, POWER: 3, CHAIN: 50 };
+        const baseLimit = LIMITS_MAP[userPlan] || 1;
+        const extraSurveys = (userSettings as any)?.extraSurveys || 0;
+        const totalLimit = baseLimit + extraSurveys;
+
+        if (totalSurveys >= totalLimit) {
+            SYSTEM_PROMPT += `
+            
+            NOTA DE CONTEXTO (LÍMITES):
+            El usuario ha alcanzado su límite de encuestas (${totalSurveys}/${totalLimit}).
+            Si intenta crear otra o pregunta por qué no puede, explícale que ha llegado al tope de su plan ${userPlan}.
+            OPCIONES:
+            1. "Agregar una encuesta extra" ($200 MXN).
+            2. "Mejorar a un plan superior".
+            `
+        }
 
         // 4. Save User Message to DB (if threadId provided)
         if (threadId) {

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { sendCrisisAlert, sendStaffAlert, sendCustomerReward } from '@/lib/alerts'
 
@@ -35,7 +36,7 @@ export async function POST(
         if (!ownerSettings) {
             // Should not happen, but proceed
         } else {
-            const { checkLimit, isLimitReached, FREE_PLAN_LIMITS } = await import('@/lib/limits')
+            const { isLimitReached, FREE_PLAN_LIMITS } = await import('@/lib/limits')
             // Check Response Count
             const currentCount = await prisma.response.count({
                 where: { surveyId: surveyId }
@@ -76,6 +77,9 @@ export async function POST(
             // Send Reward to Customer
             await sendCustomerReward(response, response.survey, response.answers)
         }
+
+        // Force cache invalidation for real-time dashboard updates
+        revalidateTag('analytics-full')
 
         checkMilestones(response.survey.userId)
 

@@ -198,12 +198,22 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
     const totalResponses = statsData.totalResponses
     const averageSatisfaction = parseFloat(statsData.averageSatisfaction)
 
+    const getTrend = (val: number | undefined) => {
+        if (!val) return 'neutral'
+        return val >= 0 ? 'up' : 'down'
+    }
+
+    const formatChange = (val: number | undefined, suffix = '%') => {
+        if (val === undefined || val === null) return '-'
+        return (val > 0 ? '+' : '') + val + suffix
+    }
+
     const stats = [
         {
             label: 'Total Respuestas',
             value: totalResponses.toString(),
-            change: '+12.5%',
-            trend: 'up',
+            change: formatChange(statsData.kpiChanges?.totalResponses),
+            trend: getTrend(statsData.kpiChanges?.totalResponses),
             icon: Users,
             color: 'from-blue-500 to-cyan-500',
             bg: 'bg-blue-500/10',
@@ -213,8 +223,8 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
         {
             label: 'Satisfacción Global',
             value: averageSatisfaction.toFixed(1),
-            change: '+0.4',
-            trend: 'up',
+            change: formatChange(statsData.kpiChanges?.averageSatisfaction),
+            trend: getTrend(statsData.kpiChanges?.averageSatisfaction),
             icon: Star,
             color: 'from-yellow-500 to-orange-500',
             bg: 'bg-yellow-500/10',
@@ -224,8 +234,8 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
         {
             label: 'Probabilidad de Recomendación (NPS)',
             value: statsData.npsScore.toString() + '%',
-            change: 'High',
-            trend: 'neutral',
+            change: formatChange(statsData.kpiChanges?.npsScore, ' pts'), // NPS is absolute points
+            trend: getTrend(statsData.kpiChanges?.npsScore),
             icon: Activity,
             color: 'from-violet-500 to-fuchsia-500',
             bg: 'bg-violet-500/10',

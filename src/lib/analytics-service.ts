@@ -24,7 +24,7 @@ export const getCachedAnalyticsData = unstable_cache(
         // 1. Total Count (Fast)
         const [totalResponses, userSettings] = await Promise.all([
             prisma.response.count({ where: whereClause }),
-            prisma.userSettings.findUnique({ where: { userId: primaryUserId }, select: { plan: true, extraSurveys: true } })
+            prisma.userSettings.findUnique({ where: { userId: primaryUserId }, select: { plan: true, extraSurveys: true } as any })
         ])
 
         // 2. Bulk Stats Data
@@ -323,27 +323,49 @@ export const getCachedAnalyticsData = unstable_cache(
         let prevRatingSum = 0
         let prevRatingCount = 0
 
+        let prevPromoters = 0
+        let prevDetractors = 0
+        let prevNpsTotal = 0
+
         prevStatsResponses.forEach(r => {
             const rating = r.answers.find((a: any) => !isNaN(parseInt(a.value)) && parseInt(a.value) <= 5)
             if (rating) {
                 const val = parseInt(rating.value)
                 if (!isNaN(val)) {
+                    // Standard Stats
                     prevRatingSum += val
                     prevRatingCount++
+
+                    // NPS Stats
+                    prevNpsTotal++
+                    if (val === 5) prevPromoters++
+                    else if (val <= 3) prevDetractors++
                 }
             }
         })
 
         const prevAvgSat = prevRatingCount > 0 ? (prevRatingSum / prevRatingCount) : 0
+
         const calcChange = (current: number, prev: number) => {
             if (prev === 0) return current > 0 ? 100 : 0
             return Math.round(((current - prev) / prev) * 100)
         }
 
+        const prevNpsScore = prevNpsTotal > 0
+            ? Math.round(((prevPromoters - prevDetractors) / prevNpsTotal) * 100)
+            : 0
+
         const kpiChanges = {
             totalResponses: calcChange(bulkStatsResponses.length, prevTotalCount),
             averageSatisfaction: calcChange(parseFloat(averageSatisfaction), prevAvgSat),
-            npsScore: 0
+            npsScore: npsScore - prevNpsScore // Point difference for NPS is standard, but UI expects logic.
+            // Let's us calcChange for consistency if we want % growth, but NPS growth is weird.
+            // If we use point difference, we should label it as "pts".
+            // For now, let's just return the raw difference as a number, and handle display in UI.
+            // Actually, existing UI logic (DashboardView) usually takes a % string or calculates it?
+            // DashboardView uses `stat.change` string.
+            // StatsData interface defines kpiChanges as numbers.
+            // Let's treat NPS change as raw point difference.
         }
 
         const processResponseDetail = (r: any) => {
@@ -434,7 +456,7 @@ export const getCachedAnalyticsData = unstable_cache(
 
         return {
             plan: userSettings?.plan || 'FREE',
-            extraSurveys: userSettings?.extraSurveys || 0,
+            extraSurveys: (userSettings as any)?.extraSurveys || 0,
             surveysList: allSurveys,
             totalResponses,
             averageSatisfaction,

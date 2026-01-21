@@ -167,12 +167,12 @@ export default function OnboardingPage() {
                             <div className="space-y-6">
                                 <div>
                                     <h1 className="text-3xl font-bold mb-2">Identidad Visual</h1>
-                                    <p className="text-gray-400">Sube el logo y banner que verán tus clientes.</p>
+                                    <p className="text-gray-400">Sube el logo y banner que verán tus clientes. (Obligatorio)</p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     {/* Logo Upload Placeholder */}
-                                    <div className="relative border-2 border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-violet-500/50 transition-colors cursor-pointer bg-[#1a1a1a] group overflow-hidden">
+                                    <div className={`relative border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-violet-500/50 transition-colors cursor-pointer bg-[#1a1a1a] group overflow-hidden ${!formData.logoUrl ? 'border-red-500/30' : 'border-white/10'}`}>
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -188,13 +188,13 @@ export default function OnboardingPage() {
                                                     <UploadCloud className="w-6 h-6 text-violet-400" />
                                                 </div>
                                                 <p className="text-sm font-bold">{uploading ? 'Subiendo...' : 'Subir Logo'}</p>
-                                                <p className="text-xs text-gray-500 mt-1">Recomendado: 500x500px</p>
+                                                <p className="text-xs text-red-500 mt-1">* Requerido</p>
                                             </>
                                         )}
                                     </div>
 
                                     {/* Banner Upload Placeholder */}
-                                    <div className="relative border-2 border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-violet-500/50 transition-colors cursor-pointer bg-[#1a1a1a] group overflow-hidden">
+                                    <div className={`relative border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-violet-500/50 transition-colors cursor-pointer bg-[#1a1a1a] group overflow-hidden ${!formData.bannerUrl ? 'border-red-500/30' : 'border-white/10'}`}>
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -210,7 +210,7 @@ export default function OnboardingPage() {
                                                     <UploadCloud className="w-6 h-6 text-indigo-400" />
                                                 </div>
                                                 <p className="text-sm font-bold">{uploading ? 'Subiendo...' : 'Subir Portada'}</p>
-                                                <p className="text-xs text-gray-500 mt-1">Recomendado: 1200x600px</p>
+                                                <p className="text-xs text-red-500 mt-1">* Requerido</p>
                                             </>
                                         )}
                                     </div>
@@ -231,8 +231,8 @@ export default function OnboardingPage() {
                                     <button
                                         type="button"
                                         onClick={() => setStep(3)}
-                                        disabled={uploading}
-                                        className="flex-1 bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                        disabled={!formData.logoUrl || !formData.bannerUrl || uploading}
+                                        className="flex-1 bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Continuar
                                     </button>
@@ -244,16 +244,17 @@ export default function OnboardingPage() {
                             <div className="space-y-6">
                                 <div>
                                     <h1 className="text-3xl font-bold mb-2">Conecta con tus Clientes</h1>
-                                    <p className="text-gray-400">Links importantes para tus encuestas y contacto.</p>
+                                    <p className="text-gray-400">Links importantes para tus encuestas y contacto. (Todos son obligatorios)</p>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-1 flex items-center gap-2">
-                                            <MessageCircle className="w-4 h-4 text-green-500" /> WhatsApp del Negocio
+                                            <MessageCircle className="w-4 h-4 text-green-500" /> WhatsApp del Negocio <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="tel"
+                                            required
                                             value={formData.whatsappContact}
                                             onChange={(e) => setFormData({ ...formData, whatsappContact: e.target.value })}
                                             className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl p-4 text-white focus:border-green-500 transition-colors outline-none"
@@ -262,10 +263,11 @@ export default function OnboardingPage() {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-1 flex items-center gap-2">
-                                            <Globe className="w-4 h-4 text-blue-400" /> Link de Google Maps/Reviews
+                                            <Globe className="w-4 h-4 text-blue-400" /> Link de Google Maps/Reviews <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="url"
+                                            required
                                             value={formData.googleReviewUrl}
                                             onChange={(e) => setFormData({ ...formData, googleReviewUrl: e.target.value })}
                                             className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 transition-colors outline-none"
@@ -274,9 +276,10 @@ export default function OnboardingPage() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-1">Instagram</label>
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">Instagram <span className="text-red-500">*</span></label>
                                             <input
                                                 type="text"
+                                                required
                                                 value={formData.instagram}
                                                 onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
                                                 className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl p-4 text-white focus:border-pink-500 transition-colors outline-none"
@@ -284,9 +287,10 @@ export default function OnboardingPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-300 mb-1">Facebook</label>
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">Facebook <span className="text-red-500">*</span></label>
                                             <input
                                                 type="text"
+                                                required
                                                 value={formData.facebook}
                                                 onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
                                                 className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl p-4 text-white focus:border-blue-600 transition-colors outline-none"
@@ -306,8 +310,8 @@ export default function OnboardingPage() {
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={isLoading}
-                                        className="flex-1 bg-violet-600 text-white font-bold py-4 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                        disabled={isLoading || !formData.whatsappContact || !formData.googleReviewUrl || !formData.instagram || !formData.facebook}
+                                        className="flex-1 bg-violet-600 text-white font-bold py-4 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
                                     >
                                         {isLoading ? 'Guardando...' : 'Finalizar y Crear Negocio'}
                                     </button>

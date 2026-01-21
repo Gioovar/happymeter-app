@@ -95,6 +95,8 @@ export default function NotificationCenter() {
     }
 
     const getNotificationLink = (notif: any) => {
+        if (notif.meta?.url) return notif.meta.url
+
         const type = notif.type
         // Mapping based on "God Mode" dashboard routes
         if (type.includes('USER') || type.includes('ACHIEVEMENT')) return '/admin/users'

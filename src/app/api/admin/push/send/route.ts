@@ -79,11 +79,26 @@ export async function POST(req: Request) {
         const successCount = results.filter(r => r.status === 'fulfilled' && (r.value as any).success).length
         const failureCount = results.length - successCount
 
+        // 2. SAVE TO DB (So they verify it in the Bell)
+        // We create one notification per user (not per device)
+        if (users.length > 0) {
+            await prisma.notification.createMany({
+                data: users.map(u => ({
+                    userId: u.userId,
+                    type: 'SYSTEM', // Default type for admin push
+                    title,
+                    message: body,
+                    meta: url ? { url } : undefined
+                }))
+            })
+        }
+
         return NextResponse.json({
             success: true,
             total: subscriptions.length,
             sent: successCount,
-            failed: failureCount
+            failed: failureCount,
+            savedToDb: users.length
         })
 
     } catch (error) {
