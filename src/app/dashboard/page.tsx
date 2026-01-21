@@ -28,7 +28,11 @@ export default function DashboardPage() {
     const isBranchMode = !!branchId || !!branchSlug
 
     // If user has chains AND is not viewing a specific branch -> Show Master Dashboard
-    const showMasterDashboard = chains.length > 0 && !isBranchMode
+    // MODIFIED: Only show Master Dashboard if there are MULTIPLE branches.
+    // Single-branch businesses should go directly to the standard dashboard.
+    const activeChain = chains[0]
+    const hasMultipleBranches = activeChain?.branches?.length > 1
+    const showMasterDashboard = chains.length > 0 && !isBranchMode && hasMultipleBranches
 
     // SABOTAGE SAFEGUARD: Check for pending checkout cookie
     useEffect(() => {
