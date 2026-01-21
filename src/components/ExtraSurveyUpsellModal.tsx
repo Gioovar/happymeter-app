@@ -29,8 +29,10 @@ export default function ExtraSurveyUpsellModal({ isOpen, onClose, currentPlanNam
             if (!res.ok) {
                 // If user has no subscription or other error
                 if (res.status === 402 || data.error?.includes('No active subscription')) {
-                    toast.error("Para agregar extras, necesitas una suscripción activa.")
-                    // Optional: Redirect to pricing?
+                    toast.error("Necesitas un plan activo para comprar extras. Redirigiendo...")
+                    setTimeout(() => {
+                        router.push('/pricing')
+                    }, 1500)
                     return
                 }
                 throw new Error(data.error || "Error al procesar la compra")
