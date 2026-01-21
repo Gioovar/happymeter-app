@@ -56,12 +56,16 @@ export function usePushNotifications() {
             })
 
             console.log('Waiting for Service Worker Ready...')
-            // Timeout after 15 seconds if SW doesn't become ready
-            await Promise.race([
-                navigator.serviceWorker.ready,
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Service Worker ready timeout (15s)')), 15000))
-            ])
-            console.log('Service Worker Ready.')
+            try {
+                // Timeout after 5 seconds but don't fail, just warn
+                await Promise.race([
+                    navigator.serviceWorker.ready,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('SW ready timeout')), 5000))
+                ])
+                console.log('Service Worker Ready.')
+            } catch (e) {
+                console.warn('Service Worker ready timed out, expecting registration to be sufficient.')
+            }
 
             const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
             console.log('VAPID Key present:', !!vapidPublicKey)
