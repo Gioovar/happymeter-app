@@ -39,12 +39,12 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
     // Sonnet Toast
     useEffect(() => {
         // Preload audio
-        const audio = new Audio('/sounds/notification.mp3')
+        const audio = new Audio('/notification.mp3')
         audio.load()
     }, [])
 
     const playNotificationSound = () => {
-        const audio = new Audio('/sounds/notification.mp3')
+        const audio = new Audio('/notification.mp3')
         audio.volume = 1.0
         audio.play().catch(e => console.error('Error playing sound:', e))
     }
