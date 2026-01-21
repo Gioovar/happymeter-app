@@ -105,6 +105,31 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
         }
     }, [chains, branchId, banner, bannerPreview])
 
+    // Pre-fill Alert Config defaults
+    useEffect(() => {
+        if (!alertConfig && chains.length > 0) {
+            let targetBranch = null
+            if (branchId) {
+                targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === branchId)
+            } else {
+                targetBranch = chains[0]?.branches[0]
+            }
+
+            const branchUser = targetBranch?.branch
+            // Prefer whatsappContact, fallback to phone
+            const businessPhone = branchUser?.whatsappContact || branchUser?.phone
+
+            if (businessPhone) {
+                setAlertConfig({
+                    enabled: true,
+                    emails: [],
+                    phones: [businessPhone],
+                    threshold: 3
+                })
+            }
+        }
+    }, [chains, branchId, alertConfig])
+
     const [questions, setQuestions] = useState<Question[]>(isAnonymousMode ? TEMPLATE_ANONYMOUS : TEMPLATE_STANDARD)
 
     const [socialConfig, setSocialConfig] = useState({
@@ -303,7 +328,7 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
                             onClick={() => setActiveTab('edit')}
                             className={`px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 ${activeTab === 'edit' ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
                         >
-                            Editor
+                            Seguir Editando
                         </button>
 
                         <button

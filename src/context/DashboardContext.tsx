@@ -53,6 +53,8 @@ export interface ChainBranch {
         businessName: string | null
         plan: string
         bannerUrl?: string | null
+        phone?: string | null
+        whatsappContact?: string | null
     }
 }
 

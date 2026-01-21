@@ -23,7 +23,9 @@ export async function GET() {
                                 userId: true,
                                 businessName: true, // Use businessName from UserSettings
                                 plan: true,
-                                bannerUrl: true
+                                bannerUrl: true,
+                                phone: true,
+                                whatsappContact: true
                             }
                         }
                     },
