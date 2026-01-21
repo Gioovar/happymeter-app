@@ -46,46 +46,16 @@ export function usePushNotifications() {
             }
 
             // Explicitly register service worker to prevent hanging if next-pwa failed
-            console.log('Registering Service Worker...')
+            // Rely on next-pwa to handle registration
+            console.log('Waiting for Service Worker Ready...')
+            const registration = await navigator.serviceWorker.ready
 
-            // 1. Force unregister to clear stuck workers
-            if ('serviceWorker' in navigator) {
-                const regs = await navigator.serviceWorker.getRegistrations()
-                for (const reg of regs) {
-                    await reg.unregister()
-                    console.log('Unregistered existing SW')
-                }
-            }
+            console.log('Service Worker Ready', registration)
 
-            const registration = await navigator.serviceWorker.register('/sw.js')
-
-            console.log('SW Registration state:', {
-                installing: registration.installing?.state,
-                waiting: registration.waiting?.state,
-                active: registration.active?.state
-            })
-
-            // 3. Simple Polling for Active
-            const waitForActive = async (reg: ServiceWorkerRegistration) => {
-                let attempts = 0
-                while (attempts < 50) { // 5 seconds max (50 * 100ms)
-                    if (reg.active?.state === 'activated') return
-                    await new Promise(r => setTimeout(r, 100))
-                    attempts++
-                }
-                throw new Error('SW activation polling timeout')
-            }
-
-            // Critical check before subscribing
+            // Double check active state
             if (!registration.active) {
-                throw new Error('Service Worker not active. Please refresh the page and try again.')
-            }
-
-            try {
-                await waitForActive(registration)
-                console.log('Service Worker Active & Ready.')
-            } catch (e) {
-                console.warn('SW activation wait failed, trying to proceed anyway:', e)
+                // Should practically never happen with .ready, but good for debugging
+                console.warn('SW ready resolved but active is missing')
             }
 
             const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
