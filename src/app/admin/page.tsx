@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Users, Building, Activity, DollarSign, ShieldCheck, TrendingUp, TrendingDown } from 'lucide-react'
+import { Users, Building, Activity, DollarSign, ShieldCheck, TrendingUp, TrendingDown, CreditCard, UserCheck, UserX } from 'lucide-react'
 import FinancialStats from '@/components/FinancialStats'
 import GrowthChart from '@/components/GrowthChart'
 import PayoutsTable from '@/components/admin/PayoutsTable'
@@ -7,62 +7,67 @@ import ActivityFeed from '@/components/ActivityFeed'
 import AIBriefing from '@/components/AIBriefing'
 import ManagementSuggestions from '@/components/ManagementSuggestions'
 import Link from 'next/link'
+import StatCard from '@/components/admin/StatCard'
+import { getGlobalStats, getFinancialStats } from '@/actions/admin-dashboard'
 
 export const dynamic = 'force-dynamic'
 
-async function getAdminStats() {
-    try {
-        const [
-            totalUsers,
-            totalSurveys,
-            totalResponses,
-        ] = await Promise.all([
-            prisma.userSettings.count(),
-            prisma.survey.count(),
-            prisma.response.count(),
-        ])
-
-        return { totalUsers, totalSurveys, totalResponses }
-    } catch (error) {
-        console.error("Error fetching admin stats:", error)
-        // Return default values to prevent page crash
-        return { totalUsers: 0, totalSurveys: 0, totalResponses: 0 }
-    }
-}
-
 export default async function AdminDashboardPage() {
-    const stats = await getAdminStats()
+    const [globalStats, financeStats] = await Promise.all([
+        getGlobalStats(),
+        getFinancialStats()
+    ])
 
     const adminStats = [
         {
             label: 'Usuarios Totales',
-            value: stats.totalUsers,
-            change: '+12%',
+            value: globalStats.users.total,
+            subValue: `+${globalStats.users.newLast30Days} nuevos (30d)`,
             trend: 'up',
             icon: Users,
-            color: 'from-orange-500 to-red-500',
+            color: 'from-blue-500 to-indigo-500',
+            bg: 'bg-blue-500/10',
+            border: 'border-blue-500/20'
+        },
+        {
+            label: 'MRR (Mensual)',
+            value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(financeStats.mrr),
+            subValue: `ARR: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(financeStats.arr)}`,
+            trend: 'up',
+            icon: DollarSign,
+            color: 'from-green-500 to-emerald-500',
+            bg: 'bg-green-500/10',
+            border: 'border-green-500/20'
+        },
+        {
+            label: 'Suscripciones Activas',
+            value: financeStats.activeSubscribers,
+            subValue: `${((financeStats.activeSubscribers / globalStats.users.total) * 100).toFixed(1)}% conversión`,
+            trend: 'neutral',
+            icon: CreditCard,
+            color: 'from-violet-500 to-purple-500',
+            bg: 'bg-violet-500/10',
+            border: 'border-violet-500/20'
+        },
+        {
+            label: 'Red de Sucursales',
+            value: globalStats.network.branches,
+            subValue: `${globalStats.network.chains} Cadenas activas`,
+            trend: 'up',
+            icon: Building,
+            color: 'from-orange-500 to-amber-500',
             bg: 'bg-orange-500/10',
             border: 'border-orange-500/20'
         },
         {
             label: 'Encuestas Activas',
-            value: stats.totalSurveys,
-            change: '+5%',
-            trend: 'up',
-            icon: Building,
-            color: 'from-amber-500 to-yellow-500',
-            bg: 'bg-amber-500/10',
-            border: 'border-amber-500/20'
-        },
-        {
-            label: 'Respuestas Globales',
-            value: stats.totalResponses,
-            change: '+24%',
+            value: globalStats.usage.surveys,
+            subValue: `${globalStats.usage.responses} Respuestas totales`,
             trend: 'up',
             icon: Activity,
-            color: 'from-red-500 to-rose-500',
-            bg: 'bg-red-500/10',
-            border: 'border-red-500/20'
+            color: 'from-pink-500 to-rose-500',
+            bg: 'bg-pink-500/10',
+            border: 'border-pink-500/20'
         }
     ]
 
@@ -86,6 +91,21 @@ export default async function AdminDashboardPage() {
                 </div>
             </div>
 
+            {/* KPI Grid - Expanded to 5 cols for cleaner look on large screens, or wrap */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 relative z-10">
+                {adminStats.map((stat, idx) => (
+                    <StatCard
+                        key={idx}
+                        label={stat.label}
+                        value={stat.value}
+                        subValue={stat.subValue}
+                        icon={stat.icon}
+                        color={stat.color}
+                        trend={stat.trend as any}
+                    />
+                ))}
+            </div>
+
             {/* Layout Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
 
@@ -103,36 +123,6 @@ export default async function AdminDashboardPage() {
                         <PayoutsTable />
                     </div>
 
-                    {/* KPI Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {adminStats.map((stat, idx) => (
-                            <div key={idx} className={`relative group p-6 rounded-3xl bg-[#0F0F0F] border ${stat.border} hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-1 shadow-2xl overflow-hidden`}>
-                                <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full bg-gradient-to-br ${stat.color} opacity-20 blur-[50px] group-hover:opacity-30 transition-opacity`} />
-
-                                <div className="relative z-10 flex flex-col justify-between h-full">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className={`p-3 rounded-2xl ${stat.bg}`}>
-                                            <stat.icon className={`w-6 h-6 text-white`} />
-                                        </div>
-                                        <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${stat.trend === 'up' ? 'bg-orange-500/20 text-orange-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                                            {stat.change}
-                                            {stat.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <h3 className="text-4xl font-bold text-white mb-1 tracking-tight">{stat.value}</h3>
-                                        <p className="text-sm text-gray-400 font-medium">{stat.label}</p>
-                                    </div>
-
-                                    <div className="h-1 w-full bg-white/5 rounded-full mt-6 overflow-hidden">
-                                        <div className={`h-full w-[70%] bg-gradient-to-r ${stat.color} rounded-full`} />
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
                     {/* Management Roadmap (New) */}
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
                         <ManagementSuggestions />
@@ -148,6 +138,27 @@ export default async function AdminDashboardPage() {
                     <div className="sticky top-4 space-y-6">
                         <div className="h-[400px]">
                             <ActivityFeed />
+                        </div>
+
+                        {/* Plan Breakdown Mini-Card */}
+                        <div className="bg-[#0F0F0F] border border-white/10 rounded-3xl p-6">
+                            <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">Distribución de Planes</h3>
+                            <div className="space-y-3">
+                                {Object.entries(financeStats.planBreakdown).map(([plan, count]) => (
+                                    <div key={plan} className="flex justify-between items-center text-sm">
+                                        <span className="text-gray-400 capitalize">{plan.toLowerCase().replace('_', ' ')}</span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-violet-500 rounded-full"
+                                                    style={{ width: `${(count / financeStats.activeSubscribers) * 100}%` }}
+                                                />
+                                            </div>
+                                            <span className="font-bold text-white">{count}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         {/* System Status Mockup */}

@@ -184,7 +184,7 @@ export default function Page() {
                                         onClick={() => setView('phone_entry')}
                                         className="w-full h-14 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group"
                                     >
-                                        <Phone className="w-5 h-5 text-[#00FF00] group-hover:text-[#00DD00] transition-colors" />
+                                        <Phone className="w-5 h-5 text-violet-500 group-hover:text-violet-400 transition-colors" />
                                         <span className="group-hover:text-gray-200">Continuar con teléfono</span>
                                     </button>
 
@@ -192,7 +192,7 @@ export default function Page() {
                                         onClick={() => setView('email_entry')}
                                         className="w-full h-14 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group"
                                     >
-                                        <Mail className="w-5 h-5 text-[#00FF00] group-hover:text-[#00DD00] transition-colors" />
+                                        <Mail className="w-5 h-5 text-violet-500 group-hover:text-violet-400 transition-colors" />
                                         <span className="group-hover:text-gray-200">Continuar con correo electrónico</span>
                                     </button>
                                 </div>
@@ -201,7 +201,7 @@ export default function Page() {
                             <div className="mt-8 text-center">
                                 <p className="text-gray-500">
                                     ¿Ya tienes cuenta?{' '}
-                                    <a href={`/sign-in?intent=${intent || ''}&program_id=${programId || ''}&redirect_url=${finalRedirect || ''}`} className="text-white hover:underline decoration-[#00FF00] font-medium">Inicia sesión</a>
+                                    <a href={`/sign-in?intent=${intent || ''}&program_id=${programId || ''}&redirect_url=${finalRedirect || ''}`} className="text-white hover:underline decoration-violet-500/50 font-medium hover:text-violet-400 transition-colors">Inicia sesión</a>
                                 </p>
                             </div>
                         </div>
@@ -230,14 +230,14 @@ export default function Page() {
                                         placeholder="+52..."
                                         value={tempPhone}
                                         onChange={(e) => setTempPhone(e.target.value)}
-                                        className="w-full bg-[#111] border border-white/10 text-white focus:border-[#00FF00] focus:ring-1 focus:ring-[#00FF00]/50 h-12 rounded-xl px-4 text-lg outline-none transition-all"
+                                        className="w-full bg-[#111] border border-white/10 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 h-12 rounded-xl px-4 text-lg outline-none transition-all"
                                         autoFocus
                                         required
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full h-12 bg-[#00FF00] hover:bg-[#00DD00] text-black font-bold rounded-xl transition-colors"
+                                    className="w-full h-12 bg-white hover:bg-gray-200 text-black font-bold rounded-xl transition-colors"
                                 >
                                     Continuar
                                 </button>
@@ -268,14 +268,14 @@ export default function Page() {
                                         placeholder="ejemplo@correo.com"
                                         value={tempEmail}
                                         onChange={(e) => setTempEmail(e.target.value)}
-                                        className="w-full bg-[#111] border border-white/10 text-white focus:border-[#00FF00] focus:ring-1 focus:ring-[#00FF00]/50 h-12 rounded-xl px-4 text-lg outline-none transition-all"
+                                        className="w-full bg-[#111] border border-white/10 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 h-12 rounded-xl px-4 text-lg outline-none transition-all"
                                         autoFocus
                                         required
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full h-12 bg-[#00FF00] hover:bg-[#00DD00] text-black font-bold rounded-xl transition-colors"
+                                    className="w-full h-12 bg-white hover:bg-gray-200 text-black font-bold rounded-xl transition-colors"
                                 >
                                     Continuar
                                 </button>
@@ -298,8 +298,8 @@ export default function Page() {
                                 appearance={{
                                     baseTheme: dark,
                                     variables: {
-                                        colorPrimary: '#00FF00',
-                                        colorTextSecondary: '#00FF00',
+                                        colorPrimary: '#8b5cf6',
+                                        colorTextSecondary: '#9ca3af',
                                         colorBackground: 'transparent'
                                     },
                                     elements: {
@@ -313,9 +313,9 @@ export default function Page() {
                                         dividerText: "hidden",
 
                                         formFieldLabel: "text-gray-400 font-medium ml-1 mb-1.5",
-                                        formFieldInput: "bg-[#111] border-white/10 text-white focus:border-[#00FF00] focus:ring-1 focus:ring-[#00FF00]/50 h-12 rounded-xl transition-all",
+                                        formFieldInput: "bg-[#111] border-white/10 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 h-12 rounded-xl transition-all",
                                         footerActionText: "text-gray-400",
-                                        footerActionLink: "!text-[#00FF00] hover:!text-[#00DD00] font-bold"
+                                        footerActionLink: "text-violet-400 hover:text-violet-300 font-bold"
                                     }
                                 }}
                                 forceRedirectUrl={redirectUrl}

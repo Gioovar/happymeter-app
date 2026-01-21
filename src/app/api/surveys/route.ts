@@ -3,17 +3,16 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { PLAN_LIMITS } from '@/lib/plans'
 
-export async function GET() {
+export async function GET(req: Request) {
     console.time('Surveys API Total')
     try {
         const { userId } = await auth()
         if (!userId) return new NextResponse("Unauthorized", { status: 401 })
 
         // --- Context Switching Logic ---
-        let targetUserId = userId;
+        let targetUserIds = [userId];
 
         // Check for 'branchId' query param to support delegated access
-        // We use 'req.url' to get search params in Next.js App Router API
         const { searchParams } = new URL(req.url);
         const branchId = searchParams.get('branchId');
 
@@ -31,14 +30,29 @@ export async function GET() {
             }
 
             // Valid context switch
-            targetUserId = branchId;
+            targetUserIds = [branchId];
+        } else {
+            // If no branchId is specified (Root Dashboard), fetch ALL surveys owned by this user (Personal + Branches)
+            // 1. Get all chains owned by user
+            const userChains = await prisma.chain.findMany({
+                where: { ownerId: userId },
+                include: { branches: true }
+            })
+
+            // 2. Extract branch IDs
+            const branchIds = userChains.flatMap(chain => chain.branches.map(b => b.branchId))
+
+            // 3. Add to targets
+            if (branchIds.length > 0) {
+                targetUserIds = [...targetUserIds, ...branchIds]
+            }
         }
         // -------------------------------
 
         console.time('DB Fetch Surveys')
         const surveys = await prisma.survey.findMany({
             where: {
-                userId: targetUserId
+                userId: { in: targetUserIds }
             },
             orderBy: {
                 createdAt: 'desc'

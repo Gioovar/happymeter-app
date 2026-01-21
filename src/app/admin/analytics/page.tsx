@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import AnalyticsCharts from '@/components/admin/AnalyticsCharts'
 import { Loader2, Brain, Zap, Server, Activity } from 'lucide-react'
 import { subDays, format } from 'date-fns'
-import { getGlobalAnalytics } from '@/actions/admin'
+import { getGlobalAnalytics } from '@/actions/admin-dashboard'
 
 export const dynamic = 'force-dynamic'
 

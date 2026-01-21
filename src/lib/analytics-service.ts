@@ -2,10 +2,13 @@ import { prisma } from '@/lib/prisma'
 import { unstable_cache } from 'next/cache'
 
 export const getCachedAnalyticsData = unstable_cache(
-    async (userId: string, surveyId: string | null, startDateParam: string | null, endDateParam: string | null) => {
+    async (userId: string | string[], surveyId: string | null, startDateParam: string | null, endDateParam: string | null) => {
+
+        const userIds = Array.isArray(userId) ? userId : [userId];
+        const primaryUserId = userIds[0];
 
         // Base filter
-        const whereClause: any = { survey: { userId } }
+        const whereClause: any = { survey: { userId: { in: userIds } } }
         if (surveyId && surveyId !== 'all') {
             whereClause.surveyId = surveyId
         }
@@ -21,7 +24,7 @@ export const getCachedAnalyticsData = unstable_cache(
         // 1. Total Count (Fast)
         const [totalResponses, userSettings] = await Promise.all([
             prisma.response.count({ where: whereClause }),
-            prisma.userSettings.findUnique({ where: { userId }, select: { plan: true } })
+            prisma.userSettings.findUnique({ where: { userId: primaryUserId }, select: { plan: true } })
         ])
 
         // 2. Bulk Stats Data
@@ -425,7 +428,7 @@ export const getCachedAnalyticsData = unstable_cache(
 
         // Also fetch All Surveys list for the dropdown (lightweight)
         const allSurveys = await prisma.survey.findMany({
-            where: { userId },
+            where: { userId: { in: userIds } },
             select: { id: true, title: true }
         })
 

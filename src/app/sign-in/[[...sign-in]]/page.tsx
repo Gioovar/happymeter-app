@@ -5,7 +5,7 @@ import BrandLogo from "@/components/BrandLogo";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getPublicLoyaltyProgramInfo } from "@/actions/loyalty";
-import { Phone, Mail, ArrowLeft, Loader2, Lock, AlertCircle, Eye, EyeOff, Smartphone } from "lucide-react";
+import { Phone, Mail, ArrowLeft, Loader2, Lock, AlertCircle, Eye, EyeOff, Smartphone, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ParticleBackground from "@/components/landing/ParticleBackground";
 
@@ -34,7 +34,19 @@ export default function Page() {
     // UI State
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
+
+
     const [showPassword, setShowPassword] = useState(false)
+    const [rememberMe, setRememberMe] = useState(false)
+
+    // Load saved email
+    useEffect(() => {
+        const savedEmail = localStorage.getItem('hm_remembered_user')
+        if (savedEmail) {
+            setEmail(savedEmail)
+            setRememberMe(true)
+        }
+    }, [])
 
     useEffect(() => {
         if (programId) {
@@ -101,6 +113,11 @@ export default function Page() {
                 setError(err.errors?.[0]?.message || 'Error al validar correo.')
             }
         } finally {
+            if (rememberMe) {
+                localStorage.setItem('hm_remembered_user', email)
+            } else {
+                localStorage.removeItem('hm_remembered_user')
+            }
             setIsLoading(false)
         }
     }
@@ -413,6 +430,25 @@ export default function Page() {
                                                 autoFocus
                                             />
                                         </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setRememberMe(!rememberMe)}
+                                            className={cn(
+                                                "w-5 h-5 rounded border flex items-center justify-center transition-all",
+                                                rememberMe ? "bg-violet-500 border-violet-500" : "bg-[#111] border-white/20 hover:border-white/40"
+                                            )}
+                                        >
+                                            {rememberMe && <Check className="w-3.5 h-3.5 text-white" />}
+                                        </button>
+                                        <label
+                                            onClick={() => setRememberMe(!rememberMe)}
+                                            className="text-sm text-gray-400 cursor-pointer select-none hover:text-gray-300 transition-colors"
+                                        >
+                                            Recordar mi cuenta
+                                        </label>
                                     </div>
 
                                     <button

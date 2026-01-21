@@ -1,6 +1,6 @@
 
 import { Suspense } from 'react'
-import { getCreatorsExtended } from '@/actions/admin' // Using the new extended action
+import { getCreatorsExtended } from '@/actions/admin-dashboard' // Using the new extended action
 import CreatorsTableExtended from '@/components/admin/CreatorsTableExtended'
 import { Loader2, TrendingUp, Trophy, DollarSign } from 'lucide-react'
 

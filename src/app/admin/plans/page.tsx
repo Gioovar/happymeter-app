@@ -1,6 +1,6 @@
 
 import { Suspense } from 'react'
-import { getSubscriptions } from '@/actions/admin'
+import { getSubscriptions } from '@/actions/admin-dashboard'
 import SubscriptionsTable from '@/components/admin/SubscriptionsTable'
 import { Loader2 } from 'lucide-react'
 

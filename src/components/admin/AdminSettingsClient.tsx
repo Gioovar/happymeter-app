@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateSystemSettings } from '@/actions/admin'
+import { updateSystemSettings } from '@/actions/admin-dashboard'
 import { Switch } from '@/components/ui/switch' // Assuming you have shadcn Switch, if not I'll make a simple one
 import { Loader2, AlertTriangle, Power } from 'lucide-react'
 

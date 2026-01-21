@@ -21,7 +21,7 @@ async function verifyAdmin() {
 
     // We treat 'SUPER_ADMIN' or specific email as God Mode
     // TODO: Add your email here or ensure your user has 'SUPER_ADMIN' role in DB
-    const isGod = dbUser?.role === 'SUPER_ADMIN' || user.emailAddresses[0].emailAddress === 'armelzuniga87@gmail.com' || user.emailAddresses[0].emailAddress === 'gioovar@gmail.com';
+    const isGod = dbUser?.role === 'SUPER_ADMIN' || user.emailAddresses[0].emailAddress === 'armelzuniga87@gmail.com' || user.emailAddresses[0].emailAddress === 'gioovar@gmail.com' || user.emailAddresses[0].emailAddress === 'gtrendy2017@gmail.com';
 
     if (!isGod) {
         throw new Error('Restricted to God Mode Admins only')
@@ -96,5 +96,67 @@ export async function updateClientLimit(targetUserId: string, updates: { maxBran
     } catch (error: any) {
         console.error('Error updating client:', error)
         return { success: false, error: error.message }
+    }
+}
+
+export async function getTenants() {
+    try {
+        await verifyAdmin()
+
+        const users = await prisma.userSettings.findMany({
+            take: 50,
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                userId: true,
+                businessName: true,
+                plan: true,
+                industry: true,
+                createdAt: true,
+                role: true,
+            }
+        })
+
+        const tenants = await Promise.all(users.map(async (u) => {
+            const [surveyCount, responseCount] = await Promise.all([
+                prisma.survey.count({ where: { userId: u.userId } }),
+                prisma.response.count({ where: { survey: { userId: u.userId } } })
+            ])
+
+            return {
+                id: u.id,
+                userId: u.userId,
+                businessName: u.businessName,
+                plan: u.plan,
+                industry: u.industry || 'Unknown',
+                createdAt: u.createdAt,
+                stats: {
+                    surveys: surveyCount,
+                    responses: responseCount
+                }
+            }
+        }))
+
+        return tenants
+    } catch (error: any) {
+        console.error('Error fetching tenants:', error)
+        throw new Error(error.message)
+    }
+}
+
+export async function updateTenantPlan(userId: string, newPlan: string) {
+    try {
+        await verifyAdmin()
+
+        await prisma.userSettings.update({
+            where: { userId },
+            data: { plan: newPlan }
+        })
+
+        revalidatePath('/admin/tenants')
+        return { success: true }
+    } catch (error: any) {
+        console.error('Error updating plan:', error)
+        throw new Error(error.message)
     }
 }

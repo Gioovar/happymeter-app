@@ -40,7 +40,7 @@ export default function RootLayout({
       appearance={{
         baseTheme: dark,
         variables: {
-          colorPrimary: '#8b5cf6',
+          colorPrimary: '#ffffff', // Minimalist White for primary interactions
           colorBackground: '#111111',
           colorText: 'white',
           colorInputBackground: '#1a1a1a',
@@ -51,10 +51,25 @@ export default function RootLayout({
           headerTitle: "text-white",
           headerSubtitle: "text-gray-400",
           socialButtonsBlockButton: "bg-white/5 border-white/10 text-white hover:bg-white/10",
+          socialButtonsBlockButtonText: "text-white",
+          formButtonPrimary: "bg-white text-black hover:bg-gray-200", // Explicit B&W button
           footerActionText: "text-gray-400",
-          footerActionLink: "text-violet-400 hover:text-violet-300",
+          footerActionLink: "text-white hover:text-gray-300 decoration-white/30", // White links instead of violet
           formFieldLabel: "text-gray-300",
-          formFieldInput: "bg-black/50 border-white/10 text-white focus:border-violet-500 transition-colors"
+          formFieldInput: "bg-black/50 border-white/10 text-white focus:border-white transition-colors",
+
+          // User Profile Specifics
+          profileSectionTitle: "text-white font-bold",
+          profileSectionTitleText: "text-white",
+          badge: "bg-white/10 text-white",
+
+          // Navigation
+          navbarButton: "text-gray-400 hover:text-white",
+          navbarButtonIcon: "text-gray-400 group-hover:text-white",
+
+          // Danger
+          formButtonReset: "text-white hover:bg-white/5",
+          fileDropAreaWithChild: "bg-black/50 border-white/10"
         }
       }}
     >

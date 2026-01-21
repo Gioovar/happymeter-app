@@ -100,6 +100,12 @@ model UserSettings {
   industry            String?   @default("restaurant")
   jobTitle            String?   // User's position/role description
   gameConfig          Json?     // Stores personalization for games (roulette, bottle, etc.)
+
+  // Business Identity
+  logoUrl             String?   // Business Logo
+  bannerUrl           String?   // Main Business Banner
+  googleReviewUrl     String?   // Link for Google Reviews
+  whatsappContact     String?   // Direct WhatsApp for business contact
   
   // Stripe & Subscription
   stripeCustomerId    String?   @unique
@@ -110,6 +116,7 @@ model UserSettings {
   affiliateProfile    AffiliateProfile?
   role                UserRole  @default(USER)
   representativeProfile RepresentativeProfile?
+  isActive            Boolean    @default(true) // For banning users
   pushSubscriptions   PushSubscription[]
   
   // Location for Business/Sales Attribution

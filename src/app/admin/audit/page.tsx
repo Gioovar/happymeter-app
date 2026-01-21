@@ -1,6 +1,6 @@
 
 import { Suspense } from 'react'
-import { getAuditLogs } from '@/actions/admin'
+import { getAuditLogs } from '@/actions/admin-dashboard'
 import AuditTable from '@/components/admin/AuditTable'
 import { Loader2, ScrollText } from 'lucide-react'
 

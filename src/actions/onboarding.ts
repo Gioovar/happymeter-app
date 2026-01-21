@@ -13,28 +13,32 @@ export async function completeOnboarding(formData: FormData) {
     const phone = formData.get('phone') as string
     const instagram = formData.get('instagram') as string
     const facebook = formData.get('facebook') as string
-    const state = formData.get('state') as string
-    const city = formData.get('city') as string
-    // const website = formData.get('website') as string
+    const whatsappContact = formData.get('whatsappContact') as string
+    const googleReviewUrl = formData.get('googleReviewUrl') as string
+    const logoUrl = formData.get('logoUrl') as string
+    const bannerUrl = formData.get('bannerUrl') as string
 
     if (!businessName) throw new Error('Business name is required')
 
     const socialLinks = {
         instagram,
         facebook,
-        // website
     }
 
-    await prisma.userSettings.upsert({
+    // 1. Update User Settings
+    const userSettings = await prisma.userSettings.upsert({
         where: { userId },
         update: {
             businessName,
             industry,
             phone,
             socialLinks,
+            whatsappContact,
+            googleReviewUrl,
+            logoUrl,
+            bannerUrl,
             isOnboarded: true,
-            state,
-            city
+            isActive: true, // Ensure they are active
         },
         create: {
             userId,
@@ -42,12 +46,47 @@ export async function completeOnboarding(formData: FormData) {
             industry,
             phone,
             socialLinks,
+            whatsappContact,
+            googleReviewUrl,
+            logoUrl,
+            bannerUrl,
             isOnboarded: true,
+            isActive: true,
             plan: 'FREE',
-            state,
-            city
         }
     })
+
+    // 2. Initialize Chain (Headquarters)
+    const existingChain = await prisma.chain.findFirst({ where: { ownerId: userId } })
+    if (!existingChain) {
+        await prisma.chain.create({
+            data: {
+                name: businessName, // Chain name = Business Name initially
+                ownerId: userId,
+                branches: {
+                    create: {
+                        name: 'Sede Principal',
+                        branchId: userId, // Mapping Main Branch ID to User ID for simplicity in single-branch setup
+                        order: 0
+                    }
+                }
+            }
+        })
+    }
+
+    // 3. Initialize Loyalty Program
+    const existingLoyalty = await prisma.loyaltyProgram.findUnique({ where: { userId } })
+    if (!existingLoyalty) {
+        await prisma.loyaltyProgram.create({
+            data: {
+                userId,
+                businessName: businessName, // Schema uses businessName
+                description: 'Programa de lealtad para nuestros clientes VIP.',
+                pointsPercentage: 5.0, // Default 5% cashback equivalent
+                isActive: true
+            }
+        })
+    }
 
     redirect('/dashboard')
 }

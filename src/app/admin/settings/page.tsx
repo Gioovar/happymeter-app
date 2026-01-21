@@ -1,6 +1,6 @@
 
 import { Suspense } from 'react'
-import { getSystemSettings } from '@/actions/admin'
+import { getSystemSettings } from '@/actions/admin-dashboard'
 import AdminSettingsClient from '@/components/admin/AdminSettingsClient'
 import { Loader2 } from 'lucide-react'
 

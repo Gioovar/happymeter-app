@@ -2,7 +2,7 @@
 const { PrismaClient } = require('@prisma/client')
 // Direct fetch to avoid Clerk SDK issues in script environment if not configured
 // We need CLERK_SECRET_KEY from process.env
-
+2
 const prisma = new PrismaClient()
 
 async function main() {
@@ -50,10 +50,7 @@ async function main() {
         userSettings = await prisma.userSettings.create({
             data: {
                 userId,
-                businessName: name,
-                email: email // Note: Schema might not have email, check if it fails. Ideally schema didn't have it in UserSettings
-                // Based on Step 11: UserSettings has NO email field. 
-                // Remove email from data.
+                businessName: name
             }
         })
         console.log('✅ UserSettings created.')

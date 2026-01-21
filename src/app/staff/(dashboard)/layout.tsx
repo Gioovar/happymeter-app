@@ -1,9 +1,10 @@
-import { auth } from '@clerk/nextjs/server'
+import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import StaffSidebar from '@/components/staff/StaffSidebar'
 import { UserButton } from '@clerk/nextjs'
 import NotificationsBell from '@/components/notifications/NotificationsBell'
+import SuspendedOverlay from '@/components/common/SuspendedOverlay'
 
 import StaffMobileNav from '@/components/staff/StaffMobileNav'
 
@@ -12,7 +13,8 @@ export default async function StaffLayout({
 }: {
     children: React.ReactNode
 }) {
-    const { userId } = await auth()
+    const user = await currentUser()
+    const userId = user?.id
 
     if (!userId) {
         redirect('/')
@@ -23,15 +25,18 @@ export default async function StaffLayout({
     try {
         userSettings = await prisma.userSettings.findUnique({
             where: { userId },
-            select: { role: true }
-        })
+            select: { role: true, isActive: true } as any
+        }) as any
     } catch (e) {
         console.error('Staff Layout Error:', e)
         // If error (e.g. unknown field), allow dev to see it on screen or fail safely
     }
 
-    // Allow STAFF and SUPER_ADMIN
-    if (userSettings?.role !== 'STAFF' && userSettings?.role !== 'SUPER_ADMIN') {
+    const isGod = user?.emailAddresses.some(e => ['armelzuniga87@gmail.com', 'gioovar@gmail.com', 'gtrendy2017@gmail.com'].includes(e.emailAddress));
+    const hasRole = userSettings?.role === 'STAFF' || userSettings?.role === 'SUPER_ADMIN';
+
+    // Allow STAFF, SUPER_ADMIN, or God Mode Emails
+    if (!hasRole && !isGod) {
         return (
             <div className="flex h-screen items-center justify-center bg-black text-white p-6">
                 <div className="max-w-md w-full border border-red-500/20 bg-red-500/10 p-8 rounded-2xl text-center">
@@ -51,6 +56,25 @@ export default async function StaffLayout({
         )
     }
 
+    // Check for Account Suspension (User OR Owner)
+    let isSuspended = false
+    if (userSettings && (userSettings as any).isActive === false) {
+        isSuspended = true
+    } else if (hasRole && userSettings?.role === 'STAFF') {
+        // If staff, check their owner status
+        const teamMember = await prisma.teamMember.findFirst({
+            where: { userId },
+            select: { owner: { select: { isActive: true } } }
+        })
+        if (teamMember && teamMember.owner && teamMember.owner.isActive === false) {
+            isSuspended = true
+        }
+    }
+
+    if (isSuspended) {
+        return <SuspendedOverlay />
+    }
+
     return (
         <div className="flex min-h-screen bg-[#050505]">
             <StaffSidebar />
@@ -62,7 +86,7 @@ export default async function StaffLayout({
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="text-right hidden lg:block">
-                            <p className="text-sm text-white font-bold">{userSettings.role}</p>
+                            <p className="text-sm text-white font-bold">{userSettings?.role || 'Super Admin'}</p>
                             <p className="text-xs text-gray-500">Panel de Operaciones</p>
                         </div>
                         <NotificationsBell />

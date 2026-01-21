@@ -1,23 +1,25 @@
-
 import { NextResponse } from 'next/server'
 import { currentUser, clerkClient } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 
-// TODO: Unified Admin Check from src/actions/admin.ts
-async function isAdmin() {
+async function verifySuperAdmin() {
     const user = await currentUser()
-    // For now, if they are authenticated and hitting this endpoint, we assume middleware/layout handled the basic check.
-    // Ideally we should have a 'role' in publicMetadata.
-    if (!user) {
-        return false
-    }
-    return true
+    if (!user) return false
+
+    const dbUser = await prisma.userSettings.findUnique({
+        where: { userId: user.id }
+    })
+
+    const isGod = dbUser?.role === 'SUPER_ADMIN' ||
+        user.emailAddresses.some(e => ['armelzuniga87@gmail.com', 'gioovar@gmail.com', 'gtrendy2017@gmail.com'].includes(e.emailAddress));
+
+    return isGod
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ userId: string }> }) {
     try {
-        if (!await isAdmin()) {
-            return new NextResponse(JSON.stringify({ error: "Unauthorized" }), { status: 403 })
+        if (!await verifySuperAdmin()) {
+            return new NextResponse(JSON.stringify({ error: "Unauthorized: God Mode Required" }), { status: 403 })
         }
 
         const { userId } = await params

@@ -3,10 +3,11 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from "next/navigation"
 import { prisma } from '@/lib/prisma'
 import DashboardSidebar from '@/components/DashboardSidebar'
-import FeatureTour from '@/components/FeatureTour'
+
 import ModeSelector from '@/components/ModeSelector'
 import { UserButton } from '@clerk/nextjs'
 import { DashboardProvider } from '@/context/DashboardContext'
+import SuspendedOverlay from '@/components/common/SuspendedOverlay'
 
 import { processReferralCookie } from '@/lib/referral-service'
 
@@ -30,8 +31,37 @@ export default async function DashboardLayout({
         if (userId) {
             const [profile, settings] = await Promise.all([
                 prisma.affiliateProfile.findUnique({ where: { userId } }),
-                prisma.userSettings.findUnique({ where: { userId }, select: { hasSeenTour: true, role: true, plan: true } })
+                prisma.userSettings.findUnique({ where: { userId }, select: { hasSeenTour: true, role: true, plan: true, isActive: true, isOnboarded: true } })
             ])
+
+            // 1. Mandatory Onboarding Check
+            // If user exists but hasn't completed business setup, force them to /onboarding
+            if (settings && !settings.isOnboarded) {
+                redirect('/onboarding')
+            }
+
+            // Check for Account Suspension
+            let isSuspended = false
+            if (settings && (settings as any).isActive === false) {
+                isSuspended = true
+            } else {
+                // If not personally suspended, check if their Owner (if they are a team member) is suspended
+                // We check if this user is a member of any team where the owner handles the billing/access
+                const membership = await prisma.teamMember.findFirst({
+                    where: { userId },
+                    select: { owner: { select: { isActive: true } } }
+                })
+
+                if (membership && membership.owner && membership.owner.isActive === false) {
+                    isSuspended = true
+                }
+            }
+
+            if (isSuspended) {
+                return <SuspendedOverlay />
+            }
+
+
             affiliateProfile = profile
             if (settings) {
                 hasSeenTour = settings.hasSeenTour
@@ -105,7 +135,7 @@ export default async function DashboardLayout({
     return (
         <DashboardProvider>
             <div className="flex min-h-screen bg-[#0a0a0a]">
-                {!hasSeenTour && <Suspense fallback={null}><FeatureTour /></Suspense>}
+
                 <Suspense fallback={<div className="w-64 bg-[#111] h-screen border-r border-white/10 hidden md:flex" />}>
                     <DashboardSidebar
                         isCreator={!!affiliateProfile}

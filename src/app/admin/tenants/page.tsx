@@ -23,7 +23,7 @@ export default async function AdminTenantsPage() {
 
             <Suspense fallback={
                 <div className="flex justify-center p-12">
-                    <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
                 </div>
             }>
                 <TenantsTable initialTenants={tenants} />

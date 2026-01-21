@@ -33,18 +33,45 @@ export interface StatsData {
     worstFeedback: any[]
     surveysWithStats: { id: string, rating: string }[]
     plan?: string
+    kpiChanges?: {
+        totalResponses: number
+        averageSatisfaction: number
+        npsScore: number
+    }
+}
+
+// Chain Types
+export interface ChainBranch {
+    id: string
+    chainId: string
+    branchId: string
+    name: string | null
+    slug: string | null
+    order: number
+    branch: {
+        userId: string
+        businessName: string | null
+        plan: string
+    }
+}
+
+export interface Chain {
+    id: string
+    name: string
+    ownerId: string
+    branches: ChainBranch[]
 }
 
 interface DashboardContextType {
     surveys: Survey[]
     statsData: StatsData
+    chains: Chain[]
     loadingSurveys: boolean
     loadingAnalytics: boolean
     refreshData: () => Promise<void>
     setSurveys: (surveys: Survey[]) => void // Allow local updates (e.g. optimistic delete)
     lastUpdated: Date | null
     isMobileMenuOpen: boolean
-    toggleMobileMenu: (val: boolean) => void
     toggleMobileMenu: (val: boolean) => void
     branchSlug?: string
     branchId?: string
@@ -72,6 +99,7 @@ export function DashboardProvider({ children, branchId, branchSlug }: { children
     // State
     const [surveys, setSurveysState] = useState<Survey[]>([])
     const [statsData, setStatsData] = useState<StatsData>(defaultStats)
+    const [chains, setChains] = useState<Chain[]>([])
     const [loadingSurveys, setLoadingSurveys] = useState(true)
     const [loadingAnalytics, setLoadingAnalytics] = useState(true)
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
@@ -96,9 +124,10 @@ export function DashboardProvider({ children, branchId, branchSlug }: { children
         const queryParams = branchId ? `?branchId=${branchId}` : ''
 
         try {
-            const [surveysRes, analyticsRes] = await Promise.all([
+            const [surveysRes, analyticsRes, chainsRes] = await Promise.all([
                 fetch(`/api/surveys${queryParams}`, { cache: 'no-store' }),
-                fetch(`/api/analytics${queryParams}`, { cache: 'no-store' })
+                fetch(`/api/analytics${queryParams}`, { cache: 'no-store' }),
+                fetch(`/api/chains`, { cache: 'no-store' })
             ])
 
             if (surveysRes.ok) {
@@ -141,6 +170,11 @@ export function DashboardProvider({ children, branchId, branchSlug }: { children
                 setStatsData(data)
             }
 
+            if (chainsRes.ok) {
+                const data = await chainsRes.json()
+                setChains(data)
+            }
+
             setLastUpdated(now)
 
         } catch (error) {
@@ -162,6 +196,7 @@ export function DashboardProvider({ children, branchId, branchSlug }: { children
         <DashboardContext.Provider value={{
             surveys,
             statsData,
+            chains,
             loadingSurveys,
             loadingAnalytics,
             lastUpdated,
