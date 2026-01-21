@@ -16,14 +16,9 @@ interface NotificationsBellProps {
 }
 
 export default function NotificationsBell({ align = 'right' }: NotificationsBellProps) {
-    // ... existing code ...
-
-    const [isOpen, setIsOpen] = useState(false)
+    const { notifications, unreadCount, markAsRead, deleteRead, loadingId, setLoadingId } = useNotifications()
     const router = useRouter()
-
-    const [notifications, setNotifications] = useState<any[]>([])
-    const [unreadCount, setUnreadCount] = useState(0)
-    const [loadingId, setLoadingId] = useState<string | null>(null)
+    const [isOpen, setIsOpen] = useState(false)
     const bellRef = useRef<HTMLDivElement>(null)
 
     // Cerrar al hacer clic fuera
@@ -37,118 +32,11 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
-    // Sonnet Toast
-    useEffect(() => {
-        // Preload audio
-        const audio = new Audio('/notification.mp3')
-        audio.load()
-    }, [])
-
-    const playNotificationSound = () => {
-        const audio = new Audio('/notification.mp3')
-        audio.volume = 1.0
-        audio.play().catch(e => console.error('Error playing sound:', e))
-    }
-
-    // Ref to track last known notification ID to detect NEW ones
-    const lastNotificationIdRef = useRef<string | null>(null)
-
-    // Fetch Notifications
-    const fetchNotifications = async (isPolling = false) => {
-        try {
-            // Add timestamp to prevent caching
-            const res = await fetch(`/api/notifications?t=${Date.now()}`, {
-                cache: 'no-store',
-                headers: { 'Pragma': 'no-cache' }
-            })
-            if (res.ok) {
-                const data = await res.json()
-                const newNotifications = data.notifications as any[]
-
-                // If polling and we have a new latest notification that is different from what we saw last time
-                if (isPolling && newNotifications.length > 0) {
-                    const latestId = newNotifications[0].id
-
-                    // Only trigger if we have a previous reference and it's different (and unread)
-                    if (lastNotificationIdRef.current && latestId !== lastNotificationIdRef.current) {
-                        const newNotif = newNotifications[0]
-                        if (!newNotif.isRead) {
-                            playNotificationSound()
-                            if (navigator.vibrate) navigator.vibrate([200, 100, 200])
-
-                            toast(newNotif.title, {
-                                description: newNotif.message,
-                                icon: '🔔',
-                                duration: 8000,
-                                action: {
-                                    label: 'Ver',
-                                    onClick: () => handleNotificationClick(newNotif)
-                                },
-                            })
-                        }
-                    }
-                }
-
-                // Update state
-                setNotifications(newNotifications)
-                setUnreadCount(data.unreadCount)
-
-                // Update ref to latest
-                if (newNotifications.length > 0) {
-                    lastNotificationIdRef.current = newNotifications[0].id
-                }
-            }
-        } catch (error) {
-            console.error('Failed to fetch notifications', error)
-        }
-    }
-
-    useEffect(() => {
-        // Initial fetch
-        fetchNotifications(false)
-
-        // Polling every 3s (Pseudo-Realtime)
-        const interval = setInterval(() => fetchNotifications(true), 3000)
-        return () => clearInterval(interval)
-    }, [])
-
-    const markAsRead = async (id?: string) => {
-        // Actualización optimista
-        if (id) {
-            setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
-            setUnreadCount(prev => Math.max(0, prev - 1))
-        } else {
-            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
-            setUnreadCount(0)
-        }
-
-        try {
-            await fetch('/api/notifications', {
-                method: 'PATCH',
-                body: JSON.stringify({ notificationId: id, markAll: !id })
-            })
-        } catch (error) {
-            console.error('Failed to mark read', error)
-        }
-    }
-
-    const handleNotificationClick = async (notif: any) => {
+    const handleClick = (notif: any) => {
         setLoadingId(notif.id)
 
-        // Remove locally immediately (Optimistic UI)
-        setNotifications(prev => prev.filter(n => n.id !== notif.id))
-        setUnreadCount(prev => Math.max(0, prev - 1))
-
-        // Mark as read in backend
-        try {
-            await fetch('/api/notifications', {
-                method: 'PATCH',
-                body: JSON.stringify({ notificationId: notif.id, markAll: false })
-            })
-        } catch (error) {
-            console.error('Failed to mark read', error)
-        }
-
+        // Optimistic update handled by context usually, but we call markAsRead
+        markAsRead(notif.id)
         setIsOpen(false)
 
         if (notif.meta?.responseId) {
@@ -167,7 +55,6 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
             router.push(`/dashboard/analytics?${query}`)
         }
 
-        // Restablecer carga después del retraso
         setTimeout(() => setLoadingId(null), 1000)
     }
 
@@ -228,10 +115,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                                     <button
                                         onClick={async () => {
                                             if (!confirm('¿Borrar todas las notificaciones leídas?')) return
-                                            setNotifications(prev => prev.filter(n => !n.isRead))
-                                            try {
-                                                await fetch('/api/notifications', { method: 'DELETE' })
-                                            } catch (e) { console.error(e) }
+                                            await deleteRead()
                                         }}
                                         className="text-[10px] text-gray-500 hover:text-red-400 transition flex items-center gap-1 hover:bg-red-500/10 px-2 py-1 rounded-md"
                                         title="Eliminar leídas"
@@ -253,7 +137,7 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                                     {notifications.map(notif => (
                                         <div
                                             key={notif.id}
-                                            onClick={() => handleNotificationClick(notif)}
+                                            onClick={() => handleClick(notif)}
                                             className={`p-4 hover:bg-white/5 transition relative group 
                                                 ${!notif.isRead ? 'bg-violet-500/5 border-l-2 border-violet-500 shadow-[inset_0_0_20px_rgba(139,92,246,0.05)]' : 'border-l-2 border-transparent'} 
                                                 ${notif.meta?.responseId ? 'cursor-pointer' : 'cursor-default'}
@@ -304,11 +188,6 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                                 </div>
                             )}
                         </div>
-
-                        {/* Pie de página */}
-                        {/* <div className="p-3 bg-white/5 border-t border-white/5 text-center">
-                            <button className="text-xs text-gray-500 hover:text-white transition">Ver historial completo</button>
-                        </div> */}
                     </motion.div>
                 )}
             </AnimatePresence>
