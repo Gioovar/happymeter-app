@@ -69,7 +69,7 @@ export default function Navbar() {
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-200" />
                         <button className="relative px-6 py-2.5 rounded-full bg-black border border-white/10 text-white text-sm font-bold flex items-center gap-2 group-hover:bg-[#0a0a0a] transition-colors">
                             <Sparkles className="w-3 h-3 text-fuchsia-400" />
-                            Entrar
+                            Iniciar sesión
                         </button>
                     </Link>
                 </div>
