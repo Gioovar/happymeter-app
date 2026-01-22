@@ -557,6 +557,7 @@ async function getEffectiveReservationSettings(userId: string) {
 
 export async function getAvailableTables(targetDateInput: Date, floorPlanId?: string, programId?: string) {
     try {
+        console.log("SERVER: getAvailableTables called", { targetDateInput, floorPlanId, programId })
         const { userId } = await auth()
         
         let effectiveOwnerId = userId

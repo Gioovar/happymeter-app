@@ -304,6 +304,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             const [hours, minutes] = selectedTime.split(':').map(Number)
             targetDate.setHours(hours, minutes, 0, 0)
 
+            console.log("Searching Tables:", { targetDate, activeFloorId, programId })
             // Pass programId as fallback context
             const result = await getAvailableTables(targetDate, activeFloorId, programId)
 
