@@ -606,39 +606,48 @@ export async function getAvailableTables(targetDateInput: Date, floorPlanId?: st
             
         } else {
             // MODE: STANDARD DURATION (Time Slots)
-            // Check intersection: 
-            // Existing Start < Request End AND Existing End > Request Start
-            
-            const requestDurationMs = settings.standardDurationMinutes * 60 * 1000
-            const requestStart = requestDate.getTime()
-            const requestEnd = requestStart + requestDurationMs
-            
-            // We need to fetch reservations for the day to check overlaps in memory or complex query
-            // optimization: query range around request time
-             const dayStart = new Date(requestDate)
-            dayStart.setHours(0,0,0,0)
-            const dayEnd = new Date(requestDate)
-            dayEnd.setHours(23,59,59,999)
-
-            const dayReservations = await prisma.reservation.findMany({
-                where: {
-                    table: { floorPlan: { userId: effectiveOwnerId } },
-                    date: { gte: dayStart, lte: dayEnd },
-                    status: { notIn: ['CANCELED', 'REJECTED'] }
-                },
-                select: { tableId: true, date: true, duration: true }
-            })
-
-            // Filter overlaps
-            for (const res of dayReservations) {
-                const existingStart = new Date(res.date).getTime()
-                // Use stored duration or fallback to current setting/default
-                const duration = res.duration || settings.standardDurationMinutes
-                const existingEnd = existingStart + (duration * 60 * 1000)
+            try {
+                // Ensure valid duration
+                const durationMinutes = settings.standardDurationMinutes || 120
+                const requestDurationMs = durationMinutes * 60 * 1000
+                const requestStart = requestDate.getTime()
+                const requestEnd = requestStart + requestDurationMs
                 
-                if (existingStart < requestEnd && existingEnd > requestStart) {
-                    occupiedTableIds.push(res.tableId)
+                // Query range optimization
+                const dayStart = new Date(requestDate)
+                dayStart.setHours(0,0,0,0)
+                const dayEnd = new Date(requestDate)
+                dayEnd.setHours(23,59,59,999)
+
+                const dayReservations = await prisma.reservation.findMany({
+                    where: {
+                        table: { floorPlan: { userId: effectiveOwnerId } },
+                        date: { gte: dayStart, lte: dayEnd },
+                        status: { notIn: ['CANCELED', 'REJECTED'] }
+                    },
+                    select: { tableId: true, date: true, duration: true }
+                })
+
+                // Filter overlaps safely
+                for (const res of dayReservations) {
+                    try {
+                        const existingStart = new Date(res.date).getTime()
+                        if (isNaN(existingStart)) continue
+
+                        // Use stored duration or fallback
+                        const duration = res.duration || durationMinutes
+                        const existingEnd = existingStart + (duration * 60 * 1000)
+                        
+                        if (existingStart < requestEnd && existingEnd > requestStart) {
+                            occupiedTableIds.push(res.tableId)
+                        }
+                    } catch (err) {
+                        console.error("Error processing reservation overlap:", err)
+                    }
                 }
+            } catch (innerError) {
+                console.error("Error in Standard Time logic:", innerError)
+                // Fallback: Don't block everything if this complex check fails
             }
         }
 
