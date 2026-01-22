@@ -521,10 +521,12 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
 
 // --- SETTINGS MANAGEMENT ---
 export async function updateReservationSettings(settings: { standardTimeEnabled: boolean, standardDurationMinutes: number }) {
+    console.log("SERVER: updateReservationSettings started", settings)
     try {
         const { userId } = await auth()
         if (!userId) throw new Error("Unauthorized")
         
+        console.log("SERVER: upserting settings for user", userId)
         // Ensure settings exist or update them
         await prisma.userSettings.upsert({
             where: { userId },
@@ -538,7 +540,9 @@ export async function updateReservationSettings(settings: { standardTimeEnabled:
             }
         })
         
+        console.log("SERVER: upsert success, revalidating...")
         revalidatePath('/dashboard/reservations')
+        console.log("SERVER: revalidation done")
         return { success: true }
     } catch (error) {
         console.error("Error updating reservation settings:", error)
@@ -560,11 +564,19 @@ async function getEffectiveReservationSettings(userId: string) {
     return { ...defaults, ...(user.reservationSettings as any) }
 }
 
-export async function getAvailableTables(targetDateInput: Date, floorPlanId?: string, programId?: string) {
+// Note: We use string date to avoid serialization issues across server boundary
+export async function getAvailableTables(targetDateIso: string, floorPlanId?: string, programId?: string) {
+    console.log("SERVER: getAvailableTables called", { targetDateIso, floorPlanId, programId })
+    
     try {
-        console.log("SERVER: getAvailableTables called", { targetDateInput, floorPlanId, programId })
-        const { userId } = await auth()
-        
+        let userId: string | null = null
+        try {
+            const authData = await auth()
+            userId = authData.userId
+        } catch (e) {
+            console.log("SERVER: auth() failed (expected in public view)", e)
+        }
+
         let effectiveOwnerId = userId
         
         // 1. Try FloorPlan lookup
@@ -586,10 +598,17 @@ export async function getAvailableTables(targetDateInput: Date, floorPlanId?: st
         }
 
         const settings = await getEffectiveReservationSettings(effectiveOwnerId)
-        const requestDate = new Date(targetDateInput)
+        // Parse the ISO string back to Date safely
+        const requestDate = new Date(targetDateIso)
+        if (isNaN(requestDate.getTime())) {
+            console.error("Invalid date received:", targetDateIso)
+            return { success: false, occupiedTableIds: [] }
+        }
         
         // 1. Time Window Logic
         let occupiedTableIds: string[] = []
+        
+        // ... (Rest of logic) ...
 
         if (!settings.standardTimeEnabled) {
             // MODE: BLOCK ALL DAY
