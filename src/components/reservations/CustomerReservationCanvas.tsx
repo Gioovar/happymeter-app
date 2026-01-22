@@ -299,19 +299,25 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
         setIsBooking(true) // Re-use loading state
 
-        // Construct full date in Client Timezone (Local)
-        const [hours, minutes] = selectedTime.split(':').map(Number)
-        targetDate.setHours(hours, minutes, 0, 0)
+        try {
+            // Construct full date in Client Timezone (Local)
+            const [hours, minutes] = selectedTime.split(':').map(Number)
+            targetDate.setHours(hours, minutes, 0, 0)
 
-        const result = await getAvailableTables(targetDate, activeFloorId)
+            const result = await getAvailableTables(targetDate, activeFloorId)
 
-        if (result.success) {
-            setOccupiedTableIds(result.occupiedTableIds || [])
-            setBookingStep('SELECT')
-        } else {
-            toast.error("Error al buscar mesas", { description: "Intenta de nuevo." })
+            if (result.success) {
+                setOccupiedTableIds(result.occupiedTableIds || [])
+                setBookingStep('SELECT')
+            } else {
+                toast.error("Error al buscar mesas", { description: "Intenta de nuevo." })
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error("Error de conexión", { description: "Revisa tu internet e intenta de nuevo." })
+        } finally {
+            setIsBooking(false)
         }
-        setIsBooking(false)
     }
 
     // New SEARCH STEP UI
