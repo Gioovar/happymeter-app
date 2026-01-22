@@ -119,13 +119,28 @@ export function ReservationSettingsDialog({ settings }: ReservationSettingsDialo
                                 step={30}
                                 value={[duration]}
                                 onValueChange={(val) => setDuration(val[0])}
-                                className="my-4"
+                                className="my-6"
                             />
-                            <div className="flex justify-between text-[10px] text-gray-600 uppercase font-bold tracking-wider">
-                                <span>30 min</span>
-                                <span>4 horas</span>
-                                <span>8 horas</span>
+                            
+                            {/* Tick Labels */}
+                            <div className="flex justify-between items-center text-[10px] text-gray-500 font-bold tracking-widest px-1">
+                                <span>30 MIN</span>
+                                <span>2H</span>
+                                <span>4H</span>
+                                <span>6H</span>
+                                <span>8 HORAS</span>
                             </div>
+
+                            <p className="text-center text-xs text-gray-400 mt-4 bg-zinc-800/50 py-2 rounded-lg border border-zinc-700/50">
+                                Ejemplo: Una reserva a las <span className="text-white font-bold">2:00 PM</span> bloqueará la mesa hasta las <span className="text-white font-bold">{
+                                    // Simple calculation for demo
+                                    (() => {
+                                        const d = new Date(); d.setHours(14, 0, 0, 0);
+                                        const end = new Date(d.getTime() + duration * 60000);
+                                        return end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                    })()
+                                }</span>
+                            </p>
                         </div>
 
                         {duration < 90 && (
