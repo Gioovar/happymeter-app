@@ -50,7 +50,7 @@ export const DialogContent: React.FC<{
                 {!disableOutsideClick && (
                     <button
                         onClick={() => onOpenChange(false)}
-                        className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition"
+                        className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition z-50"
                     >
                         <X className="w-4 h-4" />
                     </button>
