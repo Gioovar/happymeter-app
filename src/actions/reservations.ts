@@ -728,7 +728,7 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
 export async function createReservation(data: {
     reservations: {
         tableId: string
-        date: Date
+        date: string
         partySize: number
     }[]
     customer: {
