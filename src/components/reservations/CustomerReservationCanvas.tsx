@@ -185,6 +185,9 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     const zoomOut = () => scale.set(Math.max(scale.get() / 1.2, 0.3))
 
     const handleTableClick = (table: Table) => {
+        // IGNORE DECO ELEMENTS
+        if (table.type === 'DECO') return
+
         // Use occupiedTableIds (filtered by date/time) instead of raw table.reservations (all history)
         if (occupiedTableIds.includes(table.id)) {
             toast.error("Mesa Ocupada", {
@@ -656,15 +659,20 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                         const isReserved = occupiedTableIds.includes(table.id)
                         const isSelected = selectedTables.some(t => t.id === table.id)
                         const isPaid = (table.reservationPrice || 0) > 0 && !isReserved
+                        const isDeco = table.type === 'DECO'
 
                         return (
                             <div
                                 key={table.id}
                                 onClick={() => handleTableClick(table)}
-                                className={`absolute flex items-center justify-center transition-all duration-300 cursor-pointer 
+                                className={`absolute flex items-center justify-center transition-all duration-300 
+                                    ${isDeco 
+                                        ? 'cursor-default opacity-90' 
+                                        : 'cursor-pointer'
+                                    }
                                     ${isSelected
                                         ? 'ring-4 ring-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.5)] z-20 scale-105'
-                                        : isReserved ? '' : 'hover:scale-105 active:scale-95 hover:ring-2 hover:ring-white/50'
+                                        : !isDeco && (isReserved ? '' : 'hover:scale-105 active:scale-95 hover:ring-2 hover:ring-white/50')
                                     }
                                 `}
                                 style={{
@@ -675,34 +683,42 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     transform: `rotate(${table.rotation || 0}deg)`,
                                     borderRadius: table.type === 'ROUND' ? '50%' : '12px',
                                     // Visual Status: Red (Reserved) > Indigo (Paid) > Zinc (Free)
-                                    backgroundColor: isReserved
-                                        ? 'rgba(127, 29, 29, 0.8)' // Red 900
-                                        : isPaid ? '#4f46e5' : '#27272a',
+                                    backgroundColor: isDeco
+                                        ? '#3f3f46' // Zinc 700 for Deco
+                                        : isReserved
+                                            ? 'rgba(127, 29, 29, 0.8)' // Red 900
+                                            : isPaid ? '#4f46e5' : '#27272a',
                                     border: isReserved ? '1px solid rgba(248, 113, 113, 0.3)' : 'none',
-                                    color: 'white'
+                                    color: 'white',
+                                    boxShadow: isDeco ? 'none' : undefined
                                 }}
                             >
                                 <div className="flex flex-col items-center justify-center text-center transform" style={{ transform: `rotate(-${table.rotation || 0}deg)` }}>
-                                    <span className="text-[10px] font-bold opacity-80 truncate px-1 max-w-full">
+                                    <span className={`font-bold select-none truncate px-1 max-w-full ${isDeco ? 'text-[8px] text-zinc-400' : 'text-[10px] opacity-80'}`}>
                                         {table.label}
                                     </span>
-                                    {isReserved ? (
-                                        <div className="flex flex-col items-center mt-0.5">
-                                            <span className="text-[7px] font-bold uppercase tracking-wider text-red-200 bg-red-950/80 px-1.5 py-0.5 rounded border border-red-500/20">Ocupada</span>
-                                        </div>
-                                    ) : (
+                                    
+                                    {!isDeco && (
                                         <>
-                                            {table.capacity && (
-                                                <div className="flex items-center gap-0.5 text-[8px] opacity-60">
-                                                    <Users className="w-2.5 h-2.5" />
-                                                    {table.capacity}
+                                            {isReserved ? (
+                                                <div className="flex flex-col items-center mt-0.5">
+                                                    <span className="text-[7px] font-bold uppercase tracking-wider text-red-200 bg-red-950/80 px-1.5 py-0.5 rounded border border-red-500/20">Ocupada</span>
                                                 </div>
-                                            )}
-                                            {isPaid && (
-                                                <div className="absolute -top-3 -right-3 bg-green-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm flex items-center gap-0.5 border border-white/20">
-                                                    <DollarSign className="w-2 h-2" />
-                                                    {table.reservationPrice}
-                                                </div>
+                                            ) : (
+                                                <>
+                                                    {table.capacity && (
+                                                        <div className="flex items-center gap-0.5 text-[8px] opacity-60">
+                                                            <Users className="w-2.5 h-2.5" />
+                                                            {table.capacity}
+                                                        </div>
+                                                    )}
+                                                    {isPaid && (
+                                                        <div className="absolute -top-3 -right-3 bg-green-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm flex items-center gap-0.5 border border-white/20">
+                                                            <DollarSign className="w-2 h-2" />
+                                                            {table.reservationPrice}
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </>
                                     )}
