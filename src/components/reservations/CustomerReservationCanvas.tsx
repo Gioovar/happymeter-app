@@ -300,11 +300,10 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
         setIsBooking(true) // Re-use loading state
 
         // Construct full date in Client Timezone (Local)
-        const targetDate = new Date(selectedDate)
         const [hours, minutes] = selectedTime.split(':').map(Number)
         targetDate.setHours(hours, minutes, 0, 0)
 
-        const result = await getAvailableTables(targetDate)
+        const result = await getAvailableTables(targetDate, activeFloorId)
 
         if (result.success) {
             setOccupiedTableIds(result.occupiedTableIds || [])
