@@ -185,8 +185,8 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     const zoomOut = () => scale.set(Math.max(scale.get() / 1.2, 0.3))
 
     const handleTableClick = (table: Table) => {
-        // IGNORE DECO ELEMENTS
-        if (table.type === 'DECO') return
+        // IGNORE DECO ELEMENTS OR ZERO CAPACITY
+        if (table.type === 'DECO' || (table.capacity === 0)) return
 
         // Use occupiedTableIds (filtered by date/time) instead of raw table.reservations (all history)
         if (occupiedTableIds.includes(table.id)) {
