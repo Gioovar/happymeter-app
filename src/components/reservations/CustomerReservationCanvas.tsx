@@ -302,6 +302,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
         try {
             // Construct full date in Client Timezone (Local)
             const [hours, minutes] = selectedTime.split(':').map(Number)
+            const targetDate = new Date(selectedDate) // Clone date
             targetDate.setHours(hours, minutes, 0, 0)
 
             console.log("Searching Tables:", { targetDate, activeFloorId, programId })
