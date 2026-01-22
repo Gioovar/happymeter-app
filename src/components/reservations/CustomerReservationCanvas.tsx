@@ -235,7 +235,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
         const bookingData = {
             reservations: selectedTables.map(t => ({
                 tableId: t.id,
-                date: combinedDate,
+                date: combinedDate.toISOString(), // USE ISO STRING
                 partySize: t.capacity || 4
             })),
             customer: customerForm
