@@ -84,9 +84,12 @@ export function ReservationSettingsDialog({ settings }: ReservationSettingsDialo
                     </div>
 
                     {/* TOGGLE */}
-                    <div className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
+                    <div 
+                        className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50 cursor-pointer hover:bg-zinc-800 transition-colors"
+                        onClick={() => setEnabled(!enabled)}
+                    >
                         <div className="space-y-1">
-                            <Label className="text-base font-medium text-white">Activar Tiempo Estándar</Label>
+                            <Label className="text-base font-medium text-white cursor-pointer">Activar Tiempo Estándar</Label>
                             <p className="text-xs text-gray-500">Permitir múltiples reservas por mesa</p>
                         </div>
                         <Switch 
