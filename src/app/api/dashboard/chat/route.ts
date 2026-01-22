@@ -40,80 +40,137 @@ export async function POST(req: Request) {
         // 1. Parallel Fetch of Context Data (Scoped to Target Branch)
         const now = new Date()
         const startOfWeek = new Date(now.setDate(now.getDate() - 7))
+        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
         
-        // Reset to today for reservation query
+        // Time ranges
         const todayStart = new Date()
         todayStart.setHours(0, 0, 0, 0)
         const todayEnd = new Date()
         todayEnd.setHours(23, 59, 59, 999)
 
-        const [userSettings, insights, aggregateStats, recentResponses, activePrograms, branchCount, activeReservationsCount] = await Promise.all([
-            // Fetch User Settings
-            prisma.userSettings.findUnique({
-                where: { userId: targetUserId }
-            }),
-            // Fetch Long-Term Memory (AI Insights)
-            prisma.aIInsight.findMany({
-                where: { userId: targetUserId, isActive: true },
-                select: { content: true }
-            }),
-            // Fetch Stats
+        const yesterdayStart = new Date(todayStart)
+        yesterdayStart.setDate(yesterdayStart.getDate() - 1)
+        const yesterdayEnd = new Date(todayEnd)
+        yesterdayEnd.setDate(yesterdayEnd.getDate() - 1)
+
+        const [
+            userSettings, 
+            insights, 
+            aggregateStats, 
+            recentResponses, 
+            activePrograms, 
+            branchCount, 
+            activeReservationsCount,
+            // New Metrics
+            loyaltyMembers,
+            loyaltyRedemptionsMonth,
+            loyaltyPointsRedeemedToday,
+            satisfactionRatings,
+            complaintsYesterday,
+            reservationsSeated,
+            processData
+        ] = await Promise.all([
+            // 1. Settings
+            prisma.userSettings.findUnique({ where: { userId: targetUserId } }),
+            // 2. Insights
+            prisma.aIInsight.findMany({ where: { userId: targetUserId, isActive: true }, select: { content: true } }),
+            // 3. Stats (General)
             prisma.survey.findMany({
                 where: { userId: targetUserId },
-                include: {
-                    _count: { select: { responses: true } },
-                    responses: {
-                        where: { createdAt: { gte: startOfWeek } },
-                        select: { id: true }
-                    }
-                }
+                include: { _count: { select: { responses: true } } }
             }),
-            // Fetch Recent Qualitative Feedback (Last 20 responses)
+            // 4. Recent Responses
             prisma.response.findMany({
-                where: {
-                    survey: { userId: targetUserId }
-                },
+                where: { survey: { userId: targetUserId } },
                 take: 20,
                 orderBy: { createdAt: 'desc' },
-                include: {
-                    answers: {
-                        include: {
-                            question: {
-                                select: { text: true, type: true }
-                            }
-                        }
-                    }
-                }
+                include: { answers: { include: { question: { select: { text: true, type: true } } } } }
             }),
-            // Fetch Active Loyalty Programs
-            prisma.loyaltyProgram.count({
-                where: { userId: targetUserId, isActive: true }
-            }),
-            // Fetch Branch Count
-            prisma.chainBranch.count({
-                where: { chain: { ownerId: targetUserId } }
-            }),
-            // Fetch Active Reservations for TODAY
+            // 5. Active Programs
+            prisma.loyaltyProgram.count({ where: { userId: targetUserId, isActive: true } }),
+            // 6. Branch Count
+            prisma.chainBranch.count({ where: { chain: { ownerId: targetUserId } } }),
+            // 7. Active Reservations (Today)
             prisma.reservation.count({
                 where: {
                     table: { floorPlan: { userId: targetUserId } },
-                    date: {
-                        gte: todayStart,
-                        lte: todayEnd
-                    },
+                    date: { gte: todayStart, lte: todayEnd },
                     status: { notIn: ['CANCELED', 'REJECTED', 'NO_SHOW'] }
                 }
-            })
+            }),
+            // 8. Loyalty Members
+            prisma.loyaltyCustomer.count({ where: { program: { userId: targetUserId } } }),
+            // 9. Rewards Delivered (Month)
+            prisma.loyaltyRedemption.count({
+                where: { 
+                    program: { userId: targetUserId }, 
+                    redeemedAt: { gte: startOfMonth },
+                    status: 'REDEEMED'
+                }
+            }),
+            // 10. Points Redeemed Today (Need to sum manually)
+            prisma.loyaltyRedemption.findMany({
+                where: {
+                    program: { userId: targetUserId },
+                    redeemedAt: { gte: todayStart, lte: todayEnd },
+                    status: 'REDEEMED'
+                },
+                include: { reward: { select: { costInPoints: true } } }
+            }),
+            // 11. Satisfaction Ratings (Last 7 days)
+            prisma.answer.findMany({
+                where: {
+                    question: { type: { in: ['RATING', 'NPS', 'SMILEY'] } },
+                    response: { survey: { userId: targetUserId }, createdAt: { gte: startOfWeek } }
+                },
+                select: { value: true }
+            }),
+            // 12. Complaints Yesterday
+            prisma.notification.count({
+                where: {
+                    userId: targetUserId,
+                    type: 'CRISIS',
+                    createdAt: { gte: yesterdayStart, lte: yesterdayEnd }
+                }
+            }),
+            // 13. Seated Tables (Live)
+            prisma.reservation.count({
+                where: {
+                    table: { floorPlan: { userId: targetUserId } },
+                    status: 'SEATED'
+                }
+            }),
+            // 14. Processes (Total vs Completed Today)
+            Promise.all([
+                 prisma.processTask.count({ where: { zone: { userId: targetUserId } } }),
+                 prisma.processEvidence.count({ 
+                    where: { task: { zone: { userId: targetUserId } }, submittedAt: { gte: todayStart, lte: todayEnd } } 
+                 })
+            ])
         ])
 
-        console.log(`[AI_CHAT_DEBUG] Context Found:`)
-        console.log(`- Surveys: ${aggregateStats.length}`)
-        console.log(`- Insights: ${insights.length}`)
-        console.log(`- Recent Responses: ${recentResponses.length}`)
-        console.log(`- Active Programs: ${activePrograms}`)
-        console.log(`- Branch Count: ${branchCount}`)
-        console.log(`- Active Reservations (Today): ${activeReservationsCount}`)
+        // --- CALCULATIONS ---
+        
+        // Points Redeemed
+        const pointsRedeemedCount = loyaltyPointsRedeemedToday.reduce((acc, r) => acc + (r.reward?.costInPoints || 0), 0)
+        
+        // Avg Satisfaction
+        const validRatings = satisfactionRatings
+            .map(r => parseInt(r.value))
+            .filter(v => !isNaN(v) && v > 0)
+        const avgSatisfaction = validRatings.length > 0 
+            ? (validRatings.reduce((a, b) => a + b, 0) / validRatings.length).toFixed(1) 
+            : "N/A"
 
+        // Process Stats
+        const totalTasks = processData[0]
+        const tasksCompletedToday = processData[1]
+        const tasksPending = Math.max(0, totalTasks - tasksCompletedToday)
+
+        console.log(`[AI_CHAT_DEBUG] Full Context Loaded`)
+        console.log(`- Loyalty: ${loyaltyMembers} members, ${pointsRedeemedCount} points redeemed today`)
+        console.log(`- Ops: ${activeReservationsCount} reservations, ${reservationsSeated} seated`)
+        console.log(`- Quality: Avg ${avgSatisfaction}, ${complaintsYesterday} complaints yesterday`)
 
         const businessName = (userSettings as any)?.businessName || "Tu Negocio"
         const industry = (userSettings as any)?.industry || "Comercio General"
@@ -121,9 +178,7 @@ export async function POST(req: Request) {
         const insightText = insights.map((i: any) => `- ${i.content}`).join('\n')
 
         const totalSurveys = aggregateStats.length
-        const totalResponsesThisWeek = aggregateStats.reduce((acc: number, s: any) => acc + s.responses.length, 0)
         const totalResponsesAllTime = aggregateStats.reduce((acc: number, s: any) => acc + s._count.responses, 0)
-        const hasResponses = totalResponsesAllTime > 0
 
         // Format Recent Feedback for AI
         const recentFeedbackText = recentResponses.map((r: any) => {
@@ -138,162 +193,121 @@ export async function POST(req: Request) {
 
         // --- ARBOL DE DECISIÓN (Priority Order) ---
 
-        // Rama 7: Usuario Bloqueado (Not implemented in this layer, usually Middleware, but safety check)
-        // if (userSettings.isBlocked) { ... }
-
         if (totalSurveys === 0 && totalResponsesAllTime === 0 && activePrograms === 0) {
             // --- RAMA 1: USARIO NUEVO (Onboarding Mode) ---
             SYSTEM_PROMPT = `Actúa como 'HappyMeter Consultant', tu socio estratégico para arrancar ${businessName} (${industry}).
             
             ESTADO: NUEVO NEGOCIO (Sin configuración inicial).
             
-            TU OBJETIVO:
-            No preguntes "¿qué quieres hacer?". TOMA EL MANDO.
-            Tu misión es educar sobre el VALOR de cada herramienta y guiar la configuración.
+            TU OBJETIVO: TOMA EL MANDO. Educa sobre el VALOR de cada herramienta.
             
-            MENSAJE INICIAL OBLIGATORIO:
-            "Bienvenido a HappyMeter 🚀
-            Vamos a configurar tu negocio paso a paso para que empieces a recibir clientes, opiniones y ventas."
+            MENSAJE INICIAL: "Bienvenido a HappyMeter 🚀. Vamos a configurar tu negocio."
             
-            PLAN DE ACCIÓN (Explica el POR QUÉ de cada paso):
-            
-            **👉 Paso 1: Crea tu primera encuesta de satisfacción**
-            - **¿Para qué sirve?**: Medir la experiencia real del cliente y detectar fallos invisibles.
-            - **Resultados**: Mejora reputación y decisiones operativas.
-            - **Acción**: Ve a "Nueva Encuesta" y selecciona la plantilla básica.
-
-            **👉 Paso 2: Configura tu programa de lealtad**
-            - **¿Para qué sirve?**: Provocar que el cliente regrese 2 veces más rápido.
-            - **Estrategia**: Elige "Visitas" (simple) o "Puntos" (ticket alto).
-            - **Ejemplo**: "5 visitas = 1 Postre gratis".
-
-            **👉 Paso 3: Crea el mapa de tu negocio**
-            - **¿Para qué sirve?**: Identificar qué zonas (mesas/áreas) venden más o generan más quejas.
-            - **Acción**: Sube una foto de tu plano en "Espacios".
-
-            CIERRE MOTIVADOR:
-            "Esta configuración es la base de tu crecimiento. ¿Empezamos por la Encuesta?"
+            PLAN DE ACCIÓN:
+            1. Encuesta de Satisfacción (Medir experiencia).
+            2. Programa de Lealtad (Retener clientes).
+            3. Mapa de Mesas (Optimizar operación).
             `
 
         } else if (totalSurveys > 0 && totalResponsesAllTime === 0) {
-            // --- RAMA 2: ACTIVACIÓN (Encuestas listas, sin datos) ---
-            SYSTEM_PROMPT = `Actúa como 'HappyMeter Consultant', especialista en lanzamiento.
+            // --- RAMA 2: ACTIVACIÓN ---
+            SYSTEM_PROMPT = `Actúa como 'HappyMeter Consultant'.
             
-            ESTADO: INFRAESTRUCTURA LISTA, PERO INACTIVA (0 Respuestas).
+            ESTADO: INFRAESTRUCTURA LISTA, PERO INACTIVA.
             
-            TU MENSAJE CLAVE:
-            "Tu encuesta ya está lista, ahora vamos a activarla para que empieces a recibir respuestas."
+            MENSAJE CLAVE: "Activa tus encuestas para recibir datos."
             
-            GUÍA DE ACTIVACIÓN (Educativa):
-            
-            **1. El Poder del QR**
-            - Imprímelo y colócalo en cada mesa o mostrador.
-            - *Tip*: Un acrílico pequeño aumenta 40% la participación.
-
-            **2. Invitación Directa**
-            - Instruye a tu equipo: "Al entregar la cuenta, inviten amablemente a evaluar".
-            - *Por qué*: El cliente se siente valorado y escuchado.
-
-            **3. WhatsApp (El arma secreta)**
-            - Envía el link de la encuesta a tu base de datos hoy mismo.
-            
-            CTA (Acción):
-            "¿Quieres que te muestre dónde descargar tu QR oficial?"
+            ESTRATEGIAS:
+            1. QR en mesas.
+            2. Invitación del personal.
+            3. WhatsApp.
             `
 
         } else if (!branchId && branchCount > 1) {
-            // --- RAMA 6: MULTI-SUCURSAL (Vista Global) ---
-            SYSTEM_PROMPT = `Actúa como 'HappyMeter Manager', supervisor de red para ${businessName}.
+            // --- RAMA 6: MULTI-SUCURSAL ---
+            SYSTEM_PROMPT = `Actúa como 'HappyMeter Manager' (${branchCount} sucursales).
             
-            ESTADO: VISTA GLOBAL (Tiene ${branchCount} sucursales).
+            ESTADO: VISTA GLOBAL.
             
-            TU OBJETIVO:
-            Ofrecer una visión comparativa y ayudar a gestionar la complejidad.
+            RESUMEN:
+            - Respuestas Totales: ${totalResponsesAllTime}
+            - Lealtad Global: ${loyaltyMembers} miembros.
             
-            DATOS GLOBALES:
-            - Total Respuestas: ${totalResponsesAllTime}
-            
-            ACCIONES:
-            - Si pregunta por rendimiento, compara las sucursales (aunque no tengas el detalle aquí, sugiere ir a la vista de cada una).
-            - Pregunta: "¿Sobre cuál sucursal te gustaría profundizar hoy?"
+            OBJETIVO: Ayudar a gestionar la complejidad y comparar sucursales.
             `
 
         } else {
-            // --- RAMA 3: ANÁLISIS (Standard Mode - Tiene respuestas) ---
-            SYSTEM_PROMPT = `Actúa como 'HappyMeter Analyst', experto en datos para ${businessName}.
+            // --- RAMA 3: ANÁLISIS & OPERACIÓN (Full Power Mode) ---
+            SYSTEM_PROMPT = `Actúa como 'HappyMeter Analyst', el cerebro central de ${businessName}.
             
-            ESTADO: OPERACIÓN ACTIVA (${totalResponsesAllTime} respuestas históricas).
+            📊 [CENTRO DE COMANDO OPERATIVO] 📊
             
-            DATOS OPERATIVOS (HOY):
-            - Reservaciones Activas: ${activeReservationsCount}
+            === 💎 LEALTAD & CLIENTES ===
+            - Miembros Activos: ${loyaltyMembers}
+            - Premios Entregados (Este Mes): ${loyaltyRedemptionsMonth}
+            - Puntos Canjeados (Hoy): ${pointsRedeemedCount} pts
             
-            MEMORIA:
+            === 🍽️ RESERVACIONES & MESAS ===
+            - Reservaciones Activas (Hoy): ${activeReservationsCount}
+            - Mesas Ocupadas (Ahora): ${reservationsSeated}
+            
+            === ⭐ SATISFACCIÓN & CALIDAD ===
+            - Calificación Semanal: ${avgSatisfaction}/5
+            - Quejas (Ayer): ${complaintsYesterday}
+            - Total Historico: ${totalResponsesAllTime} respuestas
+            
+            === ✅ TAREAS & PROCESOS ===
+            - Tareas Pendientes (Hoy): ${tasksPending}
+            - Tareas Completadas (Hoy): ${tasksCompletedToday}
+            
+            🧠 MEMORIA ESTRATÉGICA:
             ${insightText || "Sin insights previos."}
             
-            FEEDBACK RECIENTE (Últimos 20):
+            FEEDBACK RECIENTE:
             ${recentFeedbackText}
             
             TU OBJETIVO:
-            Analizar patrones, resumir feedback y asistir con datos operativos reales.
+            Ser el ASISTENTE OPERATIVO DEFINITIVO. No des respuestas genéricas.
             
-            REGLAS:
-            1. **Identifica Patrones**: "He detectado que los clientes mencionan mucho..."
-            2. **Alerta Problemas**: Si ves quejas recientes, avisa prioritariamente.
-            3. **Datos Reales**: Si preguntan por reservaciones, USA EL DATO DE "DATOS OPERATIVOS" (${activeReservationsCount}). NO digas que no tienes acceso.
-            4. **Sé Proactivo**: "Tu siguiente mejor acción sería..."
-            5. **Formato**: Usa viñetas claras.
-            6. **Reportes**: Si piden reporte, responde solo: [[ACTION:GENERATE_REPORT]].
+            REGLAS DE ORO:
+            1. **USA LOS DATOS**: Si preguntan "¿cuántos puntos se canjearon?", responde: "Hoy se han canjeado ${pointsRedeemedCount} puntos."
+            2. **IDENTIFICA EL MÓDULO**:
+               - Preguntas de dinero/premios -> Módulo Lealtad.
+               - Preguntas de mesas/gente -> Módulo Reservaciones.
+               - Preguntas de opiniones/quejas -> Módulo Satisfacción.
+            3. **SÉ DIRECTO**: Dato exacto primero, luego el análisis.
+            4. **SI FALTAN DATOS**: Si un dato es 0 o N/A, dilo claramente (ej. "No hubo quejas ayer").
             `
         }
 
         // ... (End of Branch Logic)
 
-        // --- BASE DE CONOCIMIENTO EXPERTA (Global) ---
-        // Se anexa a cualquier rama para responder "Cómo implementar X" con nivel experto.
-
         SYSTEM_PROMPT += `
         
-        🧠 REGLAS DE RESPUESTA EXPERTA:
+        🧠 REGLAS DE RESPUESTA EXPERTA (Base de Conocimiento):
         
-        TU INDUSTRIA ACTUAL: ${industry || "General"}
-        DATOS DE RESERVACIONES (HOY): ${activeReservationsCount} (Úsalos si preguntan "¿cuántas tengo?").
+        TU INDUSTRIA: ${industry || "General"}
         
-        USAS ESTAS ESTRATEGIAS SEGÚN EL GIRO:
-
-        === 1. PROGRAMA DE LEALTAD ===
-        Si preguntan por Lealtad, responde siguiendo esta estructura:
-        1. **Beneficio**: ¿Por qué sirve en su giro?
-        2. **Estrategia Recomendada**:
-           - 🍔 Restaurante/Bar: Lealtad por Visitas (Meta corta: 5-8 visitas). Recompensa: Consumo/Bebida.
-           - ☕ Cafetería: Sellos digitales (7 cafés = 1 gratis).
-           - 🏋️ Gym: Asistencia mensual. Recompensa: Clase exclusiva o descuento de producto.
-           - 🛍️ Retail: Puntos por compra.
-        3. **Implementación**: "Crear programa" -> "Definir regla" -> "Activar QR".
-        4. **Buenas Prácticas**: Premios alcanzables, personal capacitado.
+        SI PREGUNTAN "CÓMO IMPLEMENTAR...":
+        
+        === 1. LEALTAD ===
+        1. Beneficio: Retención x2.
+        2. Estrategia: Visitas (Simple) o Puntos (Ticket alto).
+        3. Acción: "Crear Programa" -> "QR".
 
         === 2. RESERVACIONES ===
-        Si preguntan por Reservas:
-        SI PREGUNTAN CANTIDAD: Responde "Tienes ${activeReservationsCount} reservaciones activas para hoy."
-        SI PREGUNTAN CÓMO IMPLEMENTAR:
-        1. **Beneficio**: Reduce mesas vacías y mejora ticket promedio.
-        2. **Estrategia**:
-           - 🍔 Restaurante: Tiempo límite (turnos) + Confirmación WhatsApp.
-           - 🍸 Bar/Antro: VIP, Control de aforo, Venta de mesas con anticipo.
-        3. **Implementación**: "Activar módulo" -> "Definir horarios/reglas" -> "Compartir Link".
+        1. Beneficio: Menos mesas vacías.
+        2. Estrategia: Turnos + WhatsApp.
+        3. Acción: Activar módulo.
 
-        === 3. TAREAS Y PROCESOS ===
-        Si preguntan por Tareas:
-        1. **Beneficio**: Estandariza operación y reduce errores.
-        2. **Ejemplos**:
-           - 🍔 Restaurante: Checklist de Apertura/Cierre, Limpieza de baños, Inventarios.
-           - 🏋️ Gym: Mantenimiento de equipo, Limpieza de pesas.
-           - 🛍️ Retail: Recepción de mercancía, Corte de caja.
-        3. **Implementación**: "Crear proceso" -> "Asignar responsable" -> "Monitorear".
-
-        ❌ REGLAS DE PERSONALIDAD:
-        - NUNCA respondas genérico si tienes datos.
-        - Actúa como Consultor de Negocio, Gerente Operativo y Estratega.
-        - NO actúes como Soporte Técnico pasivo.
+        === 3. PROCESOS ===
+        1. Beneficio: Estandarización.
+        2. Ejemplo: Checklist de Apertura.
+        3. Acción: Crear en "Procesos".
+        
+        ❌ PROHIBIDO:
+        - Inventar datos.
+        - Decir "consulta tu dashboard" si ya tienes el dato aquí arriba.
         `
 
         // RAMA 4: LÍMITES (Context Injection)
