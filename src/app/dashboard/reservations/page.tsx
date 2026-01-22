@@ -14,6 +14,7 @@ import { NewReservationButton } from "@/components/dashboard/reservations/NewRes
 import { ReservationsList } from "@/components/dashboard/reservations/ReservationsList"
 import { prisma } from "@/lib/prisma"
 import { ReservationLinkButton } from "@/components/dashboard/reservations/ReservationLinkButton"
+import { ReservationSettingsDialog } from "@/components/dashboard/reservations/ReservationSettingsDialog"
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,13 @@ export default async function ReservationsPage() {
 
     // Fetch existing floor plan
     const floorPlans = await getFloorPlans()
-    // const floorPlan = { isConfigured: true } // MOCK SAFE MODE
+    
+    // Fetch User Settings for Reservation Config
+    const userSettings = await prisma.userSettings.findUnique({
+        where: { userId: user?.id }
+    })
+
+    // Fetch reservations for calendar
 
     // Fetch reservations for calendar
     const reservationsResult = await getDashboardReservations()
@@ -92,6 +99,11 @@ export default async function ReservationsPage() {
                 </div>
                 <div className="flex flex-wrap gap-3 w-full md:w-auto">
                     {program && <ReservationLinkButton programId={program.id} />}
+
+                    {/* SETTINGS DIALOG */}
+                    <ReservationSettingsDialog settings={
+                        (userSettings?.reservationSettings as any) || { enabled: false, durationMinutes: 120 }
+                    } />
 
                     <Link
                         href="/dashboard/reservations/setup"

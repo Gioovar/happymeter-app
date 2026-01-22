@@ -133,6 +133,8 @@ model UserSettings {
   processZones        ProcessZone[]
   
   // Reservations
+  reservationSettings Json? // Stores { standardTimeEnabled: boolean, standardDurationMinutes: number }
+
   // Chain Management
   ownedChains         Chain[]
   branchOf            ChainBranch[]
@@ -198,6 +200,9 @@ model Reservation {
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  
+  // Customization
+  duration     Int      @default(120) // Duration in minutes
 
   table        Table    @relation(fields: [tableId], references: [id], onDelete: Cascade)
 
