@@ -526,9 +526,14 @@ export async function updateReservationSettings(settings: { standardTimeEnabled:
         if (!userId) throw new Error("Unauthorized")
         
         // Ensure settings exist or update them
-        await prisma.userSettings.update({
+        await prisma.userSettings.upsert({
             where: { userId },
-            data: {
+            update: {
+                reservationSettings: settings
+            },
+            create: {
+                userId,
+                plan: 'FREE', // Default plan if creating
                 reservationSettings: settings
             }
         })
