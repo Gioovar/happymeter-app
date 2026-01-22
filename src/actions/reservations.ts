@@ -555,27 +555,29 @@ async function getEffectiveReservationSettings(userId: string) {
     return { ...defaults, ...(user.reservationSettings as any) }
 }
 
-export async function getAvailableTables(targetDateInput: Date, floorPlanId?: string) {
+export async function getAvailableTables(targetDateInput: Date, floorPlanId?: string, programId?: string) {
     try {
         const { userId } = await auth()
-        // If public facing, we might need another way to get the owner UserId, usually passed or derived from programId context previously.
-        // For waiting list / creating reservation, we usually have context.
-        // If checking availability for "New Reservation" internally, we have auth.
-        
-        // CRITICAL FIX: To prevent "Availability Check" failing for guests, we need to know the 'Owner ID'.
-        // For now, let's assume this is mostly used dashboard-side or public with context.
-        // If missing userId (public view), we need to rely on what context?
-        // Actually `createReservation` handles availability internally. This `getAvailableTables` is likely used by UI.
         
         let effectiveOwnerId = userId
         
-        // If public, we'd need to fetch owner from floorPlanId if provided
-        if (!userId && floorPlanId) {
+        // 1. Try FloorPlan lookup
+        if (!effectiveOwnerId && floorPlanId) {
              const fp = await prisma.floorPlan.findUnique({ where: { id: floorPlanId }, select: { userId: true }})
              effectiveOwnerId = fp?.userId || null
         }
+
+        // 2. Fallback: Try Program lookup (Context)
+        if (!effectiveOwnerId && programId) {
+            const prog = await prisma.loyaltyProgram.findUnique({ where: { id: programId }, select: { userId: true }})
+            effectiveOwnerId = prog?.userId || null
+        }
         
-        if (!effectiveOwnerId) return { success: false, occupiedTableIds: [] } // Fail safe
+        // Fail safe if we still don't know who the owner is
+        if (!effectiveOwnerId) {
+            console.error("getAvailableTables: Could not resolve owner ID (No auth, no floorPlanId, no programId)")
+            return { success: false, occupiedTableIds: [] } 
+        }
 
         const settings = await getEffectiveReservationSettings(effectiveOwnerId)
         const requestDate = new Date(targetDateInput)
