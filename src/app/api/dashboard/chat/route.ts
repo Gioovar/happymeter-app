@@ -40,8 +40,14 @@ export async function POST(req: Request) {
         // 1. Parallel Fetch of Context Data (Scoped to Target Branch)
         const now = new Date()
         const startOfWeek = new Date(now.setDate(now.getDate() - 7))
+        
+        // Reset to today for reservation query
+        const todayStart = new Date()
+        todayStart.setHours(0, 0, 0, 0)
+        const todayEnd = new Date()
+        todayEnd.setHours(23, 59, 59, 999)
 
-        const [userSettings, insights, aggregateStats, recentResponses, activePrograms, branchCount] = await Promise.all([
+        const [userSettings, insights, aggregateStats, recentResponses, activePrograms, branchCount, activeReservationsCount] = await Promise.all([
             // Fetch User Settings
             prisma.userSettings.findUnique({
                 where: { userId: targetUserId }
@@ -86,6 +92,17 @@ export async function POST(req: Request) {
             // Fetch Branch Count
             prisma.chainBranch.count({
                 where: { chain: { ownerId: targetUserId } }
+            }),
+            // Fetch Active Reservations for TODAY
+            prisma.reservation.count({
+                where: {
+                    table: { floorPlan: { userId: targetUserId } },
+                    date: {
+                        gte: todayStart,
+                        lte: todayEnd
+                    },
+                    status: { notIn: ['CANCELED', 'REJECTED', 'NO_SHOW'] }
+                }
             })
         ])
 
@@ -95,6 +112,7 @@ export async function POST(req: Request) {
         console.log(`- Recent Responses: ${recentResponses.length}`)
         console.log(`- Active Programs: ${activePrograms}`)
         console.log(`- Branch Count: ${branchCount}`)
+        console.log(`- Active Reservations (Today): ${activeReservationsCount}`)
 
 
         const businessName = (userSettings as any)?.businessName || "Tu Negocio"
@@ -206,6 +224,9 @@ export async function POST(req: Request) {
             
             ESTADO: OPERACIÓN ACTIVA (${totalResponsesAllTime} respuestas históricas).
             
+            DATOS OPERATIVOS (HOY):
+            - Reservaciones Activas: ${activeReservationsCount}
+            
             MEMORIA:
             ${insightText || "Sin insights previos."}
             
@@ -213,14 +234,15 @@ export async function POST(req: Request) {
             ${recentFeedbackText}
             
             TU OBJETIVO:
-            Analizar patrones, resumir feedback y sugerir mejoras operativas.
+            Analizar patrones, resumir feedback y asistir con datos operativos reales.
             
             REGLAS:
             1. **Identifica Patrones**: "He detectado que los clientes mencionan mucho..."
             2. **Alerta Problemas**: Si ves quejas recientes, avisa prioritariamente.
-            3. **Sé Proactivo**: "Tu siguiente mejor acción sería..."
-            4. **Formato**: Usa viñetas claras.
-            5. **Reportes**: Si piden reporte, responde solo: [[ACTION:GENERATE_REPORT]].
+            3. **Datos Reales**: Si preguntan por reservaciones, USA EL DATO DE "DATOS OPERATIVOS" (${activeReservationsCount}). NO digas que no tienes acceso.
+            4. **Sé Proactivo**: "Tu siguiente mejor acción sería..."
+            5. **Formato**: Usa viñetas claras.
+            6. **Reportes**: Si piden reporte, responde solo: [[ACTION:GENERATE_REPORT]].
             `
         }
 
@@ -231,9 +253,10 @@ export async function POST(req: Request) {
 
         SYSTEM_PROMPT += `
         
-        🧠 REGLAS DE RESPUESTA EXPERTA (Si preguntan "¿Cómo implementar...?"):
+        🧠 REGLAS DE RESPUESTA EXPERTA:
         
         TU INDUSTRIA ACTUAL: ${industry || "General"}
+        DATOS DE RESERVACIONES (HOY): ${activeReservationsCount} (Úsalos si preguntan "¿cuántas tengo?").
         
         USAS ESTAS ESTRATEGIAS SEGÚN EL GIRO:
 
@@ -250,6 +273,8 @@ export async function POST(req: Request) {
 
         === 2. RESERVACIONES ===
         Si preguntan por Reservas:
+        SI PREGUNTAN CANTIDAD: Responde "Tienes ${activeReservationsCount} reservaciones activas para hoy."
+        SI PREGUNTAN CÓMO IMPLEMENTAR:
         1. **Beneficio**: Reduce mesas vacías y mejora ticket promedio.
         2. **Estrategia**:
            - 🍔 Restaurante: Tiempo límite (turnos) + Confirmación WhatsApp.
@@ -266,7 +291,7 @@ export async function POST(req: Request) {
         3. **Implementación**: "Crear proceso" -> "Asignar responsable" -> "Monitorear".
 
         ❌ REGLAS DE PERSONALIDAD:
-        - NUNCA respondas genérico.
+        - NUNCA respondas genérico si tienes datos.
         - Actúa como Consultor de Negocio, Gerente Operativo y Estratega.
         - NO actúes como Soporte Técnico pasivo.
         `
