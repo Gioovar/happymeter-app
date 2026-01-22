@@ -591,22 +591,41 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
         <div className={cn("h-[100dvh] flex flex-col relative overflow-hidden bg-zinc-950 touch-none", className)}>
             {/* Header */}
             {/* Header & Floor Selector */}
-            <div className="absolute top-0 left-0 right-0 z-50 flex flex-col items-center bg-gradient-to-b from-black/90 via-black/80 to-transparent pb-8 pointer-events-none">
-                <div className="w-full p-4 flex items-center justify-between">
+            <div className="absolute top-0 left-0 right-0 z-50 flex flex-col items-center bg-gradient-to-b from-black/90 via-black/80 to-transparent pb-8 pointer-events-none transition-all duration-500">
+                <div className="w-full p-4 flex items-start justify-between pointer-events-auto">
                     <button
                         onClick={() => setBookingStep('SEARCH')}
-                        className="pointer-events-auto p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors flex items-center gap-2 px-4"
+                        className="p-3 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors shadow-lg border border-white/5 active:scale-95"
                     >
-                        <ChevronLeft className="w-4 h-4" />
-                        <span className="text-xs font-bold">Cambiar</span>
+                        <ChevronLeft className="w-5 h-5" />
                     </button>
-                    <div className="text-center pointer-events-auto">
-                        <h1 className="text-lg font-bold text-white shadow-sm">{selectedTime}</h1>
-                        <p className="text-xs text-zinc-400">
-                            {selectedDate ? format(selectedDate, "EEE, d MMM", { locale: es }) : ""}
-                        </p>
+                    
+                    <div className="flex flex-col items-center mt-2">
+                        <div className="flex flex-col items-center bg-black/60 backdrop-blur-xl rounded-[24px] px-6 py-3 border border-white/10 shadow-2xl">
+                             <div className="flex flex-col items-center gap-1 mb-2">
+                                 <span className="text-[9px] text-zinc-400 uppercase tracking-[0.2em] font-medium">Reservando en</span>
+                                 <h1 className="text-sm font-bold text-white text-center max-w-[200px] leading-tight text-balance">
+                                     {businessName}
+                                 </h1>
+                             </div>
+                             
+                             <div className="flex items-center gap-3 bg-white/5 rounded-full px-4 py-1.5 border border-white/5">
+                                 <div className="flex items-center gap-1.5">
+                                     <Calendar className="w-3 h-3 text-indigo-400" />
+                                     <span className="text-xs font-semibold text-zinc-200 capitalize">
+                                        {selectedDate ? format(selectedDate, "EEE d, MMM", { locale: es }) : ""}
+                                     </span>
+                                 </div>
+                                 <div className="w-px h-3 bg-white/10" />
+                                 <div className="flex items-center gap-1.5">
+                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                     <span className="text-xs font-bold text-white tracking-wide">{selectedTime}</span>
+                                 </div>
+                             </div>
+                        </div>
                     </div>
-                    <div className="w-10" />
+                    
+                    <div className="w-11" /> {/* Spacer for symmetry */}
                 </div>
 
                 {/* Floor Selector (Visible if > 1 floor) */}
