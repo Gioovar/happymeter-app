@@ -276,7 +276,11 @@ export async function POST(req: Request) {
                - Preguntas de mesas/gente -> Módulo Reservaciones.
                - Preguntas de opiniones/quejas -> Módulo Satisfacción.
             3. **SÉ DIRECTO**: Dato exacto primero, luego el análisis.
-            4. **SI FALTAN DATOS**: Si un dato es 0 o N/A, dilo claramente (ej. "No hubo quejas ayer").
+            4. **MANEJO DE DATOS VACÍOS (OBLIGATORIO)**:
+               Si un dato es 0 o N/A, debes cumplir 2 pasos:
+               a) Informar: "El módulo está activo, pero aún no registra datos (0)."
+               b) OFRECER AYUDA PROACTIVA: "¿Te gustaría que te explique cómo implementarlo correctamente o que te muestre los beneficios que puede traer a tu negocio?"
+               NUNCA des una respuesta vacía sin ofrecer esta ayuda.
             `
         }
 
