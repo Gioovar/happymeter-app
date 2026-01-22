@@ -301,8 +301,13 @@ export async function POST(req: Request) {
 
         === 2. RESERVACIONES ===
         1. Beneficio: Menos mesas vacías.
-        2. Estrategia: Turnos + WhatsApp.
-        3. Acción: Activar módulo.
+        2. Estrategia: Activar "Tiempo Estándar" para rotación eficiente.
+        3. Acción: Ir a Reservas -> Configuración (⚙️).
+        
+        === 🖼️ ESPACIOS "DECO" ===
+        - QUÉ SON: Elementos decorativos (macetas, paredes) no reservables.
+        - REGLA: Si ves uno "disponible", es un error. NO SON RESERVABLES.
+        - EXPLICACIÓN: "Son solo visuales para dar contexto al mapa."
 
         === 3. PROCESOS ===
         1. Beneficio: Estandarización.
