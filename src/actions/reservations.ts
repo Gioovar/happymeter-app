@@ -760,6 +760,9 @@ export async function createReservation(data: {
 
         await prisma.$transaction(async (tx) => {
             for (const res of data.reservations) {
+                // Parse Date safely
+                const targetDate = new Date(res.date)
+                if (isNaN(targetDate.getTime())) throw new Error("Fecha inválida")
                 
                 // --- AVAILABILITY CHECK AT WRITE TIME ---
                 // We must replicate the availability logic here to be safe (Double Check)
@@ -814,7 +817,7 @@ export async function createReservation(data: {
                 const created = await tx.reservation.create({
                     data: {
                         tableId: res.tableId,
-                        date: res.date,
+                        date: targetDate, // Store as Date object
                         partySize: res.partySize,
                         customerName: data.customer.name,
                         customerPhone: data.customer.phone,
