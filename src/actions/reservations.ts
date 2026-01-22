@@ -564,6 +564,77 @@ async function getEffectiveReservationSettings(userId: string) {
     return { ...defaults, ...(user.reservationSettings as any) }
 }
 
+// --- SHARED AVAILABILITY HELPER (PRIVATE) ---
+async function checkTableAvailability(
+    ownerId: string, 
+    tableId: string, 
+    requestedDate: Date, 
+    durationMinutes: number
+): Promise<{ available: boolean, error?: string }> {
+    const settings = await getEffectiveReservationSettings(ownerId)
+
+    if (!settings.standardTimeEnabled) {
+        // MODE: BLOCK ALL DAY
+        const dayStart = new Date(requestedDate)
+        dayStart.setHours(0,0,0,0)
+        const dayEnd = new Date(requestedDate)
+        dayEnd.setHours(23,59,59,999)
+        
+        const count = await prisma.reservation.count({
+            where: {
+                tableId: tableId,
+                date: { gte: dayStart, lte: dayEnd },
+                status: { notIn: ['CANCELED', 'REJECTED'] }
+            }
+        })
+        
+        if (count > 0) return { available: false, error: "Mesa reservada todo el día" }
+
+    } else {
+        // MODE: STANDARD DURATION (Time Slots)
+        try {
+            const requestDurationMs = durationMinutes * 60 * 1000
+            const requestStart = requestedDate.getTime()
+            const requestEnd = requestStart + requestDurationMs
+            
+            // Query Optimization: Fetch only relevant reservations for that day
+            const dayStart = new Date(requestedDate)
+            dayStart.setHours(0,0,0,0)
+            const dayEnd = new Date(requestedDate)
+            dayEnd.setHours(23,59,59,999)
+
+            const dayReservations = await prisma.reservation.findMany({
+                where: {
+                    tableId: tableId,
+                    date: { gte: dayStart, lte: dayEnd },
+                    status: { notIn: ['CANCELED', 'REJECTED'] }
+                },
+                select: { date: true, duration: true }
+            })
+
+            for (const res of dayReservations) {
+                const existingStart = new Date(res.date).getTime()
+                if (isNaN(existingStart)) continue
+
+                // Use stored duration or fallback
+                const existingDuration = res.duration || settings.standardDurationMinutes || 120
+                const existingEnd = existingStart + (existingDuration * 60 * 1000)
+                
+                // Overlap Logic: (StartA < EndB) and (EndA > StartB)
+                if (existingStart < requestEnd && existingEnd > requestStart) {
+                    return { available: false, error: "Horario traslapado con otra reserva" }
+                }
+            }
+        } catch (err) {
+            console.error("Error in availability check helper:", err)
+            // Fail safe: If calculation fails, assume available to prevent blocking, but log it.
+            return { available: true } 
+        }
+    }
+
+    return { available: true }
+}
+
 // Note: We use string date to avoid serialization issues across server boundary
 export async function getAvailableTables(targetDateIso: string, floorPlanId?: string, programId?: string) {
     console.log("SERVER: getAvailableTables called", { targetDateIso, floorPlanId, programId })
@@ -591,91 +662,63 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
             effectiveOwnerId = prog?.userId || null
         }
         
-        // Fail safe if we still don't know who the owner is
         if (!effectiveOwnerId) {
-            console.error("getAvailableTables: Could not resolve owner ID (No auth, no floorPlanId, no programId)")
+            console.error("getAvailableTables: Could not resolve owner ID")
             return { success: false, occupiedTableIds: [] } 
         }
 
         const settings = await getEffectiveReservationSettings(effectiveOwnerId)
-        // Parse the ISO string back to Date safely
         const requestDate = new Date(targetDateIso)
+        
         if (isNaN(requestDate.getTime())) {
             console.error("Invalid date received:", targetDateIso)
             return { success: false, occupiedTableIds: [] }
         }
-        
-        // 1. Time Window Logic
-        let occupiedTableIds: string[] = []
-        
-        // ... (Rest of logic) ...
+
+        // Get all tables for this owner/floor (Optimization: Fetch only needed)
+        // Actually we scan ALL reservations for the day for this owner effectively.
+        const dayStart = new Date(requestDate)
+        dayStart.setHours(0,0,0,0)
+        const dayEnd = new Date(requestDate)
+        dayEnd.setHours(23,59,59,999)
+
+        // Fetch relevant reservations only
+        const dayReservations = await prisma.reservation.findMany({
+            where: {
+                table: { floorPlan: { userId: effectiveOwnerId } }, // Scope by owner
+                date: { gte: dayStart, lte: dayEnd },
+                status: { notIn: ['CANCELED', 'REJECTED'] }
+            },
+            select: { tableId: true, date: true, duration: true }
+        })
+
+        // Check availability logic
+        const occupiedTableIds: string[] = []
+        const durationMinutes = settings.standardDurationMinutes || 120
+        const requestDurationMs = durationMinutes * 60 * 1000
+        const requestStart = requestDate.getTime()
+        const requestEnd = requestStart + requestDurationMs
 
         if (!settings.standardTimeEnabled) {
-            // MODE: BLOCK ALL DAY
-            // Any reservation on this calendar day blocks the table
-            const dayStart = new Date(requestDate)
-            dayStart.setHours(0,0,0,0)
-            const dayEnd = new Date(requestDate)
-            dayEnd.setHours(23,59,59,999)
-            
-            const conflicts = await prisma.reservation.findMany({
-                where: {
-                   table: { floorPlan: { userId: effectiveOwnerId } },
-                   date: { gte: dayStart, lte: dayEnd },
-                   status: { notIn: ['CANCELED', 'REJECTED'] }
-                },
-                select: { tableId: true }
-            })
-            occupiedTableIds = conflicts.map(c => c.tableId)
-            
+            // Block All Day Mode
+            dayReservations.forEach(r => occupiedTableIds.push(r.tableId))
         } else {
-            // MODE: STANDARD DURATION (Time Slots)
-            try {
-                // Ensure valid duration
-                const durationMinutes = settings.standardDurationMinutes || 120
-                const requestDurationMs = durationMinutes * 60 * 1000
-                const requestStart = requestDate.getTime()
-                const requestEnd = requestStart + requestDurationMs
-                
-                // Query range optimization
-                const dayStart = new Date(requestDate)
-                dayStart.setHours(0,0,0,0)
-                const dayEnd = new Date(requestDate)
-                dayEnd.setHours(23,59,59,999)
+            // Time Slot Mode
+            for (const res of dayReservations) {
+                const existingStart = new Date(res.date).getTime()
+                const existingDuration = res.duration || durationMinutes
+                const existingEnd = existingStart + (existingDuration * 60 * 1000)
 
-                const dayReservations = await prisma.reservation.findMany({
-                    where: {
-                        table: { floorPlan: { userId: effectiveOwnerId } },
-                        date: { gte: dayStart, lte: dayEnd },
-                        status: { notIn: ['CANCELED', 'REJECTED'] }
-                    },
-                    select: { tableId: true, date: true, duration: true }
-                })
-
-                // Filter overlaps safely
-                for (const res of dayReservations) {
-                    try {
-                        const existingStart = new Date(res.date).getTime()
-                        if (isNaN(existingStart)) continue
-
-                        // Use stored duration or fallback
-                        const duration = res.duration || durationMinutes
-                        const existingEnd = existingStart + (duration * 60 * 1000)
-                        
-                        if (existingStart < requestEnd && existingEnd > requestStart) {
-                            occupiedTableIds.push(res.tableId)
-                        }
-                    } catch (err) {
-                        console.error("Error processing reservation overlap:", err)
-                    }
+                if (existingStart < requestEnd && existingEnd > requestStart) {
+                    occupiedTableIds.push(res.tableId)
                 }
-            } catch (innerError) {
-                console.error("Error in Standard Time logic:", innerError)
-                // Fallback: Don't block everything if this complex check fails
             }
         }
 
-        return { success: true, occupiedTableIds }
+        // De-duplicate
+        const uniqueOccupied = Array.from(new Set(occupiedTableIds))
+        return { success: true, occupiedTableIds: uniqueOccupied }
+
     } catch (error) {
         console.error("Error checking availability:", error)
         return { success: false, occupiedTableIds: [] }
