@@ -1,0 +1,65 @@
+import { NextResponse } from 'next/server'
+import { getGeminiModel } from '@/lib/gemini'
+
+export async function POST(req: Request) {
+    try {
+        const { topic, question, venueName, stage, context } = await req.json()
+
+        // 1. Validate
+        if (!topic) return NextResponse.json({ error: 'El tema es requerido' }, { status: 400 })
+
+        // 2. Persona & Prompt Construction
+        const baseSystem = `Eres Zoltan, un antiguo místico y ligeramente dramático atrapado en una máquina de arcade. Tu idioma es el ESPAÑOL.`
+
+        let systemPrompt = ""
+        let userPrompt = ""
+
+        if (stage === 'clarify') {
+            // Stage 1: Ask for clarification
+            systemPrompt = `${baseSystem}
+            Tu objetivo es pedir una pequeña aclaración mística para afinar tu visión.
+            Haz una pregunta corta, intrigante y relacionada con el tema del usuario.
+            No des la predicción todavía. Solo haz la pregunta.
+            Ejemplo: "¿El nombre de esta persona empieza con una vocal?" o "¿Has sentido un escalofrío recientemente?"
+            Máximo 20 palabras.`
+
+            userPrompt = `Tema: ${topic}. Pregunta del usuario: "${question}"`
+
+        } else {
+            // Stage 2: Final Prediction
+            systemPrompt = `${baseSystem}
+            Ahora tienes la visión completa. Da tu predicción final estilo tarot.
+            Sé críptico pero reconfortante o intrigante.
+            Usa la información extra que el usuario te dio.
+            Menciona "${venueName}" al final como un lugar de poder.
+            Máximo 60 palabras.`
+
+            userPrompt = `Tema: ${topic}. 
+            Pregunta original: "${context?.originalQuestion}". 
+            Tu pregunta de aclaración: "${context?.clarificationQuestion}". 
+            Respuesta del usuario: "${question}" (Esta es la aclaración).`
+        }
+
+        if (!process.env.GEMINI_API_KEY) {
+            return NextResponse.json({ answer: "Los espíritus demo dicen que configures la API Key." })
+        }
+
+        // 3. Call AI
+        const model = getGeminiModel('gemini-flash-latest', {
+            systemInstruction: systemPrompt
+        })
+
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: userPrompt }] }]
+        })
+
+        const answer = result.response.text()
+
+        return NextResponse.json({ answer })
+
+    } catch (error) {
+        console.error('Zoltan API Error:', error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        return new NextResponse(JSON.stringify({ error: errorMessage }), { status: 500 })
+    }
+}

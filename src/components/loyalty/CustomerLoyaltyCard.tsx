@@ -1,0 +1,797 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
+import { QRCodeSVG } from "qrcode.react"
+import { unlockReward, getMemberLoyaltyPrograms, getLoyaltyNotifications, markNotificationsAsRead, getCustomerReservations } from "@/actions/loyalty"
+import { toast } from "sonner"
+import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar, Bell, QrCode, Trophy } from "lucide-react"
+import { InstallPwa } from "@/components/pwa/InstallPwa"
+import { cn } from "@/lib/utils"
+import { useClerk, useUser } from "@clerk/nextjs"
+import Link from "next/link"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+
+interface CustomerLoyaltyCardProps {
+    customer: any // Prisma type with relations
+    filterType?: "all" | "visits" | "points"
+    children?: React.ReactNode
+    className?: string
+    onEditProfile?: () => void
+}
+
+export function CustomerLoyaltyCard({ customer, filterType = "all", children, className, onEditProfile }: CustomerLoyaltyCardProps) {
+    const { user } = useUser()
+    const { signOut, openUserProfile } = useClerk()
+    const { program, visits, currentVisits } = customer
+    const [selectedReward, setSelectedReward] = useState<any | null>(null)
+    const [showQr, setShowQr] = useState(false)
+    const [redeemQrData, setRedeemQrData] = useState<{ code: string, name: string } | null>(null)
+    const [activeTab, setActiveTab] = useState("rewards") // rewards, history, info
+    const [showMenu, setShowMenu] = useState(false)
+    const [myCards, setMyCards] = useState<any[]>([])
+    const [notifications, setNotifications] = useState<any[]>([])
+    const [unreadCount, setUnreadCount] = useState(0)
+    const [showNotifications, setShowNotifications] = useState(false)
+    const [mounted, setMounted] = useState(false)
+
+    // Reservations State
+    const [myReservations, setMyReservations] = useState<any[]>([])
+    const [showReservationsModal, setShowReservationsModal] = useState(false)
+    const [selectedReservation, setSelectedReservation] = useState<any | null>(null)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    // Load reservations
+    useEffect(() => {
+        if (customer && customer.programId) {
+            getCustomerReservations(customer.programId, customer.phone, customer.email).then(res => {
+                if (res.success && res.reservations) {
+                    setMyReservations(res.reservations)
+                }
+            })
+        }
+    }, [customer])
+
+    // Load notifications on mount
+    useEffect(() => {
+        if (customer?.id && customer?.programId) {
+            getLoyaltyNotifications(customer.programId, customer.id).then(res => {
+                if (res.success && res.notifications) {
+                    setNotifications(res.notifications)
+                    setUnreadCount(res.unreadCount || 0)
+                } else {
+                    console.error("Failed to load notifications:", res.error)
+                }
+            })
+        }
+    }, [customer])
+
+    const handleOpenNotifications = async () => {
+        setShowNotifications(true)
+        if (unreadCount > 0) {
+            await markNotificationsAsRead(customer.id)
+            setUnreadCount(0)
+        }
+    }
+
+    // Load other cards when menu opens
+    useEffect(() => {
+        if (showMenu && customer.clerkUserId) {
+            getMemberLoyaltyPrograms(customer.clerkUserId).then(res => {
+                if (res.success) {
+                    setMyCards(res.memberships || [])
+                }
+            })
+        }
+    }, [showMenu, customer.clerkUserId])
+
+    // Find current unlocked rewards (pending redemption)
+    const pendingRedemptions = customer.redemptions ? customer.redemptions.filter((r: any) => r.status === 'PENDING') : []
+
+    const handleUnlock = async (rewardId: string) => {
+        if (customer.currentPoints < 0 && customer.currentVisits < 0) return // Basic check
+
+        // Optimistic UI could go here
+        const res = await unlockReward(customer.id, rewardId)
+        if (res.success) {
+            toast.success("¡Premio desbloqueado! Muestra el código al personal.")
+            window.location.reload()
+        } else {
+            toast.error(res.error || "No tienes suficientes visitas/puntos")
+        }
+    }
+
+    // Filter rewards based on filterType and Active status
+    const displayedRewards = program?.rewards?.filter((reward: any) => {
+        if (!reward.isActive) return false // Hide inactive
+
+        // Hide SYSTEM_GIFT unless user has it pending (or redeemed? redeemed means it's gone or in history)
+        // Check if user has a pending redemption for this reward
+        if (reward.description === "SYSTEM_GIFT") {
+            const hasPending = pendingRedemptions.some((r: any) => r.rewardId === reward.id)
+            if (!hasPending) return false
+        }
+
+        if (filterType === "visits") return reward.costInVisits > 0
+        if (filterType === "points") return reward.costInPoints > 0
+        return true
+    }).sort((a: any, b: any) => {
+        // Sort by cost (Visits or Points)
+        const costA = a.costInVisits || a.costInPoints || 0
+        const costB = b.costInVisits || b.costInPoints || 0
+        return costA - costB
+    }).sort((a: any, b: any) => {
+        // SYSTEM_GIFT always first
+        if (a.description === "SYSTEM_GIFT") return -1
+        if (b.description === "SYSTEM_GIFT") return 1
+        return 0
+    }) || []
+
+    const tierColor = customer.tier?.color || "#fbbf24" // Default Gold
+    const tierName = customer.tier?.name || "Miembro"
+
+    return (
+        <div className={cn("h-full w-full bg-[#0a0a0f] text-white relative overflow-hidden font-sans", className)}>
+            {/* Dynamic Background Glows */}
+            <div
+                className="absolute top-[-20%] left-[-20%] w-[80%] h-[50%] rounded-full blur-[100px] pointer-events-none opacity-40"
+                style={{ backgroundColor: tierColor }}
+            />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[40%] bg-blue-900/30 rounded-full blur-[80px] pointer-events-none" />
+
+            {/* Scrollable Content */}
+            <div className="absolute inset-0 overflow-y-auto p-6 pb-32 scrollbar-hide">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-8 relative z-10">
+                    <div className="flex items-center gap-3">
+                        {program?.logoUrl ? (
+                            <img src={program.logoUrl} alt={program.businessName} className="w-10 h-10 object-contain rounded-full bg-white/10 p-1" />
+                        ) : null}
+                        <div>
+                            <h1 className="text-xl font-bold tracking-tight">{program?.businessName || "Mi Negocio"}</h1>
+                            <p className="text-xs text-gray-400 uppercase tracking-widest">Membresía Digital</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleOpenNotifications}
+                            className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors relative mr-2"
+                        >
+                            <Bell className="w-5 h-5 text-gray-300" />
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold border border-black">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setShowMenu(true)}
+                            className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors"
+                        >
+                            <Menu className="w-5 h-5 text-gray-300" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="space-y-6 relative z-10">
+                    {/* PRIMARY CARD (Membership Status) */}
+                    <div
+                        onClick={() => setShowQr(!showQr)}
+                        className="w-full aspect-[1.6] rounded-3xl p-6 relative overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] cursor-pointer group"
+                    >
+                        {/* Card Background with customized gradient */}
+                        <div className="absolute inset-0 bg-[#16161e] z-0" />
+
+                        {/* Dynamic Gradient Overlay */}
+                        <div
+                            className="absolute inset-0 z-0 opacity-40 transition-colors duration-500"
+                            style={{
+                                background: `linear-gradient(135deg, ${tierColor}20 0%, ${tierColor}05 100%)`
+                            }}
+                        />
+
+                        {/* Card Gloss Effect */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 z-0" />
+
+                        {/* QR Hint Button (New) */}
+                        <div className="absolute top-6 right-6 z-20">
+                            <div className="p-2 bg-white/10 rounded-full backdrop-blur-md border border-white/10 group-hover:bg-white/20 transition-colors shadow-lg">
+                                <QrCode className="w-5 h-5 text-white" />
+                            </div>
+                        </div>
+
+                        {/* Chip & Logo */}
+                        <div className="relative z-10 flex justify-between items-start mb-12">
+                            <div
+                                className="w-12 h-9 rounded-md shadow-lg flex items-center justify-center relative overflow-hidden"
+                                style={{
+                                    background: `linear-gradient(to right, ${tierColor} 0%, ${tierColor}80 100%)`,
+                                    border: `1px solid ${tierColor}`
+                                }}
+                            >
+                                <div className="absolute inset-0 border border-black/20 rounded-md" />
+                                <div className="w-full h-[1px] bg-black/20 absolute top-1/3" />
+                                <div className="w-full h-[1px] bg-black/20 absolute bottom-1/3" />
+                                <div className="h-full w-[1px] bg-black/20 absolute left-1/3" />
+                                <div className="h-full w-[1px] bg-black/20 absolute right-1/3" />
+                            </div>
+                            <div className="flex items-center gap-3 opacity-90 pr-12">
+                                <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-[#0a0a0f] border border-white/10 shadow-sm" style={{ color: tierColor }}>
+                                    {tierName.toUpperCase().includes("MIEMBRO") ? tierName : `MIEMBRO ${tierName}`}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Card Number & Details */}
+                        <div className="relative z-10 text-white">
+                            <div className="font-mono text-xl tracking-[0.2em] mb-4 text-shadow-sm flex gap-4 text-white/90">
+                                <span>****</span>
+                                <span>****</span>
+                                <span>{customer.magicToken?.slice(0, 4) || "0000"}</span>
+                            </div>
+                            <div className="flex justify-between items-end">
+                                <div>
+                                    <div className="text-[10px] text-gray-400 uppercase mb-1 font-medium">Titular</div>
+                                    <div className="font-medium tracking-wide text-lg capitalize">{customer.name || "Miembro"}</div>
+                                    <div className="text-[11px] text-gray-400/80 mt-0.5 font-medium">
+                                        {program?.pointsPercentage
+                                            ? `${customer.currentPoints || 0} Puntos`
+                                            : `${customer.visits?.length || customer.totalVisits || 0} Visitas`
+                                        }
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-[10px] text-gray-400 uppercase mb-1">Tu Calificación</div>
+                                    <div className="font-bold text-xl flex items-center justify-end gap-1.5">
+                                        <span>{customer.averageRating ? Number(customer.averageRating).toFixed(1) : "5.0"}</span>
+                                        <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* QR Code Popover (Portal) */}
+                    {showQr && mounted && createPortal(
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => { setShowQr(false); setTimeout(() => setRedeemQrData(null), 300); }}>
+                            <div className={cn(
+                                "bg-white p-6 rounded-3xl shadow-2xl scale-100 animate-in zoom-in-95 duration-200 relative overflow-hidden",
+                                redeemQrData ? "border-4 border-yellow-500 shadow-yellow-500/50" : ""
+                            )} onClick={e => e.stopPropagation()}>
+
+                                {redeemQrData && (
+                                    <div className="absolute top-0 right-0 p-2 bg-yellow-500 text-white rounded-bl-2xl font-bold text-xs uppercase tracking-wide">
+                                        Premio
+                                    </div>
+                                )}
+
+                                <div className="mb-4 text-center">
+                                    <h3 className={cn("font-bold text-lg", redeemQrData ? "text-yellow-600" : "text-black")}>
+                                        {redeemQrData ? "Canjear Recompensa" : "Tu Código de Miembro"}
+                                    </h3>
+                                    <p className="text-gray-500 text-xs">
+                                        {redeemQrData ? "Muestra este código al personal para recibir tu premio" : "Muestra esto al personal para registrar tu visita"}
+                                    </p>
+                                </div>
+
+                                <div className={cn(
+                                    "bg-white p-2 rounded-xl border-2 border-dashed mx-auto",
+                                    redeemQrData ? "border-yellow-400" : "border-gray-200"
+                                )}>
+                                    <QRCodeSVG
+                                        value={redeemQrData ? redeemQrData.code : `https://happymeters.com/admin/scan/${customer.magicToken}${filterType && filterType !== 'all' ? `?type=${filterType.toUpperCase()}` : ''}`}
+                                        size={200}
+                                        level="H"
+                                        includeMargin={true}
+                                        className="w-full h-full"
+                                    />
+                                </div>
+
+                                <div className="mt-4 text-center">
+                                    {redeemQrData ? (
+                                        <p className="font-bold text-lg text-yellow-600 leading-tight">{redeemQrData.name}</p>
+                                    ) : (
+                                        <p className="font-mono text-sm font-bold text-gray-900 tracking-widest">{customer.magicToken}</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+
+                    {/* RESERVATIONS MODAL & BUTTON */}
+                    {/* Render Button Here if Reservations Exist */}
+                    {myReservations.length > 0 && (
+                        <div className="mb-4">
+                            <button
+                                onClick={() => setShowReservationsModal(true)}
+                                className="w-full py-4 bg-zinc-900 border border-white/10 rounded-2xl flex items-center justify-between px-6 hover:bg-zinc-800 transition-colors group relative overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                        <Calendar className="w-5 h-5" />
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="font-bold text-white text-base">Mis Reservaciones</div>
+                                        <div className="text-xs text-indigo-400 font-medium">
+                                            {myReservations.length} {myReservations.length === 1 ? "activa" : "activas"}
+                                        </div>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-white transition-colors" />
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Reservations List Modal */}
+                    {showReservationsModal && createPortal(
+                        <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex flex-col animate-in fade-in duration-200">
+                            <div className="p-4 flex items-center justify-between border-b border-white/10">
+                                <h2 className="text-lg font-bold">Mis Reservaciones</h2>
+                                <button onClick={() => setShowReservationsModal(false)} className="p-2 bg-zinc-800 rounded-full">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                                {myReservations.map((res: any) => (
+                                    <div
+                                        key={res.id}
+                                        onClick={() => setSelectedReservation(res)}
+                                        className="bg-zinc-900 border border-white/10 rounded-2xl p-4 flex justify-between items-center active:scale-[0.98] transition-transform"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex flex-col items-center justify-center w-14 h-14 bg-zinc-800 rounded-xl border border-white/5">
+                                                <span className="text-xs font-bold text-red-400 uppercase">{format(new Date(res.date), 'MMM', { locale: es })}</span>
+                                                <span className="text-xl font-bold">{format(new Date(res.date), 'd')}</span>
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-lg">{format(new Date(res.date), 'h:mm a')}</div>
+                                                <div className="text-xs text-zinc-400 flex items-center gap-1">
+                                                    <User className="w-3 h-3" /> {res.partySize} personas • {res.table?.label || "Mesa"}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <QrCode className="w-6 h-6 text-white/50" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+
+                    {/* Reservation Detail/QR Modal */}
+                    {selectedReservation && createPortal(
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/90 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setSelectedReservation(null)}>
+                            <div className="bg-white p-8 rounded-3xl w-full max-w-sm relative text-center shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setSelectedReservation(null)} className="absolute top-4 right-4 text-black/50 hover:text-black">
+                                    <X className="w-6 h-6" />
+                                </button>
+
+                                <h3 className="text-xl font-bold text-black mb-1">Tu Reservación</h3>
+                                <p className="text-zinc-500 text-sm mb-6">Muestra este código al llegar</p>
+
+                                <div className="bg-white p-2 rounded-xl border-2 border-black/10 mx-auto w-fit mb-6">
+                                    <QRCodeSVG
+                                        /* 
+                                            QR Content: 
+                                            We can encode a URL for checking in the reservation directly from admin panel? 
+                                            Or just raw JSON data? 
+                                            The requirement implies "codigo qr unico de esa reservacion".
+                                            Format: "RESERVATION:{id}"
+                                        */
+                                        value={`https://happymeters.com/admin/reservations/checkin/${selectedReservation.id}`} // Or just ID
+                                        size={220}
+                                        level="H"
+                                        includeMargin={true}
+                                    />
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                                        <span className="text-zinc-400 text-sm">Fecha</span>
+                                        <span className="font-bold text-black">{format(new Date(selectedReservation.date), 'PPP', { locale: es })}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                                        <span className="text-zinc-400 text-sm">Hora</span>
+                                        <span className="font-bold text-black">{format(new Date(selectedReservation.date), 'h:mm a')}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                                        <span className="text-zinc-400 text-sm">Mesa</span>
+                                        <span className="font-bold text-black">{selectedReservation.table?.label}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-2">
+                                        <span className="text-zinc-400 text-sm">Personas</span>
+                                        <span className="font-bold text-black">{selectedReservation.partySize} pax</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <button
+                            onClick={() => {
+                                const params = new URLSearchParams()
+                                if (customer.name) params.append("name", customer.name)
+                                if (customer.phone) params.append("phone", customer.phone)
+                                if (customer.email) params.append("email", customer.email)
+                                window.location.href = `/book/${program.id}?${params.toString()}`
+                            }}
+                            className="bg-[#1a1a24] hover:bg-[#20202b] text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] border border-white/5"
+                        >
+                            <Calendar className="w-6 h-6 text-violet-400" />
+                            <span className="text-sm font-bold">Reservar</span>
+                        </button>
+
+                        <button
+                            onClick={() => toast.info("Próximamente: Menú Digital", {
+                                description: "Pronto podrás ver el menú completo aquí."
+                            })}
+                            className="bg-[#1a1a24] hover:bg-[#20202b] text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] border border-white/5"
+                        >
+                            <div className="w-6 h-6 rounded-md border-2 border-dashed border-gray-500 flex items-center justify-center">
+                                <span className="text-[10px] font-bold">M</span>
+                            </div>
+                            <span className="text-sm font-bold">Menú</span>
+                        </button>
+                    </div>
+
+                    {/* Content Injection (Promotions) */}
+                    {children ? children : (
+                        <div className="space-y-4 mb-6">
+                            {program?.promotions?.map((promo: any) => (
+                                <div key={promo.id} className="relative overflow-hidden rounded-2xl aspect-[2/1] bg-gray-800 shadow-lg group">
+                                    <img src={promo.imageUrl} alt={promo.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                    <div className="absolute bottom-0 left-0 p-4 w-full">
+                                        <h3 className="text-white font-bold text-lg mb-1">{promo.title || "Promoción"}</h3>
+                                        <p className="text-gray-300 text-xs line-clamp-2">{promo.description}</p>
+                                    </div>
+                                    {promo.terms && (
+                                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md">
+                                            <p className="text-[10px] text-gray-300 font-medium">{promo.terms}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="text-sm text-gray-400 px-2 font-medium">Tus Recompensas</div>
+
+                    <div className="space-y-4">
+                        {displayedRewards.length === 0 && (
+                            <div className="text-center py-8 text-gray-500 text-sm italic">
+                                No hay recompensas disponibles.
+                            </div>
+                        )}
+                        {displayedRewards.map((reward: any) => {
+                            // Check if locked
+                            let isLocked = true
+                            let progress = 0
+                            let requirementText = ""
+
+                            if (reward.costInVisits > 0) {
+                                isLocked = (customer.currentVisits || 0) < reward.costInVisits
+                                progress = Math.min(100, ((customer.currentVisits || 0) / reward.costInVisits) * 100)
+                                requirementText = `${reward.costInVisits} visitas requeridas`
+                            } else if (reward.costInPoints > 0) {
+                                isLocked = (customer.currentPoints || 0) < reward.costInPoints
+                                progress = Math.min(100, ((customer.currentPoints || 0) / reward.costInPoints) * 100)
+                                requirementText = `${reward.costInPoints} Puntos requeridos`
+                            }
+
+                            // Check pending redemption
+                            const pending = pendingRedemptions.find((r: any) => r.rewardId === reward.id)
+                            const isSystemGift = reward.description === "SYSTEM_GIFT"
+
+                            return (
+                                <div
+                                    key={reward.id}
+                                    className={cn(
+                                        "relative overflow-hidden rounded-2xl border bg-[#12121a] p-4 transition-all duration-300",
+                                        isSystemGift ? "border-purple-500/50 bg-purple-900/10" : "border-white/5",
+                                        pending ? "border-yellow-500/50 bg-yellow-900/10" : ""
+                                    )}
+                                >
+                                    {isSystemGift && !isLocked && !pending && (
+                                        <div className="absolute top-0 right-0 p-1.5 rounded-bl-xl bg-purple-500 text-white shadow-lg shadow-purple-500/20">
+                                            <Sparkles className="w-3 h-3" />
+                                        </div>
+                                    )}
+
+                                    <div className="flex gap-4 items-center relative z-10">
+                                        <div className={cn(
+                                            "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                                            isLocked ? "bg-white/5 text-gray-500" :
+                                                pending ? "bg-yellow-500/20 text-yellow-500" :
+                                                    isSystemGift ? "bg-purple-500/20 text-purple-400 border border-purple-500/30 shadow-[0_0_15px_-5px_#a855f7]" :
+                                                        "bg-violet-500/20 text-violet-400"
+                                        )}>
+                                            {pending ? <Trophy className="w-6 h-6 animate-pulse" /> : <Gift className={cn("w-6 h-6", isSystemGift && "animate-pulse")} />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h3 className={cn("font-bold truncate pr-2",
+                                                    pending ? "text-yellow-500" :
+                                                        isSystemGift ? "text-white text-lg" : "text-white"
+                                                )}>
+                                                    {reward.name}
+                                                </h3>
+                                                {isLocked && <Lock className="w-4 h-4 text-gray-500 shrink-0 mt-1" />}
+                                            </div>
+                                            <p className="text-xs text-gray-400 mb-2">
+                                                {isSystemGift ? "¡Tu regalo de bienvenida!" : requirementText}
+                                            </p>
+
+                                            {/* Progress Bar */}
+                                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                                <div
+                                                    className={cn("h-full rounded-full transition-all duration-500",
+                                                        pending ? "bg-yellow-500" :
+                                                            isSystemGift ? "bg-gradient-to-r from-purple-500 to-pink-500" :
+                                                                "bg-violet-500"
+                                                    )}
+                                                    style={{ width: `${progress}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* ACTIONS */}
+                                    <div className="mt-4 relative z-20">
+                                        {pending ? (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    if (pending.redemptionCode) {
+                                                        setRedeemQrData({
+                                                            code: `R:${pending.redemptionCode}`,
+                                                            name: reward.name
+                                                        })
+                                                        setShowQr(true)
+                                                    } else {
+                                                        toast.error("Error: Código de canje no encontrado")
+                                                    }
+                                                }}
+                                                className="w-full bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-3 flex items-center justify-center gap-2 transition-all active:scale-95 group"
+                                            >
+                                                <Sparkles className="w-4 h-4 text-yellow-500 group-hover:scale-110 transition-transform" />
+                                                <span className="text-xs font-bold text-yellow-500 uppercase tracking-wide">CÓDIGO DE CANJE GENERADO</span>
+                                            </button>
+                                        ) : customer.redemptions?.some((r: any) => r.rewardId === reward.id && r.status === 'REDEEMED') ? (
+                                            // Redeemed State (Prioritized over Unlocked)
+                                            <div className="text-center">
+                                                <div className="flex items-center justify-center gap-2 text-green-500/80 text-xs font-bold uppercase tracking-wider bg-green-900/10 py-2 rounded-lg border border-green-500/10">
+                                                    <Check className="w-4 h-4" />
+                                                    Premio Entregado
+                                                </div>
+                                            </div>
+                                        ) : !isLocked ? (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    handleUnlock(reward.id)
+                                                }}
+                                                className="w-full bg-violet-600 hover:bg-violet-700 text-white rounded-xl p-3 font-bold text-xs uppercase shadow-lg shadow-violet-500/20 transition-all active:scale-95"
+                                            >
+                                                Desbloquear Recompensa
+                                            </button>
+                                        ) : (
+                                            // Locked State
+                                            <div className="text-center">
+                                                <div className="flex items-center justify-center gap-2 text-gray-500 text-xs font-medium py-2">
+                                                    <Lock className="w-3 h-3" />
+                                                    <span>{requirementText}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            {/* FLOATING QR BUTTON (Bottom) */}
+            <div className="absolute bottom-6 left-0 right-0 z-30 px-6 flex justify-center pointer-events-none">
+                <button
+                    onClick={() => { setRedeemQrData(null); setShowQr(true); }}
+                    className="pointer-events-auto bg-gradient-to-r from-orange-500 to-pink-500 text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 hover:scale-105 transition-transform active:scale-95 border-2 border-white/20 text-sm tracking-wide"
+                >
+                    <QrCode className="w-5 h-5" />
+                    MOSTRAR MI CÓDIGO
+                </button>
+            </div>
+
+            {/* Notifications Modal (Portal) */}
+            {showNotifications && mounted && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowNotifications(false)} />
+                    <div className="relative w-full max-w-md bg-[#18181b] border-t border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[80vh] flex flex-col m-auto sm:m-0 bottom-0 sm:bottom-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+                                <Bell className="w-5 h-5 text-violet-400" />
+                                Notificaciones
+                            </h2>
+                            <button onClick={() => setShowNotifications(false)} className="p-2 hover:bg-white/10 rounded-full text-white">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-white/20">
+                            {notifications.length === 0 ? (
+                                <div className="text-center py-10 text-gray-500">
+                                    <Bell className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                    <p>No tienes notificaciones nuevas.</p>
+                                </div>
+                            ) : (
+                                notifications.map((note) => (
+                                    <div key={note.id} className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <h4 className="font-bold text-white text-sm">{note.title}</h4>
+                                            <span className="text-[10px] text-gray-500">{new Date(note.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                        <p className="text-sm text-gray-400 leading-relaxed">{note.message}</p>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* SIDEBAR MENU */}
+            {
+                showMenu && (
+                    <>
+                        {/* Backdrop */}
+                        <div
+                            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 animate-in fade-in duration-300"
+                            onClick={() => setShowMenu(false)}
+                        />
+
+                        {/* Side Menu (Wallet) */}
+                        <div className="fixed inset-y-0 right-0 w-72 bg-[#111115] border-l border-white/10 z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+                            {/* Header */}
+                            <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#16161e]">
+                                <div className="flex items-center gap-3">
+                                    {user?.imageUrl ? (
+                                        <img src={user.imageUrl} alt="User" className="w-10 h-10 rounded-full border border-white/10" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-violet-600 flex items-center justify-center">
+                                            <span className="font-bold text-white">{customer.name?.charAt(0) || "U"}</span>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <div className="font-bold text-sm truncate max-w-[120px]">{customer.name || "Usuario"}</div>
+                                        <div className="text-xs text-gray-400">Miembro</div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowMenu(false)} className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+
+                                {/* PWA Install (New) */}
+                                <InstallPwa />
+
+                                {/* Profile Actions */}
+                                <div className="space-y-2">
+                                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-2">Mi Cuenta</div>
+                                    <button
+                                        onClick={() => onEditProfile ? onEditProfile() : openUserProfile()}
+                                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group"
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors">
+                                            <User className="w-4 h-4" />
+                                        </div>
+                                        <div className="text-sm font-medium text-gray-300 group-hover:text-white">Perfil & Datos</div>
+                                    </button>
+                                </div>
+
+                                {/* Wallet / Other Cards */}
+                                <div className="space-y-2">
+                                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-2 flex justify-between items-center">
+                                        <span>Mis Tarjetas</span>
+                                        <span className="text-[10px] bg-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded-full">{myCards.length}</span>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        {myCards.length > 0 ? myCards.flatMap((membership: any) => {
+                                            const cards = []
+                                            const isHybrid = membership.program.pointsPercentage > 0 // Assuming all have visits by default
+
+                                            // Card 1: Visits (Always add if it's the default or part of hybrid)
+                                            // Actually, if it's hybrid, render BOTH. If only points? render points. If only visits? visits.
+                                            // The backend says 'pointsPercentage > 0' means points. Everyone has visits.
+
+                                            // Visits Card
+                                            cards.push(
+                                                <Link
+                                                    key={`${membership.program.id}-visits`}
+                                                    href={`/loyalty/${membership.program.id}?mode=VISITS`}
+                                                    className={cn(
+                                                        "flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5",
+                                                        (membership.program.id === program.id && (!filterType || filterType === 'visits')) ? "bg-white/5 border-white/10" : ""
+                                                    )}
+                                                >
+                                                    <div className="w-10 h-10 rounded-full bg-orange-500/10 p-2 flex items-center justify-center border border-orange-500/20 shrink-0">
+                                                        <CreditCard className="w-full h-full text-orange-500" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-sm font-bold text-gray-200 truncate">{membership.program.businessName}</div>
+                                                        <div className="text-[10px] text-gray-500 truncate flex items-center gap-1">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                                                            Tarjeta de Visitas
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            )
+
+                                            // Points Card (if eligible)
+                                            if (membership.program.pointsPercentage > 0) {
+                                                cards.push(
+                                                    <Link
+                                                        key={`${membership.program.id}-points`}
+                                                        href={`/loyalty/${membership.program.id}?mode=POINTS`}
+                                                        className={cn(
+                                                            "flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5",
+                                                            (membership.program.id === program.id && filterType === 'points') ? "bg-white/5 border-white/10" : ""
+                                                        )}
+                                                    >
+                                                        <div className="w-10 h-10 rounded-full bg-blue-500/10 p-2 flex items-center justify-center border border-blue-500/20 shrink-0">
+                                                            <Trophy className="w-full h-full text-blue-500" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-sm font-bold text-gray-200 truncate">{membership.program.businessName}</div>
+                                                            <div className="text-[10px] text-gray-500 truncate flex items-center gap-1">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                                                Tarjeta de Puntos
+                                                            </div>
+                                                        </div>
+                                                    </Link>
+                                                )
+                                            }
+
+                                            return cards
+                                        }) : (
+                                            <div className="text-center py-6 px-4 border border-dashed border-white/10 rounded-xl">
+                                                <Wallet className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                                                <p className="text-xs text-gray-500">No tienes otras tarjetas guardadas aún.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="p-4 border-t border-white/5 bg-[#16161e]">
+                                <button
+                                    onClick={() => signOut({ redirectUrl: `/loyalty/${program.id}` })}
+                                    className="w-full flex items-center gap-2 justify-center p-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-bold"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    Cerrar Sesión
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                )
+            }
+        </div >
+    )
+}
