@@ -32,12 +32,15 @@ export async function POST(req: Request) {
         const { userId } = await auth()
         const user = await currentUser()
 
+        // [FIX] Define origin early to ensure it's available for error handling or redirects
+        const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
+
         if (!userId || !user) {
             return new NextResponse('Unauthorized', { status: 401 })
         }
 
         const body = await req.json()
-        const { plan, interval = 'month', addons = [], quantity = 1 } = body
+        const { plan, interval = 'month', addons = [], quantity = 1, promoCode } = body // [NEW] Added promoCode
 
         // Validate Plan
         if (!plan || (!['GROWTH', 'POWER', 'CHAIN', 'custom'].includes(plan))) {
@@ -89,6 +92,27 @@ export async function POST(req: Request) {
             lineItems.push({ price: priceId, quantity: quantity })
         }
 
+        // [NEW] Handle HAPPY90 Discount Manual Logic
+        if (promoCode === 'HAPPY90') {
+            const COUPON_ID = 'HAPPY90'
+            try {
+                // 1. Try to retrieve the coupon
+                await stripe.coupons.retrieve(COUPON_ID)
+            } catch (err) {
+                // 2. If it doesn't exist, create it
+                console.log('Creating HAPPY90 coupon...')
+                await stripe.coupons.create({
+                    id: COUPON_ID,
+                    percent_off: 90,
+                    duration: 'repeating',
+                    duration_in_months: 12, // 1 year of discount
+                    name: 'Oferta Especial 90% OFF'
+                })
+            }
+            // 3. Apply the coupon - OVERRIDING existing discounts because this one is huge
+            discounts = [{ coupon: COUPON_ID }]
+        }
+
         // Check for affiliate cookie
         const cookieStore = await cookies()
         const affiliateRef = cookieStore.get('affiliate_ref')?.value || null
@@ -112,7 +136,7 @@ export async function POST(req: Request) {
                 addons: addons.join(','),
                 affiliateRef: affiliateRef,
             },
-            // If we have auto-applied discounts (Power Plan), we CANNOT allow other codes.
+            // If we have auto-applied discounts (Power Plan or HAPPY90), we CANNOT allow other codes.
             allow_promotion_codes: discounts ? undefined : true,
             success_url: `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${origin}/dashboard?payment=cancelled`,
