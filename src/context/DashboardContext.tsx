@@ -85,6 +85,7 @@ interface DashboardContextType {
     daysRemaining: number
     isLocked: boolean
     checkFeature: (feature: string) => boolean
+    checkModuleAccess: (module: string) => boolean
 }
 
 const defaultStats: StatsData = {
@@ -286,7 +287,17 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
             subscriptionStatus,
             daysRemaining,
             isLocked,
-            checkFeature
+            checkFeature,
+            checkModuleAccess: (module: string) => {
+                if (plan === 'FREE' || plan === 'GROWTH') {
+                    // Growth only has Surveys. Loyalty/Processes/Reservations are paid add-ons or higher plans.
+                    // Actually, Growth might have basic access, but user said strict block for non-contracted.
+                    // Assuming FREE/GROWTH = Surveys Only for now based on "Contracted Tools".
+                    const PREMIUM_MODULES = ['loyalty', 'processes', 'reservations']
+                    if (PREMIUM_MODULES.includes(module)) return false
+                }
+                return true
+            }
         }}>
             {children}
         </DashboardContext.Provider>

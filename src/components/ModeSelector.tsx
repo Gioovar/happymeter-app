@@ -8,10 +8,12 @@ import {
     Gift,
     Settings2,
     Calendar,
-    LayoutDashboard
+    LayoutDashboard,
+    Lock
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { NavigationMode, MODES } from '@/config/navigation';
+import { useDashboard } from '@/context/DashboardContext';
 
 export default function ModeSelector() {
     const pathname = usePathname();
@@ -24,11 +26,14 @@ export default function ModeSelector() {
         return 'surveys'; // Default mode
     }, [pathname]);
 
+    const { checkModuleAccess } = useDashboard();
+
     return (
         <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-full border border-white/10 shadow-lg overflow-x-auto max-w-full no-scrollbar">
             {MODES.map((mode) => {
                 const isActive = activeMode === mode.id;
                 const Icon = mode.icon;
+                const isLocked = !checkModuleAccess(mode.id);
 
                 return (
                     <Link
@@ -38,7 +43,8 @@ export default function ModeSelector() {
                             "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 relative overflow-hidden group whitespace-nowrap",
                             isActive
                                 ? "text-white shadow-md"
-                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                                : "text-gray-400 hover:text-white hover:bg-white/5",
+                            isLocked && "opacity-70 hover:opacity-100"
                         )}
                     >
                         {isActive && (
@@ -54,6 +60,7 @@ export default function ModeSelector() {
                                 isActive ? "scale-110" : "group-hover:scale-110"
                             )} />
                             <span>{mode.label}</span>
+                            {isLocked && <Lock className="w-3 h-3 text-gray-500 ml-1" />}
                         </div>
                     </Link>
                 );
