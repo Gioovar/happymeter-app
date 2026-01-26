@@ -16,7 +16,7 @@ interface NotificationsBellProps {
 }
 
 export default function NotificationsBell({ align = 'right' }: NotificationsBellProps) {
-    const { notifications, unreadCount, markAsRead, deleteRead, loadingId, setLoadingId } = useNotifications()
+    const { notifications, unreadCount, markAsRead, deleteRead, loadingId, setLoadingId, requestPushPermission } = useNotifications()
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
     const bellRef = useRef<HTMLDivElement>(null)
@@ -99,10 +99,15 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                         transition={{ duration: 0.2 }}
                         className={`absolute mt-3 w-[360px] md:w-[400px] bg-[#13111C] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden ${align === 'right' ? 'right-0' : 'left-0'}`}
                     >
-                        {/* Encabezado */}
                         <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#13111C]">
                             <h3 className="font-bold text-white text-sm">Notificaciones</h3>
                             <div className="flex gap-2">
+                                <button
+                                    onClick={() => requestPushPermission()}
+                                    className="text-[10px] text-green-400 hover:text-green-300 transition flex items-center gap-1 bg-green-500/10 px-2 py-1 rounded-md"
+                                >
+                                    <Bell className="w-3 h-3" /> Activar Push
+                                </button>
                                 {unreadCount > 0 && (
                                     <button
                                         onClick={() => markAsRead()}

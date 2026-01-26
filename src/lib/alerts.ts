@@ -2,6 +2,7 @@ import { Response, Survey } from '@prisma/client'
 import { sendResponseAlert } from '@/lib/email'
 
 import { prisma } from '@/lib/prisma'
+import { sendPushNotification } from '@/lib/push-service'
 
 export async function sendCrisisAlert(response: Response, survey: Survey, answers: any[]) {
     try {
@@ -60,6 +61,13 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
                 message: message,
                 meta: { responseId: response.id, surveyId: survey.id }
             }
+        })
+
+        await sendPushNotification(survey.userId, {
+            title: `🚨 Alerta de Crisis`,
+            body: `Nueva calificación baja en ${survey.title}. Revisa los detalles.`,
+            url: `/dashboard/responses?responseId=${response.id}`,
+            icon: '/happymeter_logo.png'
         })
 
         // Collect Phones
@@ -251,6 +259,13 @@ export async function sendStaffAlert(response: Response, survey: Survey, answers
             }
         })
 
+        await sendPushNotification(survey.userId, {
+            title: '📩 Nuevo Reporte de Staff',
+            body: issueDescription.substring(0, 50),
+            url: `/dashboard/responses?responseId=${response.id}`,
+            icon: '/happymeter_logo.png'
+        })
+
         // 3. Send Real WhatsApp Alert
         // Fetch User Settings for Global Alerts
         const userSettings = await prisma.userSettings.findUnique({
@@ -373,6 +388,13 @@ export async function sendVisitRequestAlert(placeName: string, creatorName: stri
                     message: message,
                 }
             })
+
+            await sendPushNotification(staff.userId, {
+                title: '📅 Nueva Solicitud de Visita',
+                body: `${creatorName} quiere visitar ${placeName}.`,
+                url: `/dashboard/admin/visits`,
+                icon: '/happymeter_logo.png'
+            })
         }
 
         // 3. Mock WhatsApp to Staff (simulating sending to the "Manager")
@@ -399,6 +421,13 @@ export async function sendVisitStatusUpdateAlert(placeName: string, status: 'APP
                 title: title,
                 message: msg
             }
+        })
+
+        await sendPushNotification(creatorUserId, {
+            title: title,
+            body: msg,
+            url: `/dashboard/visits`,
+            icon: '/happymeter_logo.png'
         })
 
         // 2. Mock WhatsApp to Creator
@@ -435,6 +464,13 @@ export async function sendAchievementEvidenceAlert(creatorName: string, achievem
                     // We might add meta: { achievementId? } if needed later
                 }
             })
+
+            await sendPushNotification(staff.userId, {
+                title: '🏆 Validación de Logro',
+                body: `${creatorName} ha subido evidencia.`,
+                url: `/dashboard/admin/achievements`,
+                icon: '/happymeter_logo.png'
+            })
         }
 
         // 3. Mock WhatsApp
@@ -463,6 +499,13 @@ export async function sendCreatorApprovedAlert(userId: string) {
                 title: title,
                 message: message
             }
+        })
+
+        await sendPushNotification(userId, {
+            title: title,
+            body: message,
+            url: `/dashboard`,
+            icon: '/happymeter_logo.png'
         })
 
         // 2. Mock WhatsApp

@@ -14,7 +14,16 @@ import SocialProof from '@/components/landing/SocialProof'
 import PainPointSection from '@/components/landing/PainPointSection'
 import PricingTeaser from '@/components/landing/PricingTeaser'
 
-export default function LandingPage() {
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
+
+export default async function LandingPage() {
+  const { userId } = await auth()
+
+  if (userId) {
+    redirect('/dashboard')
+  }
+
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-violet-500/30">
       <LinkTracker />

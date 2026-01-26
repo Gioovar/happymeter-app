@@ -10,6 +10,7 @@ import { TrendingUp, Users, Star, Activity, ArrowUpRight, MessageSquare, MoreHor
 import AITopIssues from './AITopIssues'
 import MenuInsights from '@/components/MenuInsights'
 import StaffLeaderboard from '@/components/StaffLeaderboard'
+import FeatureGuard from '@/components/common/FeatureGuard'
 
 interface DetailedAnalyticsProps {
     data: {
@@ -396,7 +397,9 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
 
                 {/* Staff Ranking */}
                 <div>
-                    <StaffLeaderboard staffRanking={data.staffRanking || []} />
+                    <FeatureGuard feature="staff_leaderboard">
+                        <StaffLeaderboard staffRanking={data.staffRanking || []} />
+                    </FeatureGuard>
                 </div>
             </div>
 
@@ -471,7 +474,9 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 flex flex-col">
                     <h3 className="font-bold text-lg mb-4">Problemas Detectados (IA)</h3>
                     <div className="flex-1 min-h-[300px]">
-                        <AITopIssues />
+                        <FeatureGuard feature="ai_analytics">
+                            <AITopIssues />
+                        </FeatureGuard>
                     </div>
                 </div>
 

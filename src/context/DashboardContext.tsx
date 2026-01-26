@@ -79,6 +79,12 @@ interface DashboardContextType {
     toggleMobileMenu: (val: boolean) => void
     branchSlug?: string
     branchId?: string
+    // Subscription Logic
+    plan: string
+    subscriptionStatus: 'ACTIVE' | 'TRIALING' | 'EXPIRED'
+    daysRemaining: number
+    isLocked: boolean
+    checkFeature: (feature: string) => boolean
 }
 
 const defaultStats: StatsData = {
@@ -97,8 +103,74 @@ const defaultStats: StatsData = {
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)
 
 // Add branchId to Props
-export function DashboardProvider({ children, branchId, branchSlug }: { children: React.ReactNode, branchId?: string, branchSlug?: string }) {
+export function DashboardProvider({ children, branchId, branchSlug, initialPlan = 'FREE', userCreatedAt }: {
+    children: React.ReactNode,
+    branchId?: string,
+    branchSlug?: string,
+    initialPlan?: string,
+    userCreatedAt?: Date
+}) {
     const { userId } = useAuth()
+
+    // --- Subscription Logic Calculation ---
+    // 1. Determine Plan
+    const plan = initialPlan
+
+    // 2. Calculate Days Active
+    // If no createdAt provided (legacy), assume old/expired or new? Safe default: now (starts trial) or old (expired).
+    // Let's assume passed strictly from layout.
+    const createdDate = userCreatedAt ? new Date(userCreatedAt) : new Date()
+    const now = new Date()
+    const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+    const daysSinceCreation = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const TRIAL_DAYS = 7
+
+    let subscriptionStatus: 'ACTIVE' | 'TRIALING' | 'EXPIRED' = 'ACTIVE'
+    let daysRemaining = 0
+    let isLocked = false
+
+    if (plan !== 'FREE') {
+        subscriptionStatus = 'ACTIVE'
+        isLocked = false
+        daysRemaining = 30 // Placeholder for paid plans
+    } else {
+        // FREE Plan = Trial Logic
+        // Strict check: if created > 7 days ago, it is EXPIRED.
+        if (daysSinceCreation <= TRIAL_DAYS) {
+            subscriptionStatus = 'TRIALING'
+            daysRemaining = TRIAL_DAYS - daysSinceCreation
+            isLocked = false
+        } else {
+            subscriptionStatus = 'EXPIRED'
+            daysRemaining = 0
+            isLocked = true
+        }
+    }
+
+    // Feature Gating Logic
+    const checkFeature = (feature: string): boolean => {
+        // 1. If Locked, NO features are accessible (except via settings which is handled by guard)
+        if (isLocked) return false
+
+        // 2. If Paid Plan, allow everything (for now)
+        if (plan !== 'FREE') return true
+
+        // 3. Free Plan (Trialing) Restrictions
+        const PRO_FEATURES = ['ai_analytics', 'whatsapp_alerts', 'staff_leaderboard', 'unlimited_surveys']
+
+        // Strategy: In Trial, users get FULL access to everything (SaaS standard).
+        // But if we want to demonstrate specific locking of "Premium Add-ons" even in Trial, 
+        // we can uncomment logic here. 
+        // For now, allow everything in Trial (since isLocked handles the expiration).
+
+        // However, if we want to test the FeatureGuard popup, we need SOMETHING to be false.
+        // Let's artificially lock 'whatsapp_alerts' as an "Add-on" even in trial.
+        // Let's artificially lock 'whatsapp_alerts' and 'ai_analytics' as "Add-ons" even in trial for demo.
+        if (feature === 'whatsapp_alerts' || feature === 'ai_analytics') return false
+
+        return true
+    }
+
 
     // State
     const [surveys, setSurveysState] = useState<Survey[]>([])
@@ -209,7 +281,12 @@ export function DashboardProvider({ children, branchId, branchSlug }: { children
             isMobileMenuOpen,
             toggleMobileMenu: setIsMobileMenuOpen,
             branchSlug,
-            branchId
+            branchId,
+            plan,
+            subscriptionStatus,
+            daysRemaining,
+            isLocked,
+            checkFeature
         }}>
             {children}
         </DashboardContext.Provider>

@@ -12,6 +12,10 @@ import SuspendedOverlay from '@/components/common/SuspendedOverlay'
 
 import { processReferralCookie } from '@/lib/referral-service'
 
+import SubscriptionGuard from '@/components/subscription/SubscriptionGuard'
+
+// ... existing imports
+
 export default async function DashboardLayout({
     children,
 }: {
@@ -35,7 +39,17 @@ export default async function DashboardLayout({
         if (userId) {
             const [fetchedProfile, fetchedSettings] = await Promise.all([
                 prisma.affiliateProfile.findUnique({ where: { userId } }),
-                prisma.userSettings.findUnique({ where: { userId }, select: { hasSeenTour: true, role: true, plan: true, isActive: true, isOnboarded: true } })
+                prisma.userSettings.findUnique({
+                    where: { userId },
+                    select: {
+                        hasSeenTour: true,
+                        role: true,
+                        plan: true,
+                        isActive: true,
+                        isOnboarded: true,
+                        createdAt: true
+                    }
+                })
             ])
             profile = fetchedProfile
             settings = fetchedSettings
@@ -120,21 +134,13 @@ export default async function DashboardLayout({
         // ...
     }
 
-    // Wait, I am replacing lines 33-77. 
-    // The previous code had `[profile, settings] = await Promise.all(...)`.
-    // I should maintain that structure but add `plan: true`.
-
-    // Fetch User Data for Profile
-    const fullUser = await currentUser()
-    const userData = fullUser ? {
-        firstName: fullUser.firstName,
-        lastName: fullUser.lastName,
-        email: fullUser.emailAddresses[0]?.emailAddress,
-        imageUrl: fullUser.imageUrl,
-    } : null
+    const checkedSettings = settings || null
 
     return (
-        <DashboardProvider>
+        <DashboardProvider
+            initialPlan={checkedSettings?.plan || 'FREE'}
+            userCreatedAt={checkedSettings?.createdAt}
+        >
             <NotificationProvider>
                 <div className="flex min-h-screen bg-[#0a0a0a]">
 
@@ -172,7 +178,9 @@ export default async function DashboardLayout({
                         </div>
 
                         <div className="pt-16 md:pt-20 px-4 md:px-8 pb-32">
-                            {children}
+                            <SubscriptionGuard>
+                                {children}
+                            </SubscriptionGuard>
                         </div>
                     </main>
                 </div>

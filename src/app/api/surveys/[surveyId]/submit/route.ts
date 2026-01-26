@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { sendCrisisAlert, sendStaffAlert, sendCustomerReward } from '@/lib/alerts'
+import { sendPushNotification } from '@/lib/push-service'
 
 export async function POST(
     req: Request,
@@ -135,6 +136,13 @@ async function checkMilestones(userId: string) {
                     message,
                     meta: { count }
                 }
+            })
+
+            await sendPushNotification(userId, {
+                title: title,
+                body: message,
+                url: '/dashboard/achievements', // Assuming there's a page for this
+                icon: '/happymeter_logo.png'
             })
         }
     } catch (error) {

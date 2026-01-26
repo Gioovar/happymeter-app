@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 
 interface Notification {
     id: string
@@ -22,6 +23,7 @@ interface NotificationContextType {
     testSound: () => void
     loadingId: string | null
     setLoadingId: (id: string | null) => void
+    requestPushPermission: () => Promise<void>
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
@@ -34,32 +36,35 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const audioRef = useRef<HTMLAudioElement | null>(null)
     const router = useRouter()
 
-    // Initialize Audio
-    useEffect(() => {
-        audioRef.current = new Audio('/notification.mp3')
-        audioRef.current.load()
+    // Push Notifications Hook
+    const { askPermission } = usePushNotifications()
 
-        // Unlock audio on first user interaction
-        const unlockAudio = () => {
-            if (audioRef.current) {
-                audioRef.current.play().then(() => {
-                    audioRef.current?.pause()
-                    audioRef.current!.currentTime = 0
-                }).catch(() => { })
+    // Initialize Web Audio API
+    const playSound = async () => {
+        try {
+            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContext) return;
+
+            const audioCtx = new AudioContext();
+
+            // Resume context if suspended
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
             }
-            document.removeEventListener('click', unlockAudio)
-        }
-        document.addEventListener('click', unlockAudio)
-        return () => document.removeEventListener('click', unlockAudio)
-    }, [])
 
-    const playSound = () => {
-        if (audioRef.current) {
-            audioRef.current.volume = 1.0
-            audioRef.current.currentTime = 0
-            audioRef.current.play().catch(e => console.error('Audio play error:', e))
+            const response = await fetch('/notification.mp3');
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+            const source = audioCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioCtx.destination);
+            source.start(0);
+        } catch (error) {
+            console.log('Audio playback prevented:', error);
         }
     }
+
 
     const testSound = () => playSound()
 
@@ -125,10 +130,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                                 description: newNotif.message,
                                 icon: '🔔',
                                 duration: 8000,
+                                className: 'bg-[#1A1A1A] border border-white/10 text-white',
                                 action: {
                                     label: 'Ver',
                                     onClick: () => handleNotificationClick(newNotif)
                                 },
+                                cancel: {
+                                    label: 'Cerrar',
+                                    onClick: () => { }
+                                }
                             })
                         }
                     }
@@ -183,7 +193,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             deleteRead,
             testSound,
             loadingId,
-            setLoadingId
+            setLoadingId,
+            requestPushPermission: askPermission
         }}>
             {children}
         </NotificationContext.Provider>

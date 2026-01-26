@@ -76,7 +76,7 @@ export default function RootLayout({
       <html lang="es" suppressHydrationWarning>
         <body className={inter.className}>
           {children}
-          <Toaster position="top-center" richColors />
+          <Toaster position="top-center" theme="dark" richColors closeButton />
           <Analytics />
         </body>
       </html>
