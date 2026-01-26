@@ -22,7 +22,7 @@ export default function Page() {
     // State
     const [programInfo, setProgramInfo] = useState<any>(null)
     const [view, setView] = useState<'selection' | 'email_flow' | 'phone_flow'>('selection')
-    const [emailStep, setEmailStep] = useState<'email' | 'password'>('email')
+    const [emailStep, setEmailStep] = useState<'email' | 'password' | 'email_code'>('email')
     const [phoneStep, setPhoneStep] = useState<'phone' | 'code'>('phone')
 
     // Form Values
@@ -137,15 +137,61 @@ export default function Page() {
             if (result.status === 'complete') {
                 await setActive({ session: result.createdSessionId })
                 router.push(redirectUrl)
+            } else if (result.status === 'needs_first_factor' || (result as any).status === 'needs_verification') {
+                // Check if email_code is required/available
+                const emailFactor = result.supportedFirstFactors?.find((factor: any) => factor.strategy === 'email_code') as any
+
+                if (emailFactor) {
+                    // Send verification email
+                    await signIn.prepareFirstFactor({
+                        strategy: 'email_code',
+                        emailAddressId: emailFactor.emailAddressId,
+                    })
+                    setEmailStep('email_code')
+                    setError('')
+                } else {
+                    setError('Verificación incompleta pero no se encontró método de envío de código.')
+                }
             } else {
                 console.log(result)
-                setError('Verificación incompleta. Por favor revisa tu correo.')
+                setError('Verificación incompleta. Estado: ' + result.status)
             }
         } catch (err: any) {
+            console.error(err)
             if (err.errors?.[0]?.code === 'form_password_incorrect') {
                 setError('Contraseña incorrecta.')
             } else {
                 setError('Error al iniciar sesión.')
+            }
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleEmailVerificationCodeSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!isLoaded) return
+        setIsLoading(true)
+        setError('')
+
+        try {
+            const result = await signIn.attemptFirstFactor({
+                strategy: 'email_code',
+                code,
+            })
+
+            if (result.status === 'complete') {
+                await setActive({ session: result.createdSessionId })
+                router.push(redirectUrl)
+            } else {
+                setError('Código inválido o expirado.')
+            }
+        } catch (err: any) {
+            console.error(err)
+            if (err.errors?.[0]?.code === 'verification_code_incorrect') {
+                setError('Código incorrecto.')
+            } else {
+                setError('Error al verificar código.')
             }
         } finally {
             setIsLoading(false)
@@ -176,7 +222,7 @@ export default function Page() {
                     // Prepare the factor (send SMS)
                     await signIn.prepareFirstFactor({
                         strategy: 'phone_code',
-                        phoneNumberId: phoneFactor.phoneNumberId,
+                        phoneNumberId: (phoneFactor as any).phoneNumberId,
                     })
                     setPhoneStep('code')
                 } else {
@@ -458,6 +504,44 @@ export default function Page() {
                                     >
                                         {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
                                         Continuar
+                                    </button>
+                                </form>
+                            )}
+
+                            {/* Email Code Verification UI */}
+                            {emailStep === 'email_code' && (
+                                <form onSubmit={handleEmailVerificationCodeSubmit} className="space-y-6">
+                                    <div>
+                                        <h2 className="text-2xl font-semibold text-white mb-1">Verifica tu correo</h2>
+                                        <p className="text-gray-400 text-sm">Hemos enviado un código a {email}</p>
+                                    </div>
+
+                                    {error && (
+                                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
+                                            <AlertCircle className="w-4 h-4" />
+                                            {error}
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-gray-500 ml-1 uppercase">Código de Verificación</label>
+                                        <input
+                                            type="text"
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value)}
+                                            className="w-full bg-[#111] border border-white/10 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 h-14 rounded-xl px-4 text-center text-xl tracking-widest outline-none transition-all placeholder:text-gray-800"
+                                            placeholder="000000"
+                                            autoFocus
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="w-full h-14 bg-white hover:bg-gray-200 text-black font-bold rounded-xl transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                                    >
+                                        {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+                                        Verificar Correo
                                     </button>
                                 </form>
                             )}
