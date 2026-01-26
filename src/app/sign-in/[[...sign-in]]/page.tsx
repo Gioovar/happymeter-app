@@ -38,6 +38,7 @@ export default function Page() {
 
     const [showPassword, setShowPassword] = useState(false)
     const [rememberMe, setRememberMe] = useState(false)
+    const [isSecondFactor, setIsSecondFactor] = useState(false)
 
     // Load saved email
     useEffect(() => {
@@ -148,6 +149,7 @@ export default function Page() {
                         emailAddressId: emailFactor.emailAddressId,
                     })
                     setEmailStep('email_code')
+                    setIsSecondFactor(false)
                     setError('')
                 } else {
                     setError('Verificación incompleta pero no se encontró método de envío de código.')
@@ -167,6 +169,7 @@ export default function Page() {
                     })
                     setView('phone_flow')
                     setPhoneStep('code')
+                    setIsSecondFactor(true)
                     setError('')
                 } else if (emailFactor) {
                     await signIn.prepareSecondFactor({
@@ -174,6 +177,7 @@ export default function Page() {
                         emailAddressId: emailFactor.emailAddressId,
                     })
                     setEmailStep('email_code')
+                    setIsSecondFactor(true)
                     setError('')
                 } else {
                     setError('Se requiere autenticación de dos pasos pero no hay método compatible disponible.')
@@ -202,18 +206,30 @@ export default function Page() {
         setError('')
 
         try {
-            const result = await signIn.attemptFirstFactor({
-                strategy: 'email_code',
-                code,
-            })
+            let result;
+
+            if (isSecondFactor) {
+                result = await signIn.attemptSecondFactor({
+                    strategy: 'email_code',
+                    code,
+                })
+            } else {
+                result = await signIn.attemptFirstFactor({
+                    strategy: 'email_code',
+                    code,
+                })
+            }
 
             if (result.status === 'complete') {
                 await setActive({ session: result.createdSessionId })
                 router.push(redirectUrl)
             } else if (result.status === 'needs_second_factor') {
-                // Check logic for second factor if it chains
+                // This means we just finished 1st factor but now need 2nd factor
+                // (e.g. recursive flow)
                 const secondFactors = result.supportedSecondFactors || []
+
                 const phoneFactor = secondFactors.find((f: any) => f.strategy === 'phone_code') as any
+                const emailFactor = secondFactors.find((f: any) => f.strategy === 'email_code') as any
 
                 if (phoneFactor) {
                     await signIn.prepareSecondFactor({
@@ -222,10 +238,13 @@ export default function Page() {
                     })
                     setView('phone_flow')
                     setPhoneStep('code')
+                    setIsSecondFactor(true)
                     setError('')
-                } else {
-                    setError('Código correcto, pero se requiere un segundo paso no soportado.')
+                } else if (emailFactor) {
+                    // unlikely to chain same email twice, but possible logic
+                    setError('Se requiere un segundo paso por email.')
                 }
+
             } else {
                 setError('Código inválido o expirado.')
             }
@@ -268,6 +287,7 @@ export default function Page() {
                         phoneNumberId: (phoneFactor as any).phoneNumberId,
                     })
                     setPhoneStep('code')
+                    setIsSecondFactor(false)
                 } else {
                     setError('Tu cuenta no soporta inicio con código SMS.')
                 }
@@ -293,10 +313,18 @@ export default function Page() {
         setError('')
 
         try {
-            const result = await signIn.attemptFirstFactor({
-                strategy: 'phone_code',
-                code,
-            })
+            let result;
+            if (isSecondFactor) {
+                result = await signIn.attemptSecondFactor({
+                    strategy: 'phone_code',
+                    code,
+                })
+            } else {
+                result = await signIn.attemptFirstFactor({
+                    strategy: 'phone_code',
+                    code,
+                })
+            }
 
             if (result.status === 'complete') {
                 await setActive({ session: result.createdSessionId })
