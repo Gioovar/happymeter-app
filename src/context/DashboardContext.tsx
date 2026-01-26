@@ -289,10 +289,9 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
             isLocked,
             checkFeature,
             checkModuleAccess: (module: string) => {
-                if (plan === 'FREE' || plan === 'GROWTH') {
-                    // Growth only has Surveys. Loyalty/Processes/Reservations are paid add-ons or higher plans.
-                    // Actually, Growth might have basic access, but user said strict block for non-contracted.
-                    // Assuming FREE/GROWTH = Surveys Only for now based on "Contracted Tools".
+                if (plan === 'FREE') {
+                    // Growth 1K and above unlock these modules.
+                    // FREE plan (Trial) only has access to Surveys.
                     const PREMIUM_MODULES = ['loyalty', 'processes', 'reservations']
                     if (PREMIUM_MODULES.includes(module)) return false
                 }
