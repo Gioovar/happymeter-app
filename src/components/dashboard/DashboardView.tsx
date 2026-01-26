@@ -630,3 +630,28 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
         </div >
     )
 }
+
+function LockedAnalyticsPlaceholder() {
+    return (
+        <div className="relative w-full h-[300px] flex items-center justify-center bg-[#111] rounded-xl overflow-hidden group cursor-pointer">
+            <div className="absolute inset-0 opacity-20 blur-sm pointer-events-none">
+                {/* Fake Chart Lines */}
+                <svg className="w-full h-full text-violet-500" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M0 100 Q 25 50 50 80 T 100 20" stroke="currentColor" strokeWidth="2" fill="none" />
+                </svg>
+            </div>
+            <div className="relative z-10 flex flex-col items-center gap-3 p-6 text-center">
+                <div className="p-3 bg-violet-600/20 rounded-full text-violet-400 mb-2">
+                    <Zap className="w-6 h-6 fill-current" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Análisis Avanzado Bloqueado</h3>
+                <p className="text-sm text-gray-400 max-w-xs">
+                    Actualiza tu plan para ver tendencias, predicciones y análisis detallado de tu negocio.
+                </p>
+                <div className="px-4 py-2 bg-white text-black text-sm font-bold rounded-lg mt-2 group-hover:scale-105 transition-transform">
+                    Desbloquear Ahora
+                </div>
+            </div>
+        </div>
+    )
+}
