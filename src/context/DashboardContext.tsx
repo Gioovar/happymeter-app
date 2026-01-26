@@ -108,7 +108,7 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
     branchId?: string,
     branchSlug?: string,
     initialPlan?: string,
-    userCreatedAt?: Date
+    userCreatedAt?: string | Date
 }) {
     const { userId } = useAuth()
 

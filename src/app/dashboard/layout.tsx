@@ -22,6 +22,7 @@ export default async function DashboardLayout({
     children: React.ReactNode
 }) {
     const { userId, redirectToSignIn } = await auth()
+    const userData = await currentUser()
 
     if (!userId) return redirectToSignIn()
 
@@ -139,7 +140,7 @@ export default async function DashboardLayout({
     return (
         <DashboardProvider
             initialPlan={checkedSettings?.plan || 'FREE'}
-            userCreatedAt={checkedSettings?.createdAt}
+            userCreatedAt={checkedSettings?.createdAt?.toISOString()}
         >
             <NotificationProvider>
                 <div className="flex min-h-screen bg-[#0a0a0a]">
