@@ -19,6 +19,7 @@ import InviteMemberModal from '@/components/team/InviteMemberModal'
 import UserProfile from './dashboard/UserProfile'
 import FeatureGuard from '@/components/common/FeatureGuard'
 
+
 // Helper to determine mode from pathname
 const getActiveMode = (pathname: string | null): NavigationMode => {
     if (pathname?.includes('/dashboard/loyalty') || pathname?.includes('/dashboard/games') || pathname?.includes('/dashboard/achievements')) return 'loyalty';
@@ -33,6 +34,7 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
     const searchParams = useSearchParams()
     const params = useParams()
     const branchSlug = params?.branchSlug as string
+    const { checkFeature } = useDashboard()
 
     const activeMode = getActiveMode(pathname)
     const currentModeItems = NAVIGATION_CONFIG[activeMode] || []
@@ -63,6 +65,9 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
                     return true;
                 })()
 
+
+                const isLocked = item.feature ? !checkFeature(item.feature) : false
+
                 const LinkComponent = (
                     <Link
                         key={item.title}
@@ -72,14 +77,17 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
                             "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                             isActive
                                 ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20"
-                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                                : "text-gray-400 hover:text-white hover:bg-white/5",
+                            isLocked && "opacity-70"
                         )}
                     >
                         <Icon className="w-5 h-5" />
-                        {item.title}
+                        <span className="flex-1">{item.title}</span>
+                        {isLocked && <Lock className="w-3 h-3 text-gray-500" />}
                     </Link>
                 )
 
+                // If locked, Wrap in FeatureGuard (which adds the onclick interceptor)
                 if (item.feature) {
                     return (
                         <FeatureGuard key={item.title} feature={item.feature}>
