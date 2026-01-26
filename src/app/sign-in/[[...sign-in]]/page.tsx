@@ -344,8 +344,8 @@ export default function Page() {
                     {view === 'selection' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="text-center mb-10">
-                                <h2 className="text-3xl font-bold text-white mb-2">Crear Cuenta</h2>
-                                <p className="text-gray-400 text-sm">Elige cómo quieres empezar</p>
+                                <h2 className="text-3xl font-bold text-white mb-2">Iniciar Sesión</h2>
+                                <p className="text-gray-400 text-sm">Accede a tu dashboard</p>
                             </div>
 
                             <div className="space-y-4">
@@ -641,7 +641,7 @@ export default function Page() {
                     <div className="mt-8 text-center bg-[#111]/50 py-4 rounded-xl border border-white/5 backdrop-blur-sm">
                         <p className="text-gray-500 text-sm">
                             ¿Aún no tienes cuenta?{' '}
-                            <a href={`/sign-up?intent=${intent || ''}&program_id=${programId || ''}&redirect_url=${finalRedirect || ''}`} className="text-violet-400 hover:text-violet-300 font-medium transition-colors">Inicia sesión</a>
+                            <a href={`/sign-up?intent=${intent || ''}&program_id=${programId || ''}&redirect_url=${finalRedirect || ''}`} className="text-violet-400 hover:text-violet-300 font-medium transition-colors">Crea una cuenta</a>
                         </p>
                     </div>
                 </div>
