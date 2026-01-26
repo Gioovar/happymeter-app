@@ -22,7 +22,16 @@ export default async function DashboardLayout({
     children: React.ReactNode
 }) {
     const { userId, redirectToSignIn } = await auth()
-    const userData = await currentUser()
+    const clerkUser = await currentUser()
+
+    // Sanitize User Data for Client Component (Avoid Serialization Error)
+    const userData = clerkUser ? {
+        firstName: clerkUser.firstName,
+        lastName: clerkUser.lastName,
+        imageUrl: clerkUser.imageUrl,
+        emailAddresses: clerkUser.emailAddresses.map(e => ({ emailAddress: e.emailAddress })),
+        primaryEmailAddressId: clerkUser.primaryEmailAddressId
+    } : null
 
     if (!userId) return redirectToSignIn()
 
