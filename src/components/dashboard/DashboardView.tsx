@@ -37,6 +37,7 @@ import { DateRange } from 'react-day-picker'
 import { addDays } from 'date-fns'
 import { useDashboard } from '@/context/DashboardContext'
 import { toast } from 'sonner'
+import FeatureGuard from '@/components/common/FeatureGuard'
 
 interface DashboardViewProps {
     branchName?: string;
@@ -445,7 +446,12 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
                                     <HappyLoader size="md" text="Procesando métricas..." />
                                 </div>
                             ) : (
-                                <AnalyticsChart data={statsData.chartData} />
+                                <FeatureGuard
+                                    feature="ai_analytics"
+                                    fallback={<LockedAnalyticsPlaceholder />}
+                                >
+                                    <AnalyticsChart data={statsData.chartData} />
+                                </FeatureGuard>
                             )}
                         </div>
                     </div>
@@ -620,7 +626,7 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
                         )}
                     </div>
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     )
 }

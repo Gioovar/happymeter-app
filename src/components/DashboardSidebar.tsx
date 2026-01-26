@@ -17,6 +17,7 @@ import SalesModal from '@/components/plans/SalesModal'
 import CreateBranchModal from './chains/CreateBranchModal'
 import InviteMemberModal from '@/components/team/InviteMemberModal'
 import UserProfile from './dashboard/UserProfile'
+import FeatureGuard from '@/components/common/FeatureGuard'
 
 // Helper to determine mode from pathname
 const getActiveMode = (pathname: string | null): NavigationMode => {
@@ -62,7 +63,7 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
                     return true;
                 })()
 
-                return (
+                const LinkComponent = (
                     <Link
                         key={item.title}
                         href={item.query ? `${finalHref}?${new URLSearchParams(item.query)}` : finalHref}
@@ -78,6 +79,16 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
                         {item.title}
                     </Link>
                 )
+
+                if (item.feature) {
+                    return (
+                        <FeatureGuard key={item.title} feature={item.feature}>
+                            {LinkComponent}
+                        </FeatureGuard>
+                    )
+                }
+
+                return LinkComponent
             })}
         </nav>
     )
@@ -127,24 +138,26 @@ export default function DashboardSidebar({
             </div>
 
             <div className="px-4 pb-2 pt-2">
-                <Link
-                    href={branchSlug ? `/dashboard/${branchSlug}/chat` : `/dashboard/chat`}
-                    id="nav-item-ai-chat"
-                    onClick={() => toggleMobileMenu(false)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
-                >
-                    <Image
-                        src="/happy-ai-logo.png"
-                        alt="AI Logo"
-                        width={16}
-                        height={16}
-                        className="w-4 h-4 object-contain group-hover:rotate-12 transition-transform"
-                    />
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Asistente Virtual</span>
-                        <span className="text-xs font-bold leading-tight">Consultar IA</span>
-                    </div>
-                </Link>
+                <FeatureGuard feature="ai_analytics">
+                    <Link
+                        href={branchSlug ? `/dashboard/${branchSlug}/chat` : `/dashboard/chat`}
+                        id="nav-item-ai-chat"
+                        onClick={() => toggleMobileMenu(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
+                    >
+                        <Image
+                            src="/happy-ai-logo.png"
+                            alt="AI Logo"
+                            width={16}
+                            height={16}
+                            className="w-4 h-4 object-contain group-hover:rotate-12 transition-transform"
+                        />
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Asistente Virtual</span>
+                            <span className="text-xs font-bold leading-tight">Consultar IA</span>
+                        </div>
+                    </Link>
+                </FeatureGuard>
             </div>
 
             <Suspense fallback={<div className="flex-1 p-4"><div className="w-full h-8 bg-white/5 rounded-xl animate-pulse" /></div>}>

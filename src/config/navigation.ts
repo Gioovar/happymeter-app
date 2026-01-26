@@ -34,6 +34,7 @@ export interface NavItem {
     icon: any; // Lucide icon
     matchExact?: boolean;
     query?: Record<string, string>;
+    feature?: string;
 }
 
 export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
@@ -43,8 +44,8 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
         { title: 'Buzón Staff', href: '/dashboard/create', query: { mode: 'anonymous' }, icon: Shield },
         { title: 'Respuestas', href: '/dashboard/responses', icon: MessageSquare },
         { title: 'Equipo', href: '/dashboard/team', icon: Users },
-        { title: 'Estadísticas', href: '/dashboard/analytics', icon: PieChart },
-        { title: 'Reportes', href: '/dashboard/reports', icon: FileText },
+        { title: 'Estadísticas', href: '/dashboard/analytics', icon: PieChart, feature: 'ai_analytics' },
+        { title: 'Reportes', href: '/dashboard/reports', icon: FileText, feature: 'ai_analytics' },
         { title: 'Campañas', href: '/dashboard/campaigns', icon: Megaphone },
         { title: 'Academy', href: '/dashboard/academy', icon: GraduationCap },
     ],
