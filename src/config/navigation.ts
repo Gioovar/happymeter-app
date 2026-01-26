@@ -41,13 +41,13 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
     surveys: [
         { title: 'Mis Encuestas', href: '/dashboard', icon: LayoutDashboard, matchExact: true },
         { title: 'Crear Nueva', href: '/dashboard/create', icon: PlusCircle },
-        { title: 'Buzón Staff', href: '/dashboard/create', query: { mode: 'anonymous' }, icon: Shield },
-        { title: 'Respuestas', href: '/dashboard/responses', icon: MessageSquare },
-        { title: 'Equipo', href: '/dashboard/team', icon: Users },
+        { title: 'Buzón Staff', href: '/dashboard/create', query: { mode: 'anonymous' }, icon: Shield, feature: 'growth_locked' },
+        { title: 'Respuestas', href: '/dashboard/responses', icon: MessageSquare, feature: 'growth_locked' },
+        { title: 'Equipo', href: '/dashboard/team', icon: Users, feature: 'growth_locked' },
         { title: 'Estadísticas', href: '/dashboard/analytics', icon: PieChart, feature: 'ai_analytics' },
         { title: 'Reportes', href: '/dashboard/reports', icon: FileText, feature: 'ai_analytics' },
-        { title: 'Campañas', href: '/dashboard/campaigns', icon: Megaphone },
-        { title: 'Academy', href: '/dashboard/academy', icon: GraduationCap },
+        { title: 'Campañas', href: '/dashboard/campaigns', icon: Megaphone, feature: 'growth_locked' },
+        { title: 'Academy', href: '/dashboard/academy', icon: GraduationCap, feature: 'growth_locked' },
     ],
     loyalty: [
         { title: 'Dashboard Lealtad', href: '/dashboard/loyalty', icon: ScanLine, matchExact: true },

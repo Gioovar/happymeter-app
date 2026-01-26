@@ -157,17 +157,15 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
         if (plan !== 'FREE') return true
 
         // 3. Free Plan (Trialing) Restrictions
-        const PRO_FEATURES = ['ai_analytics', 'whatsapp_alerts', 'staff_leaderboard', 'unlimited_surveys']
+        // Lock 'growth_locked' features (Sidebar items like Team, Responses, etc.)
+        if (feature === 'growth_locked' && plan === 'FREE') return false
 
-        // Strategy: In Trial, users get FULL access to everything (SaaS standard).
-        // But if we want to demonstrate specific locking of "Premium Add-ons" even in Trial, 
-        // we can uncomment logic here. 
-        // For now, allow everything in Trial (since isLocked handles the expiration).
+        // Lock 'ai_analytics' as previously defined
+        if (feature === 'ai_analytics' && plan === 'FREE') return false
 
-        // However, if we want to test the FeatureGuard popup, we need SOMETHING to be false.
-        // Let's artificially lock 'whatsapp_alerts' as an "Add-on" even in trial.
-        // Let's artificially lock 'whatsapp_alerts' and 'ai_analytics' as "Add-ons" even in trial for demo.
-        if (feature === 'whatsapp_alerts' || feature === 'ai_analytics') return false
+        // Artificial locks for adding features
+        if (feature === 'whatsapp_alerts') return false // Always locked for now as upsell example? Or part of Growth? 
+        // Let's assume whatsapp_alerts is also Growth but maybe add-on. For now leave as is.
 
         return true
     }
