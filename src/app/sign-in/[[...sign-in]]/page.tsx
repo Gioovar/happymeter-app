@@ -152,6 +152,33 @@ export default function Page() {
                 } else {
                     setError('Verificación incompleta pero no se encontró método de envío de código.')
                 }
+            } else if (result.status === 'needs_second_factor') {
+                // Handle 2FA (Second Factor)
+                const secondFactors = result.supportedSecondFactors || []
+
+                // Prioritize Phone/SMS for 2FA if available
+                const phoneFactor = secondFactors.find((f: any) => f.strategy === 'phone_code') as any
+                const emailFactor = secondFactors.find((f: any) => f.strategy === 'email_code') as any
+
+                if (phoneFactor) {
+                    await signIn.prepareSecondFactor({
+                        strategy: 'phone_code',
+                        phoneNumberId: phoneFactor.phoneNumberId,
+                    })
+                    setView('phone_flow')
+                    setPhoneStep('code')
+                    setError('')
+                } else if (emailFactor) {
+                    await signIn.prepareSecondFactor({
+                        strategy: 'email_code',
+                        emailAddressId: emailFactor.emailAddressId,
+                    })
+                    setEmailStep('email_code')
+                    setError('')
+                } else {
+                    setError('Se requiere autenticación de dos pasos pero no hay método compatible disponible.')
+                }
+
             } else {
                 console.log(result)
                 setError('Verificación incompleta. Estado: ' + result.status)
@@ -183,6 +210,22 @@ export default function Page() {
             if (result.status === 'complete') {
                 await setActive({ session: result.createdSessionId })
                 router.push(redirectUrl)
+            } else if (result.status === 'needs_second_factor') {
+                // Check logic for second factor if it chains
+                const secondFactors = result.supportedSecondFactors || []
+                const phoneFactor = secondFactors.find((f: any) => f.strategy === 'phone_code') as any
+
+                if (phoneFactor) {
+                    await signIn.prepareSecondFactor({
+                        strategy: 'phone_code',
+                        phoneNumberId: phoneFactor.phoneNumberId,
+                    })
+                    setView('phone_flow')
+                    setPhoneStep('code')
+                    setError('')
+                } else {
+                    setError('Código correcto, pero se requiere un segundo paso no soportado.')
+                }
             } else {
                 setError('Código inválido o expirado.')
             }
@@ -512,8 +555,8 @@ export default function Page() {
                             {emailStep === 'email_code' && (
                                 <form onSubmit={handleEmailVerificationCodeSubmit} className="space-y-6">
                                     <div>
-                                        <h2 className="text-2xl font-semibold text-white mb-1">Verifica tu correo</h2>
-                                        <p className="text-gray-400 text-sm">Hemos enviado un código a {email}</p>
+                                        <h2 className="text-2xl font-semibold text-white mb-1">Código de Seguridad</h2>
+                                        <p className="text-gray-400 text-sm">Ingresa el código enviado a tu correo</p>
                                     </div>
 
                                     {error && (
