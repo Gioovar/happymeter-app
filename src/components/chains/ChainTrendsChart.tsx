@@ -15,7 +15,8 @@ export default function ChainTrendsChart({ data, branches }: ChainTrendsChartPro
 
     // Format dates for X Axis (e.g. "Jan 23")
     const formattedData = data.map(d => {
-        const dateObj = new Date(d.date)
+        // Append T12:00:00 to avoid UTC midnight shifting back a day in western timezones
+        const dateObj = new Date(`${d.date}T12:00:00`)
         return {
             ...d,
             formattedDate: dateObj.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })
@@ -87,8 +88,8 @@ export default function ChainTrendsChart({ data, branches }: ChainTrendsChartPro
                                     name={branch.name}
                                     stroke={branch.color || '#fff'}
                                     strokeWidth={2}
-                                    dot={false}
-                                    activeDot={{ r: 4, strokeWidth: 0 }}
+                                    dot={{ r: 3, strokeWidth: 1 }}
+                                    activeDot={{ r: 5, strokeWidth: 0 }}
                                     connectNulls
                                 />
                             ))}
