@@ -42,11 +42,22 @@ const COLORS = [
     '#84cc16', // Lime
 ]
 
+// Helper to normalize score to 0-10
+function normalizeScore(value: string, type: string): number | null {
+    const val = parseInt(value)
+    if (isNaN(val)) return null
+
+    if (type === 'NPS') return val
+    if (['RATING', 'SMILEY', 'STAR'].includes(type)) return val * 2 // Map 5 to 10
+
+    // Fallback for others?
+    return null
+}
+
 export async function getChainAnalytics(chainId: string): Promise<GlobalChainMetrics | null> {
     const user = await currentUser()
     if (!user) return null
 
-    // Verify ownership
     const chain = await prisma.chain.findUnique({
         where: { id: chainId },
         include: {
@@ -68,7 +79,8 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
     const branchIds = chain.branches.map(b => b.branchId)
     const branchesMap = new Map(chain.branches.map(b => [b.branchId, b.name || b.branch.businessName || 'Sucursal']))
 
-    // 1. Total Surveys & NPS 
+    // 1. Total Surveys & Satisfaction Data
+    // Fetch answers for ANY satisfaction type
     const surveys = await prisma.survey.findMany({
         where: { userId: { in: branchIds } },
         select: {
@@ -78,10 +90,13 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
                     answers: {
                         where: {
                             question: {
-                                type: 'NPS'
+                                type: { in: ['NPS', 'RATING', 'SMILEY', 'STAR'] }
                             }
                         },
-                        select: { value: true }
+                        select: {
+                            value: true,
+                            question: { select: { type: true } }
+                        }
                     }
                 }
             },
@@ -93,25 +108,17 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
 
     // 2. Redemptions
     const redemptions = await prisma.loyaltyRedemption.findMany({
-        where: {
-            program: { userId: { in: branchIds } }
-        },
-        select: {
-            program: { select: { userId: true } }
-        }
+        where: { program: { userId: { in: branchIds } } },
+        select: { program: { select: { userId: true } } }
     })
 
     // 3. Reservations 
     const reservations = await prisma.reservation.findMany({
-        where: {
-            table: { floorPlan: { userId: { in: branchIds } } }
-        },
+        where: { table: { floorPlan: { userId: { in: branchIds } } } },
         include: {
             table: {
                 include: {
-                    floorPlan: {
-                        select: { userId: true }
-                    }
+                    floorPlan: { select: { userId: true } }
                 }
             }
         }
@@ -119,16 +126,11 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
 
     // 4. Customers 
     const customers = await prisma.loyaltyCustomer.findMany({
-        where: {
-            program: { userId: { in: branchIds } }
-        },
-        select: {
-            phone: true,
-            program: { select: { userId: true } }
-        }
+        where: { program: { userId: { in: branchIds } } },
+        select: { phone: true, program: { select: { userId: true } } }
     })
 
-    // 5. Satisfaction Trends (Last 30 Days)
+    // 5. Trends
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
@@ -141,8 +143,15 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
             createdAt: true,
             survey: { select: { userId: true } },
             answers: {
-                where: { question: { type: 'NPS' } },
-                select: { value: true }
+                where: {
+                    question: {
+                        type: { in: ['NPS', 'RATING', 'SMILEY', 'STAR'] }
+                    }
+                },
+                select: {
+                    value: true,
+                    question: { select: { type: true } }
+                }
             }
         },
         orderBy: { createdAt: 'asc' }
@@ -150,27 +159,28 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
 
     // Process Trend Data
     const dateMap = new Map<string, Record<string, { sum: number, count: number }>>()
-
-    // Initialize dates
     for (let i = 0; i < 30; i++) {
         const d = new Date()
         d.setDate(d.getDate() - (29 - i))
-        const dateStr = d.toISOString().split('T')[0] // YYYY-MM-DD
+        const dateStr = d.toISOString().split('T')[0]
         dateMap.set(dateStr, {})
-        // Init all branches for this date? Optional, Recharts handles missing keys gracefully.
     }
 
     trendResponses.forEach(r => {
         const dateStr = r.createdAt.toISOString().split('T')[0]
         const bId = r.survey.userId
-        const value = parseInt(r.answers[0]?.value)
 
-        if (!isNaN(value)) {
-            const entry = dateMap.get(dateStr)
-            if (entry) { // Only process if within the mapped range
-                if (!entry[bId]) entry[bId] = { sum: 0, count: 0 }
-                entry[bId].sum += value
-                entry[bId].count += 1
+        // Find the first satisfaction answer
+        const answer = r.answers[0]
+        if (answer) {
+            const score = normalizeScore(answer.value, answer.question.type)
+            if (score !== null) {
+                const entry = dateMap.get(dateStr)
+                if (entry) {
+                    if (!entry[bId]) entry[bId] = { sum: 0, count: 0 }
+                    entry[bId].sum += score
+                    entry[bId].count += 1
+                }
             }
         }
     })
@@ -178,7 +188,6 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
     const chartData: TrendDataPoint[] = Array.from(dateMap.entries()).map(([date, branches]) => {
         const point: TrendDataPoint = { date }
         Object.entries(branches).forEach(([bId, stats]) => {
-            // Average Score (0-10)
             point[bId] = parseFloat((stats.sum / stats.count).toFixed(1))
         })
         return point
@@ -188,17 +197,20 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
     const branchMetrics: BranchMetric[] = chain.branches.map((b, idx) => {
         const bId = b.branchId
 
-        // Surveys
         const branchSurveys = surveys.filter(s => s.userId === bId)
         const totalSurveys = branchSurveys.reduce((acc, s) => acc + s._count.responses, 0)
 
-        // NPS Calculation
-        const npsValues = branchSurveys.flatMap(s => s.responses.flatMap(r => r.answers.map(a => parseInt(a.value) || 0)))
+        // NPS Calculation (Normalized)
+        const scores = branchSurveys.flatMap(s => s.responses.flatMap(r => r.answers
+            .map(a => normalizeScore(a.value, a.question.type))
+            .filter((v): v is number => v !== null)
+        ))
+
         let npsScore = 0
-        if (npsValues.length > 0) {
-            const promoters = npsValues.filter(v => v >= 9).length
-            const detractors = npsValues.filter(v => v <= 6).length
-            npsScore = Math.round(((promoters - detractors) / npsValues.length) * 100)
+        if (scores.length > 0) {
+            const promoters = scores.filter(v => v >= 9).length
+            const detractors = scores.filter(v => v <= 6).length
+            npsScore = Math.round(((promoters - detractors) / scores.length) * 100)
         }
 
         const branchRedemptions = redemptions.filter(r => r.program.userId === bId).length
@@ -213,24 +225,27 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
             reservations: branchReservations,
             customers: branchCustomers,
             nps: npsScore,
-            color: COLORS[idx % COLORS.length] // Assign color based on index
+            color: COLORS[idx % COLORS.length]
         }
     })
 
-    // Global Totals
     const totalSurveys = branchMetrics.reduce((acc, b) => acc + b.surveys, 0)
     const totalRedemptions = branchMetrics.reduce((acc, b) => acc + b.redemptions, 0)
     const totalReservations = branchMetrics.reduce((acc, b) => acc + b.reservations, 0)
-
     const uniquePhones = new Set(customers.map(c => c.phone))
     const totalCustomers = uniquePhones.size
 
-    const allNpsValues = surveys.flatMap(s => s.responses.flatMap(r => r.answers.map(a => parseInt(a.value) || 0)))
+    // Global NPS with normalized scores
+    const allScores = surveys.flatMap(s => s.responses.flatMap(r => r.answers
+        .map(a => normalizeScore(a.value, a.question.type))
+        .filter((v): v is number => v !== null)
+    ))
+
     let globalNps = 0
-    if (allNpsValues.length > 0) {
-        const promoters = allNpsValues.filter(v => v >= 9).length
-        const detractors = allNpsValues.filter(v => v <= 6).length
-        globalNps = Math.round(((promoters - detractors) / allNpsValues.length) * 100)
+    if (allScores.length > 0) {
+        const promoters = allScores.filter(v => v >= 9).length
+        const detractors = allScores.filter(v => v <= 6).length
+        globalNps = Math.round(((promoters - detractors) / allScores.length) * 100)
     }
 
     return {
