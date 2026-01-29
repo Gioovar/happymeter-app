@@ -288,45 +288,17 @@ export default function DashboardSidebar({
                                 ) : (
                                     hasChain ? (
                                         <>
-                                            {/* BRANCH SWITCHER LOGIC (Normal Mode - Quick Switcher) */}
-                                            {branchSlug && chains.length > 0 && chains[0].branches.length > 0 ? (
-                                                <div className="space-y-2 mb-3">
-                                                    <p className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Tus Sucursales</p>
-                                                    {chains[0].branches.map((branch) => {
-                                                        const bSlug = branch.slug || branch.branchId
-                                                        const isActive = branchSlug === bSlug
-                                                        return (
-                                                            <Link
-                                                                key={branch.id}
-                                                                href={`/dashboard/${bSlug}`}
-                                                                onClick={() => toggleMobileMenu(false)}
-                                                                className={cn(
-                                                                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-all group",
-                                                                    isActive
-                                                                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-sm"
-                                                                        : "bg-white/5 border border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-                                                                )}
-                                                            >
-                                                                <Store className={cn("w-4 h-4 transition-transform", isActive ? "fill-current" : "group-hover:scale-110")} />
-                                                                <span className="text-xs font-bold leading-tight truncate">{branch.name || "Sucursal"}</span>
-                                                                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
-                                                            </Link>
-                                                        )
-                                                    })}
+                                            <Link
+                                                href="/dashboard/chains"
+                                                onClick={() => toggleMobileMenu(false)}
+                                                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group mb-3"
+                                            >
+                                                <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
+                                                    <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
                                                 </div>
-                                            ) : (
-                                                <Link
-                                                    href="/dashboard/chains"
-                                                    onClick={() => toggleMobileMenu(false)}
-                                                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group mb-3"
-                                                >
-                                                    <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
-                                                        <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
-                                                    </div>
-                                                </Link>
-                                            )}
+                                            </Link>
 
                                             <button
                                                 type="button"
