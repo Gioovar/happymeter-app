@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BranchMetric, TrendDataPoint } from '@/actions/chain-analytics'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
 import { TrendingUp } from 'lucide-react'
 
 interface ChainTrendsChartProps {
@@ -52,8 +52,16 @@ export default function ChainTrendsChart({ data, branches }: ChainTrendsChartPro
             <CardContent>
                 <div className="h-[300px] w-full mt-4">
                     <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={formattedData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                        <AreaChart data={formattedData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                            <defs>
+                                {branches.map((branch) => (
+                                    <linearGradient key={branch.branchId} id={`gradient-${branch.branchId}`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={branch.color || '#fff'} stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor={branch.color || '#fff'} stopOpacity={0} />
+                                    </linearGradient>
+                                ))}
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                             <XAxis
                                 dataKey="formattedDate"
                                 stroke="#6b7280"
@@ -81,19 +89,21 @@ export default function ChainTrendsChart({ data, branches }: ChainTrendsChartPro
                             />
 
                             {branches.map((branch) => (
-                                <Line
+                                <Area
                                     key={branch.branchId}
                                     type="monotone"
                                     dataKey={branch.branchId}
                                     name={branch.name}
                                     stroke={branch.color || '#fff'}
-                                    strokeWidth={2}
+                                    strokeWidth={3}
+                                    fill={`url(#gradient-${branch.branchId})`}
+                                    fillOpacity={1}
                                     dot={{ r: 3, strokeWidth: 1 }}
                                     activeDot={{ r: 5, strokeWidth: 0 }}
                                     connectNulls
                                 />
                             ))}
-                        </LineChart>
+                        </AreaChart>
                     </ResponsiveContainer>
                 </div>
                 <div className="flex justify-end gap-2 mt-2">
