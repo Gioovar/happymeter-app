@@ -18,6 +18,9 @@ import { useDashboard } from '@/context/DashboardContext';
 export default function ModeSelector() {
     const pathname = usePathname();
 
+    // Hide on Chain Dashboard (Exclusive Selection View)
+    if (pathname === '/dashboard/chains') return null;
+
     // Determine active mode based on path
     const activeMode: NavigationMode = useMemo(() => {
         if (pathname?.includes('/dashboard/loyalty') || pathname?.includes('/dashboard/games') || pathname?.includes('/dashboard/achievements')) return 'loyalty';
