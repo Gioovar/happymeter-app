@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { LogIn, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useClerk } from '@clerk/nextjs'
 
 interface ImpersonateButtonProps {
     userId: string
@@ -12,6 +13,8 @@ interface ImpersonateButtonProps {
 
 export default function ImpersonateButton({ userId, name, type = 'tenant' }: ImpersonateButtonProps) {
     const [isLoading, setIsLoading] = useState(false)
+
+    const { signOut } = useClerk()
 
     const handleImpersonate = async () => {
         try {
@@ -29,6 +32,11 @@ export default function ImpersonateButton({ userId, name, type = 'tenant' }: Imp
             }
 
             const data = await response.json()
+
+            toast.info('Cerrando sesión de admin...')
+
+            // Sign out the admin first to ensure clean state for the new user
+            await signOut()
 
             toast.success(`Entrando al dashboard de ${name}...`)
 
