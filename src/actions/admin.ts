@@ -160,3 +160,27 @@ export async function updateTenantPlan(userId: string, newPlan: string) {
         throw new Error(error.message)
     }
 }
+
+export async function updateTenantSubscription(userId: string, data: { plan: string, maxBranches: number, extraSurveys: number }) {
+    try {
+        await verifyAdmin()
+
+        console.log(`[GOD_MODE] Updating user ${userId}`, data)
+
+        await prisma.userSettings.update({
+            where: { userId },
+            data: {
+                plan: data.plan,
+                maxBranches: data.maxBranches,
+                extraSurveys: data.extraSurveys
+            }
+        })
+
+        revalidatePath('/admin/tenants')
+        revalidatePath('/admin/clients')
+        return { success: true }
+    } catch (error: any) {
+        console.error('Error updating subscription:', error)
+        throw new Error(error.message)
+    }
+}
