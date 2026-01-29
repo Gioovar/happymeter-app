@@ -37,9 +37,13 @@ export async function getEffectiveUserId(branchSlug?: string): Promise<string> {
         // But since URL is /dashboard/[slug], it implies global uniqueness OR we search first match owned by user.
         // Let's search for "Branch with this slug belonging to a chain owned by Me".
 
+        // Find the branch where the slug OR ID matches AND the chain is owned by the current user
         const branch = await prisma.chainBranch.findFirst({
             where: {
-                slug: branchSlug,
+                OR: [
+                    { slug: branchSlug },
+                    { branchId: branchSlug }
+                ],
                 chain: {
                     ownerId: userId
                 }
@@ -91,7 +95,10 @@ export async function getDashboardContext(branchSlug?: string) {
 
     const branch = await prisma.chainBranch.findFirst({
         where: {
-            slug: branchSlug,
+            OR: [
+                { slug: branchSlug },
+                { branchId: branchSlug }
+            ],
             chain: { ownerId: userId }
         },
         include: {

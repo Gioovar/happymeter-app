@@ -70,11 +70,15 @@ export async function createChain(name: string) {
             }
         })
 
+        const branchName = name || 'Sucursal 1';
+        const safeName = branchName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15);
+
         await prisma.chainBranch.create({
             data: {
                 chainId: chain.id,
                 branchId: user.id,
-                name: name || 'Sucursal 1',
+                name: branchName,
+                slug: safeName,
                 order: 0
             }
         })
