@@ -11,6 +11,7 @@ export type GlobalChainMetrics = {
     globalNps: number
     branchBreakdown: BranchMetric[]
     satisfactionTrend: TrendDataPoint[]
+    debugInfo?: any
 }
 
 export type BranchMetric = {
@@ -143,18 +144,29 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
             createdAt: true,
             survey: { select: { userId: true } },
             answers: {
-                where: {
-                    question: {
-                        type: { in: ['NPS', 'RATING', 'SMILEY', 'STAR'] }
-                    }
-                },
-                select: {
-                    value: true,
-                    question: { select: { type: true } }
+                include: {
+                    question: { select: { type: true, text: true } }
                 }
             }
         },
         orderBy: { createdAt: 'asc' }
+    })
+
+    // DEBUG COLLECTION
+    const foundTypes = new Set<string>()
+    const sampleAnswers: any[] = []
+    trendResponses.forEach(r => {
+        r.answers.forEach(a => {
+            foundTypes.add(a.question.type)
+            if (sampleAnswers.length < 5) {
+                sampleAnswers.push({
+                    type: a.question.type,
+                    value: a.value,
+                    text: a.question.text,
+                    date: r.createdAt.toISOString()
+                })
+            }
+        })
     })
 
     // Process Trend Data
@@ -170,8 +182,9 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
         const dateStr = r.createdAt.toISOString().split('T')[0]
         const bId = r.survey.userId
 
-        // Find the first satisfaction answer
-        const answer = r.answers[0]
+        // Find any valid satisfaction answer
+        const answer = r.answers.find(a => ['NPS', 'RATING', 'SMILEY', 'STAR'].includes(a.question.type))
+
         if (answer) {
             const score = normalizeScore(answer.value, answer.question.type)
             if (score !== null) {
@@ -255,6 +268,11 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
         totalCustomers,
         globalNps,
         branchBreakdown: branchMetrics,
-        satisfactionTrend: chartData
+        satisfactionTrend: chartData,
+        debugInfo: {
+            types: Array.from(foundTypes),
+            samples: sampleAnswers,
+            totalResponsesFound: trendResponses.length
+        }
     }
 }
