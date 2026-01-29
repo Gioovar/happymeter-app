@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import confetti from 'canvas-confetti'
 import { Check, Heart, Trophy, X, Zap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -49,24 +48,32 @@ export default function GiftCelebration({ userId }: { userId: string }) {
         return () => clearInterval(interval)
     }, [])
 
-    const triggerCelebration = () => {
-        const duration = 5 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+    const triggerCelebration = async () => {
+        try {
+            // Dynamic import to avoid SSR/Module issues
+            const confettiModule = await import('canvas-confetti')
+            const confetti = confettiModule.default || confettiModule
 
-        const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+            const duration = 5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
 
-        const interval: any = setInterval(function () {
-            const timeLeft = animationEnd - Date.now();
+            const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
-            if (timeLeft <= 0) {
-                return clearInterval(interval);
-            }
+            const interval: any = setInterval(function () {
+                const timeLeft = animationEnd - Date.now();
 
-            const particleCount = 50 * (timeLeft / duration);
-            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-        }, 250);
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+            }, 250);
+        } catch (e) {
+            console.error("Confetti error:", e)
+        }
     }
 
     const handleClaim = async () => {
