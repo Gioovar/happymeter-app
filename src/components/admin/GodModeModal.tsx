@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
+import ImpersonateButton from './ImpersonateButton'
+
 interface GodModeModalProps {
     isOpen: boolean
     onClose: () => void
@@ -253,6 +255,18 @@ export default function GodModeModal({ isOpen, onClose, tenant }: GodModeModalPr
 
                     {/* Right Column: Confirmation */}
                     <div className="bg-[#111] border border-white/10 rounded-2xl p-6 flex flex-col h-fit sticky top-0">
+                        <div className="mb-6 pb-4 border-b border-white/10">
+                            <h3 className="text-xs font-bold text-gray-500 uppercase mb-3 tracking-wider flex items-center gap-2">
+                                <Sparkles className="w-3 h-3 text-yellow-500" /> Acciones Rápidas
+                            </h3>
+                            <div className="flex justify-center">
+                                <ImpersonateButton userId={tenant.userId} name={tenant.businessName || 'Usuario'} />
+                            </div>
+                            <p className="text-[10px] text-gray-500 text-center mt-2">
+                                Entra como el usuario para configurar su cuenta.
+                            </p>
+                        </div>
+
                         <h3 className="text-lg font-bold text-white mb-6">Resumen de Asignación</h3>
 
                         <div className="space-y-4 mb-6 flex-1">
