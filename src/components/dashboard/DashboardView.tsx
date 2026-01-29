@@ -316,12 +316,12 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
                         <div className="space-y-2">
                             <div className="flex flex-col gap-2">
                                 <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-gray-400">
-                                    {branchName ? `Sucursal: ${branchName}` : `${getGreeting()}, Bienvenido.`}
+                                    {branchName ? branchName : `${getGreeting()}, Bienvenido.`}
                                     <br className="md:hidden" />
                                 </h1>
                                 <div className="flex items-center gap-3">
                                     <p className="text-gray-400 text-sm">
-                                        {branchName ? 'Gestionando métricas de sucursal' : 'Gestiona tus encuestas de satisfacción.'}
+                                        {branchName ? 'Gestionando métricas' : 'Gestiona tus encuestas de satisfacción.'}
                                     </p>
 
                                     {!loadingAnalytics && (
