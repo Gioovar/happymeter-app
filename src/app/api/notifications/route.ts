@@ -12,16 +12,24 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url)
         const unreadOnly = searchParams.get('unreadOnly') === 'true'
 
-        const notifications = await prisma.notification.findMany({
-            where: {
-                userId: user.id,
-                ...(unreadOnly ? { isRead: false } : {})
-            },
-            take: 20,
-            orderBy: { createdAt: 'desc' }
-        })
+        const [notifications, unreadCount] = await Promise.all([
+            prisma.notification.findMany({
+                where: {
+                    userId: user.id,
+                    ...(unreadOnly ? { isRead: false } : {})
+                },
+                take: 20,
+                orderBy: { createdAt: 'desc' }
+            }),
+            prisma.notification.count({
+                where: {
+                    userId: user.id,
+                    isRead: false
+                }
+            })
+        ])
 
-        return NextResponse.json(notifications)
+        return NextResponse.json({ notifications, unreadCount })
     } catch (error) {
         console.error('Error fetching notifications:', error)
         return new NextResponse('Internal Error', { status: 500 })
