@@ -1,6 +1,8 @@
 import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { getChainDetails } from '@/actions/chain'
+import { getChainAnalytics } from '@/actions/chain-analytics'
+import ChainOverview from '@/components/chains/ChainOverview'
 import BranchCard from '@/components/chains/BranchCard'
 import CreateBranchModal from '@/components/chains/CreateBranchModal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -58,6 +60,8 @@ export default async function DashboardChainsPage() {
         )
     }
 
+    const analytics = await getChainAnalytics(ownedChain.id)
+
     return (
         <div className="min-h-full py-8 space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/5">
@@ -82,34 +86,40 @@ export default async function DashboardChainsPage() {
                 </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-                {ownedChain.branches.map((branch) => (
-                    <BranchCard
-                        key={branch.id}
-                        branch={branch}
-                        isCurrent={branch.branch.userId === user.id}
-                        isOwner={isOwner}
-                        ownerId={ownedChain.ownerId}
-                    />
-                ))}
 
-                {/* Add Branch Ghost Card (Visible only to owner) */}
-                {isOwner && (
-                    <div className="group relative flex flex-col items-center justify-center h-full min-h-[240px] border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02] hover:bg-white/[0.05] hover:border-violet-500/30 transition-all duration-300 cursor-pointer overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <div className="relative p-6 text-center space-y-4">
-                            <div className="mx-auto p-4 rounded-full bg-white/5 group-hover:bg-violet-500/20 transition-colors duration-300">
-                                <Store className="w-8 h-8 text-gray-500 group-hover:text-violet-400 transition-colors" />
+            {analytics && <ChainOverview metrics={analytics} />}
+
+            <div className="space-y-4">
+                <h2 className="text-xl font-bold text-white px-1">Gestionar Sucursales</h2>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+                    {ownedChain.branches.map((branch) => (
+                        <BranchCard
+                            key={branch.id}
+                            branch={branch}
+                            isCurrent={branch.branch.userId === user.id}
+                            isOwner={isOwner}
+                            ownerId={ownedChain.ownerId}
+                        />
+                    ))}
+
+                    {/* Add Branch Ghost Card (Visible only to owner) */}
+                    {isOwner && (
+                        <div className="group relative flex flex-col items-center justify-center h-full min-h-[240px] border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02] hover:bg-white/[0.05] hover:border-violet-500/30 transition-all duration-300 cursor-pointer overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="relative p-6 text-center space-y-4">
+                                <div className="mx-auto p-4 rounded-full bg-white/5 group-hover:bg-violet-500/20 transition-colors duration-300">
+                                    <Store className="w-8 h-8 text-gray-500 group-hover:text-violet-400 transition-colors" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">Nueva Sucursal</h3>
+                                    <p className="text-sm text-gray-500 group-hover:text-gray-400">Expande tu negocio hoy</p>
+                                </div>
+                                <CreateBranchModal chainId={ownedChain.id} triggerClassName="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                             </div>
-                            <div>
-                                <h3 className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">Nueva Sucursal</h3>
-                                <p className="text-sm text-gray-500 group-hover:text-gray-400">Expande tu negocio hoy</p>
-                            </div>
-                            <CreateBranchModal chainId={ownedChain.id} triggerClassName="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
-        </div>
+        </div >
     )
 }
