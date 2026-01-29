@@ -123,10 +123,11 @@ export default function DashboardSidebar({
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
     const pathname = usePathname()
 
-    // Helper to get first branch slug for quick access
-    const firstBranchUrl = chains.length > 0 && chains[0].branches.length > 0
-        ? `/dashboard/${chains[0].branches[0].slug || chains[0].branches[0].branchId}`
-        : '/chains'
+    // Helper to get chain dashboard url
+    const firstBranchUrl = '/dashboard/chains'
+
+    // Detect Chain Dashboard View
+    const isChainView = pathname === '/dashboard/chains'
 
     const SidebarContent = () => (
         <>
@@ -150,210 +151,250 @@ export default function DashboardSidebar({
                 </button>
             </div>
 
-            <div className="px-4 pb-2 pt-2">
-                <FeatureGuard feature="ai_analytics">
-                    <Link
-                        href={branchSlug ? `/dashboard/${branchSlug}/chat` : `/dashboard/chat`}
-                        id="nav-item-ai-chat"
-                        onClick={() => toggleMobileMenu(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
-                    >
-                        <Image
-                            src="/happy-ai-logo.png"
-                            alt="AI Logo"
-                            width={16}
-                            height={16}
-                            className="w-4 h-4 object-contain group-hover:rotate-12 transition-transform"
-                        />
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Asistente Virtual</span>
-                            <span className="text-xs font-bold leading-tight">Consultar IA</span>
-                        </div>
-                    </Link>
-                </FeatureGuard>
-            </div>
+            {/* --- CHAIN DASHBOARD SIDEBAR (EXCLUSIVE VIEW) --- */}
+            {isChainView ? (
+                <div className="px-4 py-4 space-y-3">
+                    <p className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Selecciona una Sucursal</p>
 
-            <Suspense fallback={<div className="flex-1 p-4"><div className="w-full h-8 bg-white/5 rounded-xl animate-pulse" /></div>}>
-                <SidebarNav setIsMobileOpen={toggleMobileMenu} />
-            </Suspense>
-
-            <div className="px-4 pb-3 mt-6">
-                <div className="mt-2">
-                    <PWAInstallButton className="w-full" />
-                </div>
-            </div>
-
-            {isCreator && (
-                <div className="px-4 pb-3">
-                    <Link
-                        href="/creators/dashboard"
-                        onClick={() => toggleMobileMenu(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-md hover:shadow-violet-600/20 transition-all group"
-                    >
-                        <LayoutDashboard className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Ir a Modo</span>
-                            <span className="text-xs font-bold leading-tight">Creador</span>
-                        </div>
-                    </Link>
-                </div>
-            )}
-
-            {
-                /* Link to Chains/Branches - Visible for everyone except purely Staff/Creators restricted modes. */
-                (!isCreator && userRole !== 'STAFF' && userRole !== 'OPERATOR') && (
-                    <div className="px-4 pb-3">
-                        {userPlan === 'FREE' ? (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        toggleMobileMenu(false)
-                                        setIsSalesModalOpen(true)
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md hover:shadow-emerald-600/20 transition-all group text-left animate-pulse mb-3"
+                    {chains.length > 0 && chains[0].branches.length > 0 ? (
+                        chains[0].branches.map((branch) => {
+                            const bSlug = branch.slug || branch.branchId
+                            return (
+                                <Link
+                                    key={branch.id}
+                                    href={`/dashboard/${bSlug}`}
+                                    onClick={() => toggleMobileMenu(false)}
+                                    className="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-violet-500/30 text-gray-300 hover:text-white transition-all group shadow-sm hover:shadow-lg hover:shadow-violet-900/10"
                                 >
-                                    <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Mejorar Plan</span>
-                                        <span className="text-xs font-bold leading-tight">Activar Negocio</span>
+                                    <div className="p-2 rounded-lg bg-gradient-to-br from-violet-600/20 to-indigo-600/20 text-violet-400 group-hover:text-white transition-colors">
+                                        <Store className="w-5 h-5" />
                                     </div>
-                                </button>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-bold leading-tight group-hover:text-violet-200">{branch.name || "Sucursal"}</span>
+                                        <span className="text-[10px] text-gray-500 group-hover:text-gray-400">Administrar</span>
+                                    </div>
+                                </Link>
+                            )
+                        })
+                    ) : (
+                        <div className="p-4 rounded-xl bg-white/5 border border-dashed border-white/10 text-center">
+                            <Store className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                            <p className="text-sm text-gray-400">No tienes sucursales vinculadas.</p>
+                        </div>
+                    )}
 
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        toggleMobileMenu(false)
-                                        setIsInviteModalOpen(true)
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group text-left"
-                                >
-                                    <Users className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                    <span className="text-xs font-bold leading-tight">Añadir Miembros</span>
-                                </button>
+                    <div className="h-px bg-white/5 my-4" />
+                    {/* Optional: Add "Create New Branch" button here if desired by user logic, but request was specific about replacing items */}
+                </div>
+            ) : (
+                /* --- STANDARD SIDEBAR VIEW --- */
+                <>
+                    <div className="px-4 pb-2 pt-2">
+                        <FeatureGuard feature="ai_analytics">
+                            <Link
+                                href={branchSlug ? `/dashboard/${branchSlug}/chat` : `/dashboard/chat`}
+                                id="nav-item-ai-chat"
+                                onClick={() => toggleMobileMenu(false)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
+                            >
+                                <Image
+                                    src="/happy-ai-logo.png"
+                                    alt="AI Logo"
+                                    width={16}
+                                    height={16}
+                                    className="w-4 h-4 object-contain group-hover:rotate-12 transition-transform"
+                                />
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Asistente Virtual</span>
+                                    <span className="text-xs font-bold leading-tight">Consultar IA</span>
+                                </div>
+                            </Link>
+                        </FeatureGuard>
+                    </div>
 
-                                <SalesModal
-                                    isOpen={isSalesModalOpen}
-                                    onOpenChange={setIsSalesModalOpen}
-                                />
-                                <InviteMemberModal
-                                    isOpen={isInviteModalOpen}
-                                    onOpenChange={setIsInviteModalOpen}
-                                    branchSlug={branchSlug}
-                                />
-                            </>
-                        ) : (
-                            hasChain ? (
-                                <>
-                                    {/* BRANCH SWITCHER LOGIC */}
-                                    {branchSlug && chains.length > 0 && chains[0].branches.length > 0 ? (
-                                        <div className="space-y-2 mb-3">
-                                            <p className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Tus Sucursales</p>
-                                            {chains[0].branches.map((branch) => {
-                                                const bSlug = branch.slug || branch.branchId
-                                                const isActive = branchSlug === bSlug
-                                                return (
-                                                    <Link
-                                                        key={branch.id}
-                                                        href={`/dashboard/${bSlug}`}
-                                                        onClick={() => toggleMobileMenu(false)}
-                                                        className={cn(
-                                                            "flex items-center gap-2 px-3 py-2 rounded-lg transition-all group",
-                                                            isActive
-                                                                ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-sm"
-                                                                : "bg-white/5 border border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-                                                        )}
-                                                    >
-                                                        <Store className={cn("w-4 h-4 transition-transform", isActive ? "fill-current" : "group-hover:scale-110")} />
-                                                        <span className="text-xs font-bold leading-tight truncate">{branch.name || "Sucursal"}</span>
-                                                        {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
-                                                    </Link>
-                                                )
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <Link
-                                            href={firstBranchUrl}
-                                            onClick={() => toggleMobileMenu(false)}
-                                            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group mb-3"
+                    <Suspense fallback={<div className="flex-1 p-4"><div className="w-full h-8 bg-white/5 rounded-xl animate-pulse" /></div>}>
+                        <SidebarNav setIsMobileOpen={toggleMobileMenu} />
+                    </Suspense>
+
+                    <div className="px-4 pb-3 mt-6">
+                        <div className="mt-2">
+                            <PWAInstallButton className="w-full" />
+                        </div>
+                    </div>
+
+                    {isCreator && (
+                        <div className="px-4 pb-3">
+                            <Link
+                                href="/creators/dashboard"
+                                onClick={() => toggleMobileMenu(false)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-md hover:shadow-violet-600/20 transition-all group"
+                            >
+                                <LayoutDashboard className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Ir a Modo</span>
+                                    <span className="text-xs font-bold leading-tight">Creador</span>
+                                </div>
+                            </Link>
+                        </div>
+                    )}
+
+                    {
+                        /* Link to Chains/Branches */
+                        (!isCreator && userRole !== 'STAFF' && userRole !== 'OPERATOR') && (
+                            <div className="px-4 pb-3">
+                                {userPlan === 'FREE' ? (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                toggleMobileMenu(false)
+                                                setIsSalesModalOpen(true)
+                                            }}
+                                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md hover:shadow-emerald-600/20 transition-all group text-left animate-pulse mb-3"
                                         >
                                             <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
-                                                <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
+                                                <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Mejorar Plan</span>
+                                                <span className="text-xs font-bold leading-tight">Activar Negocio</span>
                                             </div>
-                                        </Link>
-                                    )}
+                                        </button>
 
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            toggleMobileMenu(false)
-                                            setIsInviteModalOpen(true)
-                                        }}
-                                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group text-left"
-                                    >
-                                        <Users className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                        <span className="text-xs font-bold leading-tight">Añadir Miembros</span>
-                                    </button>
-                                    <InviteMemberModal
-                                        isOpen={isInviteModalOpen}
-                                        onOpenChange={setIsInviteModalOpen}
-                                        branchSlug={branchSlug}
-                                    />
-                                </>
-                            ) : (
-                                <>
-                                    <CreateBranchModal
-                                        isFirstChain={true}
-                                        trigger={
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                toggleMobileMenu(false)
+                                                setIsInviteModalOpen(true)
+                                            }}
+                                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group text-left"
+                                        >
+                                            <Users className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                            <span className="text-xs font-bold leading-tight">Añadir Miembros</span>
+                                        </button>
+
+                                        <SalesModal
+                                            isOpen={isSalesModalOpen}
+                                            onOpenChange={setIsSalesModalOpen}
+                                        />
+                                        <InviteMemberModal
+                                            isOpen={isInviteModalOpen}
+                                            onOpenChange={setIsInviteModalOpen}
+                                            branchSlug={branchSlug}
+                                        />
+                                    </>
+                                ) : (
+                                    hasChain ? (
+                                        <>
+                                            {/* BRANCH SWITCHER LOGIC (Normal Mode - Quick Switcher) */}
+                                            {branchSlug && chains.length > 0 && chains[0].branches.length > 0 ? (
+                                                <div className="space-y-2 mb-3">
+                                                    <p className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Tus Sucursales</p>
+                                                    {chains[0].branches.map((branch) => {
+                                                        const bSlug = branch.slug || branch.branchId
+                                                        const isActive = branchSlug === bSlug
+                                                        return (
+                                                            <Link
+                                                                key={branch.id}
+                                                                href={`/dashboard/${bSlug}`}
+                                                                onClick={() => toggleMobileMenu(false)}
+                                                                className={cn(
+                                                                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-all group",
+                                                                    isActive
+                                                                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-sm"
+                                                                        : "bg-white/5 border border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                                                                )}
+                                                            >
+                                                                <Store className={cn("w-4 h-4 transition-transform", isActive ? "fill-current" : "group-hover:scale-110")} />
+                                                                <span className="text-xs font-bold leading-tight truncate">{branch.name || "Sucursal"}</span>
+                                                                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
+                                                            </Link>
+                                                        )
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <Link
+                                                    href="/dashboard/chains"
+                                                    onClick={() => toggleMobileMenu(false)}
+                                                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group mb-3"
+                                                >
+                                                    <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
+                                                        <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
+                                                    </div>
+                                                </Link>
+                                            )}
+
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
                                                     e.preventDefault()
                                                     e.stopPropagation()
                                                     toggleMobileMenu(false)
+                                                    setIsInviteModalOpen(true)
                                                 }}
-                                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group text-left mb-3"
+                                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group text-left"
                                             >
-                                                <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
-                                                    <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
-                                                </div>
+                                                <Users className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                                <span className="text-xs font-bold leading-tight">Añadir Miembros</span>
                                             </button>
-                                        }
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            toggleMobileMenu(false)
-                                            setIsInviteModalOpen(true)
-                                        }}
-                                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group text-left"
-                                    >
-                                        <Users className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                        <span className="text-xs font-bold leading-tight">Añadir Miembros</span>
-                                    </button>
-                                    <InviteMemberModal
-                                        isOpen={isInviteModalOpen}
-                                        onOpenChange={setIsInviteModalOpen}
-                                        branchSlug={branchSlug}
-                                    />
-                                </>
-                            )
-                        )}
-                    </div>
-                )
-            }
+                                            <InviteMemberModal
+                                                isOpen={isInviteModalOpen}
+                                                onOpenChange={setIsInviteModalOpen}
+                                                branchSlug={branchSlug}
+                                            />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CreateBranchModal
+                                                isFirstChain={true}
+                                                trigger={
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault()
+                                                            e.stopPropagation()
+                                                            toggleMobileMenu(false)
+                                                        }}
+                                                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group text-left mb-3"
+                                                    >
+                                                        <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
+                                                            <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
+                                                        </div>
+                                                    </button>
+                                                }
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    e.stopPropagation()
+                                                    toggleMobileMenu(false)
+                                                    setIsInviteModalOpen(true)
+                                                }}
+                                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group text-left"
+                                            >
+                                                <Users className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                                <span className="text-xs font-bold leading-tight">Añadir Miembros</span>
+                                            </button>
+                                            <InviteMemberModal
+                                                isOpen={isInviteModalOpen}
+                                                onOpenChange={setIsInviteModalOpen}
+                                                branchSlug={branchSlug}
+                                            />
+                                        </>
+                                    )
+                                )}
+                            </div>
+                        )
+                    }
+                </>
+            )}
 
             {
                 (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') && (
