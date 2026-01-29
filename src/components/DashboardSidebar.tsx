@@ -210,6 +210,17 @@ export default function DashboardSidebar({
                                 </div>
                             </Link>
                         </FeatureGuard>
+                        <Link
+                            href={branchSlug ? `/dashboard/${branchSlug}/settings` : `/dashboard/settings`}
+                            onClick={() => toggleMobileMenu(false)}
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group mt-2"
+                        >
+                            <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-medium text-gray-500 group-hover:text-gray-400 uppercase leading-none">Ajustes</span>
+                                <span className="text-xs font-bold leading-tight">Editar Sucursal</span>
+                            </div>
+                        </Link>
                     </div>
 
                     <Suspense fallback={<div className="flex-1 p-4"><div className="w-full h-8 bg-white/5 rounded-xl animate-pulse" /></div>}>
