@@ -62,6 +62,12 @@ export default function DashboardPage() {
         }
     }, [])
 
+    useEffect(() => {
+        if (showMasterDashboard) {
+            router.replace('/dashboard/chains')
+        }
+    }, [showMasterDashboard, router])
+
     if (loadingSurveys && loadingAnalytics) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
@@ -69,12 +75,6 @@ export default function DashboardPage() {
             </div>
         )
     }
-
-    useEffect(() => {
-        if (showMasterDashboard) {
-            router.replace('/dashboard/chains')
-        }
-    }, [showMasterDashboard, router])
 
     if (showMasterDashboard) {
         return <HappyLoader size="lg" text="Cargando tus sucursales..." />
