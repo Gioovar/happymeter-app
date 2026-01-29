@@ -176,6 +176,18 @@ export async function updateTenantSubscription(userId: string, data: { plan: str
             }
         })
 
+        // Create Notification for the User (Gift Celebration Trigger)
+        await prisma.notification.create({
+            data: {
+                userId,
+                type: 'SYSTEM',
+                title: '¡Recibiste un Regalo!',
+                message: `El administrador ha desbloqueado el plan ${data.plan} para tu cuenta.`,
+                meta: { isGift: true, plan: data.plan, maxBranches: data.maxBranches },
+                isRead: false
+            }
+        })
+
         revalidatePath('/admin/tenants')
         revalidatePath('/admin/clients')
         return { success: true }

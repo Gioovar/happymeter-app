@@ -3,6 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from "next/navigation"
 import { prisma } from '@/lib/prisma'
 import DashboardSidebar from '@/components/DashboardSidebar'
+import GiftCelebration from '@/components/dashboard/GiftCelebration' // Correct import location
 
 import ModeSelector from '@/components/ModeSelector'
 import { UserButton } from '@clerk/nextjs'
@@ -147,11 +148,14 @@ export default async function DashboardLayout({
     const checkedSettings = settings || null
 
     return (
+        // ... existing code ...
+
         <DashboardProvider
             initialPlan={checkedSettings?.plan || 'FREE'}
             userCreatedAt={checkedSettings?.createdAt?.toISOString()}
         >
             <NotificationProvider>
+                <GiftCelebration userId={userId} />
                 <div className="flex min-h-screen bg-[#0a0a0a]">
 
                     <Suspense fallback={<div className="w-64 bg-[#111] h-screen border-r border-white/10 hidden md:flex" />}>
