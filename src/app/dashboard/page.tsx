@@ -6,7 +6,6 @@ import { useDashboard } from '@/context/DashboardContext'
 import { toast } from 'sonner'
 import { useEffect, useState } from 'react'
 import HappyLoader from '@/components/HappyLoader'
-import ChainDashboardView from '@/components/dashboard/ChainDashboardView'
 import DashboardView from '@/components/dashboard/DashboardView'
 
 export default function DashboardPage() {
@@ -71,8 +70,14 @@ export default function DashboardPage() {
         )
     }
 
+    useEffect(() => {
+        if (showMasterDashboard) {
+            router.replace('/dashboard/chains')
+        }
+    }, [showMasterDashboard, router])
+
     if (showMasterDashboard) {
-        return <ChainDashboardView />
+        return <HappyLoader size="lg" text="Cargando tus sucursales..." />
     }
 
     // Resolve Branch Name for Standard Dashboard View
