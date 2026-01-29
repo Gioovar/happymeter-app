@@ -36,6 +36,7 @@ export default function EditSurveyView({ surveyId, backLink = '/dashboard' }: Ed
     const [googleMapsUrl, setGoogleMapsUrl] = useState('')
     const [bannerUrl, setBannerUrl] = useState('')
     const [hexColor, setHexColor] = useState('#8b5cf6')
+    const [type, setType] = useState<string>('SATISFACTION')
     const [banner, setBanner] = useState<File | null>(null)
     const [bannerPreview, setBannerPreview] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -61,6 +62,7 @@ export default function EditSurveyView({ surveyId, backLink = '/dashboard' }: Ed
                     setGoogleMapsUrl(data.googleMapsUrl || '')
                     setHexColor(data.hexColor || '#8b5cf6')
                     setBannerPreview(data.bannerUrl)
+                    setType(data.type || 'SATISFACTION')
                     if (data.socialConfig) {
                         setSocialConfig(data.socialConfig)
                     }
@@ -215,16 +217,18 @@ export default function EditSurveyView({ surveyId, backLink = '/dashboard' }: Ed
                         Editor
                     </button>
 
-                    <button
-                        onClick={() => setActiveTab('recovery')}
-                        className={`px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 relative overflow-hidden group ${activeTab === 'recovery' ? 'ring-2 ring-white/20' : 'hover:scale-[1.02]'}`}
-                    >
-                        <div className={`absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 transition-opacity ${activeTab === 'recovery' ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}></div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-amber-400 opacity-0 group-hover:opacity-20 animate-pulse"></div>
-                        <span className="relative z-10 text-white flex items-center gap-2">
-                            Recuperación Inteligente <span className="animate-bounce">🚑</span>
-                        </span>
-                    </button>
+                    {type !== 'STAFF' && (
+                        <button
+                            onClick={() => setActiveTab('recovery')}
+                            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 relative overflow-hidden group ${activeTab === 'recovery' ? 'ring-2 ring-white/20' : 'hover:scale-[1.02]'}`}
+                        >
+                            <div className={`absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 transition-opacity ${activeTab === 'recovery' ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-amber-400 opacity-0 group-hover:opacity-20 animate-pulse"></div>
+                            <span className="relative z-10 text-white flex items-center gap-2">
+                                Recuperación Inteligente <span className="animate-bounce">🚑</span>
+                            </span>
+                        </button>
+                    )}
 
                     <button
                         onClick={() => setActiveTab('alerts')}
