@@ -96,7 +96,7 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
                 targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === branchId)
             } else {
                 // Default to first branch if available
-                targetBranch = chains[0]?.branches[0]
+                targetBranch = chains[0]?.branches?.[0]
             }
 
             if (targetBranch?.branch?.bannerUrl) {
@@ -112,7 +112,7 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
             if (branchId) {
                 targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === branchId)
             } else {
-                targetBranch = chains[0]?.branches[0]
+                targetBranch = chains[0]?.branches?.[0]
             }
 
             const branchUser = targetBranch?.branch

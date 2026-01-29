@@ -171,9 +171,10 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
 
     // ... existing renderStars ...
     const renderStars = (rating: number) => {
-        const fullStars = Math.floor(rating)
-        const hasHalfStar = rating % 1 >= 0.5
-        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0)
+        const safeRating = isNaN(rating) || rating < 0 ? 0 : rating
+        const fullStars = Math.floor(safeRating)
+        const hasHalfStar = safeRating % 1 >= 0.5
+        const emptyStars = Math.max(0, 5 - fullStars - (hasHalfStar ? 1 : 0))
 
         return (
             <div className="flex items-center gap-0.5">

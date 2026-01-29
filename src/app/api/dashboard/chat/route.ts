@@ -24,9 +24,10 @@ export async function POST(req: Request) {
         // We forbid falling back to 'userId' (Owner) to prevent data leakage.
         if (isBranchRoute && !branchId) {
             console.error(`[AI_ISOLATION_GUARD] Blocked request. Referer: ${referer}, but branchId missing.`)
+            // Auto-heal? Maybe we can find the branch? No, safer to ask refresh.
             return NextResponse.json({
                 role: 'assistant',
-                content: "⚠️ **Error de Contexto**: No puedo identificar la sucursal actual. Por favor recarga la página para asegurar el aislamiento de datos."
+                content: "⚠️ **Contexto Perdido**: No detecto la sucursal actual. ¿Podrías recargar la página? Estoy ajustando mis conexiones neuronales. 🔄"
             })
         }
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
         const now = new Date()
         const startOfWeek = new Date(now.setDate(now.getDate() - 7))
         const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-        
+
         // Time ranges
         const todayStart = new Date()
         todayStart.setHours(0, 0, 0, 0)
@@ -54,12 +55,12 @@ export async function POST(req: Request) {
         yesterdayEnd.setDate(yesterdayEnd.getDate() - 1)
 
         const [
-            userSettings, 
-            insights, 
-            aggregateStats, 
-            recentResponses, 
-            activePrograms, 
-            branchCount, 
+            userSettings,
+            insights,
+            aggregateStats,
+            recentResponses,
+            activePrograms,
+            branchCount,
             activeReservationsCount,
             // New Metrics
             loyaltyMembers,
@@ -68,7 +69,9 @@ export async function POST(req: Request) {
             satisfactionRatings,
             complaintsYesterday,
             reservationsSeated,
-            processData
+            processData,
+            globalBranches,
+            _unusedStats
         ] = await Promise.all([
             // 1. Settings
             prisma.userSettings.findUnique({ where: { userId: targetUserId } }),
@@ -102,8 +105,8 @@ export async function POST(req: Request) {
             prisma.loyaltyCustomer.count({ where: { program: { userId: targetUserId } } }),
             // 9. Rewards Delivered (Month)
             prisma.loyaltyRedemption.count({
-                where: { 
-                    program: { userId: targetUserId }, 
+                where: {
+                    program: { userId: targetUserId },
                     redeemedAt: { gte: startOfMonth },
                     status: 'REDEEMED'
                 }
@@ -142,24 +145,39 @@ export async function POST(req: Request) {
             }),
             // 14. Processes (Total vs Completed Today)
             Promise.all([
-                 prisma.processTask.count({ where: { zone: { userId: targetUserId } } }),
-                 prisma.processEvidence.count({ 
-                    where: { task: { zone: { userId: targetUserId } }, submittedAt: { gte: todayStart, lte: todayEnd } } 
-                 })
-            ])
+                prisma.processTask.count({ where: { zone: { userId: targetUserId } } }),
+                prisma.processEvidence.count({
+                    where: { task: { zone: { userId: targetUserId } }, submittedAt: { gte: todayStart, lte: todayEnd } }
+                })
+            ]),
+            // 15. Global Branch Data (Only formatted and used if !branchId)
+            !branchId ? prisma.chainBranch.findMany({
+                where: { chain: { ownerId: targetUserId } },
+                include: {
+                    branch: {
+                        select: {
+                            userId: true,
+                            businessName: true
+                        }
+                    }
+                }
+            }) : Promise.resolve([]),
+            // 16. Aggregate Stats per Branch (Only if !branchId)
+            // 16. Aggregate Stats (Moved to on-demand logic)
+            Promise.resolve([])
         ])
 
         // --- CALCULATIONS ---
-        
+
         // Points Redeemed
         const pointsRedeemedCount = loyaltyPointsRedeemedToday.reduce((acc, r) => acc + (r.reward?.costInPoints || 0), 0)
-        
+
         // Avg Satisfaction
         const validRatings = satisfactionRatings
             .map(r => parseInt(r.value))
             .filter(v => !isNaN(v) && v > 0)
-        const avgSatisfaction = validRatings.length > 0 
-            ? (validRatings.reduce((a, b) => a + b, 0) / validRatings.length).toFixed(1) 
+        const avgSatisfaction = validRatings.length > 0
+            ? (validRatings.reduce((a, b) => a + b, 0) / validRatings.length).toFixed(1)
             : "N/A"
 
         // Process Stats
@@ -225,17 +243,54 @@ export async function POST(req: Request) {
 
         } else if (!branchId && branchCount > 1) {
             // --- RAMA 6: MULTI-SUCURSAL ---
+
+            // 1. Calculate Per-Branch Stats
+            let branchBreakdown = "Información detallada por sucursal no disponible.";
+
+            if (globalBranches && globalBranches.length > 0) {
+                const branchUserIds = (globalBranches as any[]).map((b: any) => b.branchId);
+
+                // Fetch stats for these branches using simple IN query
+                const allSurveysStats = await prisma.survey.findMany({
+                    where: { userId: { in: branchUserIds } },
+                    select: { userId: true, _count: { select: { responses: true } } }
+                });
+
+                const statsMap = new Map<string, number>();
+                allSurveysStats.forEach((s: any) => {
+                    const current = statsMap.get(s.userId) || 0;
+                    statsMap.set(s.userId, current + (s._count?.responses || 0));
+                });
+
+                branchBreakdown = (globalBranches as any[])
+                    .map((b: any) => {
+                        const count = statsMap.get(b.branchId) || 0;
+                        const name = b.name || b.branch.businessName || "Sucursal sin nombre";
+                        const status = count > 0 ? "🟢 Activa" : "🔴 Sin Actividad (Requiere Atención)";
+                        return `- **${name}**: ${count} respuestas. ${status}`;
+                    })
+                    .join('\n');
+            }
+
             SYSTEM_PROMPT = `Actúa como 'HappyMeter Manager' (${branchCount} sucursales).
             
-            ESTADO: VISTA GLOBAL.
+            ESTADO: VISTA GLOBAL (Dueño de la Cadena).
             
-            RESUMEN:
+            📊 RESUMEN GLOBAL:
             - Respuestas Totales: ${totalResponsesAllTime}
             - Lealtad Global: ${loyaltyMembers} miembros.
             
-            OBJETIVO: Ayudar a gestionar la complejidad y comparar sucursales.
-            `
-
+            🏢 DETALLE POR SUCURSAL:
+            ${branchBreakdown}
+            
+            OBJETIVO: 
+            Eres el Director de Operaciones. Tu trabajo es identificar qué sucursales funcionan y cuáles no.
+            
+            REGLAS:
+            1. Si una sucursal tiene 0 respuestas, DILE al usuario que verifique si los QRs están puestos.
+            2. Si preguntan "¿Cuál va mejor?", compara los números de respuestas.
+            3. Si preguntan por una sucursal específica (ej. "Y Portales?"), busca en la lista de arriba y reporta su estado.
+            `;
         } else {
             // --- RAMA 3: ANÁLISIS & OPERACIÓN (Full Power Mode) ---
             SYSTEM_PROMPT = `Actúa como 'HappyMeter Analyst', el cerebro central de ${businessName}.
