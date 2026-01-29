@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { CheckCircle, XCircle, Mail, MapPin, Globe, CreditCard, Calendar, BarChart3, TrendingUp, History, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 import ImpersonateButton from '@/components/admin/ImpersonateButton'
+import GodModeButton from '@/components/admin/GodModeButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -106,8 +107,15 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ u
                         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
                             <CreditCard className="w-4 h-4" /> Suscripción
                         </h3>
-                        {/* God Mode Button */}
-                        <div className="scale-90 origin-top-right">
+                        {/* God Mode Buttons */}
+                        <div className="flex items-center gap-2 scale-90 origin-top-right">
+                            <GodModeButton tenant={{
+                                userId: user.userId,
+                                businessName: user.businessName,
+                                plan: user.plan || 'FREE',
+                                maxBranches: user.maxBranches,
+                                extraSurveys: user.extraSurveys
+                            }} />
                             <ImpersonateButton userId={user.userId} name={user.businessName || 'Tenant'} />
                         </div>
                     </div>
