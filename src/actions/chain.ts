@@ -74,7 +74,7 @@ export async function createChain(name: string) {
             data: {
                 chainId: chain.id,
                 branchId: user.id,
-                name: name || 'Sede Principal',
+                name: name || 'Sucursal 1',
                 order: 0
             }
         })
@@ -100,6 +100,15 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
 
         if (!chain || chain.ownerId !== user.id) {
             throw new Error('Unauthorized to add branch to this chain')
+        }
+
+        // Auto-Rename "Sede Principal" to Chain Name if it exists (Legacy Fix)
+        const mainBranch = chain.branches.find(b => b.name === 'Sede Principal')
+        if (mainBranch) {
+            await prisma.chainBranch.update({
+                where: { id: mainBranch.id },
+                data: { name: chain.name } // Rename to Business Name
+            })
         }
 
         // Limit Check
