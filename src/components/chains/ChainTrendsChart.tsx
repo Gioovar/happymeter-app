@@ -73,7 +73,10 @@ export default function ChainTrendsChart({ data, branches }: ChainTrendsChartPro
                             <Legend
                                 wrapperStyle={{ paddingTop: '20px' }}
                                 iconType="circle"
-                                formatter={(value) => <span className="text-gray-400 text-xs">{value}</span>}
+                                formatter={(value, entry: any) => {
+                                    const branch = branches.find(b => b.branchId === entry.dataKey)
+                                    return <span className="text-gray-400 text-xs">{value} ({branch?.surveys || 0})</span>
+                                }}
                             />
 
                             {branches.map((branch) => (
