@@ -11,7 +11,6 @@ export type GlobalChainMetrics = {
     globalNps: number
     branchBreakdown: BranchMetric[]
     satisfactionTrend: TrendDataPoint[]
-    debugInfo?: any
 }
 
 export type BranchMetric = {
@@ -49,7 +48,7 @@ function normalizeScore(value: string, type: string): number | null {
     if (isNaN(val)) return null
 
     if (type === 'NPS') return val
-    if (['RATING', 'SMILEY', 'STAR'].includes(type)) return val * 2 // Map 5 to 10
+    if (['RATING', 'SMILEY', 'STAR', 'EMOJI'].includes(type)) return val * 2 // Map 5 to 10
 
     // Fallback for others?
     return null
@@ -91,7 +90,7 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
                     answers: {
                         where: {
                             question: {
-                                type: { in: ['NPS', 'RATING', 'SMILEY', 'STAR'] }
+                                type: { in: ['NPS', 'RATING', 'SMILEY', 'STAR', 'EMOJI'] }
                             }
                         },
                         select: {
@@ -144,29 +143,18 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
             createdAt: true,
             survey: { select: { userId: true } },
             answers: {
-                include: {
-                    question: { select: { type: true, text: true } }
+                where: {
+                    question: {
+                        type: { in: ['NPS', 'RATING', 'SMILEY', 'STAR', 'EMOJI'] }
+                    }
+                },
+                select: {
+                    value: true,
+                    question: { select: { type: true } }
                 }
             }
         },
         orderBy: { createdAt: 'asc' }
-    })
-
-    // DEBUG COLLECTION
-    const foundTypes = new Set<string>()
-    const sampleAnswers: any[] = []
-    trendResponses.forEach(r => {
-        r.answers.forEach(a => {
-            foundTypes.add(a.question.type)
-            if (sampleAnswers.length < 5) {
-                sampleAnswers.push({
-                    type: a.question.type,
-                    value: a.value,
-                    text: a.question.text,
-                    date: r.createdAt.toISOString()
-                })
-            }
-        })
     })
 
     // Process Trend Data
@@ -183,7 +171,7 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
         const bId = r.survey.userId
 
         // Find any valid satisfaction answer
-        const answer = r.answers.find(a => ['NPS', 'RATING', 'SMILEY', 'STAR'].includes(a.question.type))
+        const answer = r.answers.find(a => ['NPS', 'RATING', 'SMILEY', 'STAR', 'EMOJI'].includes(a.question.type))
 
         if (answer) {
             const score = normalizeScore(answer.value, answer.question.type)
@@ -268,11 +256,6 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
         totalCustomers,
         globalNps,
         branchBreakdown: branchMetrics,
-        satisfactionTrend: chartData,
-        debugInfo: {
-            types: Array.from(foundTypes),
-            samples: sampleAnswers,
-            totalResponsesFound: trendResponses.length
-        }
+        satisfactionTrend: chartData
     }
 }

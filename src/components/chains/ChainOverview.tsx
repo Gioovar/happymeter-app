@@ -142,16 +142,6 @@ export default function ChainOverview({ metrics }: { metrics: GlobalChainMetrics
                     </Card>
                 </div>
             </div>
-
-            {/* DEBUG SECTION - REMOVE BEFORE PROD */}
-            {metrics.debugInfo && (
-                <div className="mt-8 p-4 bg-black border border-white/10 rounded-lg overflow-auto max-h-[300px]">
-                    <h4 className="text-white font-bold mb-2 text-xs uppercase tracking-wider">Debug Info</h4>
-                    <pre className="text-[10px] text-green-400 font-mono">
-                        {JSON.stringify(metrics.debugInfo, null, 2)}
-                    </pre>
-                </div>
-            )}
         </div>
     )
 }
