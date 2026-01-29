@@ -202,6 +202,11 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
     }
 
     const removeQuestion = (id: string) => {
+        // Prevent removing the main satisfaction question
+        if (id === '1') {
+            alert('La pregunta de satisfacción principal no se puede eliminar, ya que es necesaria para calcular tus métricas.')
+            return
+        }
         setQuestions(questions.filter(q => q.id !== id))
     }
 
@@ -585,14 +590,20 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
                                                         placeholder="Escribe la pregunta..."
                                                     />
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeQuestion(question.id)}
-                                                    className="p-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition"
-                                                    title="Eliminar pregunta"
-                                                >
-                                                    <Trash2 className="w-5 h-5" />
-                                                </button>
+                                                {question.id !== '1' ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeQuestion(question.id)}
+                                                        className="p-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition"
+                                                        title="Eliminar pregunta"
+                                                    >
+                                                        <Trash2 className="w-5 h-5" />
+                                                    </button>
+                                                ) : (
+                                                    <div className="p-2 rounded-lg text-violet-500/50 cursor-not-allowed" title="Pregunta obligatoria del sistema">
+                                                        <Shield className="w-5 h-5" />
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="flex items-center gap-4">
@@ -600,6 +611,7 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
                                                     <label className="block text-xs font-medium text-gray-500 mb-1">Tipo de Respuesta</label>
                                                     <select
                                                         value={question.type}
+                                                        disabled={question.id === '1'}
                                                         onChange={(e) => {
                                                             const newType = e.target.value as QuestionType
                                                             const updates: any = { type: newType }
@@ -608,7 +620,7 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
                                                             }
                                                             setQuestions(questions.map(q => q.id === question.id ? { ...q, ...updates } : q))
                                                         }}
-                                                        className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition text-gray-300"
+                                                        className={`w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition text-gray-300 ${question.id === '1' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     >
                                                         <option value="TEXT">Texto Libre</option>
                                                         <option value="SELECT">Selección Múltiple</option>
@@ -623,8 +635,9 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
                                                         <input
                                                             type="checkbox"
                                                             checked={question.required}
+                                                            disabled={question.id === '1'}
                                                             onChange={(e) => updateQuestion(question.id, 'required', e.target.checked)}
-                                                            className="w-4 h-4 rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500 focus:ring-offset-0"
+                                                            className={`w-4 h-4 rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500 focus:ring-offset-0 ${question.id === '1' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                         />
                                                         Obligatoria
                                                     </label>
