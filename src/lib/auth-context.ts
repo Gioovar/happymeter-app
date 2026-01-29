@@ -112,7 +112,7 @@ export async function getDashboardContext(branchSlug?: string) {
         return {
             userId: branch.branchId,
             isBranch: true,
-            name: branch.name || branch.branch.businessName || branchSlug,
+            name: branch.branch.businessName || branch.name || branchSlug,
             params: { branchSlug }
         };
     }
