@@ -157,10 +157,11 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
         if (plan !== 'FREE') return true
 
         // 3. Free Plan (Trialing) Restrictions
-        // Lock 'growth_locked' features (Sidebar items like Team, Responses, etc.)
-        if (feature === 'growth_locked' && plan === 'FREE') return false
+        // If Trialing, we ALLOW these features to let them test.
+        if (!isLocked) return true
 
-        // Lock 'ai_analytics' as previously defined
+        // If Locked (Expired), we block:
+        if (feature === 'growth_locked' && plan === 'FREE') return false
         if (feature === 'ai_analytics' && plan === 'FREE') return false
 
         // Artificial locks for adding features
@@ -287,12 +288,17 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
             isLocked,
             checkFeature,
             checkModuleAccess: (module: string) => {
-                if (plan === 'FREE') {
-                    // Growth 1K and above unlock these modules.
-                    // FREE plan (Trial) only has access to Surveys.
-                    const PREMIUM_MODULES = ['loyalty', 'processes', 'reservations']
-                    if (PREMIUM_MODULES.includes(module)) return false
-                }
+                // 1. Paid Plans -> Allow All
+                if (plan !== 'FREE') return true
+
+                // 2. Free Plan Logic
+                // If Trialing (Not Locked) -> Allow All (Full Experience)
+                if (!isLocked) return true
+
+                // If Expired (Locked) -> Block Premium Modules
+                const PREMIUM_MODULES = ['loyalty', 'processes', 'reservations']
+                if (PREMIUM_MODULES.includes(module)) return false
+
                 return true
             }
         }}>
