@@ -4,12 +4,9 @@ import { useState } from 'react'
 import { inviteMember, removeMember, cancelInvitation } from '@/actions/team'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Trash2, Mail, Loader2, UserPlus, Shield } from 'lucide-react'
+import { Trash2, Mail, UserPlus, Shield } from 'lucide-react'
+import InviteMemberModal from './InviteMemberModal'
 
 export default function TeamManager({ initialData, branchId }: { initialData: any, branchId?: string }) {
     const [loading, setLoading] = useState(false)
@@ -55,40 +52,17 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-white">Miembros del Equipo</h2>
-                <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-violet-600 hover:bg-violet-700 text-white">
-                            <UserPlus className="w-4 h-4 mr-2" /> Invitar Miembro
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-[#111] border-white/10 text-white">
-                        <DialogHeader>
-                            <DialogTitle>Invitar al Equipo</DialogTitle>
-                        </DialogHeader>
-                        <form action={handleInvite} className="space-y-4 pt-4">
-                            <div className="space-y-2">
-                                <Label>Email</Label>
-                                <Input name="email" type="email" placeholder="colaborador@correo.com" required className="bg-black/50" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Rol</Label>
-                                <Select name="role" defaultValue="OBSERVER">
-                                    <SelectTrigger className="bg-black/50 border-white/10">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-[#111] border-white/10 text-white">
-                                        <SelectItem value="ADMIN">Admin (Control Total)</SelectItem>
-                                        <SelectItem value="EDITOR">Editor (Puede editar encuestas)</SelectItem>
-                                        <SelectItem value="OBSERVER">Observador (Solo lectura)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <Button type="submit" disabled={loading} className="w-full bg-violet-600 hover:bg-violet-700">
-                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enviar Invitación'}
-                            </Button>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                <Button
+                    onClick={() => setOpen(true)}
+                    className="bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/20"
+                >
+                    <UserPlus className="w-4 h-4 mr-2" /> Invitar Miembro
+                </Button>
+                <InviteMemberModal
+                    isOpen={open}
+                    onOpenChange={setOpen}
+                    branchId={branchId}
+                />
             </div>
 
             <div className="bg-[#111] border border-white/5 rounded-xl overflow-hidden">
