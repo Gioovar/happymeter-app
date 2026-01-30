@@ -176,3 +176,40 @@ export async function getOpsTasks() {
 
     return { zones };
 }
+
+export async function getProcessAnalytics() {
+    const { userId } = await auth();
+    if (!userId) return null;
+
+    // We fetch ALL evidences for the user's zones (Owner View)
+    // TODO: Filter by Team Member access if needed (similar to getOpsTasks)
+
+    // For now, assuming Owner or Admin context for Analytics
+    const evidences = await prisma.processEvidence.findMany({
+        where: {
+            task: {
+                zone: {
+                    userId: userId
+                }
+            }
+        },
+        include: {
+            task: {
+                include: {
+                    zone: true
+                }
+            }
+        },
+        orderBy: {
+            submittedAt: 'desc'
+        },
+        take: 100 // Limit to recent 100 for now
+    });
+
+    const issues = evidences.filter(e => e.status === 'DELAYED');
+
+    return {
+        allEvidences: evidences,
+        issues: issues
+    };
+}
