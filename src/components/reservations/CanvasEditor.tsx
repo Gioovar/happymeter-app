@@ -22,7 +22,13 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
 
     // AI Import State
     const [tables, setTables] = useState<any[]>(initialData?.[0]?.tables || [])
-    const [selectedId, setSelectedId] = useState<string | null>(null)
+    // Refactor: Support Multiple Selection
+    const [selectedIds, setSelectedIds] = useState<string[]>([])
+
+    // Selection Box State
+    const [selectionBox, setSelectionBox] = useState<{ x: number, y: number, width: number, height: number, isActive: boolean } | null>(null)
+    const selectionStartRef = useRef<{ x: number, y: number } | null>(null)
+
     const [isSaving, setIsSaving] = useState(false)
     const [isDrawing, setIsDrawing] = useState(false)
     const [isProcessingAI, setIsProcessingAI] = useState(false)
@@ -41,6 +47,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         const activePlan = floorPlans.find(p => p.id === activeFloorId)
         if (activePlan) {
             setTables(activePlan.tables || [])
+            setSelectedIds([]) // Clear selection on switch
         }
     }, [activeFloorId]) // removed floorPlans from deps to avoid loop
 
@@ -52,8 +59,24 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     }, [tables]) // removed activeFloorId from deps to avoid loop
 
     const handleDragEnd = (id: string, info: any) => {
+        // If the dragged item is NOT in the selection (and we have a selection), 
+        // usually standard behavior is to select IT and deselect others, 
+        // unless we want to allow moving unselected items independently.
+        // But if it IS in selection, we move the whole group.
+
+        const isSelected = selectedIds.includes(id)
+
         setTables(prev => prev.map(t => {
-            if (t.id === id) {
+            // Include logic: If dragged item is selected, move ALL selected items.
+            // If dragged item is NOT selected, move only IT (standard behavior).
+
+            if (isSelected && selectedIds.includes(t.id)) {
+                return {
+                    ...t,
+                    x: t.x + info.offset.x,
+                    y: t.y + info.offset.y
+                }
+            } else if (!isSelected && t.id === id) {
                 return {
                     ...t,
                     x: t.x + info.offset.x,
@@ -67,7 +90,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     const startDrawing = () => {
         setIsDrawing(true)
         setDrawingPoints([])
-        setSelectedId(null)
+        setSelectedIds([])
         toast.info("Haz clic en el mapa para crear puntos. Haz clic en el primer punto para cerrar la forma.")
     }
 
@@ -188,32 +211,41 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     }
 
     const updateSelected = (key: string, value: any) => {
-        if (!selectedId) return
-        setTables(prev => prev.map(t => t.id === selectedId ? { ...t, [key]: value } : t))
+        if (selectedIds.length === 0) return
+        setTables(prev => prev.map(t => selectedIds.includes(t.id) ? { ...t, [key]: value } : t))
     }
 
     const deleteSelected = () => {
-        if (!selectedId) return
-        setTables(prev => prev.filter(t => t.id !== selectedId))
-        setSelectedId(null)
+        if (selectedIds.length === 0) return
+        setTables(prev => prev.filter(t => !selectedIds.includes(t.id)))
+        setSelectedIds([])
     }
 
     const duplicateSelected = () => {
-        if (!selectedId) return
-        const itemToDuplicate = tables.find(t => t.id === selectedId)
-        if (!itemToDuplicate) return
+        if (selectedIds.length === 0) return
 
-        const newItem = {
-            ...itemToDuplicate,
-            id: `dup-${Date.now()}`,
-            label: `${itemToDuplicate.label} (Copia)`,
-            x: itemToDuplicate.x + 20,
-            y: itemToDuplicate.y + 20
+        const newItems: any[] = []
+        const newIds: string[] = []
+
+        tables.forEach(t => {
+            if (selectedIds.includes(t.id)) {
+                const newItem = {
+                    ...t,
+                    id: `dup-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    label: `${t.label} (Copia)`,
+                    x: t.x + 20,
+                    y: t.y + 20
+                }
+                newItems.push(newItem)
+                newIds.push(newItem.id)
+            }
+        })
+
+        if (newItems.length > 0) {
+            setTables([...tables, ...newItems])
+            setSelectedIds(newIds)
+            toast.success(`${newItems.length} Elementos duplicados`)
         }
-
-        setTables([...tables, newItem])
-        setSelectedId(newItem.id)
-        toast.success("Elemento duplicado")
     }
 
     const handleAIImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -332,7 +364,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         }
     }
 
-    const selectedTable = tables.find(t => t.id === selectedId)
+    const selectedTable = selectedIds.length === 1 ? tables.find(t => t.id === selectedIds[0]) : null
 
     // Helper to generate SVG path from points
     const getPathFromPoints = (pointsStr: any) => {
@@ -450,8 +482,96 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     const PHONE_WIDTH = 390
     const PHONE_HEIGHT = 844
 
+    // Selection Box Handlers
+    const handleContainerMouseDown = (e: React.MouseEvent) => {
+        if (isDrawing || !containerRef.current) return
+
+        // 0 = Left (Normal click) -> Handled by onClick of map.
+        // 2 = Right Click -> Start Selection Box
+        // Or we can use Shift + Click? 
+        // User asked for "Right click pressed or ...".
+
+        if (e.button === 2) {
+            e.preventDefault()
+            e.stopPropagation()
+            const rect = containerRef.current.getBoundingClientRect()
+            const x = e.clientX - rect.left
+            const y = e.clientY - rect.top
+
+            selectionStartRef.current = { x, y }
+            setSelectionBox({ x, y, width: 0, height: 0, isActive: true })
+        }
+    }
+
+    const handleContainerMouseMove = (e: React.MouseEvent) => {
+        // Selection Box Update
+        if (selectionBox?.isActive && selectionStartRef.current && containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect()
+            const currentX = e.clientX - rect.left
+            const currentY = e.clientY - rect.top
+
+            const startX = selectionStartRef.current.x
+            const startY = selectionStartRef.current.y
+
+            const width = Math.abs(currentX - startX)
+            const height = Math.abs(currentY - startY)
+            const x = Math.min(currentX, startX)
+            const y = Math.min(currentY, startY)
+
+            setSelectionBox({ x, y, width, height, isActive: true })
+        }
+    }
+
+    const handleContainerMouseUp = (e: React.MouseEvent) => {
+        if (selectionBox?.isActive) {
+            // Calculate Intersection
+            const box = selectionBox
+            const newSelection: string[] = []
+
+            // If hold shift/ctrl, maybe append? For now, replace.
+            // If box is tiny (just a click), maybe don't select?
+            if (box.width > 5 || box.height > 5) {
+                tables.forEach(t => {
+                    // Check overlap
+                    // Table rect: t.x, t.y, t.width, t.height
+                    // Selection rect: box.x, box.y, box.width, box.height
+
+                    if (
+                        t.x < box.x + box.width &&
+                        t.x + t.width > box.x &&
+                        t.y < box.y + box.height &&
+                        t.y + t.height > box.y
+                    ) {
+                        newSelection.push(t.id)
+                    }
+                })
+
+                // If we found items, select them. 
+                // If we clicked empty space (select 0), clear selection.
+                if (newSelection.length > 0) {
+                    setSelectedIds(newSelection)
+                } else {
+                    // If we strictly want to clear on empty box select:
+                    setSelectedIds([])
+                }
+            }
+
+            setSelectionBox(null)
+            selectionStartRef.current = null
+        }
+    }
+
+    // Disable context menu on container to allow right drag
+    const handleContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault()
+    }
+
+
     return (
-        <div className="flex h-[calc(100vh-80px)] bg-zinc-950 overflow-hidden">
+        <div className="flex h-[calc(100vh-80px)] bg-zinc-950 overflow-hidden"
+            onMouseUp={handleContainerMouseUp} // Attach to window/top level conceptually (handled by react bubbling)
+            onMouseMove={handleContainerMouseMove}
+        >
             {/* LEFT PANEL: Tools & Properties */}
             <div className="w-[400px] flex flex-col border-r border-white/10 bg-zinc-900/50">
                 <div className="p-6 border-b border-white/10">
@@ -539,16 +659,41 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
 
                     {/* Properties (Moved from floating right panel to here) */}
                     {/* Properties (Moved to Modal) */}
-                    {selectedId && selectedTable && (
+                    {/* Properties (Moved to Modal) */}
+                    {selectedIds.length > 0 && (
                         <div className="mt-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-center">
-                            <p className="text-sm text-indigo-300 font-medium mb-2">Elemento Seleccionado</p>
-                            <p className="text-xs text-zinc-400 mb-3">Haz doble clic en la mesa o usa el botón de editar para modificar propiedades.</p>
-                            <button
-                                onClick={() => setIsPropertiesModalOpen(true)}
-                                className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
-                            >
-                                <Settings className="w-4 h-4" /> Editar Propiedades
-                            </button>
+                            <p className="text-sm text-indigo-300 font-medium mb-2">
+                                {selectedIds.length === 1 ? 'Elemento Seleccionado' : `${selectedIds.length} Elementos Seleccionados`}
+                            </p>
+                            <p className="text-xs text-zinc-400 mb-3">
+                                {selectedIds.length === 1
+                                    ? "Haz doble clic o usa el botón para editar."
+                                    : "Puedes moverlos o eliminarlos en grupo."}
+                            </p>
+
+                            {selectedIds.length === 1 && (
+                                <button
+                                    onClick={() => setIsPropertiesModalOpen(true)}
+                                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors flex items-center justify-center gap-2 mb-2"
+                                >
+                                    <Settings className="w-4 h-4" /> Editar Propiedades
+                                </button>
+                            )}
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={duplicateSelected}
+                                    className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm transition-colors flex items-center justify-center gap-2 border border-white/10"
+                                >
+                                    <Copy className="w-4 h-4" /> Duplicar
+                                </button>
+                                <button
+                                    onClick={deleteSelected}
+                                    className="flex-1 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Trash2 className="w-4 h-4" /> Eliminar
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -615,14 +760,33 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                         // Removed shadows/borders to match "Infinite Canvas" feel
                                         overflow: 'visible'
                                     }}
+                                    onMouseDown={handleContainerMouseDown}
+                                    onContextMenu={handleContextMenu}
                                     onClick={(e) => {
                                         if (isDrawing) {
                                             handleCanvasClick(e)
                                         } else {
-                                            if (e.target === containerRef.current) setSelectedId(null)
+                                            // Select logic: Click background -> Clear selection
+                                            // But if we just finished a drag-selection box, mouseUp handles it.
+                                            // Click (complete click) on bg means we didn't drag.
+                                            if (e.target === containerRef.current && !selectionBox?.isActive) {
+                                                setSelectedIds([])
+                                            }
                                         }
                                     }}
                                 >
+                                    {/* Selection Box Render */}
+                                    {selectionBox && selectionBox.isActive && (
+                                        <div
+                                            className="absolute border border-indigo-500 bg-indigo-500/20 z-50 pointer-events-none"
+                                            style={{
+                                                left: selectionBox.x,
+                                                top: selectionBox.y,
+                                                width: selectionBox.width,
+                                                height: selectionBox.height
+                                            }}
+                                        />
+                                    )}
                                     {/* Inner highlight */}
                                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
 
@@ -673,19 +837,30 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                                 onClick={(e) => {
                                                     e.stopPropagation()
                                                     if (!isDrawing) {
-                                                        setSelectedId(table.id)
-                                                        // Optional: Auto open on double click or just select
+                                                        // Toggle selection if Multi key pressed?
+                                                        // Since we have rect select, single click = select ONLY this.
+                                                        // CMD/CTRL click = Toggle?
+
+                                                        if (e.metaKey || e.ctrlKey) {
+                                                            if (selectedIds.includes(table.id)) {
+                                                                setSelectedIds(prev => prev.filter(id => id !== table.id))
+                                                            } else {
+                                                                setSelectedIds(prev => [...prev, table.id])
+                                                            }
+                                                        } else {
+                                                            setSelectedIds([table.id])
+                                                        }
                                                     }
                                                 }}
                                                 onDoubleClick={(e) => {
                                                     e.stopPropagation()
                                                     if (!isDrawing) {
-                                                        setSelectedId(table.id)
+                                                        setSelectedIds([table.id])
                                                         setIsPropertiesModalOpen(true)
                                                     }
                                                 }}
                                                 className={`absolute flex items-center justify-center cursor-move group touch-none
-                                                    ${selectedId === table.id ? 'ring-2 ring-indigo-500 z-20 shadow-lg shadow-indigo-500/20' : 'hover:ring-1 hover:ring-white/30'}
+                                                    ${selectedIds.includes(table.id) ? 'ring-2 ring-indigo-500 z-20 shadow-lg shadow-indigo-500/20' : 'hover:ring-1 hover:ring-white/30'}
                                                 `}
                                                 style={{
                                                     width: table.width,
@@ -730,7 +905,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                                 )}
 
                                                 {/* Edit Button Overlay */}
-                                                {selectedId === table.id && !isDrawing && (
+                                                {selectedIds.length === 1 && selectedIds[0] === table.id && !isDrawing && (
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation()
