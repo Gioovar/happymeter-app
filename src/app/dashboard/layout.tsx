@@ -70,8 +70,31 @@ export default async function DashboardLayout({
     }
 
     // 1. Mandatory Onboarding Check & New User Handling
-    // If settings are missing (new user race condition) OR explicit not onboarded, redirect.
-    if (!settings || !settings.isOnboarded) {
+
+    // TEAM MEMBER BYPASS & INVITATION CHECK
+    // Check if the user is already a team member (so they don't need to create a business)
+    const membership = await prisma.teamMember.findFirst({
+        where: { userId },
+        select: { id: true }
+    })
+
+    // If NOT a member, check if they have a PENDING invitation to redirect them
+    if (!membership) {
+        const userEmail = clerkUser?.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId)?.emailAddress || clerkUser?.emailAddresses[0]?.emailAddress
+        if (userEmail) {
+            const pendingInvite = await prisma.teamInvitation.findFirst({
+                where: { email: userEmail }
+            })
+            if (pendingInvite) {
+                redirect(`/join-team?token=${pendingInvite.token}`)
+            }
+        }
+    }
+
+    // Only redirect to onboarding if:
+    // 1. No settings (new user) OR explicitly not onboarded
+    // 2. AND they are NOT a team member (members don't need business onboarding)
+    if ((!settings || !settings.isOnboarded) && !membership) {
         redirect('/onboarding')
     }
 
