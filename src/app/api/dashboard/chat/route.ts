@@ -372,6 +372,16 @@ export async function POST(req: Request) {
         ❌ PROHIBIDO:
         - Inventar datos.
         - Decir "consulta tu dashboard" si ya tienes el dato aquí arriba.
+        - 🚫 NO USES TABLAS MARKDOWN (como | :--- |). Se ven mal en el chat.
+        - 🚫 NO USES SEPARADORES HORIZONTALES (---). Ensucian el diseño.
+        - 🚫 NUNCA menciones fechas en formato técnico (ej. 1/30/2026). Di "Hoy, 30 de Enero".
+
+        ✅ FORMATO PERMITIDO:
+        - Usa **Negritas** para títulos.
+        - Usa > Citas para resaltar datos clave.
+        - Usa Listas (1., 2., 3. o •) para enumerar.
+        - Usa Emojis para dar vida.
+        - Deja espacios en blanco entre párrafos.
         `
 
         // RAMA 4: LÍMITES (Context Injection)
