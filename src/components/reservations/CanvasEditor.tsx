@@ -162,6 +162,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
             rotation: 0
         }
 
+        saveToHistory() // Undo point
         setTables([...tables, newShape])
         setIsDrawing(false)
         setDrawingPoints([])
@@ -207,16 +208,25 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
             rotation: 0,
             points: points ? JSON.stringify(points) : null
         }
+        saveToHistory()
         setTables([...tables, newTable])
     }
 
     const updateSelected = (key: string, value: any) => {
         if (selectedIds.length === 0) return
+        saveToHistory()
         setTables(prev => prev.map(t => selectedIds.includes(t.id) ? { ...t, [key]: value } : t))
     }
 
     const deleteSelected = () => {
         if (selectedIds.length === 0) return
+        // saveToHistory() is called in handleKeyDown, but buttons call this directly.
+        // We should move saveToHistory call HERE? 
+        // But if called by helper, we might double save?
+        // Let's rely on caller or check safe methodology. 
+        // Actually, helper calls usually don't double save if we are careful.
+        // Let's add it here, and remove from handleKeyDown specific line.
+        saveToHistory()
         setTables(prev => prev.filter(t => !selectedIds.includes(t.id)))
         setSelectedIds([])
     }
@@ -242,6 +252,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         })
 
         if (newItems.length > 0) {
+            saveToHistory()
             setTables([...tables, ...newItems])
             setSelectedIds(newIds)
             toast.success(`${newItems.length} Elementos duplicados`)
@@ -298,6 +309,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     const confirmAIImport = (replace: boolean) => {
         if (!pendingAIResults) return
 
+        saveToHistory()
         if (replace) {
             setTables(pendingAIResults)
         } else {
