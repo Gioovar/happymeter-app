@@ -62,7 +62,7 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
         { title: 'Flujos Activos', href: '/dashboard/processes/flows', icon: GitMerge },
         { title: 'Tiempos de Atención', href: '/dashboard/processes/times', icon: Clock },
         { title: 'Incidencias', href: '/dashboard/processes/issues', icon: AlertCircle },
-        { title: 'Equipo', href: '/dashboard/team', icon: Users },
+        { title: 'Equipo', href: '/dashboard/processes/team', icon: Users },
     ],
     reservations: [
         { title: 'Agenda', href: '/dashboard/reservations', icon: CalendarDays },
