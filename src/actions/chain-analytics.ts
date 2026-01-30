@@ -16,6 +16,7 @@ export type GlobalChainMetrics = {
 export type BranchMetric = {
     branchId: string
     name: string
+    businessName?: string
     surveys: number
     redemptions: number
     reservations: number
@@ -188,9 +189,17 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
 
     const chartData: TrendDataPoint[] = Array.from(dateMap.entries()).map(([date, branches]) => {
         const point: TrendDataPoint = { date }
-        Object.entries(branches).forEach(([bId, stats]) => {
-            point[bId] = parseFloat((stats.sum / stats.count).toFixed(1))
+
+        // Ensure all branches have a value (0 if no data) to create valid "Area" shapes
+        branchIds.forEach(bId => {
+            const stats = branches[bId]
+            if (stats && stats.count > 0) {
+                point[bId] = parseFloat((stats.sum / stats.count).toFixed(1))
+            } else {
+                point[bId] = 0 // Default to 0 to create "wave" from baseline
+            }
         })
+
         return point
     })
 
@@ -221,6 +230,7 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
         return {
             branchId: bId,
             name: branchesMap.get(bId) || 'Sucursal',
+            businessName: b.branch.businessName || undefined,
             surveys: totalSurveys,
             redemptions: branchRedemptions,
             reservations: branchReservations,

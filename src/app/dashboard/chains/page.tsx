@@ -7,6 +7,8 @@ import BranchCard from '@/components/chains/BranchCard'
 import CreateBranchModal from '@/components/chains/CreateBranchModal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GitBranch, Store } from 'lucide-react'
+import EditChainModal from '@/components/chains/EditChainModal'
+import Image from 'next/image'
 
 export default async function DashboardChainsPage() {
     const user = await currentUser()
@@ -67,10 +69,31 @@ export default async function DashboardChainsPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/5">
                 <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg shadow-lg shadow-violet-500/20">
-                            <GitBranch className="w-6 h-6 text-white" />
+                        <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/20 overflow-hidden flex items-center justify-center p-0.5">
+                            {/* @ts-ignore */}
+                            {ownedChain.logoUrl ? (
+                                <Image
+                                    // @ts-ignore
+                                    src={ownedChain.logoUrl}
+                                    alt={ownedChain.name}
+                                    fill
+                                    className="object-cover rounded-xl"
+                                />
+                            ) : (
+                                <GitBranch className="w-6 h-6 text-white" />
+                            )}
                         </div>
-                        <h1 className="text-4xl font-bold tracking-tight text-white">{ownedChain.name}</h1>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-4xl font-bold tracking-tight text-white">{ownedChain.name}</h1>
+                            {isOwner && (
+                                <EditChainModal
+                                    chainId={ownedChain.id}
+                                    currentName={ownedChain.name}
+                                    // @ts-ignore
+                                    currentLogo={ownedChain.logoUrl}
+                                />
+                            )}
+                        </div>
                     </div>
                     <div className="flex items-center gap-3 text-gray-400 pl-1">
                         <p className="text-lg font-medium">Panel de Control Corporativo</p>

@@ -8,6 +8,8 @@ import { revalidatePath } from 'next/cache'
 export type ChainWithBranches = {
     id: string
     name: string
+    // @ts-ignore
+    logoUrl?: string | null
     ownerId: string
     branches: {
         id: string
@@ -383,5 +385,35 @@ export async function deleteBranch(branchUserId: string) {
     } catch (error: any) {
         console.error('Error deleting branch:', error)
         return { success: false, error: error.message || String(error) }
+    }
+}
+
+export async function updateChain(chainId: string, data: { name: string, logoUrl?: string }) {
+    try {
+        const user = await currentUser()
+        if (!user) throw new Error('Unauthorized')
+
+        const chain = await prisma.chain.findUnique({
+            where: { id: chainId }
+        })
+
+        if (!chain || chain.ownerId !== user.id) {
+            throw new Error('Unauthorized to update this chain')
+        }
+
+        await prisma.chain.update({
+            where: { id: chainId },
+            data: {
+                name: data.name,
+                // @ts-ignore
+                logoUrl: data.logoUrl
+            }
+        })
+
+        revalidatePath('/dashboard/chains')
+        return { success: true }
+    } catch (error) {
+        console.error('Error updating chain:', error)
+        return { success: false, error: String(error) }
     }
 }

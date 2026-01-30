@@ -1027,6 +1027,7 @@ model Chain {
   id          String   @id @default(uuid())
   name        String
   ownerId     String   // UserSettings.userId of the Chain Owner
+  logoUrl     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useSearchParams, useParams } from 'next/navigation'
-import { Menu, X, Home, LogOut, Settings, LayoutDashboard, Shield, Store, Calendar, HelpCircle, ChevronDown, Users, Lock } from 'lucide-react'
+import { Menu, X, Home, LogOut, Settings, LayoutDashboard, Shield, Store, Calendar, HelpCircle, ChevronDown, Users, Lock, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
@@ -126,8 +126,8 @@ export default function DashboardSidebar({
     // Helper to get chain dashboard url
     const firstBranchUrl = '/dashboard/chains'
 
-    // Detect Chain Dashboard View
-    const isChainView = pathname === '/dashboard/chains'
+    // Detect Chain Dashboard View (or Corporate Chat)
+    const isChainView = pathname === '/dashboard/chains' || pathname === '/dashboard/chat'
 
     const SidebarContent = () => (
         <>
@@ -154,6 +154,48 @@ export default function DashboardSidebar({
             {/* --- CHAIN DASHBOARD SIDEBAR (EXCLUSIVE VIEW) --- */}
             {isChainView ? (
                 <div className="px-4 py-4 space-y-3">
+                    <FeatureGuard feature="ai_analytics">
+                        <Link
+                            href="/dashboard/chat"
+                            onClick={() => toggleMobileMenu(false)}
+                            className="relative group w-full mb-6 rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-violet-900/20"
+                        >
+                            {/* Main Background */}
+                            <div className="relative w-full h-full bg-[#050505] rounded-xl px-4 py-3 flex items-center gap-4 group-hover:bg-[#0a0a0a] transition-colors border border-white/5">
+
+                                {/* Strong Left Glow Line (Active Laser) */}
+                                <div className="absolute left-0 top-0 bottom-0 w-1.5 z-10 overflow-hidden rounded-l-xl">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-violet-600 via-fuchsia-400 to-violet-600 bg-[length:100%_200%] animate-pulse" />
+                                </div>
+
+                                <div className="relative z-10 p-2.5 bg-[#1a1a1a] rounded-xl border border-white/5 group-hover:border-violet-500/30 transition-colors ml-1">
+                                    <Image
+                                        src="/happy-ai-logo.png"
+                                        alt="AI Logo"
+                                        width={20}
+                                        height={20}
+                                        className="w-5 h-5 object-contain brightness-0 invert opacity-90"
+                                    />
+                                </div>
+
+                                <div className="relative z-10 flex flex-col justify-center">
+                                    <div className="flex flex-col leading-none mb-1">
+                                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-violet-300 transition-colors">Asistente</span>
+                                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-violet-300 transition-colors">Corporativo</span>
+                                    </div>
+                                    <div className="flex flex-col leading-none">
+                                        <span className="text-sm font-bold text-white">Consultar</span>
+                                        <span className="text-sm font-bold text-white">Estrategia</span>
+                                    </div>
+                                </div>
+
+                                <div className="ml-auto relative z-10">
+                                    <Sparkles className="w-5 h-5 text-violet-500 animate-pulse drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
+                                </div>
+                            </div>
+                        </Link>
+                    </FeatureGuard>
+
                     <p className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Selecciona una Sucursal</p>
 
                     {chains.length > 0 && chains[0].branches.length > 0 ? (
@@ -170,7 +212,9 @@ export default function DashboardSidebar({
                                         <Store className="w-5 h-5" />
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-bold leading-tight group-hover:text-violet-200">{branch.name || "Sucursal"}</span>
+                                        <span className="text-sm font-bold leading-tight group-hover:text-violet-200">
+                                            {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.branch.businessName || branch.name || 'Sucursal')}
+                                        </span>
                                         <span className="text-[10px] text-gray-500 group-hover:text-gray-400">Administrar</span>
                                     </div>
                                 </Link>

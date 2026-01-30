@@ -98,9 +98,11 @@ export default function ChainTrendsChart({ data, branches }: ChainTrendsChartPro
                                     strokeWidth={3}
                                     fill={`url(#gradient-${branch.branchId})`}
                                     fillOpacity={1}
-                                    dot={{ r: 3, strokeWidth: 1 }}
-                                    activeDot={{ r: 5, strokeWidth: 0 }}
+                                    activeDot={{ r: 6, strokeWidth: 0, fill: branch.color }}
                                     connectNulls
+                                    isAnimationActive={true}
+                                    animationDuration={1500}
+                                    animationEasing="ease-out"
                                 />
                             ))}
                         </AreaChart>

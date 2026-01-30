@@ -109,7 +109,9 @@ export default function ChainOverview({ metrics }: { metrics: GlobalChainMetrics
                                             {idx + 1}
                                         </div>
                                         <div>
-                                            <p className="font-medium text-white text-xs truncate max-w-[120px]">{branch.name}</p>
+                                            <p className="font-medium text-white text-xs truncate max-w-[120px]">
+                                                {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.businessName || branch.name)}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -132,7 +134,7 @@ export default function ChainOverview({ metrics }: { metrics: GlobalChainMetrics
                             {topPerformer ? (
                                 <div className="p-3 rounded-lg bg-violet-900/10 border border-violet-500/20 text-xs">
                                     <p className="text-gray-300">
-                                        <strong className="text-white">{topPerformer.name}</strong> genera el <strong className="text-white">{metrics.totalSurveys > 0 ? Math.round((topPerformer.surveys / metrics.totalSurveys) * 100) : 0}%</strong> de tu data total.
+                                        <strong className="text-white">{(topPerformer.name && topPerformer.name !== 'Sede Principal') ? topPerformer.name : (topPerformer.businessName || topPerformer.name)}</strong> genera el <strong className="text-white">{metrics.totalSurveys > 0 ? Math.round((topPerformer.surveys / metrics.totalSurveys) * 100) : 0}%</strong> de tu data total.
                                     </p>
                                 </div>
                             ) : (

@@ -291,12 +291,14 @@ export async function getProgramFloorPlan(programId: string) {
             orderBy: { createdAt: 'asc' }
         })
 
-        if (!floorPlans || floorPlans.length === 0) return { success: false, error: "No hay mapa configurado" }
+        // if (!floorPlans || floorPlans.length === 0) return { success: false, error: "No hay mapa configurado" }
+        // CHANGED: Return success even if empty so frontend can show "Coming Soon"
+        const finalFloorPlans = floorPlans || []
 
         // Prioritize UserSettings business name if available, otherwise fallback to LoyaltyProgram name
         const displayName = program.user?.businessName || program.businessName || "Reservación"
 
-        return { success: true, floorPlans: JSON.parse(JSON.stringify(floorPlans)), businessName: displayName }
+        return { success: true, floorPlans: JSON.parse(JSON.stringify(finalFloorPlans)), businessName: displayName }
     } catch (error) {
         console.error("Error fetching program floor plan:", error)
         return { success: false, error: "Error al cargar el mapa" }
@@ -525,7 +527,7 @@ export async function updateReservationSettings(settings: { standardTimeEnabled:
     try {
         const { userId } = await auth()
         if (!userId) throw new Error("Unauthorized")
-        
+
         console.log("SERVER: upserting settings for user", userId)
         // Ensure settings exist or update them
         await prisma.userSettings.upsert({
@@ -539,7 +541,7 @@ export async function updateReservationSettings(settings: { standardTimeEnabled:
                 reservationSettings: settings
             }
         })
-        
+
         console.log("SERVER: upsert success, revalidating...")
         revalidatePath('/dashboard/reservations')
         console.log("SERVER: revalidation done")
@@ -555,20 +557,20 @@ async function getEffectiveReservationSettings(userId: string) {
         where: { userId },
         select: { reservationSettings: true }
     })
-    
+
     // Default: Disabled (All Day Blocking), Default Duration 120m
     const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120 }
-    
+
     if (!user?.reservationSettings) return defaults
-    
+
     return { ...defaults, ...(user.reservationSettings as any) }
 }
 
 // --- SHARED AVAILABILITY HELPER (PRIVATE) ---
 async function checkTableAvailability(
-    ownerId: string, 
-    tableId: string, 
-    requestedDate: Date, 
+    ownerId: string,
+    tableId: string,
+    requestedDate: Date,
     durationMinutes: number
 ): Promise<{ available: boolean, error?: string }> {
     const settings = await getEffectiveReservationSettings(ownerId)
@@ -576,10 +578,10 @@ async function checkTableAvailability(
     if (!settings.standardTimeEnabled) {
         // MODE: BLOCK ALL DAY
         const dayStart = new Date(requestedDate)
-        dayStart.setHours(0,0,0,0)
+        dayStart.setHours(0, 0, 0, 0)
         const dayEnd = new Date(requestedDate)
-        dayEnd.setHours(23,59,59,999)
-        
+        dayEnd.setHours(23, 59, 59, 999)
+
         const count = await prisma.reservation.count({
             where: {
                 tableId: tableId,
@@ -587,7 +589,7 @@ async function checkTableAvailability(
                 status: { notIn: ['CANCELED', 'REJECTED'] }
             }
         })
-        
+
         if (count > 0) return { available: false, error: "Mesa reservada todo el día" }
 
     } else {
@@ -596,12 +598,12 @@ async function checkTableAvailability(
             const requestDurationMs = durationMinutes * 60 * 1000
             const requestStart = requestedDate.getTime()
             const requestEnd = requestStart + requestDurationMs
-            
+
             // Query Optimization: Fetch only relevant reservations for that day
             const dayStart = new Date(requestedDate)
-            dayStart.setHours(0,0,0,0)
+            dayStart.setHours(0, 0, 0, 0)
             const dayEnd = new Date(requestedDate)
-            dayEnd.setHours(23,59,59,999)
+            dayEnd.setHours(23, 59, 59, 999)
 
             const dayReservations = await prisma.reservation.findMany({
                 where: {
@@ -619,7 +621,7 @@ async function checkTableAvailability(
                 // Use stored duration or fallback
                 const existingDuration = res.duration || settings.standardDurationMinutes || 120
                 const existingEnd = existingStart + (existingDuration * 60 * 1000)
-                
+
                 // Overlap Logic: (StartA < EndB) and (EndA > StartB)
                 if (existingStart < requestEnd && existingEnd > requestStart) {
                     return { available: false, error: "Horario traslapado con otra reserva" }
@@ -628,7 +630,7 @@ async function checkTableAvailability(
         } catch (err) {
             console.error("Error in availability check helper:", err)
             // Fail safe: If calculation fails, assume available to prevent blocking, but log it.
-            return { available: true } 
+            return { available: true }
         }
     }
 
@@ -638,7 +640,7 @@ async function checkTableAvailability(
 // Note: We use string date to avoid serialization issues across server boundary
 export async function getAvailableTables(targetDateIso: string, floorPlanId?: string, programId?: string) {
     console.log("SERVER: getAvailableTables called", { targetDateIso, floorPlanId, programId })
-    
+
     try {
         let userId: string | null = null
         try {
@@ -649,27 +651,27 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
         }
 
         let effectiveOwnerId = userId
-        
+
         // 1. Try FloorPlan lookup
         if (!effectiveOwnerId && floorPlanId) {
-             const fp = await prisma.floorPlan.findUnique({ where: { id: floorPlanId }, select: { userId: true }})
-             effectiveOwnerId = fp?.userId || null
+            const fp = await prisma.floorPlan.findUnique({ where: { id: floorPlanId }, select: { userId: true } })
+            effectiveOwnerId = fp?.userId || null
         }
 
         // 2. Fallback: Try Program lookup (Context)
         if (!effectiveOwnerId && programId) {
-            const prog = await prisma.loyaltyProgram.findUnique({ where: { id: programId }, select: { userId: true }})
+            const prog = await prisma.loyaltyProgram.findUnique({ where: { id: programId }, select: { userId: true } })
             effectiveOwnerId = prog?.userId || null
         }
-        
+
         if (!effectiveOwnerId) {
             console.error("getAvailableTables: Could not resolve owner ID")
-            return { success: false, occupiedTableIds: [] } 
+            return { success: false, occupiedTableIds: [] }
         }
 
         const settings = await getEffectiveReservationSettings(effectiveOwnerId)
         const requestDate = new Date(targetDateIso)
-        
+
         if (isNaN(requestDate.getTime())) {
             console.error("Invalid date received:", targetDateIso)
             return { success: false, occupiedTableIds: [] }
@@ -678,9 +680,9 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
         // Get all tables for this owner/floor (Optimization: Fetch only needed)
         // Actually we scan ALL reservations for the day for this owner effectively.
         const dayStart = new Date(requestDate)
-        dayStart.setHours(0,0,0,0)
+        dayStart.setHours(0, 0, 0, 0)
         const dayEnd = new Date(requestDate)
-        dayEnd.setHours(23,59,59,999)
+        dayEnd.setHours(23, 59, 59, 999)
 
         // Fetch relevant reservations only
         const dayReservations = await prisma.reservation.findMany({
@@ -744,12 +746,12 @@ export async function createReservation(data: {
             where: { id: data.reservations[0].tableId },
             include: { floorPlan: { include: { user: true } } } // Get UserSettings via FloorPlan
         })
-        
+
         if (!firstTable) throw new Error("Mesa no encontrada")
-        
+
         const ownerId = firstTable.floorPlan.userId
         const settings = await getEffectiveReservationSettings(ownerId)
-        
+
         // Determine Duration: Use setting or default 120
         const durationToStore = settings.standardDurationMinutes || 120
 
@@ -763,17 +765,17 @@ export async function createReservation(data: {
                 // Parse Date safely
                 const targetDate = new Date(res.date)
                 if (isNaN(targetDate.getTime())) throw new Error("Fecha inválida")
-                
+
                 // --- AVAILABILITY CHECK AT WRITE TIME ---
                 // We must replicate the availability logic here to be safe (Double Check)
-                
+
                 if (!settings.standardTimeEnabled) {
-                     // Block All Day Check
+                    // Block All Day Check
                     const dayStart = new Date(res.date)
-                    dayStart.setHours(0,0,0,0)
+                    dayStart.setHours(0, 0, 0, 0)
                     const dayEnd = new Date(res.date)
-                    dayEnd.setHours(23,59,59,999)
-                    
+                    dayEnd.setHours(23, 59, 59, 999)
+
                     const existing = await tx.reservation.findFirst({
                         where: {
                             tableId: res.tableId,
@@ -786,15 +788,15 @@ export async function createReservation(data: {
                     // Time Window Check
                     const requestStart = new Date(res.date).getTime()
                     const requestEnd = requestStart + (durationToStore * 60 * 1000)
-                    
+
                     // Simple overlap: find any reservation that ends after my start AND starts before my end
                     // We need raw DB query or efficient prisma check
                     // Fetch for table on that day
-                     const dayStart = new Date(res.date)
-                    dayStart.setHours(0,0,0,0)
+                    const dayStart = new Date(res.date)
+                    dayStart.setHours(0, 0, 0, 0)
                     const dayEnd = new Date(res.date)
-                    dayEnd.setHours(23,59,59,999)
-                    
+                    dayEnd.setHours(23, 59, 59, 999)
+
                     const candidates = await tx.reservation.findMany({
                         where: {
                             tableId: res.tableId,
@@ -802,15 +804,15 @@ export async function createReservation(data: {
                             status: { notIn: ['CANCELED', 'REJECTED'] }
                         }
                     })
-                    
+
                     for (const cand of candidates) {
-                         const cStart = new Date(cand.date).getTime()
-                         const cDur = cand.duration || settings.standardDurationMinutes
-                         const cEnd = cStart + (cDur * 60 * 1000)
-                         
-                         if (cStart < requestEnd && cEnd > requestStart) {
-                             throw new Error(`Mesa ocupada en horario traslapado`)
-                         }
+                        const cStart = new Date(cand.date).getTime()
+                        const cDur = cand.duration || settings.standardDurationMinutes
+                        const cEnd = cStart + (cDur * 60 * 1000)
+
+                        if (cStart < requestEnd && cEnd > requestStart) {
+                            throw new Error(`Mesa ocupada en horario traslapado`)
+                        }
                     }
                 }
 

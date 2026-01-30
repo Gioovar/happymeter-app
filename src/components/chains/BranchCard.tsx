@@ -103,7 +103,7 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId 
                     </div>
                     <div className="flex flex-col">
                         <span className={`text-lg font-bold tracking-tight ${isCurrent ? 'text-white' : 'text-gray-200 group-hover:text-white transition-colors'}`}>
-                            {branch.name || branch.branch.businessName || 'Sin Nombre'}
+                            {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.branch.businessName || branch.name || 'Sucursal')}
                         </span>
                         {isCurrent && <span className="text-[10px] font-medium text-violet-400 uppercase tracking-wider">Sucursal Activa</span>}
                     </div>

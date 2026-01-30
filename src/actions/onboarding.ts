@@ -65,8 +65,8 @@ export async function completeOnboarding(formData: FormData) {
                 ownerId: userId,
                 branches: {
                     create: {
-                        name: 'Sede Principal',
-                        branchId: userId, // Mapping Main Branch ID to User ID for simplicity in single-branch setup
+                        name: businessName, // Use Business Name instead of "Sede Principal"
+                        branchId: userId,
                         order: 0
                     }
                 }

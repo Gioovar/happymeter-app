@@ -121,17 +121,23 @@ export default function DashboardChatView() {
         role: 'assistant',
         content: branchId
             ? '¡Hola! Soy tu **HappyMeter Analyst**. 🧠\n\nEstoy conectado a las métricas de esta **sucursal** en tiempo real. Puedo ayudarte a:\n\n• Analizar tendencias locales.\n• Identificar problemas específicos.\n• Redactar manuales de acción.\n\n¿Por dónde empezamos hoy?'
-            : '¡Hola! Soy tu **HappyMeter Analyst**. 🧠\n\nEstoy conectado a las métricas de tu negocio en tiempo real. Puedo ayudarte a:\n\n• Analizar tendencias de satisfacción.\n• Identificar problemas recurrentes.\n• Redactar manuales de acción paso a paso.\n\n¿Por dónde empezamos hoy?'
+            : '¡Hola! Soy tu **HappyMeter Corporate Strategist**. 🌍\n\nTengo la visión completa de toda tu cadena. Estoy listo para:\n\n• Comparar rendimiento entre sucursales 🏆.\n• Detectar oportunidades globales de crecimiento.\n• Analizar el ROI de lealtad y reservas.\n\n¿Qué estrategia revisamos hoy?'
     }
 
     // Resume Last Conversation on Mount
     useEffect(() => {
         const resumeLastChat = async () => {
             try {
-                const query = branchId ? `?branchId=${branchId}` : ''
+                // Strict Context: If branchId is null (Corporate), query should reflect that? 
+                // Currently API handles it. If result is empty, we MUST reset to DEFAULT_MSG 
+                // to show the correct "Corporate Strategist" greeting instead of keeping old state.
+                const query = branchId ? `?branchId=${branchId}` : '?corporate=true'
                 const res = await fetch(`/api/dashboard/chat/threads${query}`)
                 if (res.ok) {
                     const threads = await res.json()
+                    // Filter client-side too just in case? 
+                    // No, API should handle it.
+
                     if (threads.length > 0) {
                         setSelectedThreadId(threads[0].id)
                     } else {
@@ -229,7 +235,7 @@ export default function DashboardChatView() {
                     const threadRes = await fetch('/api/dashboard/chat/threads', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ branchId })
+                        body: JSON.stringify({ branchId, corporate: !branchId })
                     })
                     if (!threadRes.ok) throw new Error("Could not create thread")
                     const thread = await threadRes.json()
@@ -246,7 +252,8 @@ export default function DashboardChatView() {
                         threadId: activeThreadId,
                         messages: newMessages.map(m => ({ role: m.role, content: m.content })),
                         audio: base64Audio,
-                        branchId
+                        branchId,
+                        corporate: !branchId
                     })
                 })
 
@@ -306,7 +313,7 @@ export default function DashboardChatView() {
                 const threadRes = await fetch('/api/dashboard/chat/threads', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ branchId })
+                    body: JSON.stringify({ branchId, corporate: !branchId })
                 })
                 if (!threadRes.ok) throw new Error("Could not create thread")
 
@@ -327,7 +334,8 @@ export default function DashboardChatView() {
                 body: JSON.stringify({
                     threadId: activeThreadId,
                     messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-                    branchId
+                    branchId,
+                    corporate: !branchId
                 })
             })
 
@@ -386,12 +394,20 @@ export default function DashboardChatView() {
     }
 
     // Quick Suggestions
-    const suggestions = [
-        "¿Cómo mejoro mi NPS?",
-        "Analiza las quejas de limpieza",
-        "Dame un plan para meseros",
-        "Resumen de esta semana"
-    ]
+    // Quick Suggestions
+    const suggestions = !branchId
+        ? [
+            "Comparativa de Rendimiento 🏆",
+            "Identificar líderes ocultos 🕵️",
+            "ROI de programas de lealtad 💰",
+            "Resumen ejecutivo de la cadena"
+        ]
+        : [
+            "¿Cómo mejoro mi NPS?",
+            "Analiza las quejas de limpieza",
+            "Dame un plan para meseros",
+            "Resumen de esta semana"
+        ]
 
     return (
         <div className="fixed inset-0 md:left-64 z-40 bg-[#0f1115] flex h-[100dvh]">

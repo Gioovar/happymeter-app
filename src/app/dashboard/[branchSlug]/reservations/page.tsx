@@ -16,6 +16,7 @@ import { prisma } from "@/lib/prisma"
 import { ReservationLinkButton } from "@/components/dashboard/reservations/ReservationLinkButton"
 import { getDashboardContext } from "@/lib/auth-context"
 import { redirect } from "next/navigation"
+import ReservationSetupModal from "@/components/dashboard/reservations/ReservationSetupModal"
 
 export const dynamic = 'force-dynamic'
 
@@ -69,30 +70,13 @@ export default async function BranchReservationsPage({ params }: { params: { bra
 
     /* Check Removed: Handled in layout.tsx */
 
+    /* Check Removed: Handled in layout.tsx */
+
     const setupLink = `/dashboard/${branchSlug}/reservations/setup`
 
-    if (!floorPlans || floorPlans.length === 0) {
-        return (
-            <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center space-y-6">
-                <div className="bg-zinc-800/50 p-6 rounded-full ring-1 ring-white/10">
-                    <Settings className="w-12 h-12 text-amber-500" />
-                </div>
-                <div className="space-y-2 max-w-md">
-                    <h1 className="text-2xl font-bold text-white">Configura tu Espacio (Sucursal)</h1>
-                    <p className="text-gray-400">
-                        Diseña el plano de esta sucursal.
-                    </p>
-                </div>
-                <Link
-                    href={setupLink}
-                    className="bg-gradient-to-r from-amber-500 to-orange-600 px-8 py-3 rounded-xl font-bold text-white shadow-lg shadow-orange-900/20 hover:scale-105 transition-all flex items-center gap-2"
-                >
-                    <Settings className="w-5 h-5" />
-                    Comenzar Configuración
-                </Link>
-            </div>
-        )
-    }
+    // Blocking check removed. Now using Popup.
+    const isConfigured = floorPlans && floorPlans.length > 0;
+
 
     return (
         <div className="space-y-8">
@@ -150,6 +134,8 @@ export default async function BranchReservationsPage({ params }: { params: { bra
                     </div>
                 </div>
             </div>
+            {/* Modal de Configuración (Popup) */}
+            <ReservationSetupModal isOpen={!isConfigured} setupLink={setupLink} />
         </div>
     )
 }
