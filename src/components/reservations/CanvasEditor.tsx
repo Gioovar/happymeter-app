@@ -1060,7 +1060,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                         )}
                     </DialogHeader>
 
-                    {selectedId && selectedTable ? (
+                    {selectedIds.length === 1 && selectedTable ? (
                         <div className="space-y-4 py-4">
                             <div className="space-y-1">
                                 <label className="text-xs text-zinc-400">Nombre / Etiqueta</label>
