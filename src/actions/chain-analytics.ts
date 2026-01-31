@@ -78,7 +78,7 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
     if (!chain || chain.ownerId !== user.id) return null
 
     const branchIds = chain.branches.map(b => b.branchId)
-    const branchesMap = new Map(chain.branches.map(b => [b.branchId, b.name || b.branch.businessName || 'Sucursal']))
+    const branchesMap = new Map(chain.branches.map(b => [b.branchId, b.branch.businessName || b.name || 'Sucursal']))
 
     // 1. Total Surveys & Satisfaction Data
     // Fetch answers for ANY satisfaction type
