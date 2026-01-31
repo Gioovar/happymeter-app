@@ -868,16 +868,17 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                         {/* Status Bar Fake */}
                         <div className="h-6 w-full flex items-center justify-between px-6 pt-2 z-20 relative select-none pointer-events-none">
                             <span className="text-[10px] font-medium text-white">9:41</span>
-
-                            {/* Dynamic Floor Name */}
-                            <span className="absolute left-1/2 -translate-x-1/2 text-[10px] font-bold text-white/50 uppercase tracking-widest">
-                                {floorPlans.find(p => p.id === activeFloorId)?.name}
-                            </span>
-
                             <div className="flex gap-1">
                                 <div className="w-3 h-3 rounded-full border border-white/20" />
                                 <div className="w-3 h-3 rounded-full border border-white/20" />
                             </div>
+                        </div>
+
+                        {/* Dynamic Floor Name - ABSOLUTE OVERLAY */}
+                        <div className="absolute top-8 left-0 right-0 flex justify-center z-50 pointer-events-none">
+                            <span className="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-widest border border-white/10 shadow-lg">
+                                {floorPlans.find(p => p.id === activeFloorId)?.name || "Sin Nombre"}
+                            </span>
                         </div>
 
                         {/* Interactive Canvas Container - ENABLE SCROLL HERE */}
