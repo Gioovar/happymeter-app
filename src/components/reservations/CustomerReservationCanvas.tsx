@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useMotionValue } from "framer-motion"
 import { Users, DollarSign, Calendar, ChevronLeft, Check, Sparkles, Gift } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { SequentialDatePicker } from "@/components/ui/SequentialDatePicker"
@@ -34,6 +35,7 @@ interface CustomerReservationCanvasProps {
     floorPlans?: any[] // Support multiple floors
     floorPlan?: any // Legacy support
     businessName: string
+    businessPhone?: string // New optional prop
     programId: string
     currentUser?: {
         name: string
@@ -44,7 +46,7 @@ interface CustomerReservationCanvasProps {
     isAdmin?: boolean
 }
 
-export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorPlan, businessName, currentUser, programId, className, isAdmin = false }: CustomerReservationCanvasProps) {
+export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorPlan, businessName, businessPhone, currentUser, programId, className, isAdmin = false }: CustomerReservationCanvasProps) {
     const router = useRouter()
 
     // Resolve initial floor (prioritize array)
@@ -81,6 +83,18 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
     const [postReservationAction, setPostReservationAction] = useState<any>(null)
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
+    const [showEmptyState, setShowEmptyState] = useState(false)
+
+    // Check for empty floor on load
+    useEffect(() => {
+        // Filter out DECO tables to check if there are any REAL tables
+        const realTables = currentFloor?.tables?.filter((t: Table) => t.type !== 'DECO') || []
+        if (realTables.length === 0) {
+            setShowEmptyState(true)
+        } else {
+            setShowEmptyState(false)
+        }
+    }, [currentFloor])
 
     // Motion Values for performant drag/zoom
     const x = useMotionValue(0)
@@ -404,6 +418,15 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                             >
                                 {isBooking ? "Buscando..." : "Buscar Mesas"}
                             </Button>
+
+                            <div className="text-center">
+                                <Link
+                                    href={`/loyalty/${programId}`}
+                                    className="text-xs text-zinc-500 hover:text-white transition-colors underline decoration-zinc-800 underline-offset-4"
+                                >
+                                    Ir al programa de lealtad
+                                </Link>
+                            </div>
                         </div>
                     </div>
 
@@ -599,32 +622,32 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </button>
-                    
+
                     <div className="flex flex-col items-center mt-2">
                         <div className="flex flex-col items-center bg-black/60 backdrop-blur-xl rounded-[24px] px-6 py-3 border border-white/10 shadow-2xl">
-                             <div className="flex flex-col items-center gap-1 mb-2">
-                                 <span className="text-[9px] text-zinc-400 uppercase tracking-[0.2em] font-medium">Reservando en</span>
-                                 <h1 className="text-sm font-bold text-white text-center max-w-[200px] leading-tight text-balance">
-                                     {businessName}
-                                 </h1>
-                             </div>
-                             
-                             <div className="flex items-center gap-3 bg-white/5 rounded-full px-4 py-1.5 border border-white/5">
-                                 <div className="flex items-center gap-1.5">
-                                     <Calendar className="w-3 h-3 text-indigo-400" />
-                                     <span className="text-xs font-semibold text-zinc-200 capitalize">
+                            <div className="flex flex-col items-center gap-1 mb-2">
+                                <span className="text-[9px] text-zinc-400 uppercase tracking-[0.2em] font-medium">Reservando en</span>
+                                <h1 className="text-sm font-bold text-white text-center max-w-[200px] leading-tight text-balance">
+                                    {businessName}
+                                </h1>
+                            </div>
+
+                            <div className="flex items-center gap-3 bg-white/5 rounded-full px-4 py-1.5 border border-white/5">
+                                <div className="flex items-center gap-1.5">
+                                    <Calendar className="w-3 h-3 text-indigo-400" />
+                                    <span className="text-xs font-semibold text-zinc-200 capitalize">
                                         {selectedDate ? format(selectedDate, "EEE d, MMM", { locale: es }) : ""}
-                                     </span>
-                                 </div>
-                                 <div className="w-px h-3 bg-white/10" />
-                                 <div className="flex items-center gap-1.5">
-                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                     <span className="text-xs font-bold text-white tracking-wide">{selectedTime}</span>
-                                 </div>
-                             </div>
+                                    </span>
+                                </div>
+                                <div className="w-px h-3 bg-white/10" />
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                    <span className="text-xs font-bold text-white tracking-wide">{selectedTime}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
+
                     <div className="w-11" /> {/* Spacer for symmetry */}
                 </div>
 
@@ -693,8 +716,8 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                 key={table.id}
                                 onClick={() => handleTableClick(table)}
                                 className={`absolute flex items-center justify-center transition-all duration-300 
-                                    ${isDeco 
-                                        ? 'cursor-default opacity-90' 
+                                    ${isDeco
+                                        ? 'cursor-default opacity-90'
                                         : 'cursor-pointer'
                                     }
                                     ${isSelected
@@ -724,7 +747,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     <span className={`font-bold select-none truncate px-1 max-w-full ${isDeco ? 'text-[8px] text-zinc-400' : 'text-[10px] opacity-80'}`}>
                                         {table.label}
                                     </span>
-                                    
+
                                     {!isDeco && (
                                         <>
                                             {isReserved ? (
@@ -900,6 +923,8 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                     />
                 </DialogContent>
             </Dialog>
+            {/* Empty State Dialog */}
+            <EmptyStateDialog open={showEmptyState} phone={businessPhone} />
         </div>
     )
 }
@@ -911,4 +936,40 @@ function ClientSideEffect({ action }: { action: () => void }) {
     return null
 }
 
+// Dialog for Empty State
+function EmptyStateDialog({ open, phone }: { open: boolean, phone?: string }) {
+    if (!open) return null
 
+    return (
+        <Dialog open={open}>
+            <DialogContent className="max-w-sm bg-zinc-900 border-zinc-800 text-white p-6 rounded-3xl" disableOutsideClick={true}>
+                <DialogHeader className="mb-4">
+                    <DialogTitle className="text-center text-xl font-bold">¡Lo sentimos!</DialogTitle>
+                    <DialogDescription className="text-zinc-400 text-center">
+                        Por el momento no hay mesas disponibles para reservar en línea.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="flex flex-col items-center gap-6">
+                    <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center animate-pulse">
+                        <Users className="w-8 h-8 text-zinc-500" />
+                    </div>
+
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 w-full text-center">
+                        <p className="text-amber-200 text-sm font-medium mb-1">¿Necesitas ayuda?</p>
+                        <p className="text-xs text-amber-500/80">Contáctanos directamente para verificar disponibilidad.</p>
+                    </div>
+
+                    {phone && (
+                        <Button
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 rounded-xl"
+                            onClick={() => window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}`, '_blank')}
+                        >
+                            <span className="mr-2">💬</span> Contactar al Negocio
+                        </Button>
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}

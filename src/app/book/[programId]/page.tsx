@@ -92,6 +92,7 @@ export default async function ReservationPage({
             <CustomerReservationCanvas
                 floorPlans={result.floorPlans} // Passing ALL floors
                 businessName={result.businessName || "Reservación"}
+                businessPhone={(result as any).businessPhone}
                 programId={programId}
                 currentUser={userData}
             />

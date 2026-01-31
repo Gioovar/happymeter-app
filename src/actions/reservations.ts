@@ -270,7 +270,11 @@ export async function getProgramFloorPlan(programId: string) {
                 userId: true,
                 businessName: true,
                 user: {
-                    select: { businessName: true }
+                    select: {
+                        businessName: true,
+                        phone: true,
+                        whatsappContact: true
+                    }
                 }
             }
         })
@@ -297,8 +301,14 @@ export async function getProgramFloorPlan(programId: string) {
 
         // Prioritize UserSettings business name if available, otherwise fallback to LoyaltyProgram name
         const displayName = program.user?.businessName || program.businessName || "Reservación"
+        const businessPhone = program.user?.whatsappContact || program.user?.phone || null
 
-        return { success: true, floorPlans: JSON.parse(JSON.stringify(finalFloorPlans)), businessName: displayName }
+        return {
+            success: true,
+            floorPlans: JSON.parse(JSON.stringify(finalFloorPlans)),
+            businessName: displayName,
+            businessPhone
+        }
     } catch (error) {
         console.error("Error fetching program floor plan:", error)
         return { success: false, error: "Error al cargar el mapa" }
