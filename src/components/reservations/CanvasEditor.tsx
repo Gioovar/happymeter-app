@@ -825,26 +825,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                                 // Constrain drag to parent? Maybe not, allow dragging out slightly to rearrange
                                                 // dragConstraints={containerRef}
                                                 initial={{ x: table.x, y: table.y }}
-                                                onDragEnd={(e, info) => {
-                                                    // Note: frame-motion drag adds translation to the element transform style.
-                                                    // We need to sync back to state.
-                                                    // BUT: The existing logic uses info.offset which is delta.
-                                                    // If we render with absolute x/y, we should update x/y.
-
-                                                    // Important: Framer Motion 'drag' modifies the visual transform.
-                                                    // If we update state 'x' and 'y', React re-renders.
-                                                    // If we just use 'offset', we are assuming previous position.
-
-                                                    // The original code:
-                                                    // x: t.x + info.offset.x
-                                                    // This is correct for delta updates.
-
-                                                    const newX = table.x + info.offset.x
-                                                    const newY = table.y + info.offset.y
-                                                    setTables(prev => prev.map(t =>
-                                                        t.id === table.id ? { ...t, x: newX, y: newY } : t
-                                                    ))
-                                                }}
+                                                onDragEnd={(e, info) => handleDragEnd(table.id, info)}
                                                 onClick={(e) => {
                                                     e.stopPropagation()
                                                     if (!isDrawing) {
