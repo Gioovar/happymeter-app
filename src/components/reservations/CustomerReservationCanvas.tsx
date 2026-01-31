@@ -924,7 +924,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                 </DialogContent>
             </Dialog>
             {/* Empty State Dialog */}
-            <EmptyStateDialog open={showEmptyState} phone={businessPhone} />
+            <EmptyStateDialog open={showEmptyState} phone={businessPhone} programId={programId} />
         </div>
     )
 }
@@ -937,7 +937,7 @@ function ClientSideEffect({ action }: { action: () => void }) {
 }
 
 // Dialog for Empty State
-function EmptyStateDialog({ open, phone }: { open: boolean, phone?: string }) {
+function EmptyStateDialog({ open, phone, programId }: { open: boolean, phone?: string, programId?: string }) {
     if (!open) return null
 
     return (
@@ -960,14 +960,25 @@ function EmptyStateDialog({ open, phone }: { open: boolean, phone?: string }) {
                         <p className="text-xs text-amber-500/80">Contáctanos directamente para verificar disponibilidad.</p>
                     </div>
 
-                    {phone && (
-                        <Button
-                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 rounded-xl"
-                            onClick={() => window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}`, '_blank')}
-                        >
-                            <span className="mr-2">💬</span> Contactar al Negocio
-                        </Button>
-                    )}
+                    <div className="w-full flex flex-col gap-3">
+                        {phone && (
+                            <Button
+                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 rounded-xl"
+                                onClick={() => window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}`, '_blank')}
+                            >
+                                <span className="mr-2">💬</span> Contactar al Negocio
+                            </Button>
+                        )}
+
+                        {programId && (
+                            <Link
+                                href={`/loyalty/${programId}`}
+                                className="text-xs text-zinc-500 hover:text-zinc-300 text-center block transition-colors mt-2"
+                            >
+                                Ir a mi programa de regalos (Registrarme / Entrar)
+                            </Link>
+                        )}
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
