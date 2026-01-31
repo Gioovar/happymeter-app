@@ -503,9 +503,8 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         // Or we can use Shift + Click? 
         // User asked for "Right click pressed or ...".
 
-        if (e.button === 2) {
-            e.preventDefault()
-            e.stopPropagation()
+        // 0 = Left Click (Background)
+        if (e.target === containerRef.current && e.button === 0) {
             const rect = containerRef.current.getBoundingClientRect()
             const x = e.clientX - rect.left
             const y = e.clientY - rect.top
