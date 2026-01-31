@@ -128,16 +128,30 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [past, future, tables, selectedIds])
 
+    // Drag State
+    const dragStartPositions = useRef<Record<string, { x: number, y: number }>>({})
+
     const handleDragStart = () => {
         saveToHistory()
+        // Capture initial positions of ALL selected items
+        const positions: Record<string, { x: number, y: number }> = {}
+        tables.forEach(t => {
+            if (selectedIds.includes(t.id)) {
+                positions[t.id] = { x: t.x, y: t.y }
+            }
+        })
+        dragStartPositions.current = positions
     }
 
     const handleDrag = (id: string, info: any) => {
-        // Real-time update for OTHER selected items
-        const deltaX = info.delta.x
-        const deltaY = info.delta.y
+        // Absolute update for OTHER selected items
+        // We calculate position based on START position + OFFSET
+        // This avoids drift and double-counting
 
-        if (deltaX === 0 && deltaY === 0) return
+        const offsetX = info.offset.x
+        const offsetY = info.offset.y
+
+        if (offsetX === 0 && offsetY === 0) return
 
         const isSelected = selectedIds.includes(id)
         if (!isSelected) return
@@ -145,10 +159,13 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         setTables(prev => prev.map(t => {
             // Update only passive selected items
             if (t.id !== id && selectedIds.includes(t.id)) {
-                return {
-                    ...t,
-                    x: t.x + deltaX,
-                    y: t.y + deltaY
+                const startPos = dragStartPositions.current[t.id]
+                if (startPos) {
+                    return {
+                        ...t,
+                        x: startPos.x + offsetX,
+                        y: startPos.y + offsetY
+                    }
                 }
             }
             return t
@@ -156,26 +173,40 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     }
 
     const handleDragEnd = (id: string, info: any) => {
-        // If movement is tiny, click handler might take over, but here we just finalize position.
+        // Finalize positions for ALL selected items (including the dragged one)
 
-        // Note: We already saved history in onDragStart.
-        // We moved passive items in handleDrag.
-        // We ONLY need to update the dragged item state now.
+        const offsetX = info.offset.x
+        const offsetY = info.offset.y
 
         const isSelected = selectedIds.includes(id)
 
         setTables(prev => prev.map(t => {
-            if (t.id === id) {
-                // Update the dragged item (which hasn't been updated in state yet)
+            if (isSelected && selectedIds.includes(t.id)) {
+                const startPos = dragStartPositions.current[t.id]
+                if (startPos) {
+                    return {
+                        ...t,
+                        x: startPos.x + offsetX,
+                        y: startPos.y + offsetY
+                    }
+                }
+            } else if (!isSelected && t.id === id) {
+                // Single item drag (not in selection)
+                // We didn't capture startPos for this case in handleDragStart if it wasn't selected?
+                // Actually logic says "if (isSelected)".
+                // But strictly speaking, standard behavior for unselected item drag:
+                // It just moves.
                 return {
                     ...t,
-                    x: t.x + info.offset.x,
-                    y: t.y + info.offset.y
+                    x: t.x + offsetX,
+                    y: t.y + offsetY
                 }
             }
-            // All other items are already updated or untouched
             return t
         }))
+
+        // Clear refs
+        dragStartPositions.current = {}
     }
 
     const startDrawing = () => {
