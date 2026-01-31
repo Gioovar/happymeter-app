@@ -128,24 +128,22 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [past, future, tables, selectedIds])
 
+    const handleDragStart = () => {
+        saveToHistory()
+    }
+
     const handleDrag = (id: string, info: any) => {
         // Real-time update for OTHER selected items
-        // We do NOT update the dragged item here, as Framer Motion handles its visual state during drag.
-        // We only update the passive selected items to follow.
-
         const deltaX = info.delta.x
         const deltaY = info.delta.y
 
         if (deltaX === 0 && deltaY === 0) return
 
         const isSelected = selectedIds.includes(id)
-        if (!isSelected) return // If dragging invalid item, do nothing (or move just it, which framer does)
-
-        // Update state for all selected items EXCEPT the one being dragged (id)
-        // Actually, if we update state for the dragged item, Framer might conflict.
-        // Let's try updating ONLY others.
+        if (!isSelected) return
 
         setTables(prev => prev.map(t => {
+            // Update only passive selected items
             if (t.id !== id && selectedIds.includes(t.id)) {
                 return {
                     ...t,
@@ -158,34 +156,24 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     }
 
     const handleDragEnd = (id: string, info: any) => {
-        // If movement is tiny, maybe ignore? 
-        if (Math.abs(info.offset.x) < 2 && Math.abs(info.offset.y) < 2) return
+        // If movement is tiny, click handler might take over, but here we just finalize position.
 
-        saveToHistory() // Save BEFORE updating state
-        // If the dragged item is NOT in the selection (and we have a selection), 
-        // usually standard behavior is to select IT and deselect others, 
-        // unless we want to allow moving unselected items independently.
-        // But if it IS in selection, we move the whole group.
+        // Note: We already saved history in onDragStart.
+        // We moved passive items in handleDrag.
+        // We ONLY need to update the dragged item state now.
 
         const isSelected = selectedIds.includes(id)
 
         setTables(prev => prev.map(t => {
-            // Include logic: If dragged item is selected, move ALL selected items.
-            // If dragged item is NOT selected, move only IT (standard behavior).
-
-            if (isSelected && selectedIds.includes(t.id)) {
-                return {
-                    ...t,
-                    x: t.x + info.offset.x,
-                    y: t.y + info.offset.y
-                }
-            } else if (!isSelected && t.id === id) {
+            if (t.id === id) {
+                // Update the dragged item (which hasn't been updated in state yet)
                 return {
                     ...t,
                     x: t.x + info.offset.x,
                     y: t.y + info.offset.y
                 }
             }
+            // All other items are already updated or untouched
             return t
         }))
     }
@@ -931,6 +919,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                                 // Constrain drag to parent? Maybe not, allow dragging out slightly to rearrange
                                                 // dragConstraints={containerRef}
                                                 initial={{ x: table.x, y: table.y }}
+                                                onDragStart={handleDragStart}
                                                 onDrag={(e, info) => handleDrag(table.id, info)}
                                                 onDragEnd={(e, info) => handleDragEnd(table.id, info)}
                                                 onClick={(e) => {
