@@ -131,12 +131,12 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     // Drag State
     const dragStartPositions = useRef<Record<string, { x: number, y: number }>>({})
 
-    const handleDragStart = () => {
+    const handleDragStart = (currentTables: any[], currentSelected: string[]) => {
         saveToHistory()
         // Capture initial positions of ALL selected items
         const positions: Record<string, { x: number, y: number }> = {}
-        tables.forEach(t => {
-            if (selectedIds.includes(t.id)) {
+        currentTables.forEach(t => {
+            if (currentSelected.includes(t.id)) {
                 positions[t.id] = { x: t.x, y: t.y }
             }
         })
@@ -950,7 +950,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                                 // Constrain drag to parent? Maybe not, allow dragging out slightly to rearrange
                                                 // dragConstraints={containerRef}
                                                 initial={{ x: table.x, y: table.y }}
-                                                onDragStart={handleDragStart}
+                                                onDragStart={() => handleDragStart(tables, selectedIds)}
                                                 onDrag={(e, info) => handleDrag(table.id, info)}
                                                 onDragEnd={(e, info) => handleDragEnd(table.id, info)}
                                                 onClick={(e) => {
