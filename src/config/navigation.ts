@@ -59,6 +59,7 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
     ],
     processes: [
         { title: 'Dashboard Procesos', href: '/dashboard/processes', icon: Workflow },
+        { title: 'Supervisión', href: '/dashboard/supervision', icon: Shield },
         { title: 'Flujos Activos', href: '/dashboard/processes/flows', icon: GitMerge },
         { title: 'Tiempos de Atención', href: '/dashboard/processes/times', icon: Clock },
         { title: 'Incidencias', href: '/dashboard/processes/issues', icon: AlertCircle },

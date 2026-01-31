@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import {
@@ -17,15 +17,17 @@ import { useDashboard } from '@/context/DashboardContext';
 
 export default function ModeSelector() {
     const pathname = usePathname();
+    const params = useParams();
+    const branchSlug = params?.branchSlug as string;
 
     // Hide on Chain Dashboard (Exclusive Selection View)
     if (pathname === '/dashboard/chains') return null;
 
     // Determine active mode based on path
     const activeMode: NavigationMode = useMemo(() => {
-        if (pathname?.includes('/dashboard/loyalty') || pathname?.includes('/dashboard/games') || pathname?.includes('/dashboard/achievements')) return 'loyalty';
-        if (pathname?.includes('/dashboard/processes')) return 'processes';
-        if (pathname?.includes('/dashboard/reservations')) return 'reservations';
+        if (pathname?.includes('/loyalty') || pathname?.includes('/games') || pathname?.includes('/achievements')) return 'loyalty';
+        if (pathname?.includes('/processes') || pathname?.includes('/supervision')) return 'processes';
+        if (pathname?.includes('/reservations')) return 'reservations';
         return 'surveys'; // Default mode
     }, [pathname]);
 
@@ -38,10 +40,19 @@ export default function ModeSelector() {
                 const Icon = mode.icon;
                 const isLocked = !checkModuleAccess(mode.id);
 
+                let finalHref = mode.href;
+                if (branchSlug) {
+                    if (finalHref === '/dashboard') {
+                        finalHref = `/dashboard/${branchSlug}`;
+                    } else if (finalHref.startsWith('/dashboard/')) {
+                        finalHref = finalHref.replace('/dashboard', `/dashboard/${branchSlug}`);
+                    }
+                }
+
                 return (
                     <Link
                         key={mode.id}
-                        href={mode.href}
+                        href={finalHref as any}
                         className={cn(
                             "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 relative overflow-hidden group whitespace-nowrap",
                             isActive

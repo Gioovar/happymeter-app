@@ -90,6 +90,7 @@ model UserSettings {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   businessName        String?
+  fullName            String?   // User's personal name (distinct from businessName)
   isOnboarded         Boolean   @default(false)
   phone               String?
   photoUrl            String?
@@ -983,6 +984,7 @@ model ProcessTask {
   title        String
   description  String?
   limitTime    String?             // "HH:MM" format for recurring daily deadlines
+  days         String[]            @default([]) // ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
   evidenceType ProcessEvidenceType
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
@@ -1000,14 +1002,22 @@ model ProcessEvidence {
   fileUrl     String
   capturedAt  DateTime              // Device timestamp
   submittedAt DateTime              @default(now())
-  status      ProcessEvidenceStatus @default(ON_TIME)
-  comments    String?
+  status      ProcessEvidenceStatus @default(PENDING) // Default to PENDING for review
+  comments    String?               // Comments from staff
+
+  // Supervision & Validation
+  validationStatus String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  supervisorNote   String?
+  validatedAt      DateTime?
+  validatedBy      String?
+  aiAnalysis       Json?   // Stores AI insights
 
   task        ProcessTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId])
   @@index([staffId])
   @@index([status])
+  @@index([validationStatus])
 }
 
 enum ProcessEvidenceType {
@@ -1017,6 +1027,7 @@ enum ProcessEvidenceType {
 }
 
 enum ProcessEvidenceStatus {
+  PENDING
   ON_TIME
   DELAYED
 }

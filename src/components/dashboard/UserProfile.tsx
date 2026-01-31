@@ -24,8 +24,10 @@ interface UserProfileProps {
     user: {
         firstName?: string | null
         lastName?: string | null
+        fullName?: string | null // Support new field
         email?: string
         imageUrl?: string
+        businessName?: string | null // Support businessName from userSettings
     } | null
     plan: string
     onUpgrade: () => void
@@ -43,7 +45,8 @@ export default function UserProfile({ user, plan, onUpgrade }: UserProfileProps)
     const { branchSlug } = useParams()
 
     // Derived state
-    const fullName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Usuario'
+    const fullName = user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Usuario'
+    const businessName = user?.businessName || ''
     const email = user?.email || ''
     const initials = (user?.firstName?.[0] || '') + (user?.lastName?.[0] || '') || 'U'
     const isPro = plan !== 'FREE'
@@ -67,6 +70,9 @@ export default function UserProfile({ user, plan, onUpgrade }: UserProfileProps)
 
                         <div className="flex-1 text-left overflow-hidden">
                             <p className="text-sm font-bold text-white truncate">{fullName}</p>
+                            {businessName && (
+                                <p className="text-[10px] text-indigo-400 truncate uppercase font-bold tracking-wider">{businessName}</p>
+                            )}
                             <p className="text-[10px] text-gray-500 truncate">{email}</p>
                         </div>
 
@@ -96,6 +102,9 @@ export default function UserProfile({ user, plan, onUpgrade }: UserProfileProps)
                                     {fullName}
                                     {isPro && <Zap className="w-3 h-3 text-yellow-400 fill-yellow-400" />}
                                 </p>
+                                {businessName && (
+                                    <p className="text-xs text-indigo-400 font-medium mb-0.5">{businessName}</p>
+                                )}
                                 <p className="text-xs text-gray-500">{email}</p>
                             </div>
                         </div>

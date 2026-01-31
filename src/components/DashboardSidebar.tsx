@@ -22,9 +22,9 @@ import FeatureGuard from '@/components/common/FeatureGuard'
 
 // Helper to determine mode from pathname
 const getActiveMode = (pathname: string | null): NavigationMode => {
-    if (pathname?.includes('/dashboard/loyalty') || pathname?.includes('/dashboard/games') || pathname?.includes('/dashboard/achievements')) return 'loyalty';
-    if (pathname?.includes('/dashboard/processes')) return 'processes';
-    if (pathname?.includes('/dashboard/reservations')) return 'reservations';
+    if (pathname?.includes('/loyalty') || pathname?.includes('/games') || pathname?.includes('/achievements')) return 'loyalty';
+    if (pathname?.includes('/processes') || pathname?.includes('/supervision')) return 'processes';
+    if (pathname?.includes('/reservations')) return 'reservations';
     return 'surveys';
 };
 

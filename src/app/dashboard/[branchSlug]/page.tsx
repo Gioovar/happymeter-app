@@ -17,6 +17,7 @@ export default async function BranchDashboardPage({
         <DashboardView
             branchName={context.name}
             isBranchMode={true}
+            branchSlug={params.branchSlug}
         />
     )
 }

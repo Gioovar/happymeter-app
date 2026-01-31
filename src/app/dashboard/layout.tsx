@@ -58,7 +58,9 @@ export default async function DashboardLayout({
                         plan: true,
                         isActive: true,
                         isOnboarded: true,
-                        createdAt: true
+                        createdAt: true,
+                        // @ts-ignore
+                        fullName: true, // Fetch Data
                     }
                 })
             ])
@@ -187,7 +189,7 @@ export default async function DashboardLayout({
                             userRole={realRole}
                             hasChain={hasChain}
                             userPlan={userPlan}
-                            user={userData}
+                            user={userData ? { ...userData, fullName: (settings as any)?.fullName, businessName: (settings as any)?.businessName } : null}
                         // We will let Sidebar handle resolutions or passing slug
                         />
                     </Suspense>

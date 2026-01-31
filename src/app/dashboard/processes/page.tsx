@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 import TeamAccessCard from '@/components/processes/TeamAccessCard';
+import DailyProcessReport from '@/components/processes/DailyProcessReport';
 
 export default async function ProcessesPage() {
     const { userId } = await auth();
@@ -58,6 +59,9 @@ export default async function ProcessesPage() {
                 {/* Team Access Card */}
                 <TeamAccessCard />
             </div>
+
+            {/* Daily Report Section */}
+            <DailyProcessReport />
 
             {/* Zones List */}
             <div className="bg-[#111] border border-white/10 rounded-2xl p-6">

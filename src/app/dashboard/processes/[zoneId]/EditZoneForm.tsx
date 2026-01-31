@@ -20,6 +20,7 @@ type TaskUI = {
     description: string;
     limitTime: string;
     evidenceType: ProcessEvidenceType;
+    days?: string[];
     deleted?: boolean;
 };
 
@@ -43,12 +44,13 @@ export default function EditZoneForm({ zone, teamMembers, pendingInvitations }: 
             title: t.title,
             description: t.description || '',
             limitTime: t.limitTime || '',
-            evidenceType: t.evidenceType
+            evidenceType: t.evidenceType,
+            days: t.days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
         }))
     );
 
     const addTask = () => {
-        setTasks([...tasks, { title: '', description: '', limitTime: '', evidenceType: ProcessEvidenceType.PHOTO }]);
+        setTasks([...tasks, { title: '', description: '', limitTime: '', evidenceType: ProcessEvidenceType.PHOTO, days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }]);
     };
 
     const removeTask = (index: number) => {
@@ -63,12 +65,32 @@ export default function EditZoneForm({ zone, teamMembers, pendingInvitations }: 
         setTasks(newTasks);
     };
 
-    const updateTask = (index: number, field: keyof TaskUI, value: string) => {
+    const updateTask = (index: number, field: keyof TaskUI, value: any) => {
         const newTasks = [...tasks];
         // @ts-ignore
         newTasks[index] = { ...newTasks[index], [field]: value };
         setTasks(newTasks);
     };
+
+    const toggleDay = (taskIndex: number, day: string) => {
+        const task = tasks[taskIndex];
+        const currentDays = task.days || [];
+        const newDays = currentDays.includes(day)
+            ? currentDays.filter(d => d !== day)
+            : [...currentDays, day];
+
+        updateTask(taskIndex, 'days', newDays);
+    }
+
+    const DAYS = [
+        { key: 'Mon', label: 'L' },
+        { key: 'Tue', label: 'M' },
+        { key: 'Wed', label: 'M' },
+        { key: 'Thu', label: 'J' },
+        { key: 'Fri', label: 'V' },
+        { key: 'Sat', label: 'S' },
+        { key: 'Sun', label: 'D' },
+    ];
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -352,6 +374,26 @@ export default function EditZoneForm({ zone, teamMembers, pendingInvitations }: 
                                                 className="w-full bg-transparent border-b border-white/10 focus:border-cyan-500 py-1 text-white outline-none transition-colors placeholder:text-gray-700"
                                                 required
                                             />
+
+                                            {/* Days Selector */}
+                                            <div className="flex gap-1 mt-3">
+                                                {DAYS.map(day => {
+                                                    const isActive = task.days?.includes(day.key);
+                                                    return (
+                                                        <button
+                                                            key={day.key}
+                                                            type="button"
+                                                            onClick={() => toggleDay(index, day.key)}
+                                                            className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center transition-all ${isActive
+                                                                    ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/30'
+                                                                    : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                                                                }`}
+                                                        >
+                                                            {day.label}
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
                                         </div>
 
                                         <div className="md:col-span-3">

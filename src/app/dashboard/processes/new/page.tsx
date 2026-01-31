@@ -14,6 +14,7 @@ type TaskDraft = {
     description: string;
     limitTime: string;
     evidenceType: 'PHOTO' | 'VIDEO' | 'BOTH';
+    days: string[];
 };
 
 export default function NewProcessPage() {
@@ -32,23 +33,55 @@ export default function NewProcessPage() {
 
     // Tasks State
     const [tasks, setTasks] = useState<TaskDraft[]>([
-        { title: '', description: '', limitTime: '', evidenceType: 'PHOTO' } // Start with one empty task
+        {
+            title: '',
+            description: '',
+            limitTime: '',
+            evidenceType: 'PHOTO',
+            days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] // Default all days
+        }
     ]);
 
     const addTask = () => {
-        setTasks([...tasks, { title: '', description: '', limitTime: '', evidenceType: 'PHOTO' }]);
+        setTasks([...tasks, {
+            title: '',
+            description: '',
+            limitTime: '',
+            evidenceType: 'PHOTO',
+            days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        }]);
     };
 
     const removeTask = (index: number) => {
         setTasks(tasks.filter((_, i) => i !== index));
     };
 
-    const updateTask = (index: number, field: keyof TaskDraft, value: string) => {
+    const updateTask = (index: number, field: keyof TaskDraft, value: any) => {
         const newTasks = [...tasks];
         // @ts-ignore
         newTasks[index] = { ...newTasks[index], [field]: value };
         setTasks(newTasks);
     };
+
+    const toggleDay = (taskIndex: number, day: string) => {
+        const task = tasks[taskIndex];
+        const currentDays = task.days || [];
+        const newDays = currentDays.includes(day)
+            ? currentDays.filter(d => d !== day)
+            : [...currentDays, day];
+
+        updateTask(taskIndex, 'days', newDays);
+    }
+
+    const DAYS = [
+        { key: 'Mon', label: 'L' },
+        { key: 'Tue', label: 'M' },
+        { key: 'Wed', label: 'M' },
+        { key: 'Thu', label: 'J' },
+        { key: 'Fri', label: 'V' },
+        { key: 'Sat', label: 'S' },
+        { key: 'Sun', label: 'D' },
+    ];
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -81,75 +114,64 @@ export default function NewProcessPage() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto py-8">
-            <Link href="/dashboard/processes" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
-                <ArrowLeft className="w-4 h-4" />
-                Volver a Procesos
-            </Link>
+        <div className="p-6 md:p-10 max-w-5xl mx-auto">
+            <div className="mb-8 flex items-center gap-4">
+                <Link href="/dashboard/processes" className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
+                    <ArrowLeft className="w-5 h-5 text-gray-400" />
+                </Link>
+                <div>
+                    <h1 className="text-3xl font-bold text-white">Nueva Zona de Procesos</h1>
+                    <p className="text-gray-400 mt-1">Define un área de trabajo y sus tareas recurrentes.</p>
+                </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
-                {/* 1. Zone Definition */}
-                <div className="bg-[#111] border border-white/10 rounded-2xl p-8">
-                    <div className="mb-6 border-b border-white/5 pb-6">
-                        <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-4 border border-cyan-500/20">
-                            <Layers className="w-6 h-6 text-cyan-400" />
-                        </div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Paso 1: Definir Zona</h1>
-                        <p className="text-gray-400">¿Qué área operativa estás configurando?</p>
-                    </div>
+                {/* Zone Info */}
+                <div className="bg-[#111] border border-white/5 rounded-2xl p-6 space-y-6">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <Layers className="w-5 h-5 text-purple-500" />
+                        Información General
+                    </h3>
 
-                    <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Nombre de la Zona</label>
+                            <label className="text-sm text-gray-400 mb-2 block">Nombre de la Zona</label>
                             <input
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="Ej. Cocina Caliente, Recepción, Baños..."
-                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all placeholder:text-gray-600"
+                                placeholder="Ej. Cocina, Barra, Entrada..."
+                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-colors"
                                 required
                             />
                         </div>
-
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Responsable (Encargado)</label>
+                            <label className="text-sm text-gray-400 mb-2 block">Responsable (Opcional)</label>
                             <select
                                 value={assignedStaffId}
                                 onChange={(e) => setAssignedStaffId(e.target.value)}
-                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all appearance-none"
+                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-colors appearance-none"
                             >
-                                <option value="">Seleccionar responsable...</option>
+                                <option value="">Sin asignar (Cualquiera puede completar)</option>
                                 {teamMembers.map(member => (
                                     <option key={member.id} value={member.id}>{member.name}</option>
                                 ))}
                             </select>
-                            <p className="text-xs text-gray-500 mt-1">Quien será notificado si las tareas no se cumplen.</p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Descripción (Opcional)</label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Detalles sobre esta zona..."
-                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all placeholder:text-gray-600 resize-none"
-                                rows={2}
-                            />
                         </div>
                     </div>
                 </div>
 
-                {/* 2. Tasks Definition */}
-                <div className="bg-[#111] border border-white/10 rounded-2xl p-8">
-                    <div className="mb-6 flex justify-between items-center">
-                        <div>
-                            <h2 className="text-xl font-bold text-white">Paso 2: Configurar Tareas</h2>
-                            <p className="text-gray-400 text-sm">Define qué debe hacerse en esta zona diariamente.</p>
-                        </div>
+                {/* Tasks Builder */}
+                <div className="bg-[#111] border border-white/5 rounded-2xl p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                            <Layers className="w-5 h-5 text-cyan-500" />
+                            Lista de Tareas
+                        </h3>
                         <button
                             type="button"
                             onClick={addTask}
-                            className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-white/10 transition-colors"
+                            className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors border border-white/5"
                         >
                             <Plus className="w-4 h-4" />
                             Agregar Tarea
@@ -184,6 +206,26 @@ export default function NewProcessPage() {
                                             className="w-full bg-transparent border-b border-white/10 focus:border-cyan-500 py-1 text-white outline-none transition-colors placeholder:text-gray-700"
                                             required
                                         />
+
+                                        {/* Days Selector */}
+                                        <div className="flex gap-1 mt-3">
+                                            {DAYS.map(day => {
+                                                const isActive = task.days?.includes(day.key);
+                                                return (
+                                                    <button
+                                                        key={day.key}
+                                                        type="button"
+                                                        onClick={() => toggleDay(index, day.key)}
+                                                        className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center transition-all ${isActive
+                                                            ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/30'
+                                                            : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                                                            }`}
+                                                    >
+                                                        {day.label}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
                                     </div>
 
                                     <div className="md:col-span-3">
@@ -232,20 +274,19 @@ export default function NewProcessPage() {
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-end gap-3 pt-6 border-t border-white/10">
+                    <Link
+                        href="/dashboard/processes"
+                        className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                    >
+                        Cancelar
+                    </Link>
                     <button
                         type="submit"
-                        disabled={isSubmitting}
-                        className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 px-8 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-cyan-900/20 disabled:opacity-50"
+                        disabled={loading}
+                        className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                        {isSubmitting ? (
-                            "Guardando..."
-                        ) : (
-                            <>
-                                <Save className="w-5 h-5" />
-                                Guardar Todo
-                            </>
-                        )}
+                        {loading ? 'Guardando...' : 'Crear Zona y Tareas'}
                     </button>
                 </div>
             </form>

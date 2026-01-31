@@ -30,7 +30,8 @@ export async function updateUserProfile(data: { phone: string, photoUrl: string,
         update: {
             phone: data.phone,
             photoUrl: data.photoUrl,
-            businessName: data.name, // Mapping "Name" to businessName for now
+            // @ts-ignore
+            fullName: data.name, // Correctly mapping to fullName
             jobTitle: data.jobTitle,
             isOnboarded: true
         },
@@ -38,7 +39,8 @@ export async function updateUserProfile(data: { phone: string, photoUrl: string,
             userId,
             phone: data.phone,
             photoUrl: data.photoUrl,
-            businessName: data.name,
+            // @ts-ignore
+            fullName: data.name,
             jobTitle: data.jobTitle,
             isOnboarded: true
         }

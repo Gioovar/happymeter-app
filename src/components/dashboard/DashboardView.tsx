@@ -42,9 +42,10 @@ import FeatureGuard from '@/components/common/FeatureGuard'
 interface DashboardViewProps {
     branchName?: string;
     isBranchMode?: boolean;
+    branchSlug?: string;
 }
 
-export default function DashboardView({ branchName, isBranchMode }: DashboardViewProps) {
+export default function DashboardView({ branchName, isBranchMode, branchSlug }: DashboardViewProps) {
     const { userId } = useAuth()
     const router = useRouter()
 
@@ -463,7 +464,7 @@ export default function DashboardView({ branchName, isBranchMode }: DashboardVie
                                 Mis Encuestas
                                 <span className="text-sm font-normal text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">{surveys.length}</span>
                             </h2>
-                            <Link href="/dashboard/surveys" className="text-sm text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1 transition">
+                            <Link href={branchSlug ? `/dashboard/${branchSlug}/surveys` : "/dashboard/surveys"} className="text-sm text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1 transition">
                                 Ver todas <ArrowRight className="w-4 h-4" />
                             </Link>
                         </div>

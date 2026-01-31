@@ -15,6 +15,7 @@ interface CreateZonePayload {
         title: string;
         description?: string;
         limitTime?: string; // "HH:MM"
+        days?: string[]; // ["Mon", "Tue", ...]
         evidenceType: ProcessEvidenceType;
     }[]
 }
@@ -75,6 +76,7 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
                     title: task.title,
                     description: task.description,
                     limitTime: task.limitTime || null,
+                    days: task.days || [],
                     evidenceType: task.evidenceType
                 }))
             }
@@ -126,6 +128,7 @@ interface UpdateZonePayload {
         title: string;
         description?: string;
         limitTime?: string;
+        days?: string[];
         evidenceType: ProcessEvidenceType;
         deleted?: boolean; // Flag to delete
     }[]
@@ -195,6 +198,7 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
                         title: task.title,
                         description: task.description,
                         limitTime: task.limitTime || null,
+                        days: task.days || [],
                         evidenceType: task.evidenceType
                     }
                 });
@@ -206,6 +210,7 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
                         title: task.title,
                         description: task.description,
                         limitTime: task.limitTime || null,
+                        days: task.days || [],
                         evidenceType: task.evidenceType
                     }
                 });
