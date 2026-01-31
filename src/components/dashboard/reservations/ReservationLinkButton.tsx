@@ -113,7 +113,7 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
                                             <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 mix-blend-overlay"></div>
                                             <div className="z-10 text-center space-y-6 p-6 w-full flex flex-col items-center">
                                                 <h3 className="text-white font-bold text-2xl drop-shadow-md">
-                                                    ¡Tu opinión nos importa!
+                                                    Escanea para Reservar
                                                 </h3>
 
                                                 <div className="bg-white p-4 rounded-3xl shadow-xl w-fit mx-auto">
@@ -128,7 +128,7 @@ export function ReservationLinkButton({ programId, className }: ReservationLinkB
 
                                                 <div className="space-y-1">
                                                     <p className="text-white/90 text-sm font-medium tracking-wide bg-black/20 py-1 px-4 rounded-full inline-block backdrop-blur-sm">
-                                                        Escanea para Reservar
+                                                        Reserva fácil y rápido
                                                     </p>
                                                 </div>
                                             </div>
