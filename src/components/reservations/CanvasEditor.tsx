@@ -25,6 +25,10 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     // Refactor: Support Multiple Selection
     const [selectedIds, setSelectedIds] = useState<string[]>([])
 
+    // History State (Undo/Redo)
+    const [past, setPast] = useState<any[][]>([])
+    const [future, setFuture] = useState<any[][]>([])
+
     // Selection Box State
     const [selectionBox, setSelectionBox] = useState<{ x: number, y: number, width: number, height: number, isActive: boolean } | null>(null)
     const selectionStartRef = useRef<{ x: number, y: number } | null>(null)
@@ -48,6 +52,9 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         if (activePlan) {
             setTables(activePlan.tables || [])
             setSelectedIds([]) // Clear selection on switch
+            // Clear history on floor switch
+            setPast([])
+            setFuture([])
         }
     }, [activeFloorId]) // removed floorPlans from deps to avoid loop
 
@@ -58,7 +65,74 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         ))
     }, [tables]) // removed activeFloorId from deps to avoid loop
 
+    // --- Undo / Redo Logic ---
+    const saveToHistory = () => {
+        setPast(prev => [...prev.slice(-49), tables]) // Keep last 50
+        setFuture([])
+    }
+
+    const undo = () => {
+        if (past.length === 0) return
+
+        const previous = past[past.length - 1]
+        const newPast = past.slice(0, past.length - 1)
+
+        setFuture(prev => [tables, ...prev])
+        setTables(previous)
+        setPast(newPast)
+        // toast.info("Deshacer")
+    }
+
+    const redo = () => {
+        if (future.length === 0) return
+
+        const next = future[0]
+        const newFuture = future.slice(1)
+
+        setPast(prev => [...prev, tables])
+        setTables(next)
+        setFuture(newFuture)
+        // toast.info("Rehacer")
+    }
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore if input is focused
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+
+            if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+                e.preventDefault()
+                if (e.shiftKey) {
+                    redo()
+                } else {
+                    undo()
+                }
+            }
+
+            if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+                e.preventDefault()
+                redo()
+            }
+
+            // Allow delete with backspace/delete
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                if (selectedIds.length > 0) {
+                    e.preventDefault()
+                    deleteSelected()
+                }
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [past, future, tables, selectedIds])
+
     const handleDragEnd = (id: string, info: any) => {
+        // If movement is tiny, maybe ignore? 
+        if (Math.abs(info.offset.x) < 2 && Math.abs(info.offset.y) < 2) return
+
+        saveToHistory() // Save BEFORE updating state
         // If the dragged item is NOT in the selection (and we have a selection), 
         // usually standard behavior is to select IT and deselect others, 
         // unless we want to allow moving unselected items independently.
@@ -504,7 +578,10 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         // User asked for "Right click pressed or ...".
 
         // 0 = Left Click (Background)
-        if (e.target === containerRef.current && e.button === 0) {
+        // Simplified check: Just ensure we are not clicking explicitly on something else that prevents default
+        // But for container, checking button 0 is key.
+
+        if (e.button === 0) {
             const rect = containerRef.current.getBoundingClientRect()
             const x = e.clientX - rect.left
             const y = e.clientY - rect.top
