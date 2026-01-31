@@ -128,6 +128,35 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [past, future, tables, selectedIds])
 
+    const handleDrag = (id: string, info: any) => {
+        // Real-time update for OTHER selected items
+        // We do NOT update the dragged item here, as Framer Motion handles its visual state during drag.
+        // We only update the passive selected items to follow.
+
+        const deltaX = info.delta.x
+        const deltaY = info.delta.y
+
+        if (deltaX === 0 && deltaY === 0) return
+
+        const isSelected = selectedIds.includes(id)
+        if (!isSelected) return // If dragging invalid item, do nothing (or move just it, which framer does)
+
+        // Update state for all selected items EXCEPT the one being dragged (id)
+        // Actually, if we update state for the dragged item, Framer might conflict.
+        // Let's try updating ONLY others.
+
+        setTables(prev => prev.map(t => {
+            if (t.id !== id && selectedIds.includes(t.id)) {
+                return {
+                    ...t,
+                    x: t.x + deltaX,
+                    y: t.y + deltaY
+                }
+            }
+            return t
+        }))
+    }
+
     const handleDragEnd = (id: string, info: any) => {
         // If movement is tiny, maybe ignore? 
         if (Math.abs(info.offset.x) < 2 && Math.abs(info.offset.y) < 2) return
@@ -902,6 +931,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                                 // Constrain drag to parent? Maybe not, allow dragging out slightly to rearrange
                                                 // dragConstraints={containerRef}
                                                 initial={{ x: table.x, y: table.y }}
+                                                onDrag={(e, info) => handleDrag(table.id, info)}
                                                 onDragEnd={(e, info) => handleDragEnd(table.id, info)}
                                                 onClick={(e) => {
                                                     e.stopPropagation()
