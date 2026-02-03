@@ -134,7 +134,7 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
             {/* Header */}
             <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-4">
                 {(step !== 'YEAR' && !(step === 'MONTH' && !showYear)) ? (
-                    <button onClick={handleBack} className="p-1 hover:bg-white/10 rounded-full transition">
+                    <button type="button" onClick={handleBack} className="p-1 hover:bg-white/10 rounded-full transition">
                         <ChevronLeft className="w-5 h-5 text-gray-400" />
                     </button>
                 ) : (
@@ -157,6 +157,7 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
                             <div className="grid grid-cols-3 gap-2">
                                 {years.map(year => (
                                     <button
+                                        type="button"
                                         key={year}
                                         onClick={() => handleYearSelect(year)}
                                         className={cn(
@@ -175,6 +176,7 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
                             <div className="grid grid-cols-2 gap-2">
                                 {months.map((month, idx) => (
                                     <button
+                                        type="button"
                                         key={month}
                                         onClick={() => handleMonthSelect(idx)}
                                         className={cn(
@@ -194,10 +196,11 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
                             <div className="grid grid-cols-5 gap-2">
                                 {days.map(day => (
                                     <button
+                                        type="button"
                                         key={day}
                                         onClick={() => handleDaySelect(day)}
                                         className={cn(
-                                            "aspect-square rounded-lg text-sm font-medium transition hover:bg-white/10 flex items-center justify-center",
+                                            "aspect-square rounded-lg text-sm font-medium transition hover:bg-white/10 flex items-center justify-center relative z-10",
                                             selectedDay === day
                                                 ? "bg-violet-600 text-white hover:bg-violet-500 shadow-lg shadow-violet-500/20"
                                                 : "bg-[#252525] text-gray-300"
@@ -214,6 +217,7 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
                             <div className="grid grid-cols-3 gap-2">
                                 {timeSlots.map(time => (
                                     <button
+                                        type="button"
                                         key={time}
                                         onClick={() => handleTimeSelect(time)}
                                         className={cn(
@@ -236,6 +240,7 @@ export function SequentialDatePicker({ value, onChange, onClose, showYear = true
             {((includeTime && step === 'TIME') || (!includeTime && step === 'DAY')) && (
                 <div className="mt-4 pt-4 border-t border-white/10">
                     <button
+                        type="button"
                         onClick={confirmSelection}
                         disabled={!selectedDay || (includeTime && !selectedTime)}
                         className={cn(
