@@ -15,7 +15,7 @@ interface NotificationsBellProps {
     align?: 'left' | 'right'
 }
 
-export default function NotificationsBell({ align = 'right' }: NotificationsBellProps) {
+export default function NotificationsBell({ align = 'right', currentSurveyId }: NotificationsBellProps & { currentSurveyId?: string }) {
     const { notifications, unreadCount, markAsRead, deleteRead, loadingId, setLoadingId, requestPushPermission } = useNotifications()
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
@@ -31,6 +31,21 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
+
+    const filteredNotifications = notifications.filter(n => {
+        // 1. If no context, show all
+        if (!currentSurveyId) return true
+
+        // 2. Always show Global types
+        if (['SYSTEM', 'ACHIEVEMENT', 'INFO'].includes(n.type)) return true
+
+        // 3. Filter by Survey ID
+        if (n.meta?.surveyId) {
+            return n.meta.surveyId === currentSurveyId
+        }
+
+        return true
+    })
 
     const handleClick = (notif: any) => {
         setLoadingId(notif.id)
@@ -146,63 +161,64 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
 
                         {/* Lista */}
                         <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-                            {notifications.length === 0 ? (
+                            {filteredNotifications.length === 0 ? (
                                 <div className="p-8 text-center text-gray-500 text-sm">
                                     No tienes notificaciones.
                                 </div>
                             ) : (
                                 <div className="divide-y divide-white/5">
-                                    {notifications.map(notif => (
-                                        <div
-                                            key={notif.id}
-                                            onClick={() => handleClick(notif)}
-                                            className={`p-4 hover:bg-white/5 transition relative group 
+                                    {filteredNotifications
+                                        .map(notif => (
+                                            <div
+                                                key={notif.id}
+                                                onClick={() => handleClick(notif)}
+                                                className={`p-4 hover:bg-white/5 transition relative group 
                                                 ${!notif.isRead ? 'bg-violet-500/5 border-l-2 border-violet-500 shadow-[inset_0_0_20px_rgba(139,92,246,0.05)]' : 'border-l-2 border-transparent'} 
                                                 ${notif.meta?.responseId ? 'cursor-pointer' : 'cursor-default'}
                                                 ${loadingId === notif.id ? 'opacity-70 pointer-events-none' : ''}
                                             `}
-                                        >
-                                            <div className="flex gap-3">
-                                                <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center border ${getBgColor(notif.type)}`}>
-                                                    {loadingId === notif.id ? (
-                                                        <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
-                                                    ) : (
-                                                        getIcon(notif.type)
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 space-y-1">
-                                                    <div className="flex justify-between items-start gap-2">
-                                                        <h4 className={`text-sm font-semibold ${!notif.isRead ? 'text-white' : 'text-gray-400'}`}>
-                                                            {notif.title}
-                                                        </h4>
-                                                        <span className="text-[10px] text-gray-600 whitespace-nowrap">
-                                                            {(() => {
-                                                                try {
-                                                                    return format(new Date(notif.createdAt), "d MMM", { locale: es })
-                                                                } catch (e) {
-                                                                    return ""
-                                                                }
-                                                            })()}
-                                                        </span>
+                                            >
+                                                <div className="flex gap-3">
+                                                    <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center border ${getBgColor(notif.type)}`}>
+                                                        {loadingId === notif.id ? (
+                                                            <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                                                        ) : (
+                                                            getIcon(notif.type)
+                                                        )}
                                                     </div>
-                                                    <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap line-clamp-3">
-                                                        {notif.message}
-                                                    </p>
+                                                    <div className="flex-1 space-y-1">
+                                                        <div className="flex justify-between items-start gap-2">
+                                                            <h4 className={`text-sm font-semibold ${!notif.isRead ? 'text-white' : 'text-gray-400'}`}>
+                                                                {notif.title}
+                                                            </h4>
+                                                            <span className="text-[10px] text-gray-600 whitespace-nowrap">
+                                                                {(() => {
+                                                                    try {
+                                                                        return format(new Date(notif.createdAt), "d MMM", { locale: es })
+                                                                    } catch (e) {
+                                                                        return ""
+                                                                    }
+                                                                })()}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap line-clamp-3">
+                                                            {notif.message}
+                                                        </p>
 
-                                                    {/* Enlace de texto opcional, aunque ahora toda la tarjeta es clicable */}
-                                                    {notif.meta?.responseId && (
-                                                        <span className="block w-fit text-[10px] text-violet-500 font-bold mt-2">
-                                                            {loadingId === notif.id ? 'Cargando...' : 'Ver Respuesta'}
-                                                        </span>
+                                                        {/* Enlace de texto opcional, aunque ahora toda la tarjeta es clicable */}
+                                                        {notif.meta?.responseId && (
+                                                            <span className="block w-fit text-[10px] text-violet-500 font-bold mt-2">
+                                                                {loadingId === notif.id ? 'Cargando...' : 'Ver Respuesta'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {!notif.isRead && !loadingId && (
+                                                        <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-violet-500" />
                                                     )}
                                                 </div>
-
-                                                {!notif.isRead && !loadingId && (
-                                                    <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-violet-500" />
-                                                )}
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
                                 </div>
                             )}
                         </div>

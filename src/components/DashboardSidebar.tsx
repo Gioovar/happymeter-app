@@ -140,7 +140,19 @@ export default function DashboardSidebar({
                 </div>
 
                 <div className="hidden md:block">
-                    <NotificationsBell align="left" />
+                    <NotificationsBell
+                        align="left"
+                        currentSurveyId={(() => {
+                            if (!branchSlug) return undefined
+                            // Find Branch ID from Slug in Chains
+                            for (const chain of chains) {
+                                const branch = chain.branches.find(b => b.slug === branchSlug || b.branchId === branchSlug)
+                                if (branch) return branch.branchId
+                            }
+                            // Fallback: If slug IS the ID (legacy)
+                            return branchSlug
+                        })()}
+                    />
                 </div>
 
                 <button
@@ -592,7 +604,16 @@ export default function DashboardSidebar({
                 </div>
                 {/* Notifications on Mobile */}
                 <div className="flex items-center gap-2">
-                    <NotificationsBell />
+                    <NotificationsBell
+                        currentSurveyId={(() => {
+                            if (!branchSlug) return undefined
+                            for (const chain of chains) {
+                                const branch = chain.branches.find(b => b.slug === branchSlug || b.branchId === branchSlug)
+                                if (branch) return branch.branchId
+                            }
+                            return branchSlug
+                        })()}
+                    />
                 </div>
             </div>
 
