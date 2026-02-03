@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import AIProcessManual from '@/components/AIProcessManual'
 
-export default async function ReportsIndexPage() {
+export default async function ReportsIndexPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
     const { userId } = await auth()
     console.log("Rendering Reports Index Page for user:", userId)
 
@@ -29,6 +29,10 @@ export default async function ReportsIndexPage() {
         orderBy: { createdAt: 'desc' }
     })
 
+    const initialAutoStart = searchParams?.auto === 'true'
+    const initialFrom = typeof searchParams?.from === 'string' ? new Date(searchParams.from) : undefined
+    const initialTo = typeof searchParams?.to === 'string' ? new Date(searchParams.to) : undefined
+
     return (
         <div className="min-h-screen bg-[#0a0a0a]">
             {/* 
@@ -40,6 +44,9 @@ export default async function ReportsIndexPage() {
                 surveyTitle="Reporte General Unificado"
                 initialIndustry={userSettings?.industry || 'restaurant'}
                 availableSurveys={surveys}
+                initialAutoStart={initialAutoStart}
+                initialFrom={initialFrom}
+                initialTo={initialTo}
             />
         </div>
     )

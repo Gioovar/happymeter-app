@@ -49,10 +49,11 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
             const endDate = new Date(notif.createdAt)
             const startDate = subDays(endDate, 15)
             const query = new URLSearchParams({
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString()
+                auto: 'true',
+                from: startDate.toISOString(),
+                to: endDate.toISOString()
             }).toString()
-            router.push(`/dashboard/analytics?${query}`)
+            router.push(`/dashboard/reports?${query}`)
         }
 
         setTimeout(() => setLoadingId(null), 1000)

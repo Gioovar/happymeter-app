@@ -24,9 +24,12 @@ interface AIProcessManualProps {
     initialIndustry?: string
     publicToken?: string // Optional token for public view
     availableSurveys?: { id: string, title: string }[]
+    initialAutoStart?: boolean
+    initialFrom?: Date
+    initialTo?: Date
 }
 
-export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys }: AIProcessManualProps) {
+export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys, initialAutoStart = false, initialFrom, initialTo }: AIProcessManualProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
     const [loading, setLoading] = useState(true)
@@ -35,13 +38,13 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
     const [showReport, setShowReport] = useState(false) // Start closed by default
     const [showDateModal, setShowDateModal] = useState(false) // Nuevo Estado Modal
     const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>({
-        from: subDays(new Date(), 7), // Por defecto últimos 7 días
-        to: new Date()
+        from: initialFrom || subDays(new Date(), 7),
+        to: initialTo || new Date()
     })
     const [industry, setIndustry] = useState<string>(initialIndustry || 'restaurant') // Por defecto restaurante si falla la inferencia/falta prop
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
-        from: subDays(new Date(), 15),
-        to: new Date(),
+        from: initialFrom || subDays(new Date(), 15),
+        to: initialTo || new Date(),
     })
     const [isSurveySelectorOpen, setIsSurveySelectorOpen] = useState(false)
 
@@ -52,6 +55,60 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
     useEffect(() => {
         if (initialIndustry) setIndustry(initialIndustry)
     }, [initialIndustry])
+
+    // --- AUTO START EFFECT ---
+    // Moved down below function definition to avoid lint errors
+
+
+    // lógica de compartir antigua eliminada
+
+
+    const handleGenerateStrategy = async () => {
+        console.log("Generating Strategy...")
+
+        // 1. Cerrar modal y mostrar loader
+        setShowDateModal(false)
+        setStrategiesLoading(true)
+
+        // Actualizar rango real en estado principal
+        if (selectedDateRange) {
+            setDateRange(selectedDateRange)
+        }
+
+        try {
+            // Simular delay para UX
+            await new Promise(resolve => setTimeout(resolve, 800))
+
+            // Forzar recarga de datos con nuevas fechas
+            setShowReport(true)
+
+        } catch (error) {
+            toast.error("Error al iniciar generación")
+        } finally {
+            // El useEffect principal detectará el cambio de fechas y cargará la data real
+            // setStrategiesLoading(false) -> Lo maneja el fetch de abajo
+        }
+    }
+
+
+    // --- AUTO START EFFECT ---
+    useEffect(() => {
+        if (initialAutoStart && dateRange?.from && dateRange?.to && !showReport) {
+            const autoGenerate = async () => {
+                // Ensure dateRange is set before triggering
+                if (initialFrom && initialTo) {
+                    setSelectedDateRange({ from: initialFrom, to: initialTo })
+                    setDateRange({ from: initialFrom, to: initialTo })
+                }
+
+                // Wait a tick for state to update then trigger
+                setTimeout(() => {
+                    handleGenerateStrategy()
+                }, 100)
+            }
+            autoGenerate()
+        }
+    }, [initialAutoStart])
 
     useEffect(() => {
         const fetchData = async () => {
