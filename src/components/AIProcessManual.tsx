@@ -543,13 +543,16 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     <div className="bg-[#1a1d26] p-1.5 rounded-full border border-white/10 flex items-center shadow-lg relative z-30">
 
 
-                        <button
+                        <motion.button
+                            whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(139, 92, 246, 0.4)" }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => setShowDateModal(true)}
-                            className="flex items-center gap-2 px-5 py-2 text-white hover:text-white text-sm font-medium rounded-full hover:bg-white/5 transition-all"
+                            className="group relative flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm font-bold rounded-full overflow-hidden transition-all shadow-lg shadow-violet-500/20 border border-white/10"
                         >
-                            <Sparkles className="w-4 h-4 text-purple-400" />
-                            Crear Reporte
-                        </button>
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                            <Calendar className="w-4 h-4 text-white group-hover:animate-pulse relative z-10" />
+                            <span className="relative z-10">Crear Reporte</span>
+                        </motion.button>
 
                     </div>
 
