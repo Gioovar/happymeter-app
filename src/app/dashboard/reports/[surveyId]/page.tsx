@@ -11,25 +11,52 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
 
     if (!userId) redirect('/')
 
+    // 1. Find the survey first (without ownership check yet)
     const survey = await prisma.survey.findUnique({
-        where: { id: surveyId, userId },
-        select: { title: true }
-    })
-
-    const userSettings = await prisma.userSettings.findUnique({
-        where: { userId },
-        select: { industry: true }
-    })
-
-    const surveys = await prisma.survey.findMany({
-        where: { userId },
-        select: { id: true, title: true },
-        orderBy: { createdAt: 'desc' }
+        where: { id: surveyId },
+        select: { id: true, title: true, userId: true }
     })
 
     if (!survey) {
         return <div className="p-8 text-white">Encuesta no encontrada</div>
     }
+
+    // 2. Permission Check
+    let hasAccess = false
+
+    // A. Direct Ownership
+    if (survey.userId === userId) {
+        hasAccess = true
+    } else {
+        // B. Chain Ownership (Business Owner accessing Branch)
+        const ownedChain = await prisma.chain.findFirst({
+            where: {
+                ownerId: userId,
+                branches: {
+                    some: {
+                        branchId: survey.userId
+                    }
+                }
+            }
+        })
+        if (ownedChain) hasAccess = true
+    }
+
+    if (!hasAccess) {
+        return <div className="p-8 text-white">No tienes permiso para ver este reporte.</div>
+    }
+
+    const userSettings = await prisma.userSettings.findUnique({
+        where: { userId: survey.userId }, // Use survey owner's settings for industry
+        select: { industry: true }
+    })
+
+    // Fetch other surveys from the SAME OWNER (context of that branch)
+    const surveys = await prisma.survey.findMany({
+        where: { userId: survey.userId },
+        select: { id: true, title: true },
+        orderBy: { createdAt: 'desc' }
+    })
 
     const initialAutoStart = searchParams?.auto === 'true'
     const initialFrom = typeof searchParams?.from === 'string' ? new Date(searchParams.from) : undefined
