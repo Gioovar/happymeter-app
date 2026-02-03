@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 import { Check, ChevronLeft, Upload, X, Instagram, Facebook, Sparkles, Calendar as CalendarIcon } from 'lucide-react'
 import Image from 'next/image'
-import { compressImage } from '@/lib/image-compression'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
@@ -36,7 +35,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
         sourceOther: '',
         birthday: '' // Restored birthday field
     })
-    const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null)
+
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isExpanded, setIsExpanded] = useState(false)
     const [isBirthdayPickerOpen, setIsBirthdayPickerOpen] = useState(false)
@@ -88,28 +87,46 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
         setFormData({ ...formData, [field]: value })
     }
 
+    const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null) // Final URL
+    const [localPhotoPreview, setLocalPhotoPreview] = useState<string | null>(null) // Immediate preview
+    const [uploadProgress, setUploadProgress] = useState<number | null>(null)
+
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
+            // 1. Immediate Preview
+            const previewUrl = URL.createObjectURL(file)
+            setLocalPhotoPreview(previewUrl)
+            setUploadProgress(0)
+
             try {
-                const compressed = await compressImage(file)
-                setUploadedPhoto(compressed)
+                // 2. Async Process & Upload
+                const { processAndUploadImage } = await import('@/lib/image-processing')
+                const result = await processAndUploadImage(file, (progress) => {
+                    setUploadProgress(progress)
+                })
+
+                setUploadedPhotoUrl(result.url)
+                setUploadProgress(null) // Done
             } catch (error) {
-                console.error('Error compressing image:', error)
-                // Fallback to original if compression fails
-                const reader = new FileReader()
-                reader.onloadend = () => setUploadedPhoto(reader.result as string)
-                reader.readAsDataURL(file)
+                console.error('Upload failed', error)
+                alert('No pudimos subir tu foto. Intenta con otra imagen.')
+                setUploadProgress(null)
+                // Optionally keep local preview or clear it? Keeping it might be misleading if submit fails.
+                // But let's allow "retry" logic implicitly by just showing error.
             }
         }
     }
 
     const [isSuccess, setIsSuccess] = useState(false)
 
-    /* ... */
-
     const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
         e.preventDefault()
+
+        if (uploadProgress !== null) {
+            alert('Tu foto se está procesando. Por favor espera unos segundos.')
+            return
+        }
 
         // Manual validation since we are using type="button" to prevent Enter submit
         if (formRef.current && !formRef.current.checkValidity()) {
@@ -149,7 +166,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
 
             const res = await fetch(`/api/surveys/${surveyId}/submit`, {
                 method: 'POST',
-                body: JSON.stringify({ answers, customer, photo: uploadedPhoto })
+                body: JSON.stringify({ answers, customer, photo: uploadedPhotoUrl })
             })
 
             if (res.ok) {
@@ -306,7 +323,8 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                 survey.questions.forEach((q: any) => { initialData[q.id] = q.type === 'EMOJI' ? '3' : '' })
                             }
                             setFormData(initialData)
-                            setUploadedPhoto(null)
+                            setUploadedPhotoUrl(null)
+                            setLocalPhotoPreview(null)
                             window.scrollTo({ top: 0, behavior: 'smooth' })
                         }}
                         className="px-6 py-3 rounded-xl font-medium transition w-full mt-4"
@@ -491,20 +509,49 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                         {/* Photo */}
                                         <div className="space-y-2">
                                             <label className="block text-sm font-medium" style={{ color: theme.textSecondary }}>Sube una foto (opcional)</label>
-                                            {uploadedPhoto ? (
+                                            {localPhotoPreview ? (
                                                 <div className="relative">
-                                                    <div className="relative w-full h-48 rounded-xl overflow-hidden">
-                                                        <Image src={uploadedPhoto} alt="Uploaded" fill className="object-cover" />
+                                                    <div className="relative w-full h-48 rounded-xl overflow-hidden bg-black/50">
+                                                        {/* Preview Image */}
+                                                        <Image src={localPhotoPreview} alt="Uploaded" fill className={`object-cover transition duration-300 ${uploadProgress !== null ? 'opacity-50 blur-sm' : 'opacity-100'}`} />
+
+                                                        {/* Progress Overlay */}
+                                                        {uploadProgress !== null && (
+                                                            <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                                                                <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mb-2" />
+                                                                <span className="text-white font-medium text-sm drop-shadow-md">Procesando...</span>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Success Indicator */}
+                                                        {uploadProgress === null && (
+                                                            <div className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+                                                                <Check className="w-3 h-3" /> Listo
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <button type="button" onClick={() => setUploadedPhoto(null)} className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 rounded-full transition">
-                                                        <X className="w-4 h-4 text-white" />
-                                                    </button>
+
+                                                    {/* Delete Button - Only allowed if done processing */}
+                                                    {uploadProgress === null && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setUploadedPhotoUrl(null)
+                                                                setLocalPhotoPreview(null)
+                                                            }}
+                                                            className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 rounded-full transition shadow-lg z-20"
+                                                        >
+                                                            <X className="w-4 h-4 text-white" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             ) : (
-                                                <label className="w-full h-32 rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center cursor-pointer hover:border-violet-500/50 transition" style={{ backgroundColor: theme.inputBg }}>
-                                                    <Upload className="w-8 h-8 mb-2" style={{ color: theme.textSecondary }} />
-                                                    <span className="text-sm" style={{ color: theme.textSecondary }}>Haz clic para subir una foto</span>
-                                                    <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                                                <label className="w-full h-32 rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center cursor-pointer hover:border-violet-500/50 transition relative overflow-hidden group" style={{ backgroundColor: theme.inputBg }}>
+                                                    <div className="absolute inset-0 bg-violet-500/0 group-hover:bg-violet-500/5 transition duration-300" />
+                                                    <Upload className="w-8 h-8 mb-2 group-hover:scale-110 transition duration-300" style={{ color: theme.textSecondary }} />
+                                                    <span className="text-sm font-medium" style={{ color: theme.textSecondary }}>Toca para subir foto</span>
+                                                    <span className="text-xs text-center px-4 mt-1 opacity-60" style={{ color: theme.textSecondary }}>Soporta HEIC, JPG, PNG (Max 100MB)</span>
+                                                    <input type="file" accept="image/*,.heic,.heif" onChange={handlePhotoUpload} className="hidden" />
                                                 </label>
                                             )}
                                         </div>
