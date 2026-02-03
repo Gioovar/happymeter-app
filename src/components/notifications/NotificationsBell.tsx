@@ -54,9 +54,12 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                 to: endDate.toISOString()
             }).toString()
 
-            toast.loading("🔄 Conectando con tu reporte...", {
+            const toastId = toast.loading("🔄 Conectando con tu reporte...", {
                 description: "Preparando análisis actualizado. Por favor espera."
             })
+
+            // Dismiss toast after 3 seconds to prevent stacking
+            setTimeout(() => toast.dismiss(toastId), 3000)
 
             if (notif.meta?.surveyId) {
                 router.push(`/dashboard/reports/${notif.meta.surveyId}?${query}`)

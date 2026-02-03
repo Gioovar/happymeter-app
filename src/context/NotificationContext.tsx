@@ -97,10 +97,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             const startDate = new Date(endDate)
             startDate.setDate(endDate.getDate() - 15)
             const query = new URLSearchParams({
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString()
+                auto: 'true',
+                from: startDate.toISOString(),
+                to: endDate.toISOString()
             }).toString()
-            router.push(`/dashboard/analytics?${query}`)
+
+            if (notif.meta?.surveyId) {
+                router.push(`/dashboard/reports/${notif.meta.surveyId}?${query}`)
+            } else {
+                router.push(`/dashboard/reports?${query}`)
+            }
         }
 
         setTimeout(() => setLoadingId(null), 1000)
