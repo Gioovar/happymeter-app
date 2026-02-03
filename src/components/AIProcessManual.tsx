@@ -541,16 +541,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     {/* Botones de Acción */}
                     <div className="bg-[#1a1d26] p-1.5 rounded-full border border-white/10 flex items-center shadow-lg relative z-30">
 
-                        <ShareButton
-                            surveyId={surveyId}
-                            surveyTitle={surveyTitle}
-                            publicToken={publicToken}
-                            variant="header"
-                        />
 
-                        <div className="w-px h-6 bg-white/10 mx-1" />
-                        <div className="w-px h-6 bg-white/10 mx-1" />
-                        <div className="w-px h-6 bg-white/10 mx-1" />
                         <button
                             onClick={() => setShowDateModal(true)}
                             className="flex items-center gap-2 px-5 py-2 text-white hover:text-white text-sm font-medium rounded-full hover:bg-white/5 transition-all"
@@ -561,18 +552,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
 
                     </div>
 
-                    <DateRangePicker
-                        date={dateRange}
-                        setDate={setDateRange}
-                        onGenerate={() => {
-                            // La obtención de datos se activa por useEffect cuando cambia la fecha
-                            setManualData(null) // Limpiar momentáneamente para mostrar estado de carga si se desea
-                            setLoading(true)
-                            // El useEffect detectará el cambio o podemos dejarlo al efecto.
-                            // Dado que setDate activa el efecto, este botón podría ser redundante o usado para "Actualizar".
-                            // Dejemos que el efecto lo maneje.
-                        }}
-                    />
+
                 </div>
             </div>
             {/* --- MODAL DE SELECCIÓN DE FECHA --- */}
