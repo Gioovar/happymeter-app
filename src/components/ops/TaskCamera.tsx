@@ -19,6 +19,7 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
     const [capturedImage, setCapturedImage] = useState<string | null>(null);
     const [capturedVideo, setCapturedVideo] = useState<Blob | null>(null);
     const [capturedVideoUrl, setCapturedVideoUrl] = useState<string | null>(null);
+    const [galleryFile, setGalleryFile] = useState<File | null>(null); // Store original file from gallery
 
     const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -156,7 +157,11 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
         let file: File;
         let type: 'PHOTO' | 'VIDEO' = 'PHOTO';
 
-        if (capturedImage) {
+        if (galleryFile) {
+            // Use the original file from gallery (HEIC/JPG/PNG)
+            file = galleryFile;
+            type = 'PHOTO';
+        } else if (capturedImage) {
             const res = await fetch(capturedImage);
             const blob = await res.blob();
             file = new File([blob], "evidence.jpg", { type: "image/jpeg" });
@@ -180,6 +185,7 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
         setCapturedImage(null);
         setCapturedVideo(null);
         setCapturedVideoUrl(null);
+        setGalleryFile(null);
     };
 
     // Format seconds to MM:SS
@@ -274,6 +280,31 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
                             </div>
                         )}
 
+                        {/* Gallery Upload Button */}
+                        {!isRecording && mode === 'PHOTO' && (
+                            <div className="absolute right-8 bottom-8 z-30">
+                                <label className="flex flex-col items-center gap-1 cursor-pointer text-white/80 hover:text-white transition-colors">
+                                    <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center">
+                                        <Square className="w-6 h-6" />
+                                    </div>
+                                    <span className="text-[10px] font-medium">Galería</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*,.heic,.heif"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                setGalleryFile(file);
+                                                setCapturedImage(URL.createObjectURL(file));
+                                                setCapturedVideo(null);
+                                            }
+                                        }}
+                                    />
+                                </label>
+                            </div>
+                        )}
+
                     </div>
                 </>
             ) : (
@@ -314,3 +345,4 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
         </div>
     );
 }
+

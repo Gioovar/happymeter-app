@@ -21,24 +21,36 @@ interface TaskCaptureClientProps {
 export default function TaskCaptureClient({ task }: TaskCaptureClientProps) {
     const router = useRouter();
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<number>(0);
 
     const handleCapture = async (file: File, meta: { lat: number, lng: number, capturedAt: Date, type: 'PHOTO' | 'VIDEO' }) => {
         setIsUploading(true);
+        setUploadProgress(0);
         try {
-            // 1. Upload File to Supabase
-            // Use different folders or extensions based on type if needed, but 'evidence' bucket is fine.
-            const ext = file.type.split('/')[1] || 'jpg';
-            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+            let publicUrl = '';
 
-            const { data, error } = await supabase.storage
-                .from('evidence')
-                .upload(fileName, file);
+            if (meta.type === 'PHOTO') {
+                // Use robust image processing (HEIC -> JPG, Compress -> Vercel Blob)
+                const { processAndUploadImage } = await import('@/lib/image-processing');
+                const result = await processAndUploadImage(file, (progress) => {
+                    setUploadProgress(Math.round(progress));
+                });
+                publicUrl = result.url;
+            } else {
+                // Video: Keep using Supabase for now (handling large files)
+                const ext = file.type.split('/')[1] || 'webm';
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
 
-            if (error) throw error;
+                const { data, error } = await supabase.storage
+                    .from('evidence')
+                    .upload(fileName, file);
 
-            const publicUrl = supabase.storage
-                .from('evidence')
-                .getPublicUrl(fileName).data.publicUrl;
+                if (error) throw error;
+
+                publicUrl = supabase.storage
+                    .from('evidence')
+                    .getPublicUrl(fileName).data.publicUrl;
+            }
 
             // 2. Submit Evidence
             await submitTaskEvidence({
@@ -49,11 +61,6 @@ export default function TaskCaptureClient({ task }: TaskCaptureClientProps) {
 
             toast.success("Evidencia enviada correctamente");
 
-            // If "BOTH" maybe we should check if they need to upload the other one?
-            // For now, let's assume one is enough or they can enter again.
-            // But realistically for "BOTH" they might want to upload two. 
-            // The user complaint was "It only asked for Photo". Now they can choose.
-
             router.push('/ops/tasks');
             router.refresh();
 
@@ -62,6 +69,7 @@ export default function TaskCaptureClient({ task }: TaskCaptureClientProps) {
             toast.error(error.message || "Error al enviar evidencia");
         } finally {
             setIsUploading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -69,8 +77,10 @@ export default function TaskCaptureClient({ task }: TaskCaptureClientProps) {
         return (
             <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
                 <UploadCloud className="w-12 h-12 animate-bounce text-indigo-500 mb-4" />
-                <h2 className="text-xl font-bold">Subiendo Evidencia...</h2>
-                <p className="text-gray-400">Por favor espera un momento.</p>
+                <h2 className="text-xl font-bold">Subiendo Evidencia... {uploadProgress > 0 && `${uploadProgress}%`}</h2>
+                <p className="text-gray-400">
+                    {uploadProgress > 0 && uploadProgress < 100 ? 'Procesando y optimizando...' : 'Por favor espera un momento.'}
+                </p>
             </div>
         )
     }
