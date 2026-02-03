@@ -75,7 +75,6 @@ export default function ChainTrendsChart({ data, branches }: ChainTrendsChartPro
                                 fontSize={10}
                                 tickLine={false}
                                 axisLine={false}
-                                domain={[0, 10]}
                                 tickCount={6}
                             />
                             <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#ffffff20' }} />
