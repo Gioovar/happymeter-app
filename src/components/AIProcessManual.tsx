@@ -709,6 +709,14 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                             </div>
                                             <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">Reporte de Inteligencia Artificial</h1>
                                             <p className="text-sm md:text-xl text-gray-400 px-4">Análisis detallado y estrategias de optimización para <br className="hidden md:block" />{surveyTitle}</p>
+                                            <div className="mt-4 flex justify-center">
+                                                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs md:text-sm text-gray-400">
+                                                    <Calendar className="w-3 h-3 md:w-4 md:h-4 text-violet-400" />
+                                                    <span>
+                                                        Del <span className="text-gray-200 font-medium">{dateRange?.from ? format(dateRange.from, "d 'de' MMMM", { locale: es }) : ''}</span> al <span className="text-gray-200 font-medium">{dateRange?.to ? format(dateRange.to, "d 'de' MMMM, yyyy", { locale: es }) : ''}</span>
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {/* Cuadrícula de Métricas */}
