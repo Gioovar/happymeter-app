@@ -95,7 +95,11 @@ export async function GET(req: Request) {
                     where: {
                         userId: userId,
                         type: 'REPORT',
-                        title: title,
+                        // Check specifically for this survey ID in meta to handle duplicate names
+                        meta: {
+                            path: ['surveyId'],
+                            equals: survey.id
+                        },
                         createdAt: {
                             gte: startOfDay(today),
                             lte: endOfDay(today)
