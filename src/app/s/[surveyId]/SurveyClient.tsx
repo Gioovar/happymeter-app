@@ -13,6 +13,14 @@ import { SequentialDatePicker } from '@/components/ui/SequentialDatePicker'
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 
 
+// Helper to prevent timezone issues (off-by-one error)
+const parseLocalDate = (dateString: string | undefined | null) => {
+    if (!dateString) return undefined
+    // Handle explicit handling of YYYY-MM-DD to ensure local rendering
+    const [year, month, day] = dateString.split('-').map(Number)
+    return new Date(year, month - 1, day)
+}
+
 export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, isOwner: boolean }) {
     const searchParams = useSearchParams()
     const urlSource = searchParams.get('source')
@@ -401,7 +409,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                             <DialogTitle className="sr-only">Seleccionar fecha de cumpleaños</DialogTitle>
                                                             <DialogDescription className="sr-only">Usa el selector para elegir tu año, mes y día de nacimiento.</DialogDescription>
                                                             <SequentialDatePicker
-                                                                value={formData.birthday ? new Date(formData.birthday + 'T00:00:00') : undefined}
+                                                                value={parseLocalDate(formData.birthday)}
                                                                 onChange={(date) => handleInputChange('birthday', date ? format(date, 'yyyy-MM-dd') : '')}
                                                                 onClose={() => setIsBirthdayPickerOpen(false)}
                                                             />
@@ -703,7 +711,7 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
                         <DialogTitle className="sr-only">Seleccionar fecha</DialogTitle>
                         <DialogDescription className="sr-only">Usa el selector para elegir una fecha.</DialogDescription>
                         <SequentialDatePicker
-                            value={value ? new Date(value + 'T00:00:00') : undefined}
+                            value={parseLocalDate(value)}
                             onChange={(date) => onChange(date ? format(date, 'yyyy-MM-dd') : '')}
                             onClose={() => setIsDatePickerOpen(false)}
                         />
