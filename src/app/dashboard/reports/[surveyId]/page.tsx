@@ -5,7 +5,7 @@ import AIProcessManual from '@/components/AIProcessManual'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 
-export default async function ReportPage({ params }: { params: Promise<{ surveyId: string }> }) {
+export default async function ReportPage({ params, searchParams }: { params: Promise<{ surveyId: string }>, searchParams: { [key: string]: string | string[] | undefined } }) {
     const { surveyId } = await params
     const { userId } = await auth()
 
@@ -31,6 +31,10 @@ export default async function ReportPage({ params }: { params: Promise<{ surveyI
         return <div className="p-8 text-white">Encuesta no encontrada</div>
     }
 
+    const initialAutoStart = searchParams?.auto === 'true'
+    const initialFrom = typeof searchParams?.from === 'string' ? new Date(searchParams.from) : undefined
+    const initialTo = typeof searchParams?.to === 'string' ? new Date(searchParams.to) : undefined
+
     return (
         <div className="min-h-screen bg-[#f3f4f6] text-black pb-20">
             <div className="bg-black text-white p-4 print:hidden sticky top-0 z-50 shadow-md">
@@ -48,6 +52,9 @@ export default async function ReportPage({ params }: { params: Promise<{ surveyI
                     surveyTitle={survey.title}
                     initialIndustry={userSettings?.industry || undefined}
                     availableSurveys={surveys}
+                    initialAutoStart={initialAutoStart}
+                    initialFrom={initialFrom}
+                    initialTo={initialTo}
                 />
             </div>
         </div>

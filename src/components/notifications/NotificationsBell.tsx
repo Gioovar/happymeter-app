@@ -53,10 +53,16 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                 from: startDate.toISOString(),
                 to: endDate.toISOString()
             }).toString()
+
             toast.loading("🔄 Conectando con tu reporte...", {
                 description: "Preparando análisis actualizado. Por favor espera."
             })
-            router.push(`/dashboard/reports?${query}`)
+
+            if (notif.meta?.surveyId) {
+                router.push(`/dashboard/reports/${notif.meta.surveyId}?${query}`)
+            } else {
+                router.push(`/dashboard/reports?${query}`)
+            }
         }
 
         setTimeout(() => setLoadingId(null), 1000)

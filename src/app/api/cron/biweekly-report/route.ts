@@ -49,16 +49,17 @@ export async function GET(req: Request) {
 
         console.log(`[CRON] Found ${surveysWithActivity.length} active surveys.`)
 
-        // 2. Group by User ID
-        const userStats: Record<string, { totalResponses: number, totalNpsResponses: number, promoters: number, detractors: number }> = {}
+        // 2. Generate Notifications Per Survey
+        let reportsGenerated = 0
 
         for (const survey of surveysWithActivity) {
             const userId = survey.userId
-            if (!userStats[userId]) {
-                userStats[userId] = { totalResponses: 0, totalNpsResponses: 0, promoters: 0, detractors: 0 }
-            }
 
-            userStats[userId].totalResponses += survey.responses.length
+            // Calculate Stats for this specific survey
+            let totalResponses = survey.responses.length
+            let totalNpsResponses = 0
+            let promoters = 0
+            let detractors = 0
 
             for (const response of survey.responses) {
                 const ratingAnswer = response.answers.find(a =>
@@ -67,7 +68,6 @@ export async function GET(req: Request) {
 
                 if (ratingAnswer) {
                     const val = parseInt(ratingAnswer.value)
-
                     let isPromoter = false
                     let isDetractor = false
 
@@ -81,26 +81,21 @@ export async function GET(req: Request) {
                         if (val <= 3) isDetractor = true
                     }
 
-                    userStats[userId].totalNpsResponses++
-                    if (isPromoter) userStats[userId].promoters++
-                    if (isDetractor) userStats[userId].detractors++
+                    totalNpsResponses++
+                    if (isPromoter) promoters++
+                    if (isDetractor) detractors++
                 }
             }
-        }
 
-        // 3. Generate Notifications
-        let reportsGenerated = 0
-        const userIds = Object.keys(userStats)
+            if (totalResponses > 0) {
+                // Idempotency Check: Prevent duplicate reports for exact same survey/day
+                const title = `📈 Resumen Quincenal (${survey.title})`
 
-        for (const userId of userIds) {
-            const stats = userStats[userId]
-            if (stats.totalResponses > 0) {
-                // Idempotency Check: Prevent duplicate reports on the same day
                 const alreadySent = await prisma.notification.findFirst({
                     where: {
                         userId: userId,
                         type: 'REPORT',
-                        title: '📈 Resumen Quincenal',
+                        title: title,
                         createdAt: {
                             gte: startOfDay(today),
                             lte: endOfDay(today)
@@ -109,21 +104,25 @@ export async function GET(req: Request) {
                 })
 
                 if (alreadySent) {
-                    console.log(`[CRON] Report already sent for ${userId} today. Skipping.`)
+                    console.log(`[CRON] Report already sent for ${survey.title} today. Skipping.`)
                     continue
                 }
 
-                const npsScore = stats.totalNpsResponses > 0
-                    ? Math.round(((stats.promoters - stats.detractors) / stats.totalNpsResponses) * 100)
+                const npsScore = totalNpsResponses > 0
+                    ? Math.round(((promoters - detractors) / totalNpsResponses) * 100)
                     : 0
 
                 await prisma.notification.create({
                     data: {
                         userId: userId,
                         type: 'REPORT',
-                        title: '📈 Resumen Quincenal',
-                        message: `En los últimos 15 días has recibido ${stats.totalResponses} nuevas respuestas.\nTu NPS calculado es: ${npsScore}.\n¡Sigue así!`,
-                        meta: { type: 'biweekly_report', date: new Date().toISOString() }
+                        title: title,
+                        message: `En los últimos 15 días, "${survey.title}" recibió ${totalResponses} nuevas respuestas.\nEl NPS calculado es: ${npsScore}.\n¡Revisa los detalles!`,
+                        meta: {
+                            type: 'biweekly_report',
+                            date: new Date().toISOString(),
+                            surveyId: survey.id
+                        }
                     }
                 })
                 reportsGenerated++
