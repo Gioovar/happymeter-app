@@ -398,7 +398,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                                 style={{ backgroundColor: theme.inputBg, color: formData.birthday ? theme.text : theme.textSecondary }}
                                                             >
                                                                 {formData.birthday ? (
-                                                                    format(new Date(formData.birthday), "PPP", { locale: es })
+                                                                    format(parseLocalDate(formData.birthday)!, "PPP", { locale: es })
                                                                 ) : (
                                                                     <span>Selecciona una fecha</span>
                                                                 )}
@@ -700,7 +700,7 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
                             style={{ backgroundColor: theme.inputBg, color: value ? theme.text : theme.textSecondary }}
                         >
                             {value ? (
-                                format(new Date(value), "PPP", { locale: es })
+                                format(parseLocalDate(value)!, "PPP", { locale: es })
                             ) : (
                                 <span>Selecciona una fecha</span>
                             )}
