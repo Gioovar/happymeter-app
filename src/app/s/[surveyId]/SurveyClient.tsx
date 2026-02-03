@@ -401,7 +401,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                                                             <DialogTitle className="sr-only">Seleccionar fecha de cumpleaños</DialogTitle>
                                                             <DialogDescription className="sr-only">Usa el selector para elegir tu año, mes y día de nacimiento.</DialogDescription>
                                                             <SequentialDatePicker
-                                                                value={formData.birthday ? new Date(formData.birthday) : undefined}
+                                                                value={formData.birthday ? new Date(formData.birthday + 'T00:00:00') : undefined}
                                                                 onChange={(date) => handleInputChange('birthday', date ? format(date, 'yyyy-MM-dd') : '')}
                                                                 onClose={() => setIsBirthdayPickerOpen(false)}
                                                             />
@@ -703,7 +703,7 @@ function QuestionField({ question, value, onChange, theme, formData }: any) {
                         <DialogTitle className="sr-only">Seleccionar fecha</DialogTitle>
                         <DialogDescription className="sr-only">Usa el selector para elegir una fecha.</DialogDescription>
                         <SequentialDatePicker
-                            value={value ? new Date(value) : undefined}
+                            value={value ? new Date(value + 'T00:00:00') : undefined}
                             onChange={(date) => onChange(date ? format(date, 'yyyy-MM-dd') : '')}
                             onClose={() => setIsDatePickerOpen(false)}
                         />
