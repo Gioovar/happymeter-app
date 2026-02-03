@@ -53,6 +53,9 @@ export default function NotificationsBell({ align = 'right' }: NotificationsBell
                 from: startDate.toISOString(),
                 to: endDate.toISOString()
             }).toString()
+            toast.loading("🔄 Conectando con tu reporte...", {
+                description: "Preparando análisis actualizado. Por favor espera."
+            })
             router.push(`/dashboard/reports?${query}`)
         }
 
