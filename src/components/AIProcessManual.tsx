@@ -15,6 +15,7 @@ import jsPDF from 'jspdf'
 import { getSurveyAnalytics, getPublicSurveyAnalytics } from '@/actions/analytics'
 import ShareButton from './ShareButton'
 import HappyLoader from '@/components/HappyLoader'
+import ModernLoader from '@/components/ModernLoader'
 import BrandLogo from '@/components/BrandLogo'
 
 interface AIProcessManualProps {
@@ -743,8 +744,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                         {/* Mostrar Cargador si Estrategias Cargando */}
                                         {strategiesLoading && (
                                             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                                                <HappyLoader size="md" text="Analizando métricas con IA para generar estrategias..." />
-                                                <p className="text-gray-500 text-sm max-w-md">Esto puede tomar unos segundos mientras HappyMeter AI 2.0 Gemini procesa el feedback.</p>
+                                                <ModernLoader text="Analizando métricas con IA para generar estrategias..." />
                                             </div>
                                         )}
 
@@ -806,7 +806,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                     </div>
 
                                     {/* CTA Inferior */}
-                                    <div className="mt-12 md:mt-24 text-center pb-12 flex flex-col md:flex-row justify-center gap-3 md:gap-4 px-4 md:px-0">
+                                    <div className={`mt-12 md:mt-24 text-center pb-12 flex flex-col md:flex-row justify-center gap-3 md:gap-4 px-4 md:px-0 transition-opacity duration-300 ${strategiesLoading ? 'opacity-50 pointer-events-none' : ''}`}>
                                         <ShareButton
                                             surveyId={surveyId}
                                             surveyTitle={surveyTitle}
@@ -816,14 +816,16 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                         />
                                         <button
                                             onClick={downloadPDF}
-                                            className="px-6 py-3 bg-slate-800 text-white font-bold rounded-full hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-700 w-full md:w-auto text-sm md:text-base"
+                                            disabled={strategiesLoading}
+                                            className="px-6 py-3 bg-slate-800 text-white font-bold rounded-full hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-700 w-full md:w-auto text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <Download className="w-5 h-5" />
                                             Descargar PDF (Impresión)
                                         </button>
                                         <button
                                             onClick={() => setShowReport(false)}
-                                            className="px-6 py-3 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors border border-white/10 w-full md:w-auto text-sm md:text-base"
+                                            disabled={strategiesLoading}
+                                            className="px-6 py-3 bg-white/10 text-white font-bold rounded-full hover:bg-white/20 transition-colors border border-white/10 w-full md:w-auto text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Cerrar Reporte
                                         </button>
