@@ -15,7 +15,7 @@ interface NotificationsBellProps {
     align?: 'left' | 'right'
 }
 
-export default function NotificationsBell({ align = 'right', currentSurveyId }: NotificationsBellProps & { currentSurveyId?: string }) {
+export default function NotificationsBell({ align = 'right', currentBranchId }: NotificationsBellProps & { currentBranchId?: string }) {
     const { notifications, unreadCount, markAsRead, deleteRead, loadingId, setLoadingId, requestPushPermission } = useNotifications()
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
@@ -34,17 +34,17 @@ export default function NotificationsBell({ align = 'right', currentSurveyId }: 
 
     const filteredNotifications = notifications.filter(n => {
         // 1. If no context, show all
-        if (!currentSurveyId) return true
+        if (!currentBranchId) return true
 
         // 2. Always show Global types
         if (['SYSTEM', 'ACHIEVEMENT', 'INFO'].includes(n.type)) return true
 
-        // 3. Filter by Survey ID
-        if (n.meta?.surveyId) {
-            return n.meta.surveyId === currentSurveyId
+        // 3. Filter by Branch ID (Origin of the notification)
+        if (n.meta?.branchId) {
+            return n.meta.branchId === currentBranchId
         }
 
-        return true
+        return false
     })
 
     const handleClick = (notif: any) => {

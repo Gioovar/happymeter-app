@@ -101,7 +101,8 @@ async function triggerBiWeeklyReport() {
                         meta: {
                             type: 'biweekly_report',
                             date: new Date().toISOString(),
-                            surveyId: survey.id
+                            surveyId: survey.id,
+                            branchId: survey.userId
                         }
                     }
                 })

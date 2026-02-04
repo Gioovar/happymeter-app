@@ -142,7 +142,7 @@ export default function DashboardSidebar({
                 <div className="hidden md:block">
                     <NotificationsBell
                         align="left"
-                        currentSurveyId={(() => {
+                        currentBranchId={(() => {
                             if (!branchSlug) return undefined
                             // Find Branch ID from Slug in Chains
                             for (const chain of chains) {
@@ -605,7 +605,7 @@ export default function DashboardSidebar({
                 {/* Notifications on Mobile */}
                 <div className="flex items-center gap-2">
                     <NotificationsBell
-                        currentSurveyId={(() => {
+                        currentBranchId={(() => {
                             if (!branchSlug) return undefined
                             for (const chain of chains) {
                                 const branch = chain.branches.find(b => b.slug === branchSlug || b.branchId === branchSlug)
