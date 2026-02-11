@@ -106,7 +106,10 @@ export function ModernMenuView({ userId, onClose, businessName }: ModernMenuView
                     {filteredCategories.map(cat => (
                         <button
                             key={cat.id}
-                            onClick={() => scrollToCategory(cat.id)}
+                            onClick={() => {
+                                setActiveCategory(cat.id)
+                                // Reset subcategory scroll or selection if needed
+                            }}
                             className={cn(
                                 "whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold transition-all border",
                                 activeCategory === cat.id
@@ -118,6 +121,29 @@ export function ModernMenuView({ userId, onClose, businessName }: ModernMenuView
                         </button>
                     ))}
                 </div>
+
+                {/* Subcategories Nav (Only for active category) */}
+                {(() => {
+                    const currentCat = filteredCategories.find(c => c.id === activeCategory)
+                    if (!currentCat?.subCategories?.length) return null
+
+                    return (
+                        <div className="px-4 overflow-x-auto scrollbar-hide flex gap-2 pb-2 mt-1 border-t border-white/5 pt-2">
+                            {currentCat.subCategories.map((sub: any) => (
+                                <button
+                                    key={sub.id}
+                                    onClick={() => {
+                                        const element = document.getElementById(`sub-${sub.id}`)
+                                        if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                                    }}
+                                    className="whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all"
+                                >
+                                    {sub.name}
+                                </button>
+                            ))}
+                        </div>
+                    )
+                })()}
             </div>
 
             {/* Menu Content */}
@@ -131,23 +157,21 @@ export function ModernMenuView({ userId, onClose, businessName }: ModernMenuView
                         <p>No se encontraron productos</p>
                     </div>
                 ) : (
-                    filteredCategories.map(cat => {
-                        // Group items
-                        const noSubProducts = cat.products.filter((p: any) => !p.subCategoryId)
-                        const subCategoriesWithProducts = cat.subCategories?.map((sub: any) => ({
+                    (() => {
+                        const currentCat = filteredCategories.find(c => c.id === activeCategory)
+                        if (!currentCat) return null
+
+                        const noSubProducts = currentCat.products.filter((p: any) => !p.subCategoryId)
+                        const subCategoriesWithProducts = currentCat.subCategories?.map((sub: any) => ({
                             ...sub,
-                            products: cat.products.filter((p: any) => p.subCategoryId === sub.id)
+                            products: currentCat.products.filter((p: any) => p.subCategoryId === sub.id)
                         })).filter((sub: any) => sub.products.length > 0) || []
 
                         return (
-                            <div
-                                key={cat.id}
-                                ref={el => { categoryRefs.current[cat.id] = el }}
-                                className="scroll-mt-40"
-                            >
-                                <h3 className="text-xl font-bold mb-4 sticky top-0 bg-[#0a0a0f]/95 py-2 z-10 backdrop-blur-sm">{cat.name}</h3>
+                            <div key={currentCat.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {/* <h3 className="text-xl font-bold mb-4 sticky top-0 bg-[#0a0a0f]/95 py-2 z-10 backdrop-blur-sm">{currentCat.name}</h3> */ /* Removing duplicate header since we have tabs */}
 
-                                <div className="space-y-6">
+                                <div className="space-y-8">
                                     {/* Products without subcategory */}
                                     {noSubProducts.length > 0 && (
                                         <div className="grid grid-cols-1 gap-4">
@@ -159,7 +183,7 @@ export function ModernMenuView({ userId, onClose, businessName }: ModernMenuView
 
                                     {/* Subcategories */}
                                     {subCategoriesWithProducts.map((sub: any) => (
-                                        <div key={sub.id}>
+                                        <div key={sub.id} id={`sub-${sub.id}`} className="scroll-mt-32">
                                             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1 border-l-2 border-indigo-500">{sub.name}</h4>
                                             <div className="grid grid-cols-1 gap-4">
                                                 {sub.products.map((product: any) => (
@@ -168,10 +192,16 @@ export function ModernMenuView({ userId, onClose, businessName }: ModernMenuView
                                             </div>
                                         </div>
                                     ))}
+
+                                    {noSubProducts.length === 0 && subCategoriesWithProducts.length === 0 && (
+                                        <div className="text-center py-10 text-gray-600">
+                                            <p>No hay productos en esta categoría.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )
-                    })
+                    })()
                 )}
 
                 <div className="text-center py-8 text-xs text-gray-600">
