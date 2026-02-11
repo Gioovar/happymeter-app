@@ -109,14 +109,6 @@ export async function deleteSubCategory(subCategoryId: string) {
     }
 }
 
-revalidatePath('/dashboard/loyalty')
-return { success: true }
-    } catch (error: any) {
-    console.error('Error deleting category:', error)
-    return { success: false, error: 'Error al eliminar categoría' }
-}
-}
-
 // --- PRODUCTS ---
 
 export async function upsertProduct(data: {
