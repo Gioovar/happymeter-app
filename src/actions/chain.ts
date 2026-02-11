@@ -261,7 +261,8 @@ export async function getChainDetails() {
                         branch: {
                             select: {
                                 userId: true,
-                                businessName: true
+                                businessName: true,
+                                state: true
                             }
                         }
                     }
@@ -415,5 +416,51 @@ export async function updateChain(chainId: string, data: { name: string, logoUrl
     } catch (error) {
         console.error('Error updating chain:', error)
         return { success: false, error: String(error) }
+    }
+}
+
+export async function updateBranch(branchUserId: string, data: { name: string, country?: string }) {
+    try {
+        const user = await currentUser()
+        if (!user) throw new Error('Unauthorized')
+
+        // 1. Verify Ownership
+        const branchRelation = await prisma.chainBranch.findFirst({
+            where: { branchId: branchUserId },
+            include: { chain: true }
+        })
+
+        if (!branchRelation) throw new Error('Branch not found')
+
+        if (branchRelation.chain.ownerId !== user.id) {
+            throw new Error('Unauthorized: You do not own this branch')
+        }
+
+        // 2. Update ChainBranch Name (Display name)
+        await prisma.chainBranch.updateMany({
+            where: {
+                chainId: branchRelation.chainId,
+                branchId: branchUserId
+            },
+            data: {
+                name: data.name
+            }
+        })
+
+        // 3. Update UserSettings (Business Name & Country/State)
+        await prisma.userSettings.update({
+            where: { userId: branchUserId },
+            data: {
+                businessName: data.name,
+                state: data.country // Storing country in 'state' field as planned
+            }
+        })
+
+        revalidatePath('/chains')
+        revalidatePath('/dashboard/chains')
+        return { success: true }
+    } catch (error: any) {
+        console.error('Error updating branch:', error)
+        return { success: false, error: error.message || String(error) }
     }
 }

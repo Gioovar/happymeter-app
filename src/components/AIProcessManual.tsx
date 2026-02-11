@@ -27,9 +27,10 @@ interface AIProcessManualProps {
     initialAutoStart?: boolean
     initialFrom?: Date
     initialTo?: Date
+    targetUserId?: string; // New Prop for Branch Context
 }
 
-export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys, initialAutoStart = false, initialFrom, initialTo }: AIProcessManualProps) {
+export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys, initialAutoStart = false, initialFrom, initialTo, targetUserId }: AIProcessManualProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
     const [loading, setLoading] = useState(true)
@@ -125,7 +126,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                 if (publicToken) {
                     fastAnalytics = await getPublicSurveyAnalytics(surveyId, publicToken, { from, to }, industry, true)
                 } else {
-                    fastAnalytics = await getSurveyAnalytics(surveyId, { from, to }, industry, true)
+                    fastAnalytics = await getSurveyAnalytics(surveyId, { from, to }, targetUserId, true) // Pass targetUserId and skipAI=true
                 }
 
                 setManualData({
@@ -170,7 +171,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                     if (publicToken) {
                         fullAnalytics = await getPublicSurveyAnalytics(surveyId, publicToken, { from, to }, industry, false)
                     } else {
-                        fullAnalytics = await getSurveyAnalytics(surveyId, { from, to }, industry, false)
+                        fullAnalytics = await getSurveyAnalytics(surveyId, { from, to }, targetUserId, false) // Pass targetUserId and skipAI=false
                     }
 
                     if (fullAnalytics && fullAnalytics.generatedStrategies) {
@@ -707,7 +708,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                             <div className="inline-flex p-3 bg-violet-500/10 rounded-2xl mb-4 border border-violet-500/20">
                                                 <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-violet-400" />
                                             </div>
-                                            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">Reporte de Inteligencia Artificial</h1>
+                                            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">Reporte de IA HappyMeter</h1>
                                             <p className="text-sm md:text-xl text-gray-400 px-4">Análisis detallado y estrategias de optimización para <br className="hidden md:block" />{surveyTitle}</p>
                                             <div className="mt-4 flex justify-center">
                                                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs md:text-sm text-gray-400">

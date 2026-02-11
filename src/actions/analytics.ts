@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { startOfDay, subDays, format, endOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { getGeminiModel } from '@/lib/gemini'
+import { DateRange } from 'react-day-picker'
 
 
 // --- STATIC STRATEGY GENERATION ---
@@ -41,6 +42,54 @@ interface AnalyticsData {
 import { unstable_cache } from 'next/cache'
 
 // --- CACHED DATA FETCHING ---
+export async function getSurveyAnalytics(surveyId: string, dateRange: DateRange, overrideUserId?: string, skipAI: boolean = false) {
+    const { userId } = await auth()
+    if (!userId) {
+        throw new Error("Unauthorized")
+    }
+
+    // Determine the "Effective User ID"
+    let targetUserId = userId;
+
+    // If an override is requested (e.g. looking at a specific branch)
+    if (overrideUserId && overrideUserId !== userId) {
+        // SECURITY CHECK: Ensure the authenticated `userId` OWNS the `overrideUserId` (which represents a Branch)
+        const isOwner = await prisma.chain.findFirst({
+            where: {
+                ownerId: userId,
+                branches: {
+                    some: {
+                        branchId: overrideUserId
+                    }
+                }
+            }
+        });
+
+        if (!isOwner) {
+            // Check if it's the other way around? (Branch accessing itself? Unlikely with this architecture)
+            // Or maybe a super-admin?
+            console.warn(`[Security] User ${userId} attempted to access analytics for ${overrideUserId} without ownership.`);
+            throw new Error("Unauthorized Access to Branch Data");
+        }
+
+        targetUserId = overrideUserId;
+    }
+
+    const start = dateRange?.from ? dateRange.from.toISOString() : new Date(0).toISOString()
+    const end = dateRange?.to ? dateRange.to.toISOString() : new Date().toISOString()
+
+    // Fetch User Settings to get the Industry (from the TARGET user, effectively the branch or owner)
+    const userSettings = await prisma.userSettings.findUnique({
+        where: { userId: targetUserId }
+    })
+
+    // Determine Industry Analysis
+    const industry = userSettings?.industry || 'restaurant'
+
+    // Use cached version for heavy lifting
+    return await getCachedAnalytics(targetUserId, surveyId, start, end, skipAI, industry)
+}
+
 const getCachedAnalytics = unstable_cache(
     async (userId: string, surveyId: string, startDateStr: string, endDateStr: string, skipAI: boolean, industry: string) => {
         const startDate = new Date(startDateStr)
@@ -331,32 +380,8 @@ const getCachedAnalytics = unstable_cache(
     }
 )
 
-export async function getSurveyAnalytics(surveyId: string, dateRange?: { from: Date; to: Date }, industry: string = 'restaurant', skipAI: boolean = false): Promise<AnalyticsData> {
-    try {
-        const { userId } = await auth()
-        if (!userId) throw new Error('Unauthorized')
+// Old function removed to avoid duplicate implementation
 
-        // 2. Determine Data Window (Moved up for DB Optimization)
-        const toDate = dateRange?.to || new Date()
-        const endDate = endOfDay(toDate)
-        const startDate = dateRange?.from || subDays(startOfDay(toDate), 30)
-
-        const result = await getCachedAnalytics(
-            userId,
-            surveyId,
-            startDate.toISOString(),
-            endDate.toISOString(),
-            skipAI,
-            industry
-        )
-
-        return result || getEmptyAnalytics()
-
-    } catch (error) {
-        console.error('ANALYTICS ACTION ERROR:', error)
-        return getEmptyAnalytics()
-    }
-}
 
 
 // --- AI GENERATION ---

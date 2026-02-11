@@ -54,10 +54,10 @@ export function DeleteBranchDialog({ branchId, branchName }: DeleteBranchDialogP
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-gray-500 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                    className="h-7 w-7 text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     title="Eliminar Sucursal"
                 >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                 </Button>
             </DialogTrigger>
             <DialogContent className="bg-zinc-950 border-white/10 text-white sm:max-w-md max-h-[90vh] overflow-y-auto">

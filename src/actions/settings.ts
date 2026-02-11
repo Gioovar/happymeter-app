@@ -44,7 +44,7 @@ export async function updateSettings(formData: FormData) {
     }
 
     try {
-        await prisma.userSettings.upsert({
+        const settings = await prisma.userSettings.upsert({
             where: { userId: targetUserId },
             update: {
                 businessName,
@@ -65,6 +65,16 @@ export async function updateSettings(formData: FormData) {
             }
         })
 
+        // Sync to ChainBranch (Critical for consistency)
+        try {
+            await prisma.chainBranch.updateMany({
+                where: { branchId: targetUserId },
+                data: { name: businessName }
+            })
+        } catch (e) {
+            console.error("Error syncing chain branch name:", e)
+        }
+
         // Sync to Loyalty Program if exists
         try {
             const program = await prisma.loyaltyProgram.findUnique({ where: { userId: targetUserId } })
@@ -79,6 +89,8 @@ export async function updateSettings(formData: FormData) {
         }
 
         revalidatePath('/dashboard/settings')
+        revalidatePath('/chains')
+        revalidatePath('/dashboard/chains')
         return { success: true }
     } catch (error: any) {
         console.error('SERVER ACTION ERROR:', error)

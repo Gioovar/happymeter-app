@@ -59,7 +59,11 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
                 type: 'CRISIS',
                 title: `🚨 Alerta de Crisis: ${survey.title}`,
                 message: message,
-                meta: { responseId: response.id, surveyId: survey.id }
+                meta: {
+                    responseId: response.id,
+                    surveyId: survey.id,
+                    branchId: survey.userId // Add explicit branchId for filtering
+                }
             }
         })
 
@@ -255,7 +259,11 @@ export async function sendStaffAlert(response: Response, survey: Survey, answers
                 type: 'SYSTEM', // Using SYSTEM type for general alerts
                 title: '📩 Nuevo Reporte de Staff',
                 message: message,
-                meta: { responseId: response.id, surveyId: survey.id }
+                meta: {
+                    responseId: response.id,
+                    surveyId: survey.id,
+                    branchId: survey.userId // Add explicit branchId key
+                }
             }
         })
 

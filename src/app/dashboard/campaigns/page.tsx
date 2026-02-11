@@ -1,73 +1,37 @@
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
+import CampaignsClient from '@/components/campaigns/CampaignsClient'
 
-'use client'
+export default async function CampaignsPage() {
+    const { userId } = await auth()
 
-import { useAuth } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
-import CampaignManager from '@/components/CampaignManager'
-import WhatsAppManager from '@/components/WhatsAppManager'
-
-export default function CampaignsPage() {
-    const { userId, isLoaded } = useAuth()
-    const router = useRouter()
-    const [surveys, setSurveys] = useState<{ id: string, title: string }[]>([])
-    const [selectedSurveyId, setSelectedSurveyId] = useState('all')
-
-    useEffect(() => {
-        const fetchSurveys = async () => {
-            const res = await fetch('/api/surveys')
-            if (res.ok) {
-                const data = await res.json()
-                if (Array.isArray(data)) {
-                    setSurveys(data)
-                } else {
-                    console.error("Invalid surveys data:", data)
-                    setSurveys([])
-                }
-            }
-        }
-        if (userId) fetchSurveys()
-    }, [userId])
-
-    if (isLoaded && !userId) {
-        router.push('/')
-        return null
+    if (!userId) {
+        redirect('/')
     }
 
-    const selectedSurveyTitle = surveys.find(s => s.id === selectedSurveyId)?.title || 'Todas las Encuestas'
+    // 1. Get all chains owned by user
+    const userChains = await prisma.chain.findMany({
+        where: { ownerId: userId },
+        include: { branches: true }
+    })
+
+    // 2. Extract branch IDs
+    const branchIds = userChains.flatMap(chain => chain.branches.map(b => b.branchId))
+
+    // 3. Include User's own ID
+    const targetUserIds = [userId, ...branchIds]
+
+    // Fetch all surveys available to this user (Personal + All Branches)
+    const surveys = await prisma.survey.findMany({
+        where: {
+            userId: { in: targetUserIds }
+        },
+        select: { id: true, title: true },
+        orderBy: { createdAt: 'desc' }
+    })
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 space-y-8 font-sans">
-            {/* Header Hub */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
-                <div>
-                    <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400 mb-2">
-                        Marketing Hub
-                    </h1>
-                    <p className="text-gray-400 max-w-2xl">
-                        Centraliza tus esfuerzos de retención. Exporta audiencias para redes sociales y gestiona tus comunidades de WhatsApp desde un solo lugar.
-                    </p>
-                </div>
-                <div className="flex items-center gap-3 bg-white/5 p-1 rounded-xl border border-white/10">
-                    <span className="text-xs text-gray-500 font-bold px-2 uppercase tracking-wider">Fuente de Datos:</span>
-                    <select
-                        value={selectedSurveyId}
-                        onChange={(e) => setSelectedSurveyId(e.target.value)}
-                        className="bg-transparent text-sm text-white focus:outline-none font-medium min-w-[180px] cursor-pointer hover:text-violet-300 transition"
-                    >
-                        <option value="all" className="bg-[#1a1d26]">Todas las Encuestas</option>
-                        {surveys.map(survey => (
-                            <option key={survey.id} value={survey.id} className="bg-[#1a1d26]">{survey.title}</option>
-                        ))}
-                    </select>
-                </div>
-            </div>
-
-            {/* Grid Principal */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <CampaignManager selectedSurveyTitle={selectedSurveyTitle} selectedSurveyId={selectedSurveyId} />
-                <WhatsAppManager selectedSurveyTitle={selectedSurveyTitle} selectedSurveyId={selectedSurveyId} />
-            </div>
-        </div>
+        <CampaignsClient initialSurveys={surveys} />
     )
 }

@@ -9,9 +9,10 @@ import CopyGeneratorModal from './CopyGeneratorModal'
 interface WhatsAppManagerProps {
     selectedSurveyTitle?: string
     selectedSurveyId?: string
+    branchId?: string
 }
 
-export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selectedSurveyId }: WhatsAppManagerProps) {
+export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selectedSurveyId, branchId }: WhatsAppManagerProps) {
     const [segment, setSegment] = useState<'all' | 'vip' | 'promo' | 'angry' | 'neutral'>('vip')
     const [isExporting, setIsExporting] = useState(false)
     const [counts, setCounts] = useState({ vip: 0, neutral: 0, angry: 0, promo: 0 })
@@ -22,7 +23,7 @@ export default function WhatsAppManager({ selectedSurveyTitle = 'Todas', selecte
         const fetchCounts = async () => {
             setLoadingCounts(true)
             try {
-                const data = await getCampaignCounts(selectedSurveyId || 'all')
+                const data = await getCampaignCounts(selectedSurveyId || 'all', branchId)
                 setCounts(data || { vip: 0, neutral: 0, angry: 0, promo: 0 })
             } catch (error) {
                 console.error("Failed to load counts", error)

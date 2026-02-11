@@ -141,6 +141,10 @@ model UserSettings {
   branchOf            ChainBranch[]
 
   floorPlans          FloorPlan[]
+
+  // Menu
+  products            Product[]
+  productCategories   ProductCategory[]
 }
 
 
@@ -1064,3 +1068,56 @@ model ChainBranch {
   @@index([branchId])
 }
 
+// --- Digital Menu System ---
+
+model ProductCategory {
+  id          String   @id @default(uuid())
+  userId      String   // Links to UserSettings
+  name        String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    Product[]
+  subCategories ProductSubCategory[]
+
+  user        UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ProductSubCategory {
+  id          String   @id @default(uuid())
+  categoryId  String
+  name        String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    Product[]
+  
+  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  userId      String
+  categoryId  String
+  subCategoryId String? // Optional subcategory
+  name        String
+  description String?
+  price       Float
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subCategory ProductSubCategory? @relation(fields: [subCategoryId], references: [id])
+  user        UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([subCategoryId])
+}

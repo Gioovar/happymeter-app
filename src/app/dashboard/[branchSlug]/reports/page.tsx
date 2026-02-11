@@ -25,7 +25,7 @@ export default async function BranchReportsPage({ params }: { params: { branchSl
 
     // Fetch all surveys for the selector (Branch specific)
     const surveys = await prisma.survey.findMany({
-        where: { userId },
+        where: { userId: context.userId }, // Fix: Use context.userId (Branch ID) instead of potentially wrong inferred ID
         select: { id: true, title: true },
         orderBy: { createdAt: 'desc' }
     })
@@ -40,6 +40,7 @@ export default async function BranchReportsPage({ params }: { params: { branchSl
                 surveyTitle={`Reporte: ${context.name || 'Sucursal'}`}
                 initialIndustry={userSettings?.industry || 'restaurant'}
                 availableSurveys={surveys}
+                targetUserId={context.userId} // Pass the Branch ID as the target
             />
         </div>
     )

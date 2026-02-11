@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { createLoyaltyProgram, addLoyaltyReward, createLoyaltyRule, updateLoyaltyRule, applyLoyaltyTemplate, updateLoyaltyReward, deleteLoyaltyReward, redeemReward, logCustomerVisit, updateLoyaltyProgram } from "@/actions/loyalty"
-// Update imports to include getOperators and toggleMemberStatus
 import { inviteMember, getOperators, toggleMemberStatus } from "@/actions/team"
 import { createPromotion, deletePromotion, getPromotions } from "@/actions/loyalty"
-
 import { toast } from "sonner"
-import { Plus, Save, Gift, Trophy, QrCode, Zap, Layers, BarChart3, ArrowRight, Sparkles, Crown, X, Pencil, Eye, Utensils, Wine, Star, Camera, Users, Loader2, Bell, Clock } from "lucide-react"
+import { MenuManager } from "./MenuManager"
 import { CustomerLoyaltyCard } from "./CustomerLoyaltyCard"
 import { cn } from "@/lib/utils"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -26,9 +24,7 @@ import { Button } from "@/components/ui/button"
 import TiersManager from "./TiersManager"
 import NotificationsManager from "./NotificationsManager"
 import { RedemptionHistory } from "./RedemptionHistory"
-
-
-
+import { Plus, Save, Gift, Trophy, QrCode, Zap, Layers, BarChart3, ArrowRight, Sparkles, Crown, X, Pencil, Eye, Utensils, Wine, Star, Camera, Users, Loader2, Bell, Clock } from "lucide-react"
 
 function OperatorList() {
     // Ideally we fetch this data. For this simple implementation in a Client Component, 
@@ -419,7 +415,7 @@ interface LoyaltyDashboardProps {
 
 export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
     // State for the View Mode: 'hub' | 'advanced' | 'visits' | 'points'
-    const [viewMode, setViewMode] = useState<'hub' | 'advanced' | 'visits' | 'points'>('hub')
+    const [viewMode, setViewMode] = useState<'hub' | 'advanced' | 'visits' | 'points' | 'menu'>('hub')
 
     // Force Advanced View if tab is present in URL
     const searchParams = useSearchParams()
@@ -481,6 +477,10 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
 
     if (viewMode === 'points') {
         return <PointsLoyaltyView userId={userId} program={program} onBack={() => setViewMode('hub')} />
+    }
+
+    if (viewMode === 'menu') {
+        return <MenuManager userId={userId} onBack={() => setViewMode('hub')} />
     }
 
     if (viewMode === 'hub') {
@@ -550,7 +550,7 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
                         )
                     }
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         {/* OPTION 1: VISITS */}
                         <div
                             onClick={() => setViewMode('visits')}
@@ -616,6 +616,28 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
                                     <QrCode className="w-4 h-4" />
                                     <span>Ver QR</span>
                                 </button>
+                            </div>
+                        </div>
+
+                        {/* OPTION 3: MENU (NEW) */}
+                        <div
+                            onClick={() => setViewMode('menu')}
+                            className="bg-[#111] border border-white/10 rounded-3xl p-8 hover:bg-white/5 transition-all group cursor-pointer relative overflow-hidden flex flex-col"
+                        >
+                            <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ArrowRight className="w-6 h-6 text-pink-500 -rotate-45 group-hover:rotate-0 transition-transform duration-300" />
+                            </div>
+                            <div className="w-16 h-16 bg-pink-500/10 rounded-2xl flex items-center justify-center mb-6 border border-pink-500/20 group-hover:scale-110 transition-transform">
+                                <Utensils className="w-8 h-8 text-pink-400" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-2">Tu Menú Digital</h3>
+                            <p className="text-gray-400 mb-6 flex-1">Sube tus productos, precios y categorías para que tus clientes puedan verlos desde su tarjeta.</p>
+
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold bg-pink-500/10 text-pink-400 px-3 py-1 rounded-full border border-pink-500/20">Nuevo</span>
+                                <div className="p-2 bg-white/5 rounded-lg">
+                                    <QrCode className="w-4 h-4 text-gray-500" />
+                                </div>
                             </div>
                         </div>
                     </div>

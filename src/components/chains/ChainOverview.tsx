@@ -84,7 +84,7 @@ export default function ChainOverview({ metrics }: { metrics: GlobalChainMetrics
 
                 {/* CHART SECTION */}
                 <div className="lg:col-span-2 h-[400px]">
-                    <ChainTrendsChart data={metrics.satisfactionTrend} branches={metrics.branchBreakdown} />
+                    <ChainTrendsChart data={metrics.volumeTrend} branches={metrics.branchBreakdown} />
                 </div>
 
                 {/* RANKING SECTION */}

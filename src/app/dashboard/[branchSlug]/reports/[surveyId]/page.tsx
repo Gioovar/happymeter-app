@@ -4,14 +4,27 @@ import { redirect } from 'next/navigation'
 import AIProcessManual from '@/components/AIProcessManual'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
+import { getDashboardContext } from '@/lib/auth-context'
 
-export default async function ReportPage({ params, searchParams }: { params: Promise<{ surveyId: string }>, searchParams: { [key: string]: string | string[] | undefined } }) {
-    const { surveyId } = await params
+export default async function BranchReportPage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ branchSlug: string, surveyId: string }>,
+    searchParams: { [key: string]: string | string[] | undefined }
+}) {
+    const { branchSlug, surveyId } = await params
     const { userId } = await auth()
 
     if (!userId) redirect('/')
 
-    // 1. Find the survey first (without ownership check yet)
+    // 1. Resolve Branch Context
+    const context = await getDashboardContext(branchSlug)
+    if (!context || !context.userId) {
+        redirect('/dashboard')
+    }
+
+    // 2. Find the survey
     const survey = await prisma.survey.findUnique({
         where: { id: surveyId },
         select: { id: true, title: true, userId: true }
@@ -21,48 +34,24 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         return <div className="p-8 text-white">Encuesta no encontrada</div>
     }
 
-    // 2. Permission Check
-    let hasAccess = false
-
-    // A. Direct Ownership
-    if (survey.userId === userId) {
-        hasAccess = true
-    } else {
-        // B. Chain Ownership (Business Owner accessing Branch)
-        // Find the specific branch that owns this survey
-        const ownedBranch = await prisma.chainBranch.findFirst({
-            where: {
-                branchId: survey.userId,
-                chain: {
-                    ownerId: userId
-                }
-            },
-            select: {
-                slug: true,
-                branchId: true
-            }
-        })
-
-        if (ownedBranch) {
-            // REDIRECT STRATEGY:
-            // Since we know this survey belongs to a branch owned by the user,
-            // we should redirect them to the Scoped URL to preserve Sidebar Context.
-            const queryString = new URLSearchParams(searchParams as any).toString()
-            const targetUrl = `/dashboard/${ownedBranch.slug || ownedBranch.branchId}/reports/${surveyId}${queryString ? `?${queryString}` : ''}`
-            redirect(targetUrl)
-        }
+    // 3. Security: Ensure the survey belongs to the context (Branch)
+    // The survey.userId MUST match the resolved context.userId (Branch ID)
+    if (survey.userId !== context.userId) {
+        return <div className="p-8 text-white">Esta encuesta no pertenece a esta sucursal.</div>
     }
 
-    if (!hasAccess) {
-        return <div className="p-8 text-white">No tienes permiso para ver este reporte.</div>
-    }
+    // 4. Permission Check: Verify the authenticated user owns this context
+    // getDashboardContext already ensures this implicitly (by finding chain owned by userId),
+    // but explicit check is good if logic changes.
+    // However, getDashboardContext logic: "find branch where chain.ownerId = userId". 
+    // So if context exists, user is owner.
 
     const userSettings = await prisma.userSettings.findUnique({
-        where: { userId: survey.userId }, // Use survey owner's settings for industry
+        where: { userId: survey.userId },
         select: { industry: true }
     })
 
-    // Fetch other surveys from the SAME OWNER (context of that branch)
+    // Fetch other surveys from the SAME BRANCH
     const surveys = await prisma.survey.findMany({
         where: { userId: survey.userId },
         select: { id: true, title: true },
@@ -77,10 +66,10 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         <div className="min-h-screen bg-[#f3f4f6] text-black pb-20">
             <div className="bg-black text-white p-4 print:hidden sticky top-0 z-50 shadow-md">
                 <div className="max-w-4xl mx-auto flex items-center gap-4">
-                    <Link href="/dashboard" className="p-2 hover:bg-white/10 rounded-lg transition">
+                    <Link href={`/dashboard/${branchSlug}`} className="p-2 hover:bg-white/10 rounded-lg transition">
                         <ChevronLeft className="w-6 h-6" />
                     </Link>
-                    <h1 className="font-bold text-lg">Volver al Dashboard</h1>
+                    <h1 className="font-bold text-lg">Volver al Dashboard de {context.name}</h1>
                 </div>
             </div>
 

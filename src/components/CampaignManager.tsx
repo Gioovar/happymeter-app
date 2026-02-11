@@ -9,9 +9,10 @@ import CopyGeneratorModal from './CopyGeneratorModal'
 interface CampaignManagerProps {
     selectedSurveyTitle?: string
     selectedSurveyId?: string
+    branchId?: string
 }
 
-export default function CampaignManager({ selectedSurveyTitle = 'Todas', selectedSurveyId }: CampaignManagerProps) {
+export default function CampaignManager({ selectedSurveyTitle = 'Todas', selectedSurveyId, branchId }: CampaignManagerProps) {
     const [segment, setSegment] = useState<'all' | 'angry' | 'neutral' | 'happy'>('happy') // Default to happy which is usually VIP
     const [isExporting, setIsExporting] = useState(false)
     const [counts, setCounts] = useState({ vip: 0, neutral: 0, angry: 0, promo: 0 })
@@ -23,7 +24,7 @@ export default function CampaignManager({ selectedSurveyTitle = 'Todas', selecte
         const fetchCounts = async () => {
             setLoadingCounts(true)
             try {
-                const data = await getCampaignCounts(selectedSurveyId || 'all')
+                const data = await getCampaignCounts(selectedSurveyId || 'all', branchId)
                 setCounts(data || { vip: 0, neutral: 0, angry: 0, promo: 0 })
             } catch (error) {
                 console.error("Failed to load counts", error)

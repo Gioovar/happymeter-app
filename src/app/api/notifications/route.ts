@@ -12,10 +12,23 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url)
         const unreadOnly = searchParams.get('unreadOnly') === 'true'
 
+        // Fetch all branches owned by the user (Chain Context)
+        const userChains = await prisma.chain.findMany({
+            where: { ownerId: user.id },
+            select: {
+                branches: {
+                    select: { branchId: true }
+                }
+            }
+        })
+
+        const branchIds = userChains.flatMap(chain => chain.branches.map(b => b.branchId))
+        const allTargetIds = [user.id, ...branchIds]
+
         const [notifications, unreadCount] = await Promise.all([
             prisma.notification.findMany({
                 where: {
-                    userId: user.id,
+                    userId: { in: allTargetIds },
                     ...(unreadOnly ? { isRead: false } : {})
                 },
                 take: 20,
@@ -23,7 +36,7 @@ export async function GET(req: Request) {
             }),
             prisma.notification.count({
                 where: {
-                    userId: user.id,
+                    userId: { in: allTargetIds },
                     isRead: false
                 }
             })

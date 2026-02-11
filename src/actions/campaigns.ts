@@ -10,23 +10,48 @@ interface CampaignCounts {
     promo: number
 }
 
-export async function getCampaignCounts(surveyId: string): Promise<CampaignCounts> {
+export async function getCampaignCounts(surveyId: string, overrideUserId?: string): Promise<CampaignCounts> {
     try {
         const { userId } = await auth()
         if (!userId) {
             throw new Error('Unauthorized')
         }
 
+        // 1. Get all chains/branches owned by the user to establish the "Allowed Scope"
+        const userChains = await prisma.chain.findMany({
+            where: { ownerId: userId },
+            include: { branches: true }
+        })
+
+        // All IDs the user has access to (Personal + All Branches)
+        const branchIds = userChains.flatMap(c => c.branches.map(b => b.branchId))
+        const allowedUserIds = [userId, ...branchIds]
+
+        let targetUserIds: string[] = []
+
+        // 2. Determine Target Scope
+        if (overrideUserId) {
+            // Specific Branch Context
+            if (overrideUserId !== userId && !branchIds.includes(overrideUserId)) {
+                console.warn(`[Security] User ${userId} attempted to access campaigns for ${overrideUserId} without ownership.`)
+                throw new Error("Unauthorized Access to Branch Data")
+            }
+            targetUserIds = [overrideUserId]
+        } else {
+            // Main Dashboard Context (View All Personal + All Branches)
+            targetUserIds = allowedUserIds
+        }
+
         const whereClause: any = {
             survey: {
-                userId: userId
+                userId: { in: targetUserIds }
             },
             customerPhone: {
                 not: null
             }
         }
 
-        // If 'all', we don't filter by specific surveyId, just by user ownership
+        // If 'all', we don't filter by specific surveyId, just by user/branch ownership scope
         if (surveyId !== 'all') {
             whereClause.surveyId = surveyId
         }

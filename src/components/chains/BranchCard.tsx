@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { DeleteBranchDialog } from './DeleteBranchDialog'
+import { EditBranchDialog } from './EditBranchDialog'
 
 interface BranchCardProps {
     branch: {
@@ -18,6 +19,18 @@ interface BranchCardProps {
         branch: {
             userId: string
             businessName: string | null
+            state?: string | null // NEW: Country/Location
+        }
+    }
+    metrics?: {
+        surveys: number
+        nps: number
+        staff: number
+        staffFeedback: number
+        periods: {
+            today: { surveys: number, reservations: number, rating: number }
+            week: { surveys: number, reservations: number, rating: number }
+            month: { surveys: number, reservations: number, rating: number }
         }
     }
     isCurrent: boolean
@@ -25,14 +38,32 @@ interface BranchCardProps {
     ownerId?: string
 }
 
-export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId }: BranchCardProps) {
+export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId, metrics }: BranchCardProps) {
     const [loading, setLoading] = useState(false)
+    const [period, setPeriod] = useState<'today' | 'week' | 'month'>('week')
     const { signOut, client, setActive, openSignIn } = useClerk()
     const router = useRouter()
 
     // Smart Session Detection
     const ownerSession = client?.sessions?.find((s: any) => s.user.id === ownerId);
     const hasOwnerSession = !!ownerSession;
+
+    // Health Status Logic
+    let statusText = "Sin Datos Suficientes"
+    let statusColor = "text-gray-500 bg-gray-500/10 border-gray-500/20"
+    let statusIcon = <div className="w-1.5 h-1.5 rounded-full bg-gray-500" />
+
+    if (metrics && metrics.surveys >= 10) {
+        if (metrics.nps >= 50) {
+            statusText = "Sucursal Sana"
+            statusColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+            statusIcon = <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+        } else {
+            statusText = "Requiere Atención"
+            statusColor = "text-rose-400 bg-rose-500/10 border-rose-500/20"
+            statusIcon = <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
+        }
+    }
 
     const handleEnter = async () => {
         // Case 0: Already here -> Just Navigate to Dashboard
@@ -78,9 +109,14 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId 
     }
 
     return (
-        <Card className={`group relative overflow-hidden transition-all duration-300 border-white/5 bg-black/40 backdrop-blur-xl hover:-translate-y-1 hover:shadow-2xl hover:shadow-violet-500/10 ${isCurrent ? 'ring-1 ring-violet-500/50 border-violet-500/20 shadow-[0_0_30px_-10px_rgba(139,92,246,0.2)]' : 'hover:border-white/10'}`}>
+        <Card className={`group relative overflow-hidden transition-all duration-300 border-white/5 bg-black/40 backdrop-blur-xl hover:-translate-y-1 hover:shadow-2xl hover:shadow-violet-500/10 ${isCurrent ? 'ring-1 ring-violet-500/50 border-violet-500/20' : 'hover:border-white/10'}`}>
             {isOwner && (
-                <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div className="absolute top-3 right-3 z-50 flex gap-1 bg-black/20 backdrop-blur-sm rounded-lg p-1 border border-white/10 shadow-sm">
+                    <EditBranchDialog
+                        branchId={branch.branch.userId}
+                        currentName={branch.name || branch.branch.businessName || ""}
+                        currentCountry={branch.branch.state || undefined}
+                    />
                     <DeleteBranchDialog
                         branchId={branch.branch.userId}
                         branchName={branch.name || branch.branch.businessName || "Sucursal"}
@@ -97,58 +133,121 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId 
             )}
 
             <CardHeader className="relative">
-                <CardTitle className="flex items-center gap-4">
+                <CardTitle className="flex items-start gap-4">
                     <div className={`p-3 rounded-2xl transition-all duration-300 ${isCurrent ? 'bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/20' : 'bg-white/5 border border-white/5 group-hover:border-white/10 group-hover:bg-white/10'}`}>
                         <Building2 className={`w-6 h-6 ${isCurrent ? 'text-white' : 'text-gray-400 group-hover:text-white'}`} />
                     </div>
-                    <div className="flex flex-col">
-                        <span className={`text-lg font-bold tracking-tight ${isCurrent ? 'text-white' : 'text-gray-200 group-hover:text-white transition-colors'}`}>
-                            {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.branch.businessName || branch.name || 'Sucursal')}
-                        </span>
-                        {isCurrent && <span className="text-[10px] font-medium text-violet-400 uppercase tracking-wider">Sucursal Activa</span>}
+                    <div className="flex flex-col flex-1">
+                        <div className="flex items-center gap-2">
+                            <span className={`text-lg font-bold tracking-tight ${isCurrent ? 'text-white' : 'text-gray-200 group-hover:text-white transition-colors'}`}>
+                                {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.branch.businessName || branch.name || 'Sucursal')}
+                            </span>
+                            {/* Inline Edit Trigger */}
+                            {isOwner && (
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <EditBranchDialog
+                                        branchId={branch.branch.userId}
+                                        currentName={branch.name || branch.branch.businessName || ""}
+                                        currentCountry={branch.branch.state || undefined}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Country Badge */}
+                            {branch.branch.state && (
+                                <span className="text-[10px] uppercase font-bold text-gray-500 mt-0.5 tracking-wider flex items-center gap-1">
+                                    📍 {branch.branch.state}
+                                </span>
+                            )}
+
+                            {/* Metrics Badge */}
+                            {metrics && (
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className={`text-xs font-mono font-bold ${metrics.nps >= 50 ? 'text-emerald-400' : metrics.nps > 0 ? 'text-rose-400' : 'text-gray-500'}`}>
+                                        NPS {metrics.nps > 0 ? '+' : ''}{metrics.nps}
+                                    </span>
+                                    <span className="text-[10px] text-gray-500 font-medium px-1.5 py-0.5 bg-white/5 rounded border border-white/5">
+                                        {metrics.surveys} Encuestas
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </CardTitle>
             </CardHeader>
-            <CardContent className="relative">
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">ID Sucursal</span>
-                            <span className="text-xs font-mono text-gray-300">{branch.id.slice(0, 8)}...</span>
+            <CardContent className="relative space-y-4">
+                {/* Metrics Grid */}
+                {metrics && (
+                    <>
+                        <div className="grid grid-cols-3 gap-2 py-2">
+                            <div className="flex flex-col items-center p-2 rounded-lg bg-white/5 border border-white/5">
+                                <span className="text-[10px] text-gray-500 uppercase font-bold mb-1">Encuestas</span>
+                                <span className="text-sm font-mono font-bold text-white">{metrics.periods[period].surveys}</span>
+                            </div>
+                            <div className="flex flex-col items-center p-2 rounded-lg bg-white/5 border border-white/5">
+                                <span className="text-[10px] text-gray-500 uppercase font-bold mb-1">Reservas</span>
+                                <span className="text-sm font-mono font-bold text-emerald-400">{metrics.periods[period].reservations}</span>
+                            </div>
+                            <div className="flex flex-col items-center p-2 rounded-lg bg-white/5 border border-white/5">
+                                <span className="text-[10px] text-gray-500 uppercase font-bold mb-1">Global</span>
+                                <div className="flex items-center gap-1">
+                                    <span className="text-sm font-mono font-bold text-amber-400">{metrics.periods[period].rating > 0 ? metrics.periods[period].rating : '-'}</span>
+                                    <span className="text-[10px] text-amber-500">★</span>
+                                </div>
+                            </div>
                         </div>
-                        {/* We could add visual stats here later like "Status: Online" */}
-                    </div>
+                        {/* Staff & Satisfaction Row */}
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                                <span className="text-[10px] text-gray-500 uppercase font-bold">Staff</span>
+                                <span className="text-xs font-mono font-bold text-gray-300">{metrics.staff}</span>
+                            </div>
+                            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                                <span className="text-[10px] text-gray-500 uppercase font-bold">Buzón</span>
+                                <span className="text-xs font-mono font-bold text-gray-300">{metrics.staffFeedback}</span>
+                            </div>
+                        </div>
+                    </>
+                )}
 
-                    {isCurrent && (
-                        <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20 w-fit">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                            </span>
-                            Conectado ahora
-                        </div>
-                    )}
+                {/* Status Logic */}
+                <div className={`flex items-center justify-between px-3 py-2 rounded-lg border ${statusColor}`}>
+                    <span className="text-[10px] uppercase tracking-wider font-bold">{statusText}</span>
+                    {statusIcon}
                 </div>
+
+                {isCurrent && (
+                    <div className="absolute top-4 right-4 animate-pulse">
+                        <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                    </div>
+                )}
+
+                {isCurrent && (
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 mb-1">
+                        Sucursal Actual
+                    </div>
+                )}
+
             </CardContent>
-            <CardFooter className="relative pt-2">
+            <CardFooter className="relative pt-0">
                 <Button
-                    className={`w-full h-11 font-medium text-sm transition-all duration-300 rounded-xl ${isCurrent
-                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 border-0'
+                    className={`w-full h-10 font-medium text-xs transition-all duration-300 rounded-lg group/btn ${isCurrent
+                        ? 'bg-white text-black hover:bg-gray-200 border-0 shadow-lg shadow-white/10'
                         : (!isOwner && hasOwnerSession)
-                            ? 'bg-amber-600/10 hover:bg-amber-600/20 text-amber-500 border border-amber-600/20'
+                            ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20'
                             : !isOwner
                                 ? 'bg-white/5 text-gray-500 border border-white/5 cursor-not-allowed'
-                                : 'bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20'
+                                : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'
                         }`}
                     variant={isCurrent ? "default" : "outline"}
                     onClick={handleEnter}
                     disabled={loading}
                 >
                     {loading ? (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        <Loader2 className="w-3 h-3 animate-spin mr-2" />
                     ) : isCurrent ? (
                         <>
-                            Ir al Dashboard <ExternalLink className="w-4 h-4 ml-2 opacity-50" />
+                            Entrar <ExternalLink className="w-3 h-3 ml-2 opacity-50 group-hover/btn:translate-x-0.5 transition-transform" />
                         </>
                     ) : (!isOwner && hasOwnerSession) ? (
                         'Cambiar a Dueño'
@@ -156,11 +255,11 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId 
                         'Loguear como Dueño'
                     ) : (
                         <>
-                            Administrar <ExternalLink className="w-4 h-4 ml-2 opacity-50" />
+                            Administrar <ExternalLink className="w-3 h-3 ml-2 opacity-50 group-hover/btn:translate-x-0.5 transition-transform" />
                         </>
                     )}
                 </Button>
             </CardFooter>
-        </Card>
+        </Card >
     )
 }

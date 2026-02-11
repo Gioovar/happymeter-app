@@ -241,79 +241,209 @@ export async function POST(req: Request) {
             3. WhatsApp.
             `
 
-        } else if (!branchId && branchCount > 1) {
-            // --- RAMA 6: MULTI-SUCURSAL ---
 
-            // 1. Calculate Per-Branch Stats
+
+        } else if ((!branchId && branchCount > 0) || (body.corporate === true)) {
+            // --- RAMA 6: MULTI-SUCURSAL (CORPORATE INTELLIGENCE) ---
+
+            // 1. Fetch Deep Operational Data per Branch
             let branchBreakdown = "Información detallada por sucursal no disponible.";
 
             if (globalBranches && globalBranches.length > 0) {
                 const branchUserIds = (globalBranches as any[]).map((b: any) => b.branchId);
 
-                // Fetch stats for these branches using simple IN query
-                const allSurveysStats = await prisma.survey.findMany({
-                    where: { userId: { in: branchUserIds } },
-                    select: { userId: true, _count: { select: { responses: true } } }
+                // Parallel Fetch for Critical Indicators (Last 30 Days)
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+                const [
+                    negativeFeedbackMap,
+                    staffReportsMap,
+                    processComplianceMap,
+                    reservationsMap,
+                    responseCountsMap
+                ] = await Promise.all([
+                    // A. Negative Feedback (Last 30 Days) - Fetch full response context
+                    prisma.response.findMany({
+                        where: {
+                            survey: { userId: { in: branchUserIds } },
+                            answers: { some: { value: { in: ['1', '2'] } } },
+                            createdAt: { gte: thirtyDaysAgo }
+                        },
+                        select: {
+                            survey: { select: { userId: true } },
+                            answers: {
+                                select: {
+                                    value: true,
+                                    question: { select: { type: true, text: true } }
+                                }
+                            }
+                        },
+                        take: 100 // Cap to prevent huge context
+                    }),
+                    // B. Staff Reports (System Notifications)
+                    prisma.notification.findMany({
+                        where: {
+                            userId: { in: branchUserIds },
+                            type: 'SYSTEM', // Staff Box Alerts
+                            createdAt: { gte: thirtyDaysAgo }
+                        },
+                        select: { userId: true, title: true }
+                    }),
+                    // C. Process Compliance (Completed Tasks / Total Tasks - Approx)
+                    // Hard to get exact % without huge query, getting raw completion count for now
+                    prisma.processEvidence.findMany({
+                        where: {
+                            task: { zone: { userId: { in: branchUserIds } } },
+                            submittedAt: { gte: thirtyDaysAgo }
+                        },
+                        select: { task: { select: { zone: { select: { userId: true } } } } }
+                    }),
+                    // D. Active Reservations (Future)
+                    prisma.reservation.groupBy({
+                        by: ['tableId'], // Group by table isn't helpful for branch summing, need richer query or simple count
+                        where: {
+                            date: { gte: new Date() },
+                            status: { not: 'CANCELED' }
+                            // Linking to branch is harder via floorplan, need separate query per branch or intricate join. 
+                            // Simplified: Just fetch counts if possible or skip for efficiency if complexity is too high.
+                            // Let's do a findMany with include for accuracy.
+                        },
+                        _count: true
+                        // Complexity: Reservation -> Table -> FloorPlan -> UserId. Prisma groupBy doesn't support deep relation filtering easily in one go.
+                        // Fallback: We will infer activity from Response Count for now or fetch simple count if vital.
+                        // Let's skip complex reservation query for speed and rely on Feedback Volume as proxy for traffic.
+                    }),
+                    // E. Total Response Volume
+                    prisma.survey.findMany({
+                        where: { userId: { in: branchUserIds } },
+                        include: { _count: { select: { responses: true } } }
+                    })
+                ]);
+
+                // Process Data Maps
+                const negMap = new Map<string, number>();
+                const commentsMap = new Map<string, string[]>();
+
+                (negativeFeedbackMap as any[]).forEach((resp: any) => {
+                    const bid = resp.survey.userId;
+                    negMap.set(bid, (negMap.get(bid) || 0) + 1);
+
+                    // Extract comments from this negative response
+                    const comments = resp.answers
+                        .filter((a: any) => a.question.type === 'TEXT' || a.question.type === 'LONG_TEXT')
+                        .map((a: any) => a.value)
+                        .filter((v: any) => v && v.length > 3);
+
+                    if (comments.length > 0) {
+                        const existing = commentsMap.get(bid) || [];
+                        // Limit to 5 comments per branch to save context
+                        if (existing.length < 5) {
+                            commentsMap.set(bid, [...existing, ...comments]);
+                        }
+                    }
                 });
 
-                const statsMap = new Map<string, number>();
-                allSurveysStats.forEach((s: any) => {
-                    const current = statsMap.get(s.userId) || 0;
-                    statsMap.set(s.userId, current + (s._count?.responses || 0));
+                const staffMap = new Map<string, number>();
+                staffReportsMap.forEach((item: any) => {
+                    staffMap.set(item.userId, (staffMap.get(item.userId) || 0) + 1);
                 });
+
+                const processMap = new Map<string, number>();
+                processComplianceMap.forEach((item: any) => {
+                    const bid = item.task.zone.userId;
+                    processMap.set(bid, (processMap.get(bid) || 0) + 1);
+                });
+
+                const volumeMap = new Map<string, number>();
+                (responseCountsMap as any[]).forEach((s: any) => {
+                    volumeMap.set(s.userId, (volumeMap.get(s.userId) || 0) + (s._count?.responses || 0));
+                });
+
 
                 branchBreakdown = (globalBranches as any[])
                     .map((b: any) => {
-                        const count = statsMap.get(b.branchId) || 0;
-                        const name = b.name || b.branch.businessName || "Sucursal sin nombre";
-                        const status = count > 0 ? "🟢 Activa" : "🔴 Sin Actividad (Requiere Atención)";
-                        return `- **${name}**: ${count} respuestas. ${status}`;
+                        const bid = b.branchId;
+                        let name = b.name;
+
+                        // FIX: If name is "Sede Principal", try to use the Business Name instead to treat it as a real branch
+                        if (!name || name === 'Sede Principal' || name === 'Sede principal') {
+                            name = b.branch.businessName || name || "Sucursal";
+                        }
+
+                        const vol = volumeMap.get(bid) || 0;
+                        const neg = negMap.get(bid) || 0;
+                        const staff = staffMap.get(bid) || 0;
+                        const proc = processMap.get(bid) || 0;
+
+                        const activeComments = commentsMap.get(bid) || [];
+
+                        // Risk Assessment
+                        const risks = [];
+                        if (neg > 2) risks.push(`📉 ${neg} Quejas Graves`);
+                        if (staff > 0) risks.push(`🚨 ${staff} Conflictos Staff`);
+                        if (vol === 0) risks.push(`⚠️ Sin Actividad (QRs?)`);
+                        if (proc === 0) risks.push(`⚙️ Sin Procesos`);
+
+                        const status = risks.length > 0 ? `RIESGOS: ${risks.join(', ')}` : "✅ Operación Saludable";
+                        const commentsSection = activeComments.length > 0 ? `\n   - "Quejas Reales": ${activeComments.map(c => `"${c}"`).join(', ')}` : "";
+
+                        return `### ${name}\n- Volumen Feedback: ${vol}\n- Estado: ${status}${commentsSection}`;
                     })
-                    .join('\n');
+                    .join('\n\n');
             }
 
-            SYSTEM_PROMPT = `Actúa como 'HappyMeter Manager' (${branchCount} sucursales).
+            SYSTEM_PROMPT = `Actúa como 'HappyMeter Corporate Director'.
+
+            ESTADO: VISTA DE CORPORATIVO (Análisis Multi-Sucursal).
             
-            ESTADO: VISTA GLOBAL (Dueño de la Cadena).
+            📊 REPORTE DE INTELIGENCIA OPERATIVA (Últimos 30 Días):
             
-            📊 RESUMEN GLOBAL:
-            - Respuestas Totales: ${totalResponsesAllTime}
-            - Lealtad Global: ${loyaltyMembers} miembros.
-            
-            🏢 DETALLE POR SUCURSAL:
             ${branchBreakdown}
             
             OBJETIVO: 
-            Eres el Director de Operaciones. Tu trabajo es identificar qué sucursales funcionan y cuáles no.
+            Actuar como un consultor operativo experto. No solo señales el riesgo, ANALIZA LA CAUSA RAÍZ basándote en los textos de las "Quejas Reales" (si los hay).
             
-            REGLAS:
-            1. Si una sucursal tiene 0 respuestas, DILE al usuario que verifique si los QRs están puestos.
-            2. Si preguntan "¿Cuál va mejor?", compara los números de respuestas.
-            3. Si preguntan por una sucursal específica (ej. "Y Portales?"), busca en la lista de arriba y reporta su estado.
+            REGLAS DE ANÁLISIS:
+            1. **DETECTA EL PROBLEMA REAL**: No digas solo "Tiene quejas". Si los comentarios dicen "fría", el problema es TEMPERATURA. Si dicen "lentos", es VELOCIDAD. Si dicen "groseros", es ACTITUD.
+            2. **SOLUCIÓN CORTA**: Para cada sucursal con problemas, da 1 acción táctica inmediata (ej. "Auditar tiempos de cocina" o "Checklist de limpieza baños").
+            3. **INTERACCIÓN OBLIGATORIA**:
+               - AL FINAL DE TU RESPUESTA, pregunta SIEMPRE:
+               "¿Quieres que diseñemos un plan de acción detallado para alguna sucursal en específico?"
+            
+            FORMATO DE RESPUESTA REQUERIDO:
+            
+            ### [Nombre Sucursal]
+            🔴 **Problema Principal**: [Causa raíz basada en las quejas]
+            💡 **Acción Inmediata**: [Solución táctica de 1 línea]
+            
+            (Repetir solo para sucursales con Riesgos)
+            
+            ⚠️ *[Pregunta de Cierre Interactiva]*
             `;
         } else {
             // --- RAMA 3: ANÁLISIS & OPERACIÓN (Full Power Mode) ---
             SYSTEM_PROMPT = `Actúa como 'HappyMeter Analyst', el cerebro central de ${businessName}.
             
-            📊 [CENTRO DE COMANDO OPERATIVO] 📊
+            📊[CENTRO DE COMANDO OPERATIVO] 📊
             
             === 💎 LEALTAD & CLIENTES ===
-            - Miembros Activos: ${loyaltyMembers}
-            - Premios Entregados (Este Mes): ${loyaltyRedemptionsMonth}
-            - Puntos Canjeados (Hoy): ${pointsRedeemedCount} pts
-            
-            === 🍽️ RESERVACIONES & MESAS ===
-            - Reservaciones Activas (Hoy): ${activeReservationsCount}
-            - Mesas Ocupadas (Ahora): ${reservationsSeated}
+                - Miembros Activos: ${loyaltyMembers}
+            - Premios Entregados(Este Mes): ${loyaltyRedemptionsMonth}
+            - Puntos Canjeados(Hoy): ${pointsRedeemedCount} pts
+
+                === 🍽️ RESERVACIONES & MESAS ===
+                    - Reservaciones Activas(Hoy): ${activeReservationsCount}
+            - Mesas Ocupadas(Ahora): ${reservationsSeated}
             
             === ⭐ SATISFACCIÓN & CALIDAD ===
-            - Calificación Semanal: ${avgSatisfaction}/5
-            - Quejas (Ayer): ${complaintsYesterday}
+                - Calificación Semanal: ${avgSatisfaction}/5
+                    - Quejas(Ayer): ${complaintsYesterday}
             - Total Historico: ${totalResponsesAllTime} respuestas
-            
-            === ✅ TAREAS & PROCESOS ===
-            - Tareas Pendientes (Hoy): ${tasksPending}
-            - Tareas Completadas (Hoy): ${tasksCompletedToday}
+
+                === ✅ TAREAS & PROCESOS ===
+                    - Tareas Pendientes(Hoy): ${tasksPending}
+            - Tareas Completadas(Hoy): ${tasksCompletedToday}
             
             🧠 MEMORIA ESTRATÉGICA:
             ${insightText || "Sin insights previos."}
@@ -322,17 +452,17 @@ export async function POST(req: Request) {
             ${recentFeedbackText}
             
             TU OBJETIVO:
-            Ser el ASISTENTE OPERATIVO DEFINITIVO. No des respuestas genéricas.
+            Ser el ASISTENTE OPERATIVO DEFINITIVO.No des respuestas genéricas.
             
             REGLAS DE ORO:
-            1. **USA LOS DATOS**: Si preguntan "¿cuántos puntos se canjearon?", responde: "Hoy se han canjeado ${pointsRedeemedCount} puntos."
-            2. **IDENTIFICA EL MÓDULO**:
-               - Preguntas de dinero/premios -> Módulo Lealtad.
-               - Preguntas de mesas/gente -> Módulo Reservaciones.
-               - Preguntas de opiniones/quejas -> Módulo Satisfacción.
-            3. **SÉ DIRECTO**: Dato exacto primero, luego el análisis.
-            4. **MANEJO DE DATOS VACÍOS (OBLIGATORIO)**:
-               Si un dato es 0 o N/A, debes cumplir 2 pasos:
+            1. ** USA LOS DATOS **: Si preguntan "¿cuántos puntos se canjearon?", responde: "Hoy se han canjeado ${pointsRedeemedCount} puntos."
+            2. ** IDENTIFICA EL MÓDULO **:
+            - Preguntas de dinero / premios -> Módulo Lealtad.
+               - Preguntas de mesas / gente -> Módulo Reservaciones.
+               - Preguntas de opiniones / quejas -> Módulo Satisfacción.
+            3. ** SÉ DIRECTO **: Dato exacto primero, luego el análisis.
+            4. ** MANEJO DE DATOS VACÍOS(OBLIGATORIO) **:
+               Si un dato es 0 o N / A, debes cumplir 2 pasos:
                a) Informar: "El módulo está activo, pero aún no registra datos (0)."
                b) OFRECER AYUDA PROACTIVA: "¿Te gustaría que te explique cómo implementarlo correctamente o que te muestre los beneficios que puede traer a tu negocio?"
                NUNCA des una respuesta vacía sin ofrecer esta ayuda.
@@ -343,43 +473,43 @@ export async function POST(req: Request) {
 
         SYSTEM_PROMPT += `
         
-        🧠 REGLAS DE RESPUESTA EXPERTA (Base de Conocimiento):
+        🧠 REGLAS DE RESPUESTA EXPERTA(Base de Conocimiento):
         
         TU INDUSTRIA: ${industry || "General"}
         
         SI PREGUNTAN "CÓMO IMPLEMENTAR...":
         
         === 1. LEALTAD ===
-        1. Beneficio: Retención x2.
-        2. Estrategia: Visitas (Simple) o Puntos (Ticket alto).
+                1. Beneficio: Retención x2.
+        2. Estrategia: Visitas(Simple) o Puntos(Ticket alto).
         3. Acción: "Crear Programa" -> "QR".
 
         === 2. RESERVACIONES ===
-        1. Beneficio: Menos mesas vacías.
+                1. Beneficio: Menos mesas vacías.
         2. Estrategia: Activar "Tiempo Estándar" para rotación eficiente.
-        3. Acción: Ir a Reservas -> Configuración (⚙️).
+        3. Acción: Ir a Reservas -> Configuración(⚙️).
         
         === 🖼️ ESPACIOS "DECO" ===
-        - QUÉ SON: Elementos decorativos (macetas, paredes) no reservables.
-        - REGLA: Si ves uno "disponible", es un error. NO SON RESERVABLES.
+                - QUÉ SON: Elementos decorativos(macetas, paredes) no reservables.
+        - REGLA: Si ves uno "disponible", es un error.NO SON RESERVABLES.
         - EXPLICACIÓN: "Son solo visuales para dar contexto al mapa."
 
-        === 3. PROCESOS ===
-        1. Beneficio: Estandarización.
+                === 3. PROCESOS ===
+                    1. Beneficio: Estandarización.
         2. Ejemplo: Checklist de Apertura.
         3. Acción: Crear en "Procesos".
         
         ❌ PROHIBIDO:
-        - Inventar datos.
+            - Inventar datos.
         - Decir "consulta tu dashboard" si ya tienes el dato aquí arriba.
-        - 🚫 NO USES TABLAS MARKDOWN (como | :--- |). Se ven mal en el chat.
-        - 🚫 NO USES SEPARADORES HORIZONTALES (---). Ensucian el diseño.
-        - 🚫 NUNCA menciones fechas en formato técnico (ej. 1/30/2026). Di "Hoy, 30 de Enero".
+        - 🚫 NO USES TABLAS MARKDOWN(como | : --- |).Se ven mal en el chat.
+        - 🚫 NO USES SEPARADORES HORIZONTALES(---).Ensucian el diseño.
+        - 🚫 NUNCA menciones fechas en formato técnico(ej. 1 / 30 / 2026).Di "Hoy, 30 de Enero".
 
         ✅ FORMATO PERMITIDO:
-        - Usa **Negritas** para títulos.
+        - Usa ** Negritas ** para títulos.
         - Usa > Citas para resaltar datos clave.
-        - Usa Listas (1., 2., 3. o •) para enumerar.
+        - Usa Listas(1., 2., 3. o •) para enumerar.
         - Usa Emojis para dar vida.
         - Deja espacios en blanco entre párrafos.
         `
@@ -394,11 +524,11 @@ export async function POST(req: Request) {
         if (totalSurveys >= totalLimit) {
             SYSTEM_PROMPT += `
             
-            NOTA DE CONTEXTO (LÍMITES):
-            El usuario ha alcanzado su límite de encuestas (${totalSurveys}/${totalLimit}).
+            NOTA DE CONTEXTO(LÍMITES):
+            El usuario ha alcanzado su límite de encuestas(${totalSurveys} / ${totalLimit}).
             Si intenta crear otra o pregunta por qué no puede, explícale que ha llegado al tope de su plan ${userPlan}.
             OPCIONES:
-            1. "Agregar una encuesta extra" ($200 MXN).
+            1. "Agregar una encuesta extra"($200 MXN).
             2. "Mejorar a un plan superior".
             `
         }
@@ -484,14 +614,14 @@ export async function POST(req: Request) {
                 select: { title: true }
             })
 
-            console.log(`[TITLE_GEN] Check for thread ${threadId}. Title: "${currentThread?.title}". MsgLen: ${messages.length}`)
+            console.log(`[TITLE_GEN] Check for thread ${threadId}.Title: "${currentThread?.title}".MsgLen: ${messages.length} `)
 
             // Generate if it's new (short history) OR if it still has the default name
             if (currentThread?.title === "Nuevo Chat" || messages.length <= 2) {
                 try {
                     console.log('[TITLE_GEN] Generating new title...')
                     const titleModel = getGeminiModel('gemini-flash-latest', {
-                        systemInstruction: `Genera un título muy corto, conciso y descriptivo (máximo 4 palabras) para un chat. Basado en este mensaje: "${lastUserMsg.content}". Ejemplo: "Estrategia de Ventas", "Análisis de Quejas". NO uses comillas ni puntos finales.`
+                        systemInstruction: `Genera un título muy corto, conciso y descriptivo(máximo 4 palabras) para un chat.Basado en este mensaje: "${lastUserMsg.content}".Ejemplo: "Estrategia de Ventas", "Análisis de Quejas".NO uses comillas ni puntos finales.`
                     })
                     const titleResult = await titleModel.generateContent(lastUserMsg.content)
                     const title = titleResult.response.text().trim()
@@ -537,6 +667,6 @@ async function extractInsights(userId: string, threadId: string, lastUserMessage
         await prisma.aIInsight.create({
             data: { userId, content: newInsight, source: threadId }
         })
-        console.log(`[AI MEMORY] Learned new insight: ${newInsight}`)
+        console.log(`[AI MEMORY] Learned new insight: ${newInsight} `)
     }
 }

@@ -46,7 +46,7 @@ export default function ChainTrendsChart({ data, branches }: ChainTrendsChartPro
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-lg">
                     <TrendingUp className="w-5 h-5 text-violet-500" />
-                    Análisis de Tendencias (Satisfacción)
+                    Tendencia de Volumen (Encuestas)
                 </CardTitle>
             </CardHeader>
             <CardContent>

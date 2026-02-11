@@ -12,6 +12,7 @@ import { useClerk, useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { ModernMenuView } from "./ModernMenuView"
 
 interface CustomerLoyaltyCardProps {
     customer: any // Prisma type with relations
@@ -35,6 +36,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
     const [unreadCount, setUnreadCount] = useState(0)
     const [showNotifications, setShowNotifications] = useState(false)
     const [mounted, setMounted] = useState(false)
+    const [showDigitalMenu, setShowDigitalMenu] = useState(false)
 
     // Reservations State
     const [myReservations, setMyReservations] = useState<any[]>([])
@@ -432,9 +434,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                         </button>
 
                         <button
-                            onClick={() => toast.info("Próximamente: Menú Digital", {
-                                description: "Pronto podrás ver el menú completo aquí."
-                            })}
+                            onClick={() => setShowDigitalMenu(true)}
                             className="bg-[#1a1a24] hover:bg-[#20202b] text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] border border-white/5"
                         >
                             <div className="w-6 h-6 rounded-md border-2 border-dashed border-gray-500 flex items-center justify-center">
@@ -648,6 +648,18 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                         </div>
                     </div>
                 </div>,
+                document.body
+            )}
+
+
+
+            {/* DIGITAL MENU PORTAL */}
+            {showDigitalMenu && mounted && createPortal(
+                <ModernMenuView
+                    userId={program.userId}
+                    businessName={program.businessName}
+                    onClose={() => setShowDigitalMenu(false)}
+                />,
                 document.body
             )}
 

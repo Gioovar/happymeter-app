@@ -11,6 +11,7 @@ export type GlobalChainMetrics = {
     globalNps: number
     branchBreakdown: BranchMetric[]
     satisfactionTrend: TrendDataPoint[]
+    volumeTrend: TrendDataPoint[]
 }
 
 export type BranchMetric = {
@@ -21,8 +22,21 @@ export type BranchMetric = {
     redemptions: number
     reservations: number
     customers: number
+    staff: number
+    staffFeedback: number
     nps: number
     color?: string
+    periods: {
+        today: PeriodMetrics
+        week: PeriodMetrics
+        month: PeriodMetrics
+    }
+}
+
+export type PeriodMetrics = {
+    surveys: number
+    reservations: number
+    rating: number
 }
 
 export type TrendDataPoint = {
@@ -78,7 +92,14 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
     if (!chain || chain.ownerId !== user.id) return null
 
     const branchIds = chain.branches.map(b => b.branchId)
-    const branchesMap = new Map(chain.branches.map(b => [b.branchId, b.branch.businessName || b.name || 'Sucursal']))
+    const branchesMap = new Map(chain.branches.map(b => {
+        let name = b.name;
+        // Fix for "Sede Principal" -> use Business Name
+        if (!name || name === 'Sede Principal' || name === 'Sede principal') {
+            name = b.branch.businessName || name || 'Sucursal';
+        }
+        return [b.branchId, name];
+    }))
 
     // 1. Total Surveys & Satisfaction Data
     // Fetch answers for ANY satisfaction type
@@ -130,8 +151,24 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
         where: { program: { userId: { in: branchIds } } },
         select: { phone: true, program: { select: { userId: true } } }
     })
+    // 5. Staff
+    const staffMembers = await prisma.teamMember.findMany({
+        where: { ownerId: { in: branchIds }, isActive: true },
+        select: { ownerId: true }
+    })
 
-    // 5. Trends
+    // 6. Staff Feedback (Complaints/Suggestions)
+    const staffFeedback = await prisma.survey.findMany({
+        where: { userId: { in: branchIds }, type: 'STAFF' },
+        select: {
+            userId: true,
+            _count: {
+                select: { responses: true }
+            }
+        }
+    })
+
+    // 7. Trends
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
@@ -203,6 +240,21 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
         return point
     })
 
+    const volumeChartData: TrendDataPoint[] = Array.from(dateMap.entries()).map(([date, branches]) => {
+        const point: TrendDataPoint = { date }
+
+        branchIds.forEach(bId => {
+            const stats = branches[bId]
+            if (stats) {
+                point[bId] = stats.count // Raw Count
+            } else {
+                point[bId] = 0
+            }
+        })
+
+        return point
+    })
+
     // Process Metrics Per Branch
     const branchMetrics: BranchMetric[] = chain.branches.map((b, idx) => {
         const bId = b.branchId
@@ -226,6 +278,53 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
         const branchRedemptions = redemptions.filter(r => r.program.userId === bId).length
         const branchReservations = reservations.filter(r => r.table?.floorPlan?.userId === bId).length
         const branchCustomers = customers.filter(c => c.program.userId === bId).length
+        const branchStaff = staffMembers.filter(m => m.ownerId === bId).length
+        const branchFeedback = staffFeedback.filter(s => s.userId === bId).reduce((acc, s) => acc + s._count.responses, 0)
+
+        // Time-based filtering helpers
+        const now = new Date()
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        const startOfMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+        const calcMetrics = (fromDate: Date): PeriodMetrics => {
+            // Filter Surveys
+
+
+            // Let's use trendResponses for this specific calculation to be safe and accurate on time.
+            // Note: trendResponses is restricted to 30 days in the query (line 136). So it covers Today, Week, Month.
+            const periodResponses = trendResponses.filter(r => r.survey.userId === bId && new Date(r.createdAt) >= fromDate)
+
+            const count = periodResponses.length
+
+            // Calc Average Rating (0-5 scale)
+            // Reuse normalizeScore but map to 5 scale
+            const scores = periodResponses.flatMap(r => r.answers
+                .map(a => {
+                    const val = normalizeScore(a.value, a.question.type) // returns 0-10
+                    return val !== null ? val / 2 : null // Convert 0-10 to 0-5
+                })
+                .filter((v): v is number => v !== null)
+            )
+            const avgRating = scores.length > 0
+                ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1))
+                : 0
+
+            // Filter Reservations
+            // Reservations query (line 117) fetches all. We need to check 'date' field.
+            // We assume 'reservations' variable has date field. The Prisma query included 'table', but we need 'date' from Reservation itself.
+            // I need to update the reservation query (line 117) to select 'date' or just rely on default include.
+            // Default include fetches scalars, so 'date' should be there.
+            const periodReservations = reservations.filter(r =>
+                r.table?.floorPlan?.userId === bId && new Date(r.date) >= fromDate
+            ).length
+
+            return {
+                surveys: count,
+                reservations: periodReservations,
+                rating: avgRating
+            }
+        }
 
         return {
             branchId: bId,
@@ -235,8 +334,15 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
             redemptions: branchRedemptions,
             reservations: branchReservations,
             customers: branchCustomers,
+            staff: branchStaff,
+            staffFeedback: branchFeedback,
             nps: npsScore,
-            color: COLORS[idx % COLORS.length]
+            color: COLORS[idx % COLORS.length],
+            periods: {
+                today: calcMetrics(startOfDay),
+                week: calcMetrics(startOfWeek),
+                month: calcMetrics(startOfMonth)
+            }
         }
     })
 
@@ -266,6 +372,7 @@ export async function getChainAnalytics(chainId: string): Promise<GlobalChainMet
         totalCustomers,
         globalNps,
         branchBreakdown: branchMetrics,
-        satisfactionTrend: chartData
+        satisfactionTrend: chartData,
+        volumeTrend: volumeChartData
     }
 }

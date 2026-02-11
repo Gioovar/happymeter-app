@@ -91,7 +91,7 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
             case 'CRISIS': return <AlertOctagon className="w-5 h-5 text-red-500" />
             case 'SYSTEM': return <Megaphone className="w-5 h-5 text-blue-500" />
             case 'ACHIEVEMENT': return <Trophy className="w-5 h-5 text-yellow-500" />
-            case 'REPORT': return <BarChart className="w-5 h-5 text-purple-500" />
+            case 'REPORT': return <BarChart className="w-5 h-5 text-blue-400" /> // Changed from purple to blue
             default: return <Info className="w-5 h-5 text-gray-500" />
         }
     }
@@ -101,7 +101,7 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
             case 'CRISIS': return 'bg-red-500/10 border-red-500/20'
             case 'SYSTEM': return 'bg-blue-500/10 border-blue-500/20'
             case 'ACHIEVEMENT': return 'bg-yellow-500/10 border-yellow-500/20'
-            case 'REPORT': return 'bg-purple-500/10 border-purple-500/20'
+            case 'REPORT': return 'bg-blue-500/10 border-blue-500/20' // Changed from purple to blue
             default: return 'bg-white/5 border-white/5'
         }
     }
@@ -139,7 +139,7 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
                                 {unreadCount > 0 && (
                                     <button
                                         onClick={() => markAsRead()}
-                                        className="text-[10px] text-violet-400 hover:text-violet-300 transition flex items-center gap-1 bg-violet-500/10 px-2 py-1 rounded-md"
+                                        className="text-[10px] text-blue-400 hover:text-blue-300 transition flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-md"
                                     >
                                         <Check className="w-3 h-3" /> Marcar leídas
                                     </button>
@@ -173,7 +173,7 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
                                                 key={notif.id}
                                                 onClick={() => handleClick(notif)}
                                                 className={`p-4 hover:bg-white/5 transition relative group 
-                                                ${!notif.isRead ? 'bg-violet-500/5 border-l-2 border-violet-500 shadow-[inset_0_0_20px_rgba(139,92,246,0.05)]' : 'border-l-2 border-transparent'} 
+                                                ${!notif.isRead ? 'bg-blue-500/5 border-l-2 border-blue-500 shadow-[inset_0_0_20px_rgba(59,130,246,0.05)]' : 'border-l-2 border-transparent'} 
                                                 ${notif.meta?.responseId ? 'cursor-pointer' : 'cursor-default'}
                                                 ${loadingId === notif.id ? 'opacity-70 pointer-events-none' : ''}
                                             `}
@@ -187,11 +187,11 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
                                                         )}
                                                     </div>
                                                     <div className="flex-1 space-y-1">
-                                                        <div className="flex justify-between items-start gap-2">
+                                                        <div className="flex justify-between items-start gap-2 pr-2"> {/* Added pr-2 to avoid right edge tightness */}
                                                             <h4 className={`text-sm font-semibold ${!notif.isRead ? 'text-white' : 'text-gray-400'}`}>
                                                                 {notif.title}
                                                             </h4>
-                                                            <span className="text-[10px] text-gray-600 whitespace-nowrap">
+                                                            <span className="text-[10px] text-gray-600 whitespace-nowrap pt-1">
                                                                 {(() => {
                                                                     try {
                                                                         return format(new Date(notif.createdAt), "d MMM", { locale: es })
@@ -207,14 +207,20 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
 
                                                         {/* Enlace de texto opcional, aunque ahora toda la tarjeta es clicable */}
                                                         {notif.meta?.responseId && (
-                                                            <span className="block w-fit text-[10px] text-violet-500 font-bold mt-2">
+                                                            <span className="block w-fit text-[10px] text-blue-500 font-bold mt-2">
                                                                 {loadingId === notif.id ? 'Cargando...' : 'Ver Respuesta'}
                                                             </span>
                                                         )}
                                                     </div>
 
                                                     {!notif.isRead && !loadingId && (
-                                                        <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-violet-500" />
+                                                        // Moved dot to be left-aligned in the flex or relative to title instead of absolute top-right overlay
+                                                        // Actually, keeping absolute but moving it slightly or changing it to be part of the layout?
+                                                        // Cleanest fix: Remove the dot if we have the blue border/bg, OR position it 'top-4 right-2' but ensure text has padding.
+                                                        // I'll effectively remove the big absolute overlay if it's clashing and rely on the border/bg which is cleaner.
+                                                        // User explicitly complained about the big circle.
+                                                        // But let's keep a small indicator.
+                                                        <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
                                                     )}
                                                 </div>
                                             </div>
