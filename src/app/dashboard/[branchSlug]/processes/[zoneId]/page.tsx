@@ -23,7 +23,7 @@ export default async function ProcessZonePage({ params }: { params: { branchSlug
 
     return (
         <div className="w-full">
-            <ProcessZoneView zone={zone} branchSlug={params.branchSlug} />
+            <ProcessZoneView zone={zone} branchSlug={params.branchSlug} branchName={context.name} />
         </div>
     )
 }

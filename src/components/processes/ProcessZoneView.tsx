@@ -31,9 +31,10 @@ interface ProcessZoneViewProps {
         tasks: Task[]
     }
     branchSlug: string
+    branchName?: string
 }
 
-export default function ProcessZoneView({ zone, branchSlug }: ProcessZoneViewProps) {
+export default function ProcessZoneView({ zone, branchSlug, branchName }: ProcessZoneViewProps) {
     const router = useRouter()
     const [selectedTask, setSelectedTask] = useState<Task | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -124,7 +125,10 @@ export default function ProcessZoneView({ zone, branchSlug }: ProcessZoneViewPro
                     <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-white">{zone.name}</h1>
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        {zone.name}
+                        {branchName && <span className="text-gray-500 font-normal text-lg">| {branchName}</span>}
+                    </h1>
                     <p className="text-gray-400 text-sm">{zone.description || 'Lista de tareas operativas'}</p>
                 </div>
             </div>
