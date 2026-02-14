@@ -1061,6 +1061,7 @@ model ProcessTemplateTask {
   defaultLimitTime String? // "14:00"
   evidenceType     ProcessEvidenceType @default(PHOTO)
   isRequired       Boolean @default(true)
+  days            String[] @default([]) // ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] - Empty means all days
   
   template    ProcessTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   

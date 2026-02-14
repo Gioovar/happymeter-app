@@ -124,6 +124,57 @@ export default function ProcessTemplateGallery({ branchId }: ProcessTemplateGall
                 >
                     + Generar Plantilla Caja
                 </Button>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                        const { seedDJTemplate } = await import('@/actions/seed-dj-template');
+                        const res = await seedDJTemplate();
+                        if (res.success) {
+                            toast.success(res.message);
+                            loadTemplates();
+                        } else {
+                            toast.info(res.message);
+                        }
+                    }}
+                    className="text-xs text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+                >
+                    + Generar Plantilla DJ
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                        const { seedManagerTemplate } = await import('@/actions/seed-manager-template');
+                        const res = await seedManagerTemplate();
+                        if (res.success) {
+                            toast.success(res.message);
+                            loadTemplates();
+                        } else {
+                            toast.info(res.message);
+                        }
+                    }}
+                    className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                >
+                    + Generar Plantilla Gerente
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                        const { seedFloorTemplate } = await import('@/actions/seed-floor-template');
+                        const res = await seedFloorTemplate();
+                        if (res.success) {
+                            toast.success(res.message);
+                            loadTemplates();
+                        } else {
+                            toast.info(res.message);
+                        }
+                    }}
+                    className="text-xs text-orange-400 hover:text-orange-300 hover:bg-orange-500/10"
+                >
+                    + Generar Plantilla Salón
+                </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
