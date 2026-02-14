@@ -71,8 +71,8 @@ export default function ProcessTemplateGallery({ branchId }: ProcessTemplateGall
 
     return (
         <div className="space-y-4">
-            {/* Temporary Seed Button - Click once to generate template */}
-            <div className="flex justify-end mb-4">
+            {/* Temporary Seed Buttons */}
+            <div className="flex justify-end mb-4 gap-2">
                 <Button
                     variant="ghost"
                     size="sm"
@@ -89,6 +89,23 @@ export default function ProcessTemplateGallery({ branchId }: ProcessTemplateGall
                     className="text-xs text-gray-600 hover:text-white hover:bg-white/5"
                 >
                     + Generar Plantilla Cocina
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                        const { seedBarTemplate } = await import('@/actions/seed-bar-template');
+                        const res = await seedBarTemplate();
+                        if (res.success) {
+                            toast.success(res.message);
+                            loadTemplates();
+                        } else {
+                            toast.info(res.message);
+                        }
+                    }}
+                    className="text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                >
+                    + Generar Plantilla Barra
                 </Button>
             </div>
 
