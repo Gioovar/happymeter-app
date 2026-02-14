@@ -582,11 +582,42 @@ export async function getProcessZoneHistory(zoneId: string, dateStr: string) {
 }
 
 export async function getDashboardProcessStats(branchId: string) {
-    // Get today's stats
-    const todayStr = new Date().toISOString().split('T')[0];
-    const report = await getDailyTaskReport(todayStr);
+    try {
+        // Get today's stats
+        const todayStr = new Date().toISOString().split('T')[0];
+        const report = await getDailyTaskReport(todayStr);
 
-    if (!report) {
+        if (!report) {
+            return {
+                total: 0,
+                completed: 0,
+                missed: 0,
+                pending: 0,
+                complianceRate: 0,
+                zonesCount: 0
+            };
+        }
+
+        // Calculate aggregate stats
+        const total = report.stats.total;
+        const completed = report.stats.completed;
+        const missed = report.stats.missed;
+        const pending = report.stats.pending;
+        const complianceRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        // Get zones count separately as report is task-centric
+        const uniqueZoneIds = new Set(report.tasks.map((t: any) => t.zoneId));
+
+        return {
+            total,
+            completed,
+            missed,
+            pending,
+            complianceRate,
+            zonesCount: uniqueZoneIds.size
+        };
+    } catch (error) {
+        console.error("Error getting dashboard process stats:", error);
         return {
             total: 0,
             completed: 0,
@@ -596,23 +627,4 @@ export async function getDashboardProcessStats(branchId: string) {
             zonesCount: 0
         };
     }
-
-    // Calculate aggregate stats
-    const total = report.stats.total;
-    const completed = report.stats.completed;
-    const missed = report.stats.missed;
-    const pending = report.stats.pending;
-    const complianceRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    // Get zones count separately as report is task-centric
-    const uniqueZoneIds = new Set(report.tasks.map((t: any) => t.zoneId));
-
-    return {
-        total,
-        completed,
-        missed,
-        pending,
-        complianceRate,
-        zonesCount: uniqueZoneIds.size
-    };
 }

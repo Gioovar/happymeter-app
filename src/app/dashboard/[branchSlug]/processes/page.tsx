@@ -18,6 +18,7 @@ import { redirect } from "next/navigation"
 import { getDashboardProcessStats } from '@/actions/processes';
 
 import ProcessTemplateGallery from '@/components/processes/ProcessTemplateGallery';
+import { ProcessZoneCard } from '@/components/processes/ProcessZoneCard'; // Correct import
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 
@@ -29,19 +30,36 @@ export default async function BranchProcessesPage({ params }: { params: { branch
     const branchSlug = params.branchSlug;
 
     // Fetch Data
-    const zonesPromise = prisma.processZone.findMany({
-        where: { userId },
-        include: {
-            _count: {
-                select: { tasks: true }
-            }
-        },
-        orderBy: { createdAt: 'desc' }
-    });
+    let zones: any[] = []; // Explicitly type as any[] or defined interface to avoid TS error
+    let stats = {
+        total: 0,
+        completed: 0,
+        missed: 0,
+        pending: 0,
+        complianceRate: 0,
+        zonesCount: 0
+    };
 
-    const statsPromise = getDashboardProcessStats(userId);
+    try {
+        const zonesPromise = prisma.processZone.findMany({
+            where: { userId },
+            include: {
+                _count: {
+                    select: { tasks: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
 
-    const [zones, stats] = await Promise.all([zonesPromise, statsPromise]);
+        const statsPromise = getDashboardProcessStats(userId);
+
+        const [fetchedZones, fetchedStats] = await Promise.all([zonesPromise, statsPromise]);
+        zones = fetchedZones;
+        stats = fetchedStats;
+    } catch (error) {
+        console.error("Error fetching process data:", error);
+        // We can optionally redirect or show an error state, but empty state is safer to prevent crash loop
+    }
 
     const newFlowLink = `/dashboard/${branchSlug}/processes/new`
 
