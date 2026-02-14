@@ -107,102 +107,104 @@ export default function ProcessTemplateGallery({ branchId }: ProcessTemplateGall
                                     )}
                                 </div>
                             ))}
-                            + {template.tasks.length - 3} tareas más...
-                        </p>
+                            {template.tasks.length > 3 && (
+                                <p className="text-xs text-gray-600 pl-3 italic">
+                                    + {template.tasks.length - 3} tareas más...
+                                </p>
                             )}
-                    </div>
+                        </div>
 
-                    <div className="flex gap-2">
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button variant="outline" className="flex-1 border-white/10 hover:bg-white/5 hover:text-white text-gray-400">
-                                    <Eye className="w-4 h-4 mr-2" />
-                                    Ver
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="bg-[#0c0c0c] border-white/10 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle>{template.name}</DialogTitle>
-                                    <DialogDescription className="text-gray-400">Listado completo de tareas</DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4 mt-4">
-                                    {template.tasks.map((task, i) => (
-                                        <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
-                                            <div className="mt-1 min-w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 text-xs font-bold">
-                                                {i + 1}
+                        <div className="flex gap-2">
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="flex-1 border-white/10 hover:bg-white/5 hover:text-white text-gray-400">
+                                        <Eye className="w-4 h-4 mr-2" />
+                                        Ver
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-[#0c0c0c] border-white/10 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
+                                    <DialogHeader>
+                                        <DialogTitle>{template.name}</DialogTitle>
+                                        <DialogDescription className="text-gray-400">Listado completo de tareas</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 mt-4">
+                                        {template.tasks.map((task, i) => (
+                                            <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
+                                                <div className="mt-1 min-w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 text-xs font-bold">
+                                                    {i + 1}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-medium text-white text-sm">{task.title}</h4>
+                                                    {task.description && <p className="text-gray-400 text-xs mt-1">{task.description}</p>}
+                                                </div>
+                                                {task.defaultLimitTime && (
+                                                    <Badge variant="secondary" className="bg-white/10 text-gray-300 ml-auto whitespace-nowrap">
+                                                        <Clock className="w-3 h-3 mr-1" />
+                                                        {task.defaultLimitTime}
+                                                    </Badge>
+                                                )}
                                             </div>
-                                            <div>
-                                                <h4 className="font-medium text-white text-sm">{task.title}</h4>
-                                                {task.description && <p className="text-gray-400 text-xs mt-1">{task.description}</p>}
-                                            </div>
-                                            {task.defaultLimitTime && (
-                                                <Badge variant="secondary" className="bg-white/10 text-gray-300 ml-auto whitespace-nowrap">
-                                                    <Clock className="w-3 h-3 mr-1" />
-                                                    {task.defaultLimitTime}
-                                                </Badge>
-                                            )}
+                                        ))}
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+
+                            <Dialog open={open && selectedTemplate?.id === template.id} onOpenChange={(val) => {
+                                if (val) setSelectedTemplate(template);
+                                setOpen(val);
+                            }}>
+                                <DialogTrigger asChild>
+                                    <Button className="flex-[2] bg-white text-black hover:bg-gray-200 font-bold tracking-wide" size="sm">
+                                        <Copy className="w-4 h-4 mr-2" />
+                                        Usar
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-[#0c0c0c] border-white/10 text-white sm:max-w-md">
+                                    <DialogHeader>
+                                        <div className="mx-auto w-12 h-12 rounded-full bg-violet-500/10 flex items-center justify-center mb-4 text-violet-400">
+                                            <Copy className="w-6 h-6" />
                                         </div>
-                                    ))}
-                                </div>
-                            </DialogContent>
-                        </Dialog>
+                                        <DialogTitle className="text-center text-xl">Importar "{template.name}"</DialogTitle>
+                                        <DialogDescription className="text-center text-gray-400">
+                                            Se crearán {template.tasks.length} tareas nuevas en esta sucursal.
+                                        </DialogDescription>
+                                    </DialogHeader>
 
-                        <Dialog open={open && selectedTemplate?.id === template.id} onOpenChange={(val) => {
-                            if (val) setSelectedTemplate(template);
-                            setOpen(val);
-                        }}>
-                            <DialogTrigger asChild>
-                                <Button className="flex-[2] bg-white text-black hover:bg-gray-200 font-bold tracking-wide" size="sm">
-                                    <Copy className="w-4 h-4 mr-2" />
-                                    Usar
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="bg-[#0c0c0c] border-white/10 text-white sm:max-w-md">
-                                <DialogHeader>
-                                    <div className="mx-auto w-12 h-12 rounded-full bg-violet-500/10 flex items-center justify-center mb-4 text-violet-400">
-                                        <Copy className="w-6 h-6" />
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-gray-300">Nombre de la Zona / Lista</Label>
+                                            <Input
+                                                placeholder={template.name}
+                                                className="bg-white/5 border-white/10 text-white focus:ring-violet-500/50"
+                                                value={zoneName}
+                                                onChange={(e) => setZoneName(e.target.value)}
+                                            />
+                                            <p className="text-xs text-gray-500">
+                                                Ejemplo: "Aperturas Salón", "Checklist Diario", etc.
+                                            </p>
+                                        </div>
                                     </div>
-                                    <DialogTitle className="text-center text-xl">Importar "{template.name}"</DialogTitle>
-                                    <DialogDescription className="text-center text-gray-400">
-                                        Se crearán {template.tasks.length} tareas nuevas en esta sucursal.
-                                    </DialogDescription>
-                                </DialogHeader>
 
-                                <div className="space-y-4 py-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-gray-300">Nombre de la Zona / Lista</Label>
-                                        <Input
-                                            placeholder={template.name}
-                                            className="bg-white/5 border-white/10 text-white focus:ring-violet-500/50"
-                                            value={zoneName}
-                                            onChange={(e) => setZoneName(e.target.value)}
-                                        />
-                                        <p className="text-xs text-gray-500">
-                                            Ejemplo: "Aperturas Salón", "Checklist Diario", etc.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <DialogFooter>
-                                    <Button variant="ghost" onClick={() => setOpen(false)} className="hover:bg-white/5 hover:text-white">
-                                        Cancelar
-                                    </Button>
-                                    <Button
-                                        onClick={handleDeploy}
-                                        disabled={deploying}
-                                        className="bg-violet-600 hover:bg-violet-700 text-white"
-                                    >
-                                        {deploying ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                                        Confirmar Importación
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                </CardContent>
+                                    <DialogFooter>
+                                        <Button variant="ghost" onClick={() => setOpen(false)} className="hover:bg-white/5 hover:text-white">
+                                            Cancelar
+                                        </Button>
+                                        <Button
+                                            onClick={handleDeploy}
+                                            disabled={deploying}
+                                            className="bg-violet-600 hover:bg-violet-700 text-white"
+                                        >
+                                            {deploying ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                                            Confirmar Importación
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </CardContent>
                 </Card>
-    ))
-}
+            ))
+            }
         </div >
     );
 }
