@@ -139,84 +139,14 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
     if (!userId) throw new Error("Unauthorized");
 
     const existingZone = await prisma.processZone.findUnique({
-        where: { id: data.zoneId, userId }
+        where: { id: data.zoneId },
+        include: { tasks: true }
     });
 
-    if (!existingZone) throw new Error("Zone not found");
-    // UPDATE ZONE
-    export async function updateProcessZone(zoneId: string, data: CreateZonePayload) {
-        const { userId } = await auth();
-        if (!userId) throw new Error("Unauthorized");
-
-        // Verify ownership
-        const existingZone = await prisma.processZone.findUnique({
-            where: { id: zoneId },
-            select: { userId: true }
-        });
-
-        if (!existingZone || existingZone.userId !== userId) {
-            throw new Error("Zone not found or unauthorized");
-        }
-
-        // Transaction to update zone and replace tasks
-        await prisma.$transaction(async (tx) => {
-            // 1. Update Zone details
-            await tx.processZone.update({
-                where: { id: zoneId },
-                data: {
-                    name: data.name,
-                    description: data.description,
-                    assignedStaffId: data.assignedStaffId || null
-                }
-            });
-
-            // 2. Delete existing tasks (simple replacement strategy)
-            // Alternatively, we could diff them, but replacement is safer for now
-            await tx.processTask.deleteMany({
-                where: { zoneId }
-            });
-
-            // 3. Create new tasks
-            if (data.tasks.length > 0) {
-                await tx.processTask.createMany({
-                    data: data.tasks.map(task => ({
-                        zoneId,
-                        title: task.title,
-                        description: task.description,
-                        limitTime: task.limitTime || null,
-                        evidenceType: task.evidenceType,
-                        // assignedStaffId? inherited from zone or specific? keeping simple for now
-                    }))
-                });
-            }
-        });
-
-        revalidatePath('/dashboard/[branchSlug]/processes'); // We'll need to pass the path or just rely on page refresh
-        return { success: true };
+    if (!existingZone || existingZone.userId !== userId) {
+        throw new Error("Zone not found or unauthorized");
     }
 
-    // DELETE ZONE
-    export async function deleteProcessZone(zoneId: string) {
-        const { userId } = await auth();
-        if (!userId) throw new Error("Unauthorized");
-
-        // Verify ownership
-        const existingZone = await prisma.processZone.findUnique({
-            where: { id: zoneId },
-            select: { userId: true }
-        });
-
-        if (!existingZone || existingZone.userId !== userId) {
-            throw new Error("Zone not found or unauthorized");
-        }
-
-        await prisma.processZone.delete({
-            where: { id: zoneId }
-        });
-
-        revalidatePath('/dashboard');
-        return { success: true };
-    }
     // LIMIT CHECK (Tasks)
     const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
     if (userSettings && userSettings.plan === 'FREE') {
@@ -226,9 +156,6 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
         const currentTaskCount = await prisma.processTask.count({ where: { zoneId: data.zoneId } })
 
         // Calculate net change
-        // data.tasks contains: new tasks (no id), updates (id), deletes (id + deleted)
-        // We only care about the resulting total
-
         let newTotal = currentTaskCount
 
         for (const task of data.tasks) {
@@ -329,10 +256,20 @@ export async function deleteProcessZone(zoneId: string) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
+    // Verify ownership
+    const existingZone = await prisma.processZone.findUnique({
+        where: { id: zoneId },
+        select: { userId: true }
+    });
+
+    if (!existingZone || existingZone.userId !== userId) {
+        throw new Error("Zone not found or unauthorized");
+    }
+
     await prisma.processZone.delete({
-        where: { id: zoneId, userId }
+        where: { id: zoneId }
     });
 
     revalidatePath('/dashboard/processes');
-    redirect('/dashboard/processes');
+    return { success: true };
 }

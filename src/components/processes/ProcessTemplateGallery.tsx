@@ -311,8 +311,8 @@ export default function ProcessTemplateGallery({ branchId }: ProcessTemplateGall
                             </div>
                         </CardContent>
                     </Card>
-                ))
-                }
-            </div >
-            );
+                ))}
+            </div>
+        </div>
+    );
 }
