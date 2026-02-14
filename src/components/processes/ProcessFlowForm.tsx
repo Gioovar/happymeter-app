@@ -32,18 +32,27 @@ const formSchema = z.object({
 interface ProcessFlowFormProps {
     branchId: string
     branchSlug: string
+    initialData?: any // Typed properly
+    onSuccess?: () => void
 }
 
-export function ProcessFlowForm({ branchId, branchSlug }: ProcessFlowFormProps) {
+import { updateProcessZone } from "@/actions/processes-mutations"
+
+export function ProcessFlowForm({ branchId, branchSlug, initialData, onSuccess }: ProcessFlowFormProps) {
     const router = useRouter()
     const [submitting, setSubmitting] = useState(false)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name: "",
-            description: "",
-            tasks: [{ title: "", description: "", limitTime: "", evidenceType: "PHOTO" }]
+            name: initialData?.name || "",
+            description: initialData?.description || "",
+            tasks: initialData?.tasks?.map((t: any) => ({
+                title: t.title,
+                description: t.description || "",
+                limitTime: t.limitTime || "",
+                evidenceType: t.evidenceType
+            })) || [{ title: "", description: "", limitTime: "", evidenceType: "PHOTO" }]
         }
     })
 
@@ -62,19 +71,35 @@ export function ProcessFlowForm({ branchId, branchSlug }: ProcessFlowFormProps) 
                 description: t.description === "" ? undefined : t.description
             }))
 
-            await createProcessZoneWithTasks({
-                name: values.name,
-                description: values.description,
-                assignedStaffId: undefined, // Optional logic could be added later
-                tasks: cleanTasks
-            })
+            if (initialData) {
+                // UPDATE
+                await updateProcessZone(initialData.id, {
+                    name: values.name,
+                    description: values.description,
+                    assignedStaffId: initialData.assignedStaffId,
+                    tasks: cleanTasks
+                })
+                toast.success("Flujo actualizado correctamente")
+            } else {
+                // CREATE
+                await createProcessZoneWithTasks({
+                    name: values.name,
+                    description: values.description,
+                    assignedStaffId: undefined,
+                    tasks: cleanTasks
+                })
+                toast.success("Flujo creado exitosamente")
+            }
 
-            toast.success("Flujo creado exitosamente")
-            router.push(`/dashboard/${branchSlug}/processes`)
+            if (onSuccess) {
+                onSuccess()
+            } else {
+                router.push(`/dashboard/${branchSlug}/processes`)
+            }
             router.refresh()
         } catch (error) {
             console.error(error)
-            toast.error(error instanceof Error ? error.message : "Error al crear el flujo")
+            toast.error(error instanceof Error ? error.message : "Error al guardar el flujo")
         } finally {
             setSubmitting(false)
         }
@@ -127,7 +152,7 @@ export function ProcessFlowForm({ branchId, branchSlug }: ProcessFlowFormProps) 
                         </Button>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                         {fields.map((field, index) => (
                             <Card key={field.id} className="bg-[#1a1a1a] border-white/5">
                                 <CardHeader className="p-4 flex flex-row items-center gap-4 space-y-0">
@@ -202,7 +227,6 @@ export function ProcessFlowForm({ branchId, branchSlug }: ProcessFlowFormProps) 
                                                     <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
                                                         <SelectItem value="PHOTO">📸 Foto</SelectItem>
                                                         <SelectItem value="VIDEO">🎥 Video</SelectItem>
-                                                        {/* <SelectItem value="QR">Scanning QR</SelectItem> */}
                                                     </SelectContent>
                                                 </Select>
                                             </FormItem>
@@ -211,24 +235,16 @@ export function ProcessFlowForm({ branchId, branchSlug }: ProcessFlowFormProps) 
                                 </CardContent>
                             </Card>
                         ))}
-                        {fields.length === 0 && (
-                            <div className="text-center py-8 border-2 border-dashed border-white/10 rounded-xl text-gray-500">
-                                No hay tareas agregadas.
-                            </div>
-                        )}
-                        {form.formState.errors.tasks && (
-                            <p className="text-sm font-medium text-red-500 text-center">{form.formState.errors.tasks.root?.message || "Agrega tareas"}</p>
-                        )}
                     </div>
                 </div>
 
                 <div className="flex justify-end gap-4 pt-6 mt-6 border-t border-white/5">
-                    <Button type="button" variant="ghost" className="text-gray-400 hover:text-white" onClick={() => router.back()}>
+                    <Button type="button" variant="ghost" className="text-gray-400 hover:text-white" onClick={onSuccess || (() => router.back())}>
                         Cancelar
                     </Button>
                     <Button type="submit" disabled={submitting} className="bg-violet-600 hover:bg-violet-700 text-white">
                         {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                        Guardar Flujo
+                        {initialData ? "Actualizar Flujo" : "Guardar Flujo"}
                     </Button>
                 </div>
             </form>

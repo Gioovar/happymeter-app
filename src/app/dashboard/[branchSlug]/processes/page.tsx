@@ -166,30 +166,12 @@ export default async function BranchProcessesPage({ params }: { params: { branch
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {zones.map((zone) => (
-                                <Link
-                                    href={`/dashboard/${branchSlug}/processes/${zone.id}`}
+                                <ProcessZoneCard
                                     key={zone.id}
-                                    className="block group relative"
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-600/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                    <div className="bg-[#111] border border-white/10 rounded-3xl p-6 h-full relative hover:-translate-y-1 transition-transform duration-300">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-cyan-500/20 group-hover:text-cyan-400 transition-colors">
-                                                <MapPin className="w-6 h-6 text-gray-300 group-hover:text-cyan-400" />
-                                            </div>
-                                            <div className="bg-white/5 px-3 py-1 rounded-full border border-white/5">
-                                                <span className="text-xs font-mono text-gray-300">{zone._count.tasks} Tareas</span>
-                                            </div>
-                                        </div>
-
-                                        <h4 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">{zone.name}</h4>
-                                        <p className="text-sm text-gray-400 line-clamp-2 mb-6">{zone.description || "Zona operativa sin descripción detallada."}</p>
-
-                                        <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 group-hover:translate-x-1 transition-transform">
-                                            Gestionar Zona <ArrowUpRight className="w-3 h-3" />
-                                        </div>
-                                    </div>
-                                </Link>
+                                    zone={zone}
+                                    branchSlug={branchSlug}
+                                    branchId={userId}
+                                />
                             ))}
 
                             {/* Create New Card (Inline) */}
