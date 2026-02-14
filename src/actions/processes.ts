@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
-import { ProcessEvidenceStatus, ProcessEvidenceType } from '@prisma/client';
+import { ProcessEvidenceStatus, ProcessEvidenceType, ProcessTask, ProcessTemplateTask } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 
 /**
@@ -413,7 +413,7 @@ export async function instantiateTemplate(templateId: string, branchId: string, 
     });
 
     // 3. Create Tasks
-    const creationPromises = template.tasks.map(task =>
+    const creationPromises = template.tasks.map((task: ProcessTemplateTask) =>
         prisma.processTask.create({
             data: {
                 zoneId: zone.id,
@@ -482,11 +482,25 @@ export async function getProcessZoneHistory(zoneId: string, dateStr: string) {
                 where: {
                     days: { has: dayOfWeek }
                 }
+            },
+            assignedStaff: {
+                include: {
+                    user: {
+                        select: {
+                            fullName: true,
+                            businessName: true,
+                            photoUrl: true
+                        }
+                    }
+                }
             }
         }
     });
 
     if (!zone) return null;
+
+    const responsiblePerson = zone.assignedStaff?.user?.fullName || zone.assignedStaff?.user?.businessName || "Personal Asignado";
+    const responsiblePhoto = zone.assignedStaff?.user?.photoUrl;
 
     // 2. Fetch Evidence for these tasks on that date
     const taskIds = zone.tasks.map(t => t.id);
@@ -512,7 +526,7 @@ export async function getProcessZoneHistory(zoneId: string, dateStr: string) {
     });
 
     // 3. Map tasks with status
-    const historyTasks = zone.tasks.map(task => {
+    const historyTasks = zone.tasks.map((task: ProcessTask) => {
         const evidence = evidences.find(e => e.taskId === task.id);
         let status: 'COMPLETED' | 'PENDING' | 'MISSED' = 'PENDING';
 
@@ -535,6 +549,8 @@ export async function getProcessZoneHistory(zoneId: string, dateStr: string) {
         return {
             ...task,
             status,
+            responsible: responsiblePerson,
+            responsiblePhoto,
             evidence: evidence ? {
                 id: evidence.id,
                 fileUrl: evidence.fileUrl,
@@ -558,6 +574,44 @@ export async function getProcessZoneHistory(zoneId: string, dateStr: string) {
     return {
         date: dateStr,
         stats,
-        tasks: historyTasks
+        tasks: historyTasks,
+        zoneName: zone.name,
+        responsible: responsiblePerson
+    };
+}
+
+export async function getDashboardProcessStats(branchId: string) {
+    // Get today's stats
+    const todayStr = new Date().toISOString().split('T')[0];
+    const report = await getDailyTaskReport(todayStr);
+
+    if (!report) {
+        return {
+            total: 0,
+            completed: 0,
+            missed: 0,
+            pending: 0,
+            complianceRate: 0,
+            zonesCount: 0
+        };
+    }
+
+    // Calculate aggregate stats
+    const total = report.stats.total;
+    const completed = report.stats.completed;
+    const missed = report.stats.missed;
+    const pending = report.stats.pending;
+    const complianceRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    // Get zones count separately as report is task-centric
+    const uniqueZoneIds = new Set(report.tasks.map((t: any) => t.zoneId));
+
+    return {
+        total,
+        completed,
+        missed,
+        pending,
+        complianceRate,
+        zonesCount: uniqueZoneIds.size
     };
 }

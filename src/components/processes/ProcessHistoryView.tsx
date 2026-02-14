@@ -43,12 +43,12 @@ export default function ProcessHistoryView({ zoneId }: ProcessHistoryViewProps) 
     const completionRate = data?.stats?.total ? Math.round((data.stats.completed / data.stats.total) * 100) : 0
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
             {/* Sidebar: Calendar & Stats */}
-            <div className="lg:col-span-4 space-y-6">
-                <div className="bg-[#111] border border-white/10 rounded-3xl overflow-hidden shadow-2xl p-6 relative group">
+            <div className="lg:col-span-5 space-y-6">
+                <div className="bg-[#111] border border-white/10 rounded-3xl overflow-hidden shadow-2xl p-6 relative group h-fit">
                     <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                         <CalendarIcon className="w-5 h-5 text-cyan-400" />
                         Calendario
                     </h3>
@@ -57,21 +57,21 @@ export default function ProcessHistoryView({ zoneId }: ProcessHistoryViewProps) 
                         selected={date}
                         onSelect={(d) => d && setDate(d)}
                         disabled={(d) => d > new Date() || d < new Date("2024-01-01")}
-                        className="bg-transparent text-white w-full flex justify-center p-0"
+                        className="bg-transparent text-white w-full p-0"
                         classNames={{
-                            head_cell: "text-gray-500 font-medium text-[0.8rem] uppercase tracking-wider pb-4",
-                            cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                            head_cell: "text-gray-500 font-medium text-sm uppercase tracking-wider pb-4",
+                            cell: "h-auto w-full text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 aspect-square flex items-center justify-center",
                             day: cn(
-                                "h-10 w-10 p-0 font-medium aria-selected:opacity-100 hover:bg-white/10 rounded-xl transition-all text-gray-300 hover:text-white hover:scale-110"
+                                "h-full w-full p-0 font-medium aria-selected:opacity-100 hover:bg-white/10 rounded-xl transition-all text-gray-300 hover:text-white flex items-center justify-center text-lg"
                             ),
                             day_selected:
-                                "bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 rounded-xl font-bold scale-110",
+                                "bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 rounded-xl font-bold scale-105",
                             day_today: "bg-white/5 text-white border border-white/10 rounded-xl",
                             day_outside: "text-gray-700 opacity-30",
                             day_disabled: "text-gray-800 opacity-20",
-                            caption: "text-white capitalize font-bold text-lg mb-6 flex justify-center pt-2",
-                            nav_button: "text-gray-400 hover:text-white hover:bg-white/10 rounded-lg p-1 transition-colors",
-                            table: "w-full border-collapse space-y-1",
+                            caption: "text-white capitalize font-bold text-2xl mb-8 flex justify-between px-2 pt-2",
+                            nav_button: "text-gray-400 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-colors",
+                            table: "w-full border-collapse space-y-2",
                         }}
                     />
                 </div>
@@ -136,7 +136,7 @@ export default function ProcessHistoryView({ zoneId }: ProcessHistoryViewProps) 
             </div>
 
             {/* Main Content: Logs */}
-            <div className="lg:col-span-8 space-y-6">
+            <div className="lg:col-span-7 space-y-6">
                 <div className="flex items-center justify-between bg-[#111] p-6 rounded-3xl border border-white/10">
                     <div>
                         <h2 className="text-2xl font-bold text-white capitalize tracking-tight">
@@ -209,7 +209,7 @@ export default function ProcessHistoryView({ zoneId }: ProcessHistoryViewProps) 
                                                     </div>
                                                 )}
 
-                                                {task.evidence && (
+                                                {task.evidence ? (
                                                     <div className="flex items-center gap-2">
                                                         <Avatar className="w-5 h-5 border border-white/10">
                                                             <AvatarImage src={task.evidence.completedByPhoto || undefined} />
@@ -218,6 +218,18 @@ export default function ProcessHistoryView({ zoneId }: ProcessHistoryViewProps) 
                                                             </AvatarFallback>
                                                         </Avatar>
                                                         <span className="text-xs text-gray-400">{task.evidence.completedBy}</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2">
+                                                        <Avatar className="w-5 h-5 border border-white/10 grayscale opacity-50">
+                                                            <AvatarImage src={task.responsiblePhoto || undefined} />
+                                                            <AvatarFallback className="text-[9px] bg-gray-500 text-white">
+                                                                {task.responsible?.[0] || 'A'}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <span className="text-xs text-gray-500">
+                                                            Resp: {task.responsible || 'Sin asignar'}
+                                                        </span>
                                                     </div>
                                                 )}
                                             </div>
