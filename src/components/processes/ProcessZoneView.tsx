@@ -136,43 +136,60 @@ export default function ProcessZoneView({ zone, branchSlug }: ProcessZoneViewPro
                 </TabsList>
 
                 <TabsContent value="today" className="mt-0">
-                    <div className="grid gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {zone.tasks.map(task => {
                             const status = getTaskStatus(task)
                             const StatusIcon = status.icon
 
                             return (
-                                <Card
+                                <div
                                     key={task.id}
-                                    className={`bg-[#111] border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer ${task.evidences?.[0] ? 'opacity-75' : ''}`}
+                                    className={`group relative bg-[#111] border border-white/10 rounded-3xl p-1 hover:border-cyan-500/30 transition-all cursor-pointer overflow-hidden ${task.evidences?.[0] ? 'opacity-75' : ''}`}
                                     onClick={() => !task.evidences?.[0] && setSelectedTask(task)}
                                 >
-                                    <CardContent className="p-4 flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${status.color}`}>
-                                                <StatusIcon className="w-5 h-5" />
+                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                    <div className="relative bg-[#111] rounded-[1.3rem] p-5 h-full flex flex-col justify-between gap-4 border border-white/5">
+                                        <div className="flex justify-between items-start">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${status.color}`}>
+                                                <StatusIcon className="w-6 h-6" />
                                             </div>
-                                            <div>
-                                                <h3 className="font-bold text-white">{task.title}</h3>
-                                                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                                                    {task.limitTime && (
-                                                        <span className="flex items-center gap-1">
-                                                            <Clock className="w-3 h-3" />
-                                                            Límite: {task.limitTime}
-                                                        </span>
-                                                    )}
-                                                    <span>•</span>
-                                                    <span>{task.evidenceType === 'PHOTO' ? '📸 Foto' : '🎥 Video'}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
                                             <Badge variant="outline" className={`${status.color} border-0`}>
                                                 {status.label}
                                             </Badge>
                                         </div>
-                                    </CardContent>
-                                </Card>
+
+                                        <div>
+                                            <h3 className="font-bold text-lg text-white leading-tight mb-2 group-hover:text-cyan-400 transition-colors line-clamp-2">
+                                                {task.title}
+                                            </h3>
+                                            <p className="text-sm text-gray-500 line-clamp-2 mb-3">
+                                                {task.description || "Sin descripción adicional."}
+                                            </p>
+
+                                            <div className="flex items-center gap-3 text-xs text-gray-400 bg-white/5 p-2 rounded-lg w-fit">
+                                                {task.limitTime && (
+                                                    <span className="flex items-center gap-1.5 border-r border-white/10 pr-3 mr-1">
+                                                        <Clock className="w-3.5 h-3.5 text-orange-400" />
+                                                        <span className="font-mono">{task.limitTime}</span>
+                                                    </span>
+                                                )}
+                                                <span className="flex items-center gap-1.5">
+                                                    {task.evidenceType === 'PHOTO' ? <Camera className="w-3.5 h-3.5 text-purple-400" /> : <div className="i-lucide-video w-3.5 h-3.5 text-blue-400" />}
+                                                    {task.evidenceType === 'PHOTO' ? 'Foto' : 'Video'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {!task.evidences?.[0] && (
+                                            <div className="pt-4 mt-auto border-t border-white/5 flex justify-end">
+                                                <span className="text-xs font-bold text-cyan-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                                    Completar Tarea <ArrowLeft className="w-3 h-3 rotate-180" />
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             )
                         })}
                     </div>
