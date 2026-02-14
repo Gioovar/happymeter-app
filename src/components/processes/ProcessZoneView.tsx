@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner'
 import { submitTaskEvidence } from '@/actions/processes'
 import Image from 'next/image'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import ProcessHistoryView from './ProcessHistoryView'
 
 interface Task {
     id: string
@@ -83,12 +85,12 @@ export default function ProcessZoneView({ zone, branchSlug }: ProcessZoneViewPro
 
         setIsSubmitting(true)
         try {
-            // Upload logic would go here. 
-            // For now we will create a fake URL or use a base64 string if the server action supports it, 
+            // Upload logic would go here.
+            // For now we will create a fake URL or use a base64 string if the server action supports it,
             // but usually we upload to Blob/S3 first.
             // Since I don't have the full Blob upload setup here, I'll assume we pass the fileUrl.
             // Wait, the action `submitTaskEvidence` expects `fileUrl`.
-            // I need to implement upload. For this specific step, I will simulate an upload or simpler, 
+            // I need to implement upload. For this specific step, I will simulate an upload or simpler,
             // check if there is an upload action available.
             // Looking at `src/actions/processes.ts`, it just takes a URL.
             // I will implement a basic client-side upload or placeholder for now.
@@ -117,7 +119,7 @@ export default function ProcessZoneView({ zone, branchSlug }: ProcessZoneViewPro
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-2">
                 <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-gray-400 hover:text-white">
                     <ArrowLeft className="w-5 h-5" />
                 </Button>
@@ -127,46 +129,59 @@ export default function ProcessZoneView({ zone, branchSlug }: ProcessZoneViewPro
                 </div>
             </div>
 
-            <div className="grid gap-4">
-                {zone.tasks.map(task => {
-                    const status = getTaskStatus(task)
-                    const StatusIcon = status.icon
+            <Tabs defaultValue="today" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-[#111] border border-white/10 mb-6">
+                    <TabsTrigger value="today" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white">Tareas de Hoy</TabsTrigger>
+                    <TabsTrigger value="history" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white">Historial</TabsTrigger>
+                </TabsList>
 
-                    return (
-                        <Card
-                            key={task.id}
-                            className={`bg-[#111] border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer ${task.evidences?.[0] ? 'opacity-75' : ''}`}
-                            onClick={() => !task.evidences?.[0] && setSelectedTask(task)}
-                        >
-                            <CardContent className="p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${status.color}`}>
-                                        <StatusIcon className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-white">{task.title}</h3>
-                                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                                            {task.limitTime && (
-                                                <span className="flex items-center gap-1">
-                                                    <Clock className="w-3 h-3" />
-                                                    Límite: {task.limitTime}
-                                                </span>
-                                            )}
-                                            <span>•</span>
-                                            <span>{task.evidenceType === 'PHOTO' ? '📸 Foto' : '🎥 Video'}</span>
+                <TabsContent value="today" className="mt-0">
+                    <div className="grid gap-4">
+                        {zone.tasks.map(task => {
+                            const status = getTaskStatus(task)
+                            const StatusIcon = status.icon
+
+                            return (
+                                <Card
+                                    key={task.id}
+                                    className={`bg-[#111] border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer ${task.evidences?.[0] ? 'opacity-75' : ''}`}
+                                    onClick={() => !task.evidences?.[0] && setSelectedTask(task)}
+                                >
+                                    <CardContent className="p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${status.color}`}>
+                                                <StatusIcon className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-white">{task.title}</h3>
+                                                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                                                    {task.limitTime && (
+                                                        <span className="flex items-center gap-1">
+                                                            <Clock className="w-3 h-3" />
+                                                            Límite: {task.limitTime}
+                                                        </span>
+                                                    )}
+                                                    <span>•</span>
+                                                    <span>{task.evidenceType === 'PHOTO' ? '📸 Foto' : '🎥 Video'}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <Badge variant="outline" className={`${status.color} border-0`}>
-                                        {status.label}
-                                    </Badge>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )
-                })}
-            </div>
+                                        <div className="text-right">
+                                            <Badge variant="outline" className={`${status.color} border-0`}>
+                                                {status.label}
+                                            </Badge>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="history" className="mt-0">
+                    <ProcessHistoryView zoneId={zone.id} />
+                </TabsContent>
+            </Tabs>
 
             <Dialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
                 <DialogContent className="bg-[#111] border-white/10 text-white sm:max-w-md">

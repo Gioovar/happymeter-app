@@ -4,7 +4,9 @@ import { getChainDetails } from '@/actions/chain'
 import BranchCard from '@/components/chains/BranchCard'
 import CreateBranchModal from '@/components/chains/CreateBranchModal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { GitBranch, Store } from 'lucide-react'
+import { GitBranch, Store, Sparkles } from 'lucide-react'
+import { prisma } from '@/lib/prisma'
+import Link from 'next/link'
 
 export default async function ChainsPage() {
     const user = await currentUser()
@@ -15,6 +17,17 @@ export default async function ChainsPage() {
     // Check for ownership OR membership
     const ownedChain = chains.find(c => c.ownerId === user.id) || chains.find(c => c.branches.some(b => b.branchId === user.id))
     const isOwner = ownedChain?.ownerId === user.id
+
+    let plan = 'FREE';
+
+    if (ownedChain) {
+        const ownerSettings = await prisma.userSettings.findUnique({
+            where: { userId: ownedChain.ownerId },
+            select: { plan: true }
+        })
+        plan = ownerSettings?.plan || 'FREE';
+        console.log('[ChainPage] Plan loaded:', plan, 'For Owner:', ownedChain.ownerId);
+    }
 
     if (!ownedChain) {
         return (
@@ -89,6 +102,20 @@ export default async function ChainsPage() {
                                 <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold uppercase tracking-wide">
                                     Vista Limitada
                                 </span>
+                            )}
+
+                            <div className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${plan === 'POWER' ? 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20 shadow-[0_0_10px_rgba(232,121,249,0.1)]' :
+                                plan === 'GROWTH' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(96,165,250,0.1)]' :
+                                    plan === 'CHAIN' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(251,191,36,0.1)]' :
+                                        'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                                }`}>
+                                {(plan || 'FREE') === 'FREE' ? 'Plan Gratis' : `${(plan || 'FREE').replace('_', ' ')}`}
+                            </div>
+
+                            {plan !== 'POWER' && plan !== 'CHAIN' && plan !== 'ENTERPRISE' && isOwner && (
+                                <Link href="/pricing" className="px-2 py-0.5 rounded-full bg-violet-500 text-white text-[10px] font-bold hover:bg-violet-400 transition shadow-lg shadow-violet-500/20 flex items-center gap-1">
+                                    <Sparkles className="w-2.5 h-2.5" /> Mejorar
+                                </Link>
                             )}
                         </div>
                     </div>

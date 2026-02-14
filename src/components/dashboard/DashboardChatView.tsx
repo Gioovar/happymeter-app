@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Sparkles, User, Zap, Menu, Mic, Square, Play, Pause } from 'lucide-react'
+import { Send, Sparkles, User, Zap, Menu, Mic, Square, Play, Pause, X } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import ChatSidebar from '@/components/chat/ChatSidebar'
@@ -465,6 +466,14 @@ export default function DashboardChatView() {
                             </h1>
                         </div>
                     </div>
+
+                    <Link
+                        href={branchSlug ? `/dashboard/${branchSlug}` : '/dashboard/chains'}
+                        className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+                        title="Volver a métricas"
+                    >
+                        <X className="w-5 h-5" />
+                    </Link>
                 </header>
 
                 {/* 3. LAYER - Messages */}

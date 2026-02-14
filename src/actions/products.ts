@@ -120,6 +120,10 @@ export async function upsertProduct(data: {
     description?: string
     price: number
     imageUrl?: string
+    isFeatured?: boolean
+    unit?: string
+    size?: number
+    highlightedNote?: string
 }) {
     try {
         if (data.id) {
@@ -132,7 +136,11 @@ export async function upsertProduct(data: {
                     name: data.name,
                     description: data.description,
                     price: data.price,
-                    imageUrl: data.imageUrl
+                    imageUrl: data.imageUrl,
+                    isFeatured: data.isFeatured ?? false,
+                    unit: data.unit,
+                    size: data.size,
+                    highlightedNote: data.highlightedNote
                 }
             })
         } else {
@@ -153,7 +161,11 @@ export async function upsertProduct(data: {
                     description: data.description,
                     price: data.price,
                     imageUrl: data.imageUrl,
-                    order: newOrder
+                    isFeatured: data.isFeatured ?? false,
+                    order: newOrder,
+                    unit: data.unit,
+                    size: data.size,
+                    highlightedNote: data.highlightedNote
                 }
             })
         }
@@ -165,6 +177,22 @@ export async function upsertProduct(data: {
         return { success: false, error: 'Error al guardar producto' }
     }
 }
+
+export async function toggleProductFeatured(productId: string, isFeatured: boolean) {
+    try {
+        await prisma.product.update({
+            where: { id: productId },
+            data: { isFeatured }
+        })
+        revalidatePath('/dashboard/loyalty')
+        return { success: true }
+    } catch (error: any) {
+        console.error('Error toggling product featured:', error)
+        return { success: false, error: 'Error al actualizar destacado' }
+    }
+}
+
+
 
 export async function deleteProduct(productId: string, userId: string) {
     try {

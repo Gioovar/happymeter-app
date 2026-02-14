@@ -9,6 +9,7 @@ import { format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { toast } from 'sonner'
 import { useNotifications } from '@/context/NotificationContext'
+import { useDashboard } from '@/context/DashboardContext'
 
 
 interface NotificationsBellProps {
@@ -17,6 +18,7 @@ interface NotificationsBellProps {
 
 export default function NotificationsBell({ align = 'right', currentBranchId }: NotificationsBellProps & { currentBranchId?: string }) {
     const { notifications, unreadCount, markAsRead, deleteRead, loadingId, setLoadingId, requestPushPermission } = useNotifications()
+    const { chains } = useDashboard()
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
     const bellRef = useRef<HTMLDivElement>(null)
@@ -33,16 +35,18 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
     }, [])
 
     const filteredNotifications = notifications.filter(n => {
-        // 1. If no context, show all
+        // 1. If no context (Global Dashboard), show all
         if (!currentBranchId) return true
 
-        // 2. Always show Global types
-        if (['SYSTEM', 'ACHIEVEMENT', 'INFO'].includes(n.type)) return true
-
-        // 3. Filter by Branch ID (Origin of the notification)
+        // 2. If Notification has a specific Branch ID, it MUST match the current context
+        // This takes precedence over "Global Types". If an achievement is for Branch A, Branch B shouldn't see it.
         if (n.meta?.branchId) {
             return n.meta.branchId === currentBranchId
         }
+
+        // 3. Fallback: If no Branch ID is present, show Global Types
+        // This covers system-wide announcements or legacy notifications without branch data
+        if (['SYSTEM', 'ACHIEVEMENT', 'INFO'].includes(n.type)) return true
 
         return false
     })
@@ -168,63 +172,85 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
                             ) : (
                                 <div className="divide-y divide-white/5">
                                     {filteredNotifications
-                                        .map(notif => (
-                                            <div
-                                                key={notif.id}
-                                                onClick={() => handleClick(notif)}
-                                                className={`p-4 hover:bg-white/5 transition relative group 
+                                        .map(notif => {
+                                            // Dynamic Title Logic for Chain View
+                                            let displayTitle = notif.title
+                                            let branchName = null
+
+                                            if (!currentBranchId && notif.meta?.branchId) {
+                                                // We are in Chain View, find the branch name
+                                                // Iterate over all chains and their branches
+                                                for (const chain of chains) {
+                                                    const branch = chain.branches.find(b => b.branchId === notif.meta.branchId)
+                                                    if (branch) {
+                                                        branchName = branch.name || branch.branch.businessName || "Sucursal"
+                                                        break
+                                                    }
+                                                }
+
+                                                if (branchName) {
+                                                    displayTitle = `Alerta de ${branchName}`
+                                                }
+                                            }
+
+                                            return (
+                                                <div
+                                                    key={notif.id}
+                                                    onClick={() => handleClick(notif)}
+                                                    className={`p-4 hover:bg-white/5 transition relative group 
                                                 ${!notif.isRead ? 'bg-blue-500/5 border-l-2 border-blue-500 shadow-[inset_0_0_20px_rgba(59,130,246,0.05)]' : 'border-l-2 border-transparent'} 
                                                 ${notif.meta?.responseId ? 'cursor-pointer' : 'cursor-default'}
                                                 ${loadingId === notif.id ? 'opacity-70 pointer-events-none' : ''}
                                             `}
-                                            >
-                                                <div className="flex gap-3">
-                                                    <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center border ${getBgColor(notif.type)}`}>
-                                                        {loadingId === notif.id ? (
-                                                            <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
-                                                        ) : (
-                                                            getIcon(notif.type)
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 space-y-1">
-                                                        <div className="flex justify-between items-start gap-2 pr-2"> {/* Added pr-2 to avoid right edge tightness */}
-                                                            <h4 className={`text-sm font-semibold ${!notif.isRead ? 'text-white' : 'text-gray-400'}`}>
-                                                                {notif.title}
-                                                            </h4>
-                                                            <span className="text-[10px] text-gray-600 whitespace-nowrap pt-1">
-                                                                {(() => {
-                                                                    try {
-                                                                        return format(new Date(notif.createdAt), "d MMM", { locale: es })
-                                                                    } catch (e) {
-                                                                        return ""
-                                                                    }
-                                                                })()}
-                                                            </span>
+                                                >
+                                                    <div className="flex gap-3">
+                                                        <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center border ${getBgColor(notif.type)}`}>
+                                                            {loadingId === notif.id ? (
+                                                                <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                                                            ) : (
+                                                                getIcon(notif.type)
+                                                            )}
                                                         </div>
-                                                        <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap line-clamp-3">
-                                                            {notif.message}
-                                                        </p>
+                                                        <div className="flex-1 space-y-1">
+                                                            <div className="flex justify-between items-start gap-2 pr-2">
+                                                                <h4 className={`text-sm font-semibold ${!notif.isRead ? 'text-white' : 'text-gray-400'}`}>
+                                                                    {displayTitle}
+                                                                </h4>
+                                                                <span className="text-[10px] text-gray-600 whitespace-nowrap pt-1">
+                                                                    {(() => {
+                                                                        try {
+                                                                            return format(new Date(notif.createdAt), "d MMM", { locale: es })
+                                                                        } catch (e) {
+                                                                            return ""
+                                                                        }
+                                                                    })()}
+                                                                </span>
+                                                            </div>
+                                                            {branchName && (
+                                                                <p className="text-[10px] text-violet-400 font-medium mb-0.5 uppercase tracking-wide">
+                                                                    {notif.title.replace('🚨 ', '').replace('🏆 ', '').replace('📩 ', '')}
+                                                                </p>
+                                                            )}
+                                                            <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap line-clamp-3">
+                                                                {notif.message}
+                                                            </p>
 
-                                                        {/* Enlace de texto opcional, aunque ahora toda la tarjeta es clicable */}
-                                                        {notif.meta?.responseId && (
-                                                            <span className="block w-fit text-[10px] text-blue-500 font-bold mt-2">
-                                                                {loadingId === notif.id ? 'Cargando...' : 'Ver Respuesta'}
-                                                            </span>
+                                                            {/* Enlace de texto opcional, aunque ahora toda la tarjeta es clicable */}
+                                                            {notif.meta?.responseId && (
+                                                                <span className="block w-fit text-[10px] text-blue-500 font-bold mt-2">
+                                                                    {loadingId === notif.id ? 'Cargando...' : 'Ver Respuesta'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {!notif.isRead && !loadingId && (
+                                                            <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
                                                         )}
                                                     </div>
-
-                                                    {!notif.isRead && !loadingId && (
-                                                        // Moved dot to be left-aligned in the flex or relative to title instead of absolute top-right overlay
-                                                        // Actually, keeping absolute but moving it slightly or changing it to be part of the layout?
-                                                        // Cleanest fix: Remove the dot if we have the blue border/bg, OR position it 'top-4 right-2' but ensure text has padding.
-                                                        // I'll effectively remove the big absolute overlay if it's clashing and rely on the border/bg which is cleaner.
-                                                        // User explicitly complained about the big circle.
-                                                        // But let's keep a small indicator.
-                                                        <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
-                                                    )}
                                                 </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
+                                        })}
                                 </div>
                             )}
                         </div>

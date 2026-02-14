@@ -3,6 +3,7 @@ import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { sendCrisisAlert, sendStaffAlert, sendCustomerReward } from '@/lib/alerts'
 import { sendPushNotification } from '@/lib/push-service'
+import { checkCrisis, checkFraud } from '@/lib/security'
 
 export async function POST(
     req: Request,
@@ -68,7 +69,12 @@ export async function POST(
             include: { survey: true, answers: { include: { question: true } } }
         })
 
+        // ...
+
         // Async Alert Trigger (Don't await to keep response fast)
+        const ip = req.headers.get('x-forwarded-for') || 'unknown'
+        const branchId = survey.userId // Assuming survey Owner is the Branch
+
         // Check if it's a Staff Report (Anonymous Box)
         if (response.survey.title.includes('Buzón')) {
             await sendStaffAlert(response, response.survey, response.answers)
@@ -77,6 +83,10 @@ export async function POST(
             await sendCrisisAlert(response, response.survey, response.answers)
             // Send Reward to Customer
             await sendCustomerReward(response, response.survey, response.answers)
+
+            // New Advanced Security Checks
+            checkCrisis(surveyId, branchId)
+            checkFraud(surveyId, ip, branchId)
         }
 
         // Force cache invalidation for real-time dashboard updates
@@ -134,7 +144,7 @@ async function checkMilestones(userId: string) {
                     type: 'ACHIEVEMENT',
                     title,
                     message,
-                    meta: { count }
+                    meta: { count, branchId: userId }
                 }
             })
 

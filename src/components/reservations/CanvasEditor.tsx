@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles, Copy, Layout, Settings, DollarSign } from 'lucide-react'
+import { Plus, Save, Square, Circle, Armchair, Move, RotateCw, Trash2, PenTool, Sparkles, Copy, Layout, Settings, DollarSign, Camera } from 'lucide-react'
 import { toast } from 'sonner'
 import { saveFloorPlan } from '@/actions/reservations'
 import { supabase } from '@/lib/supabase'
@@ -144,28 +144,27 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     }
 
     const handleDrag = (id: string, info: any) => {
-        // Absolute update for OTHER selected items
-        // We calculate position based on START position + OFFSET
-        // This avoids drift and double-counting
-
         const offsetX = info.offset.x
         const offsetY = info.offset.y
-
         if (offsetX === 0 && offsetY === 0) return
 
         const isSelected = selectedIds.includes(id)
         if (!isSelected) return
 
+        const CONTAINER_WIDTH = 390 // Phone Width
+
         setTables(prev => prev.map(t => {
-            // Update only passive selected items
             if (t.id !== id && selectedIds.includes(t.id)) {
                 const startPos = dragStartPositions.current[t.id]
                 if (startPos) {
-                    return {
-                        ...t,
-                        x: startPos.x + offsetX,
-                        y: startPos.y + offsetY
-                    }
+                    let newX = startPos.x + offsetX
+                    let newY = startPos.y + offsetY
+
+                    // Constrain
+                    newX = Math.max(0, Math.min(newX, CONTAINER_WIDTH - t.width))
+                    newY = Math.max(0, newY)
+
+                    return { ...t, x: newX, y: newY }
                 }
             }
             return t
@@ -173,39 +172,41 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
     }
 
     const handleDragEnd = (id: string, info: any) => {
-        // Finalize positions for ALL selected items (including the dragged one)
-
         const offsetX = info.offset.x
         const offsetY = info.offset.y
-
         const isSelected = selectedIds.includes(id)
+
+        const CONTAINER_WIDTH = 390 // Phone Width
 
         setTables(prev => prev.map(t => {
             if (isSelected && selectedIds.includes(t.id)) {
                 const startPos = dragStartPositions.current[t.id]
                 if (startPos) {
-                    return {
-                        ...t,
-                        x: startPos.x + offsetX,
-                        y: startPos.y + offsetY
-                    }
+                    let newX = startPos.x + offsetX
+                    let newY = startPos.y + offsetY
+
+                    // Constrain
+                    newX = Math.max(0, Math.min(newX, CONTAINER_WIDTH - t.width))
+                    newY = Math.max(0, newY)
+
+                    return { ...t, x: newX, y: newY }
                 }
             } else if (!isSelected && t.id === id) {
-                // Single item drag (not in selection)
-                // We didn't capture startPos for this case in handleDragStart if it wasn't selected?
-                // Actually logic says "if (isSelected)".
-                // But strictly speaking, standard behavior for unselected item drag:
-                // It just moves.
-                return {
-                    ...t,
-                    x: t.x + offsetX,
-                    y: t.y + offsetY
-                }
+                // Single item drag
+                // Note: t.x is original position. 
+                // If using dragConstraints, Framer might give us a different offset?
+                // But typically offset is cumulative.
+                let newX = t.x + offsetX
+                let newY = t.y + offsetY
+
+                // Constrain
+                newX = Math.max(0, Math.min(newX, CONTAINER_WIDTH - t.width))
+                newY = Math.max(0, newY)
+
+                return { ...t, x: newX, y: newY }
             }
             return t
         }))
-
-        // Clear refs
         dragStartPositions.current = {}
     }
 
@@ -704,7 +705,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
 
 
     return (
-        <div className="flex h-[calc(100vh-80px)] bg-zinc-950 overflow-hidden"
+        <div className="flex h-full bg-zinc-950 overflow-hidden"
             onMouseUp={handleContainerMouseUp} // Attach to window/top level conceptually (handled by react bubbling)
             onMouseMove={handleContainerMouseMove}
         >
@@ -780,9 +781,12 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
 
                     <div className="h-px bg-white/10" />
 
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Importar con AI</label>
+                    <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Importar con AI</label>
+                        <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/20">BETA</span>
+                    </div>
                     <label className="cursor-pointer p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex flex-col items-center gap-2 text-indigo-400 transition-all border border-transparent hover:border-white/10">
-                        <Sparkles className="w-6 h-6" />
+                        <Camera className="w-6 h-6" />
                         <span className="text-xs">Subir Imagen</span>
                         <input
                             type="file"
@@ -954,8 +958,7 @@ export default function CanvasEditor({ initialData }: { initialData: any[] }) {
                                                 key={table.id}
                                                 drag={!isDrawing}
                                                 dragMomentum={false}
-                                                // Constrain drag to parent? Maybe not, allow dragging out slightly to rearrange
-                                                // dragConstraints={containerRef}
+                                                dragConstraints={containerRef}
                                                 initial={{ x: table.x, y: table.y }}
                                                 onDragStart={() => handleDragStart(tables, selectedIds)}
                                                 onDrag={(e, info) => handleDrag(table.id, info)}

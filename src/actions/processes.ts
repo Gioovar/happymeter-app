@@ -460,3 +460,104 @@ export async function getProcessZone(zoneId: string) {
 
     return zone;
 }
+
+export async function getProcessZoneHistory(zoneId: string, dateStr: string) {
+    const { userId } = await auth();
+    if (!userId) return null;
+
+    // Parse Date similar to getDailyTaskReport
+    const startOfDay = new Date(`${dateStr}T00:00:00`);
+    const endOfDay = new Date(`${dateStr}T23:59:59.999`);
+
+    // Get Day of Week for recurring tasks check
+    const dateObj = new Date(dateStr + "T12:00:00");
+    const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const dayOfWeek = dayMap[dateObj.getDay()];
+
+    // 1. Fetch Zone and its Tasks (filtered by day)
+    const zone = await prisma.processZone.findUnique({
+        where: { id: zoneId },
+        include: {
+            tasks: {
+                where: {
+                    days: { has: dayOfWeek }
+                }
+            }
+        }
+    });
+
+    if (!zone) return null;
+
+    // 2. Fetch Evidence for these tasks on that date
+    const taskIds = zone.tasks.map(t => t.id);
+    const evidences = await prisma.processEvidence.findMany({
+        where: {
+            taskId: { in: taskIds },
+            submittedAt: {
+                gte: startOfDay,
+                lte: endOfDay
+            }
+        },
+        // include: {
+        //     staff: {
+        //         select: {
+        //             businessName: true,
+        //             phone: true, 
+        //             photoUrl: true,
+        //             // @ts-ignore
+        //             fullName: true
+        //         }
+        //     }
+        // }
+    });
+
+    // 3. Map tasks with status
+    const historyTasks = zone.tasks.map(task => {
+        const evidence = evidences.find(e => e.taskId === task.id);
+        let status: 'COMPLETED' | 'PENDING' | 'MISSED' = 'PENDING';
+
+        if (evidence) {
+            status = 'COMPLETED';
+        } else {
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (dateStr < todayStr) {
+                status = 'MISSED';
+            } else if (dateStr === todayStr && task.limitTime) {
+                const now = new Date();
+                const nowTotalMinutes = now.getHours() * 60 + now.getMinutes();
+                const [lh, lm] = task.limitTime.split(':').map(Number);
+                if (nowTotalMinutes > (lh * 60 + lm)) {
+                    status = 'MISSED';
+                }
+            }
+        }
+
+        return {
+            ...task,
+            status,
+            evidence: evidence ? {
+                id: evidence.id,
+                fileUrl: evidence.fileUrl,
+                submittedAt: evidence.submittedAt,
+                // completedBy: evidence.staff?.fullName || evidence.staff?.businessName || evidence.staff?.phone || 'Usuario',
+                // completedByPhoto: evidence.staff?.photoUrl
+                completedBy: 'Usuario', // Simplification until relation is fixed
+                completedByPhoto: null
+            } : null
+        };
+    });
+
+    // Stats
+    const stats = {
+        total: historyTasks.length,
+        completed: historyTasks.filter(t => t.status === 'COMPLETED').length,
+        missed: historyTasks.filter(t => t.status === 'MISSED').length,
+        pending: historyTasks.filter(t => t.status === 'PENDING').length
+    };
+
+    return {
+        date: dateStr,
+        stats,
+        tasks: historyTasks
+    };
+}

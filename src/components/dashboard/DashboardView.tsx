@@ -20,6 +20,7 @@ import {
     Pencil,
     Trash2,
     Zap,
+    RotateCw,
 } from 'lucide-react'
 import Link from 'next/link'
 import ExtraSurveyUpsellModal from '@/components/ExtraSurveyUpsellModal'
@@ -324,46 +325,6 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                     <p className="text-gray-400 text-sm">
                                         {branchName ? 'Gestionando métricas' : 'Gestiona tus encuestas de satisfacción.'}
                                     </p>
-
-                                    {!loadingAnalytics && (
-                                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-500">
-                                            <div className="h-4 w-px bg-white/10 mx-2" />
-                                            <div className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${statsData.plan === 'POWER' ? 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20 shadow-[0_0_10px_rgba(232,121,249,0.1)]' :
-                                                statsData.plan === 'GROWTH' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(96,165,250,0.1)]' :
-                                                    statsData.plan === 'CHAIN' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(251,191,36,0.1)]' :
-                                                        'bg-gray-500/10 text-gray-400 border-gray-500/20'
-                                                }`}>
-                                                {(statsData.plan || 'FREE') === 'FREE' ? 'Plan Gratis' : `${(statsData.plan || 'FREE').replace('_', ' ')}`}
-                                            </div>
-
-                                            {statsData.plan !== 'POWER' && statsData.plan !== 'CHAIN' && statsData.plan !== 'ENTERPRISE' && !isBranchMode && (
-                                                <div className="relative">
-                                                    <button
-                                                        onClick={() => setUpgradeMenuOpen(!upgradeMenuOpen)}
-                                                        className="px-2 py-0.5 rounded-full bg-violet-500 text-white text-[10px] font-bold hover:bg-violet-400 transition shadow-lg shadow-violet-500/20 flex items-center gap-1"
-                                                    >
-                                                        <Sparkles className="w-2.5 h-2.5" /> Mejorar
-                                                    </button>
-
-                                                    {upgradeMenuOpen && (
-                                                        <div className="absolute top-full left-0 mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100 flex flex-col">
-                                                            <div className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-white/5">
-                                                                Elegir Facturación
-                                                            </div>
-                                                            <Link href="/pricing?interval=month" className="px-4 py-3 text-sm hover:bg-white/5 flex items-center justify-between group">
-                                                                <span>Mensual</span>
-                                                                <span className="text-xs text-gray-500">$24</span>
-                                                            </Link>
-                                                            <Link href="/pricing?interval=year" className="px-4 py-3 text-sm hover:bg-white/5 flex items-center justify-between group">
-                                                                <span>Anual</span>
-                                                                <span className="text-xs text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">-17%</span>
-                                                            </Link>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
@@ -384,7 +345,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                 className={`p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition text-gray-400 hover:text-white ${isRefreshing ? 'animate-spin' : ''}`}
                                 title="Recargar datos"
                             >
-                                <Zap className="w-5 h-5" />
+                                <RotateCw className="w-5 h-5" />
                             </button>
 
 

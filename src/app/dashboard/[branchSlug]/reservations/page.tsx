@@ -82,7 +82,7 @@ export default async function BranchReservationsPage({ params }: { params: { bra
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Reservaciones <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 align-middle">Sucursal</span></h1>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">Reservaciones <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 align-middle">{context.name}</span></h1>
                     <p className="text-gray-400 mt-2">Gestiona agenda y capacidad local.</p>
                 </div>
                 <div className="flex flex-wrap gap-3 w-full md:w-auto">

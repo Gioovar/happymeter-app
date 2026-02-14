@@ -16,7 +16,7 @@ export default async function BranchLoyaltyPage({ params }: { params: { branchSl
         <div className="p-0 md:p-8 max-w-5xl mx-auto">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-white bg-clip-text text-transparent inline-block">
-                    Programa de Lealtad (Sucursal)
+                    Programa de Lealtad ({context.name})
                 </h1>
                 <p className="text-gray-400 mt-2">Motor de reglas, estatus y recompensas automatizadas</p>
             </div>
