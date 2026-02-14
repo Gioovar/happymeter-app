@@ -118,21 +118,29 @@ export default function ProcessHistoryView({ zoneId }: ProcessHistoryViewProps) 
                             selected={date}
                             onSelect={(d) => d && setDate(d)}
                             disabled={(d) => d > new Date() || d < new Date("2024-01-01")}
-                            className="bg-transparent text-white w-full p-0"
+                            className="bg-transparent text-white w-full p-0 flex justify-center"
                             classNames={{
-                                head_cell: "text-gray-500 font-medium text-sm uppercase tracking-wider pb-4",
-                                cell: "h-auto w-full text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 aspect-square flex items-center justify-center",
+                                months: "w-full space-y-4",
+                                month: "space-y-4 w-full",
+                                caption: "flex justify-center pt-1 relative items-center mb-4",
+                                caption_label: "text-xl font-bold text-white capitalize",
+                                nav: "space-x-1 flex items-center bg-white/5 rounded-xl p-0.5 absolute right-0 top-0",
+                                nav_button: "h-8 w-8 bg-transparent p-0 hover:opacity-100 transition-all hover:bg-white/10 rounded-lg text-gray-400 hover:text-white flex items-center justify-center",
+                                nav_button_previous: "absolute left-2 top-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-xl w-9 h-9 flex items-center justify-center transition-all z-10",
+                                nav_button_next: "absolute right-2 top-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-xl w-9 h-9 flex items-center justify-center transition-all z-10",
+                                table: "w-full border-collapse space-y-2",
+                                head_row: "flex w-full justify-between mb-2",
+                                head_cell: "text-gray-500 rounded-md w-full font-medium text-[0.8rem] uppercase tracking-wider",
+                                row: "flex w-full mt-2 justify-between",
+                                cell: "h-12 w-full text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
                                 day: cn(
-                                    "h-full w-full p-0 font-medium aria-selected:opacity-100 hover:bg-white/10 rounded-xl transition-all text-gray-300 hover:text-white flex items-center justify-center text-lg"
+                                    "h-12 w-full p-0 font-medium aria-selected:opacity-100 hover:bg-white/10 rounded-xl transition-all text-gray-300 hover:text-white flex items-center justify-center text-base"
                                 ),
                                 day_selected:
                                     "bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 rounded-xl font-bold scale-105",
                                 day_today: "bg-white/5 text-white border border-white/10 rounded-xl",
                                 day_outside: "text-gray-700 opacity-30",
                                 day_disabled: "text-gray-800 opacity-20",
-                                caption: "text-white capitalize font-bold text-2xl mb-8 flex justify-between px-2 pt-2",
-                                nav_button: "text-gray-400 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-colors",
-                                table: "w-full border-collapse space-y-2",
                             }}
                         />
                     </div>
