@@ -373,3 +373,63 @@ export async function getDailyTaskReport(dateStr: string) {
         tasks: reportData
     };
 }
+
+// --- Template Management System ---
+
+export async function getProcessTemplates() {
+    const templates = await prisma.processTemplate.findMany({
+        include: {
+            tasks: true
+        }
+    });
+    return { templates };
+}
+
+export async function instantiateTemplate(templateId: string, branchId: string, zoneName: string) {
+    const { userId } = await auth();
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
+    // 1. Fetch Template
+    const template = await prisma.processTemplate.findUnique({
+        where: { id: templateId },
+        include: { tasks: true }
+    });
+
+    if (!template) {
+        throw new Error("Plantilla no encontrada");
+    }
+
+    // 2. Create Process Zone for the Branch
+
+    // Create Zone
+    const zone = await prisma.processZone.create({
+        data: {
+            userId: branchId,
+            name: zoneName || template.name,
+            description: `Importado de plantilla: ${template.name}`,
+        }
+    });
+
+    // 3. Create Tasks
+    const creationPromises = template.tasks.map(task =>
+        prisma.processTask.create({
+            data: {
+                zoneId: zone.id,
+                title: task.title,
+                description: task.description,
+                limitTime: task.defaultLimitTime,
+                evidenceType: task.evidenceType,
+                days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], // Default to daily
+            }
+        })
+    );
+
+    await Promise.all(creationPromises);
+
+    revalidatePath(`/dashboard/${branchId}/processes`);
+    revalidatePath(`/dashboard/processes`);
+
+    return { success: true, zoneId: zone.id };
+}

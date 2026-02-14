@@ -1,15 +1,35 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createLoyaltyProgram, addLoyaltyReward, createLoyaltyRule, updateLoyaltyRule, applyLoyaltyTemplate, updateLoyaltyReward, deleteLoyaltyReward, redeemReward, logCustomerVisit, updateLoyaltyProgram } from "@/actions/loyalty"
+import { createLoyaltyProgram, addLoyaltyReward, createLoyaltyRule, updateLoyaltyRule, applyLoyaltyTemplate, updateLoyaltyReward, deleteLoyaltyReward, redeemReward, logCustomerVisit, updateLoyaltyProgram, getProgramCustomers } from "@/actions/loyalty"
 import { inviteMember, getOperators, toggleMemberStatus } from "@/actions/team"
 import { createPromotion, deletePromotion, getPromotions } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { MenuManager } from "./MenuManager"
+import MenuManager from "./MenuManager"
 import { CustomerLoyaltyCard } from "./CustomerLoyaltyCard"
 import { cn } from "@/lib/utils"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-// ...
+import { Zap, Users, BarChart3, ArrowRight, Utensils, QrCode, Trophy, X, Star, Camera, Loader2, Megaphone, Plus, Percent, Gift, History, Sparkles, Wine } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { StaffInviteForm } from "@/components/team/StaffInviteForm"
+import { ProgramSharedQrModal } from "./ProgramSharedQrModal"
+import { VisitsLoyaltyView } from "./VisitsLoyaltyView"
+import { PointsLoyaltyView } from "./PointsLoyaltyView"
+
+// Imported Components
+import { RedemptionHistory } from "./RedemptionHistory"
+import { CustomerList } from "./CustomerList"
+import TiersManager from "./TiersManager"
+import NotificationsManager from "./NotificationsManager"
+import { PromotionsManager } from "./PromotionsManager"
+import { PremiumTabs, WelcomeGiftCard, StaffManagementView, LoyaltyStatCard as StatCard } from "./LoyaltyComponents"
+
+interface LoyaltyDashboardProps {
+    userId: string
+    program: any
+}
 
 export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
     const router = useRouter()
@@ -763,14 +783,16 @@ function AdvancedLoyaltyView({ userId, program, onBack, initialTab: propInitialT
 
 
                     {/* TIERS TAB */}
-                    {activeTab === 'notifications' && (
-                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <NotificationsManager programId={program.id} />
+                    {activeTab === 'tiers' && (
+                        <div className="animate-in fade-in duration-500">
+                            <TiersManager programId={program.id} tiers={program.tiers || []} />
                         </div>
                     )}
 
-                    {activeTab === 'tiers' && (
-                        <TiersManager programId={program.id} tiers={program.tiers || []} />
+                    {activeTab === 'notifications' && (
+                        <div className="animate-in fade-in duration-500">
+                            <NotificationsManager programId={program.id} />
+                        </div>
                     )}
                 </PremiumTabs>
 

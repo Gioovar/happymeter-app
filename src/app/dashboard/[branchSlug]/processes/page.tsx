@@ -14,6 +14,9 @@ import { prisma } from '@/lib/prisma';
 import { getDashboardContext } from "@/lib/auth-context"
 import { redirect } from "next/navigation"
 
+import ProcessTemplateGallery from '@/components/processes/ProcessTemplateGallery';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 export default async function BranchProcessesPage({ params }: { params: { branchSlug: string } }) {
     const context = await getDashboardContext(params.branchSlug);
     if (!context || !context.userId) return redirect('/dashboard');
@@ -38,7 +41,7 @@ export default async function BranchProcessesPage({ params }: { params: { branch
         <div className="space-y-8">
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Procesos & Operaciones <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 align-middle">Sucursal</span></h1>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">Procesos & Operaciones <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 align-middle">{context.name}</span></h1>
                     <p className="text-gray-400 mt-2">Gestión de flujos y tareas locales.</p>
                 </div>
                 <Link href={newFlowLink} className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-cyan-900/20 hover:scale-105 transition-all text-white flex items-center gap-2">
@@ -61,43 +64,64 @@ export default async function BranchProcessesPage({ params }: { params: { branch
                 </div>
             </div>
 
-            {/* Zones List */}
-            <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-6">Mis Zonas y Flujos</h3>
+            <Tabs defaultValue="zones" className="w-full">
+                <TabsList className="bg-[#111] border border-white/10">
+                    <TabsTrigger value="zones">Mis Zonas</TabsTrigger>
+                    <TabsTrigger value="templates">Galería de Plantillas</TabsTrigger>
+                </TabsList>
 
-                {zones.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                        <Layers className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>No tienes zonas configuradas.</p>
-                        <p className="text-sm">Crea una nueva para empezar.</p>
+                <TabsContent value="zones" className="mt-6">
+                    {/* Zones List */}
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-white">Mis Zonas y Flujos</h3>
+                        </div>
+
+                        {zones.length === 0 ? (
+                            <div className="text-center py-12 text-gray-500">
+                                <Layers className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                <p>No tienes zonas configuradas.</p>
+                                <p className="text-sm">Crea una nueva para empezar o usa una plantilla.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {zones.map((zone) => (
+                                    <Link
+                                        // Link to branch specific process page
+                                        href={`/dashboard/${branchSlug}/processes/${zone.id}`}
+                                        key={zone.id}
+                                        className="block p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-pointer"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h4 className="text-white font-bold flex items-center gap-2">
+                                                    <MapPin className="w-4 h-4 text-cyan-400" />
+                                                    {zone.name}
+                                                </h4>
+                                                <p className="text-xs text-gray-400 mt-1">{zone.description || "Sin descripción"}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-2xl font-bold text-white block">{zone._count.tasks}</span>
+                                                <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Tareas</span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {zones.map((zone) => (
-                            <Link
-                                // Link to branch specific process page
-                                href={`/dashboard/${branchSlug}/processes/${zone.id}`}
-                                key={zone.id}
-                                className="block p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-pointer"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h4 className="text-white font-bold flex items-center gap-2">
-                                            <MapPin className="w-4 h-4 text-cyan-400" />
-                                            {zone.name}
-                                        </h4>
-                                        <p className="text-xs text-gray-400 mt-1">{zone.description || "Sin descripción"}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="text-2xl font-bold text-white block">{zone._count.tasks}</span>
-                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Tareas</span>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
+                </TabsContent>
+
+                <TabsContent value="templates" className="mt-6">
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+                        <div className="mb-6">
+                            <h3 className="text-lg font-bold text-white">Galería de Plantillas (Machotes)</h3>
+                            <p className="text-gray-400 text-sm">Importa procesos predefinidos para estandarizar tu operación.</p>
+                        </div>
+                        <ProcessTemplateGallery branchId={userId} />
                     </div>
-                )}
-            </div>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }

@@ -145,6 +145,7 @@ model UserSettings {
   // Menu
   products            Product[]
   productCategories   ProductCategory[]
+  menuPromotions      MenuPromotion[]
 }
 
 
@@ -853,6 +854,7 @@ model LoyaltyCustomer {
   // Tier info
   tierId          String?
   tier            LoyaltyTier?   @relation(fields: [tierId], references: [id])
+  productReviews  ProductReview[]
 
   // Constraint: One profile per phone per program
   @@unique([programId, phone]) 
@@ -1036,6 +1038,35 @@ enum ProcessEvidenceStatus {
   DELAYED
 }
 
+model ProcessTemplate {
+  id          String   @id @default(uuid())
+  name        String   // e.g. "Apertura Salón - Estándar"
+  description String?
+  category    String   // e.g. "Salón", "Cocina", "Barra"
+  
+  // Tasks belonging to this template
+  tasks       ProcessTemplateTask[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProcessTemplateTask {
+  id          String   @id @default(uuid())
+  templateId  String
+  title       String
+  description String?
+  
+  // Default configuration
+  defaultLimitTime String? // "14:00"
+  evidenceType     ProcessEvidenceType @default(PHOTO)
+  isRequired       Boolean @default(true)
+  
+  template    ProcessTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  
+  @@index([templateId])
+}
+
 // --- Chain Dashboard System ---
 
 model Chain {
@@ -1108,16 +1139,54 @@ model Product {
   description String?
   price       Float
   imageUrl    String?
+  isFeatured  Boolean  @default(false)
   isActive    Boolean  @default(true)
   order       Int      @default(0)
+  
+  // Enhanced Product Data
+  unit        String?  // ml, lt, gr, kg, pz
+  size        Float?   // e.g. 500, 1.5
+  highlightedNote String? // e.g. "INCLUYE ENVASE"
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   subCategory ProductSubCategory? @relation(fields: [subCategoryId], references: [id])
   user        UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  reviews     ProductReview[]
 
   @@index([userId])
   @@index([categoryId])
   @@index([subCategoryId])
+}
+
+model MenuPromotion {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String?
+  imageUrl    String
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ProductReview {
+  id          String   @id @default(uuid())
+  productId   String
+  customerId  String?
+  rating      Int      // 1-5
+  comment     String?  @db.Text
+  createdAt   DateTime @default(now())
+  
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer    LoyaltyCustomer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([customerId])
 }
