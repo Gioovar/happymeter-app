@@ -433,3 +433,30 @@ export async function instantiateTemplate(templateId: string, branchId: string, 
 
     return { success: true, zoneId: zone.id };
 }
+
+export async function getProcessZone(zoneId: string) {
+    const { userId } = await auth();
+    if (!userId) return null;
+
+    const zone = await prisma.processZone.findUnique({
+        where: { id: zoneId },
+        include: {
+            tasks: {
+                include: {
+                    evidences: {
+                        where: {
+                            submittedAt: {
+                                gte: new Date(new Date().setHours(0, 0, 0, 0)),
+                                lt: new Date(new Date().setHours(23, 59, 59, 999))
+                            }
+                        },
+                        take: 1,
+                        orderBy: { submittedAt: 'desc' }
+                    }
+                }
+            }
+        }
+    });
+
+    return zone;
+}
