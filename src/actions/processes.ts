@@ -413,7 +413,7 @@ export async function instantiateTemplate(templateId: string, branchId: string, 
     });
 
     // 3. Create Tasks
-    const creationPromises = template.tasks.map((task: ProcessTemplateTask) =>
+    const creationPromises = template.tasks.map((task: any) =>
         prisma.processTask.create({
             data: {
                 zoneId: zone.id,
@@ -421,10 +421,11 @@ export async function instantiateTemplate(templateId: string, branchId: string, 
                 description: task.description,
                 limitTime: task.defaultLimitTime,
                 evidenceType: task.evidenceType,
-                days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], // Default to daily
+                days: task.days?.length > 0 ? task.days : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], // Use template days or default to daily
             }
         })
     );
+
 
     await Promise.all(creationPromises);
 
