@@ -139,64 +139,63 @@ export default function ProcessZoneView({ zone, branchSlug, branchName }: Proces
                     <TabsTrigger value="history" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white">Historial</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="today" className="mt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {zone.tasks.map(task => {
-                            const status = getTaskStatus(task)
-                            const StatusIcon = status.icon
+                <TabsContent value="today" className="mt-0 space-y-3">
+                    {zone.tasks.map(task => {
+                        const status = getTaskStatus(task)
+                        const StatusIcon = status.icon
 
-                            return (
-                                <div
-                                    key={task.id}
-                                    className={`group relative bg-[#111] border border-white/10 rounded-3xl p-1 hover:border-cyan-500/30 transition-all cursor-pointer overflow-hidden ${task.evidences?.[0] ? 'opacity-75' : ''}`}
-                                    onClick={() => !task.evidences?.[0] && setSelectedTask(task)}
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        return (
+                            <div
+                                key={task.id}
+                                className={`group relative bg-[#111] border border-white/10 rounded-xl p-4 hover:border-cyan-500/30 transition-all cursor-pointer overflow-hidden flex flex-col md:flex-row md:items-center gap-4 ${task.evidences?.[0] ? 'opacity-75' : ''}`}
+                                onClick={() => !task.evidences?.[0] && setSelectedTask(task)}
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                    <div className="relative bg-[#111] rounded-[1.3rem] p-5 h-full flex flex-col justify-between gap-4 border border-white/5">
-                                        <div className="flex justify-between items-start">
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${status.color}`}>
-                                                <StatusIcon className="w-6 h-6" />
-                                            </div>
-                                            <Badge variant="outline" className={`${status.color} border-0`}>
-                                                {status.label}
-                                            </Badge>
-                                        </div>
+                                {/* Status Icon */}
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${status.color}`}>
+                                    <StatusIcon className="w-5 h-5" />
+                                </div>
 
-                                        <div>
-                                            <h3 className="font-bold text-lg text-white leading-tight mb-2 group-hover:text-cyan-400 transition-colors line-clamp-2">
-                                                {task.title}
-                                            </h3>
-                                            <p className="text-sm text-gray-500 line-clamp-2 mb-3">
-                                                {task.description || "Sin descripción adicional."}
-                                            </p>
+                                {/* Main Content */}
+                                <div className="flex-1 min-w-0 z-10">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h3 className="font-bold text-base text-white truncate group-hover:text-cyan-400 transition-colors">
+                                            {task.title}
+                                        </h3>
+                                        <Badge variant="outline" className={`${status.color} border-0 text-[10px] h-5 px-1.5`}>
+                                            {status.label}
+                                        </Badge>
+                                    </div>
+                                    <p className="text-sm text-gray-500 line-clamp-1">
+                                        {task.description || "Sin descripción adicional."}
+                                    </p>
+                                </div>
 
-                                            <div className="flex items-center gap-3 text-xs text-gray-400 bg-white/5 p-2 rounded-lg w-fit">
-                                                {task.limitTime && (
-                                                    <span className="flex items-center gap-1.5 border-r border-white/10 pr-3 mr-1">
-                                                        <Clock className="w-3.5 h-3.5 text-orange-400" />
-                                                        <span className="font-mono">{task.limitTime}</span>
-                                                    </span>
-                                                )}
-                                                <span className="flex items-center gap-1.5">
-                                                    {task.evidenceType === 'PHOTO' ? <Camera className="w-3.5 h-3.5 text-purple-400" /> : <div className="i-lucide-video w-3.5 h-3.5 text-blue-400" />}
-                                                    {task.evidenceType === 'PHOTO' ? 'Foto' : 'Video'}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {!task.evidences?.[0] && (
-                                            <div className="pt-4 mt-auto border-t border-white/5 flex justify-end">
-                                                <span className="text-xs font-bold text-cyan-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                                                    Completar Tarea <ArrowLeft className="w-3 h-3 rotate-180" />
-                                                </span>
+                                {/* Metadata & Action */}
+                                <div className="flex items-center gap-4 shrink-0 z-10 w-full md:w-auto justify-between md:justify-end mt-2 md:mt-0">
+                                    <div className="flex items-center gap-3">
+                                        {task.limitTime && (
+                                            <div className="flex items-center gap-1.5 text-xs text-gray-400 bg-white/5 px-2 py-1 rounded">
+                                                <Clock className="w-3.5 h-3.5 text-orange-400" />
+                                                <span className="font-mono">{task.limitTime}</span>
                                             </div>
                                         )}
+                                        <div className="flex items-center gap-1.5 text-xs text-gray-400 bg-white/5 px-2 py-1 rounded">
+                                            {task.evidenceType === 'PHOTO' ? <Camera className="w-3.5 h-3.5 text-purple-400" /> : <div className="i-lucide-video w-3.5 h-3.5 text-blue-400" />}
+                                            <span className="hidden sm:inline">{task.evidenceType === 'PHOTO' ? 'Foto' : 'Video'}</span>
+                                        </div>
                                     </div>
+
+                                    {!task.evidences?.[0] && (
+                                        <Button size="sm" variant="ghost" className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950 p-0 h-auto font-bold text-xs gap-1 hidden md:flex">
+                                            Completar <ArrowLeft className="w-3 h-3 rotate-180" />
+                                        </Button>
+                                    )}
                                 </div>
-                            )
-                        })}
-                    </div>
+                            </div>
+                        )
+                    })}
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-0">
