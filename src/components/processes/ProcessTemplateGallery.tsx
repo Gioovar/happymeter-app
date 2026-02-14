@@ -107,6 +107,23 @@ export default function ProcessTemplateGallery({ branchId }: ProcessTemplateGall
                 >
                     + Generar Plantilla Barra
                 </Button>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                        const { seedCashierTemplate } = await import('@/actions/seed-cashier-template');
+                        const res = await seedCashierTemplate();
+                        if (res.success) {
+                            toast.success(res.message);
+                            loadTemplates();
+                        } else {
+                            toast.info(res.message);
+                        }
+                    }}
+                    className="text-xs text-green-400 hover:text-green-300 hover:bg-green-500/10"
+                >
+                    + Generar Plantilla Caja
+                </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
