@@ -167,71 +167,71 @@ export default function ProcessHistoryView({ zoneId }: ProcessHistoryViewProps) 
                             <p className="max-w-xs text-center">No hay registros de tareas para la fecha seleccionada.</p>
                         </div>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                             {data.tasks.map((task: any, index: number) => (
                                 <motion.div
                                     key={task.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: index * 0.05 }}
                                     className={cn(
-                                        "group relative overflow-hidden p-1 rounded-3xl transition-all duration-300",
+                                        "group relative overflow-hidden p-1 rounded-3xl transition-all duration-300 h-full",
                                         task.status === 'COMPLETED' ? "hover:bg-gradient-to-r hover:from-green-500/20 hover:to-emerald-500/10 cursor-pointer" : ""
                                     )}
                                     onClick={() => task.status === 'COMPLETED' && task.evidence && setSelectedEvidence({ ...task.evidence, title: task.title })}
                                 >
                                     <div className={cn(
-                                        "relative bg-[#111] p-5 rounded-[1.3rem] border transition-all flex items-center justify-between",
+                                        "relative bg-[#111] p-5 rounded-[1.3rem] border transition-all flex flex-col justify-between h-full gap-4",
                                         task.status === 'COMPLETED' ? "border-green-500/20 shadow-lg shadow-green-900/5" :
                                             task.status === 'MISSED' ? "border-red-500/20 bg-red-950/5" : "border-white/10"
                                     )}>
-                                        <div className="flex items-center gap-5">
+                                        <div className="flex items-start gap-4">
                                             <div className={cn(
-                                                "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-colors",
+                                                "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border transition-colors",
                                                 task.status === 'COMPLETED' ? "bg-green-500/10 border-green-500/20 text-green-400 group-hover:scale-110 duration-300" :
                                                     task.status === 'MISSED' ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-white/5 border-white/10 text-gray-500"
                                             )}>
-                                                {task.status === 'COMPLETED' ? <CheckCircle2 className="w-6 h-6" /> :
-                                                    task.status === 'MISSED' ? <XCircle className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+                                                {task.status === 'COMPLETED' ? <CheckCircle2 className="w-5 h-5" /> :
+                                                    task.status === 'MISSED' ? <XCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
                                             </div>
 
-                                            <div>
+                                            <div className="flex-1 min-w-0">
                                                 <h4 className={cn(
-                                                    "font-bold text-lg leading-tight transition-colors",
+                                                    "font-bold text-base leading-tight transition-colors line-clamp-2",
                                                     task.status === 'COMPLETED' ? "text-white group-hover:text-green-400" :
                                                         task.status === 'MISSED' ? "text-gray-300" : "text-gray-400"
                                                 )}>
                                                     {task.title}
                                                 </h4>
 
-                                                <div className="flex items-center gap-4 mt-2">
+                                                <div className="flex items-center gap-3 mt-2 flex-wrap">
                                                     {task.limitTime && (
-                                                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 border border-white/5">
+                                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/5 shrink-0">
                                                             <Clock className="w-3 h-3 text-gray-400" />
-                                                            <span className="text-xs font-mono text-gray-300">{task.limitTime}</span>
+                                                            <span className="text-[10px] font-mono text-gray-300">{task.limitTime}</span>
                                                         </div>
                                                     )}
 
                                                     {task.evidence ? (
-                                                        <div className="flex items-center gap-2">
-                                                            <Avatar className="w-5 h-5 border border-white/10">
+                                                        <div className="flex items-center gap-1.5 shrink-0">
+                                                            <Avatar className="w-4 h-4 border border-white/10">
                                                                 <AvatarImage src={task.evidence.completedByPhoto || undefined} />
-                                                                <AvatarFallback className="text-[9px] bg-indigo-500 text-white">
+                                                                <AvatarFallback className="text-[8px] bg-indigo-500 text-white">
                                                                     {task.evidence.completedBy?.[0]}
                                                                 </AvatarFallback>
                                                             </Avatar>
-                                                            <span className="text-xs text-gray-400">{task.evidence.completedBy}</span>
+                                                            <span className="text-[10px] text-gray-400 truncate max-w-[80px]">{task.evidence.completedBy}</span>
                                                         </div>
                                                     ) : (
-                                                        <div className="flex items-center gap-2">
-                                                            <Avatar className="w-5 h-5 border border-white/10 grayscale opacity-50">
+                                                        <div className="flex items-center gap-1.5 shrink-0">
+                                                            <Avatar className="w-4 h-4 border border-white/10 grayscale opacity-50">
                                                                 <AvatarImage src={task.responsiblePhoto || undefined} />
-                                                                <AvatarFallback className="text-[9px] bg-gray-500 text-white">
+                                                                <AvatarFallback className="text-[8px] bg-gray-500 text-white">
                                                                     {task.responsible?.[0] || 'A'}
                                                                 </AvatarFallback>
                                                             </Avatar>
-                                                            <span className="text-xs text-gray-500">
-                                                                Resp: {task.responsible || 'Sin asignar'}
+                                                            <span className="text-[10px] text-gray-500 truncate max-w-[80px]">
+                                                                {task.responsible || 'Sin asignar'}
                                                             </span>
                                                         </div>
                                                     )}
@@ -239,28 +239,31 @@ export default function ProcessHistoryView({ zoneId }: ProcessHistoryViewProps) 
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col items-end gap-2">
-                                            {task.status === 'COMPLETED' && (
-                                                <Badge className="bg-green-500 text-black hover:bg-green-400 font-bold px-3 py-1">
-                                                    Ver Evidencia
-                                                </Badge>
-                                            )}
-                                            {task.status === 'MISSED' && (
-                                                <Badge variant="outline" className="border-red-500/30 text-red-400 bg-red-500/5">
-                                                    No Realizado
-                                                </Badge>
-                                            )}
-                                            {task.status === 'PENDING' && (
-                                                <Badge variant="secondary" className="bg-white/10 text-gray-400 hover:bg-white/20">
-                                                    Pendiente
-                                                </Badge>
-                                            )}
-
+                                        <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-auto">
                                             {task.evidence && (
-                                                <span className="text-[10px] text-gray-600 font-mono">
+                                                <span className="text-[10px] text-gray-600 font-mono flex items-center gap-1">
+                                                    <CheckCircle2 className="w-3 h-3" />
                                                     {format(new Date(task.evidence.submittedAt), "HH:mm")}
                                                 </span>
                                             )}
+
+                                            <div className="ml-auto">
+                                                {task.status === 'COMPLETED' && (
+                                                    <Badge className="bg-green-500 text-black hover:bg-green-400 font-bold px-2 py-0.5 text-[10px]">
+                                                        Ver
+                                                    </Badge>
+                                                )}
+                                                {task.status === 'MISSED' && (
+                                                    <Badge variant="outline" className="border-red-500/30 text-red-400 bg-red-500/5 px-2 py-0.5 text-[10px]">
+                                                        Fallida
+                                                    </Badge>
+                                                )}
+                                                {task.status === 'PENDING' && (
+                                                    <Badge variant="secondary" className="bg-white/10 text-gray-400 hover:bg-white/20 px-2 py-0.5 text-[10px]">
+                                                        Pendiente
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
