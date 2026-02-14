@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
-import { Loader2, Copy, CheckCircle2, ChevronRight, Clock, ListChecks } from 'lucide-react';
+import { Loader2, Copy, CheckCircle2, ChevronRight, Clock, ListChecks, Eye } from 'lucide-react';
 import { getProcessTemplates, instantiateTemplate } from '@/actions/processes';
 import { useRouter } from 'next/navigation';
 
@@ -107,21 +107,54 @@ export default function ProcessTemplateGallery({ branchId }: ProcessTemplateGall
                                     )}
                                 </div>
                             ))}
-                            {template.tasks.length > 3 && (
-                                <p className="text-xs text-gray-600 pl-3 italic">
-                                    + {template.tasks.length - 3} tareas más...
-                                </p>
+                            + {template.tasks.length - 3} tareas más...
+                        </p>
                             )}
-                        </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="flex-1 border-white/10 hover:bg-white/5 hover:text-white text-gray-400">
+                                    <Eye className="w-4 h-4 mr-2" />
+                                    Ver
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="bg-[#0c0c0c] border-white/10 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>{template.name}</DialogTitle>
+                                    <DialogDescription className="text-gray-400">Listado completo de tareas</DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 mt-4">
+                                    {template.tasks.map((task, i) => (
+                                        <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
+                                            <div className="mt-1 min-w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 text-xs font-bold">
+                                                {i + 1}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-medium text-white text-sm">{task.title}</h4>
+                                                {task.description && <p className="text-gray-400 text-xs mt-1">{task.description}</p>}
+                                            </div>
+                                            {task.defaultLimitTime && (
+                                                <Badge variant="secondary" className="bg-white/10 text-gray-300 ml-auto whitespace-nowrap">
+                                                    <Clock className="w-3 h-3 mr-1" />
+                                                    {task.defaultLimitTime}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </DialogContent>
+                        </Dialog>
 
                         <Dialog open={open && selectedTemplate?.id === template.id} onOpenChange={(val) => {
                             if (val) setSelectedTemplate(template);
                             setOpen(val);
                         }}>
                             <DialogTrigger asChild>
-                                <Button className="w-full bg-white text-black hover:bg-gray-200 font-bold tracking-wide" size="sm">
+                                <Button className="flex-[2] bg-white text-black hover:bg-gray-200 font-bold tracking-wide" size="sm">
                                     <Copy className="w-4 h-4 mr-2" />
-                                    Usar Plantilla
+                                    Usar
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="bg-[#0c0c0c] border-white/10 text-white sm:max-w-md">
@@ -165,9 +198,11 @@ export default function ProcessTemplateGallery({ branchId }: ProcessTemplateGall
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
-                    </CardContent>
+                    </div>
+                </CardContent>
                 </Card>
-            ))}
-        </div>
+    ))
+}
+        </div >
     );
 }
