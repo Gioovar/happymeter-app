@@ -1,121 +1,203 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Camera, RefreshCw, Check, MapPin, AlertTriangle, Video, Square, Circle } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, ChangeEvent } from 'react';
+import { RefreshCw, Check, MapPin, Square, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TaskCameraProps {
-    onCapture: (file: File, meta: { lat: number, lng: number, capturedAt: Date, type: 'PHOTO' | 'VIDEO' }) => void;
+    onCapture: (file: File, meta: { lat: number, lng: number, capturedAt: Date, type: 'PHOTO' | 'VIDEO', comments?: string }) => void;
     evidenceType: 'PHOTO' | 'VIDEO' | 'BOTH';
 }
 
 export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps) {
-    const videoRef = useRef<HTMLVideoElement>(null);
+    // Refs
+    const videoRef = useRef<HTMLVideoElement | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
 
+    // State
     const [stream, setStream] = useState<MediaStream | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
+
+    // Capture State
     const [capturedImage, setCapturedImage] = useState<string | null>(null);
     const [capturedVideo, setCapturedVideo] = useState<Blob | null>(null);
     const [capturedVideoUrl, setCapturedVideoUrl] = useState<string | null>(null);
-    const [galleryFile, setGalleryFile] = useState<File | null>(null); // Store original file from gallery
+    const [galleryFile, setGalleryFile] = useState<File | null>(null);
 
-    const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
-    const [error, setError] = useState<string | null>(null);
-
-    // Mode: If BOTH, user can switch. Else fixed.
+    // Mode State
     const [mode, setMode] = useState<'PHOTO' | 'VIDEO'>(evidenceType === 'BOTH' ? 'PHOTO' : evidenceType);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // 1. Initialize Camera
-    useEffect(() => {
-        startCamera();
-        return () => {
-            stopStream();
-        };
-    }, []);
+    // Step-by-step flow for BOTH type
+    const [currentStep, setCurrentStep] = useState<'PHOTO' | 'VIDEO' | 'COMMENTS' | 'READY'>('PHOTO');
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [comments, setComments] = useState<string>('');
 
-    const stopStream = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+
+    // --- Helpers ---
+
+    const stopStream = useCallback(() => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
         }
         if (timerRef.current) clearInterval(timerRef.current);
-    };
+    }, []);
 
-    const startCamera = async () => {
+    const startCamera = useCallback(async () => {
         try {
             setError(null);
-            const mediaStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'environment', // Rear camera preferred
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
-                },
-                audio: true // Needed for video
-            });
-            setStream(mediaStream);
-            if (videoRef.current) {
-                videoRef.current.srcObject = mediaStream;
-                videoRef.current.muted = true; // Mute preview to avoid feedback
+            stopStream();
+
+            console.log("Requesting camera...");
+            let mediaStream: MediaStream;
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment'
+                    },
+                    audio: true
+                });
+            } catch (err: any) {
+                console.warn("Environment camera failed with audio, trying fallback", err);
+                // Fallback: try without audio or user facing mode if needed, but sticking to logic:
+                // try environment without audio
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
             }
 
-            // Get Location concurrently
-            navigator.geolocation.getCurrentPosition(
-                (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                (err) => toast.error("Se requiere ubicación para validar la tarea.")
-            );
-
+            console.log("Camera acquired", mediaStream.id);
+            streamRef.current = mediaStream;
+            setStream(mediaStream);
         } catch (err: any) {
             console.error("Camera error:", err);
-            setError("No se pudo acceder a la cámara o micrófono. Verifica los permisos.");
+            setError("No se pudo acceder a la cámara. Verifica los permisos.");
         }
+    }, [stopStream]);
+
+    // --- Lifecycle Effects ---
+
+    // 1. Initialize Camera on mount
+    useEffect(() => {
+        let mounted = true;
+        const init = async () => {
+            if (mounted) await startCamera();
+        };
+        init();
+
+        return () => {
+            mounted = false;
+            stopStream();
+        };
+    }, [startCamera, stopStream]);
+
+    // 2. Initialize GPS independently
+    useEffect(() => {
+        if (!navigator.geolocation) {
+            console.log("Geolocation not supported");
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            (err) => console.log("GPS no disponible:", err),
+            { enableHighAccuracy: false, timeout: 10000 }
+        );
+    }, []);
+
+
+    // --- Video Reference Management ---
+
+    // Callback ref to handle video mounting/unmounting robustly
+    const setVideoNode = useCallback((node: HTMLVideoElement | null) => {
+        videoRef.current = node;
+        if (node && stream) {
+            console.log("Video node mounted, attaching stream");
+            node.srcObject = stream;
+            node.setAttribute('playsinline', 'true'); // Important for iOS
+            node.muted = true;
+
+            // Try to play immediately
+            node.play().catch(e => {
+                console.error("Play error:", e);
+            });
+        }
+    }, [stream]);
+
+
+    // --- Actions ---
+
+    const processImage = (source: HTMLVideoElement | HTMLImageElement, quality = 0.7, maxWidth = 1280): string | null => {
+        if (!canvasRef.current) return null;
+
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+        if (!context) return null;
+
+        // Calculate new dimensions (Max width 1280, maintain aspect ratio)
+        let width = source instanceof HTMLVideoElement ? source.videoWidth : source.naturalWidth;
+        let height = source instanceof HTMLVideoElement ? source.videoHeight : source.naturalHeight;
+
+        if (width > maxWidth) {
+            const ratio = maxWidth / width;
+            width = maxWidth;
+            height = height * ratio;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        context.drawImage(source, 0, 0, width, height);
+
+        // Watermark
+        const dateStr = new Date().toLocaleString();
+        context.font = 'bold 16px Arial';
+        context.fillStyle = 'white';
+        context.shadowColor = 'black';
+        context.shadowBlur = 4;
+        context.fillText(`${dateStr}`, 20, height - 40);
+
+        const locText = location
+            ? `Lat: ${location.lat.toFixed(5)}, Lng: ${location.lng.toFixed(5)}`
+            : "Ubicación no disponible";
+        context.fillText(locText, 20, height - 20);
+
+        // Compress
+        return canvas.toDataURL('image/jpeg', quality);
     };
 
     const takePhoto = () => {
-        if (!videoRef.current || !canvasRef.current || !location) {
-            if (!location) toast.error("Esperando señal GPS...");
-            return;
-        }
-
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        if (context) {
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Watermark
-            const dateStr = new Date().toLocaleString();
-            context.font = '20px Arial';
-            context.fillStyle = 'white';
-            context.shadowColor = 'black';
-            context.shadowBlur = 4;
-            context.fillText(`${dateStr}`, 20, canvas.height - 50);
-            context.fillText(`Lat: ${location.lat.toFixed(5)}, Lng: ${location.lng.toFixed(5)}`, 20, canvas.height - 20);
-
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            setCapturedImage(dataUrl);
+        if (!videoRef.current) return;
+        const optimizedDataUrl = processImage(videoRef.current);
+        if (optimizedDataUrl) {
+            setCapturedImage(optimizedDataUrl);
             setCapturedVideo(null);
         }
     };
 
     const startRecording = () => {
-        if (!stream || !location) {
-            if (!location) toast.error("Esperando señal GPS...");
-            return;
-        }
-
-        const options = { mimeType: 'video/webm;codecs=vp8,opus' };
-        // Fallback for Safari/iOS uses mp4 usually or different mime
+        if (!stream) return;
 
         try {
-            const recorder = new MediaRecorder(stream); // Let browser choose default if specific fails
+            // Optimize Video Bitrate (2.5 Mbps)
+            const options: MediaRecorderOptions = {
+                mimeType: 'video/webm;codecs=vp8,opus',
+                videoBitsPerSecond: 2500000 // 2.5 Mbps
+            };
+
+            // Fallback if mimeType not supported
+            if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
+                delete options.mimeType;
+            }
+
+            const recorder = new MediaRecorder(stream, options);
             mediaRecorderRef.current = recorder;
             chunksRef.current = [];
 
@@ -151,34 +233,134 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
         }
     };
 
-    const confirmCapture = async () => {
-        if ((!capturedImage && !capturedVideo) || !location) return;
+    const handleGalleryUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
+        if (file.type.startsWith('video/')) {
+            // Video: Check size limit (e.g. 50MB) 
+            const maxSize = 50 * 1024 * 1024;
+            if (file.size > maxSize) {
+                toast.error("El video es demasiado grande (Máx 50MB).");
+                return;
+            }
+            setGalleryFile(file);
+            setCapturedVideo(file); // Store as blob/file
+            setCapturedVideoUrl(URL.createObjectURL(file));
+            setCapturedImage(null);
+            setMode('VIDEO'); // Switch mode to show preview correctly if needed
+        } else {
+            // Image: Optimize
+            const img = new Image();
+            img.onload = () => {
+                const optimizedDataUrl = processImage(img);
+                if (optimizedDataUrl) {
+                    setCapturedImage(optimizedDataUrl);
+                    setCapturedVideo(null);
+                    setGalleryFile(null); // We will convert dataUrl to file on confirm
+                }
+            };
+            img.src = URL.createObjectURL(file);
+        }
+    };
+
+    const confirmCapture = async () => {
+        if (!capturedImage && !capturedVideo) return;
+
+        // For BOTH type, handle step-by-step flow
+        if (evidenceType === 'BOTH') {
+            if (currentStep === 'PHOTO' && capturedImage) {
+                // Step 1: Photo captured, save it and move to video
+                const res = await fetch(capturedImage);
+                const blob = await res.blob();
+                const file = new File([blob], "evidence_photo.jpg", { type: "image/jpeg" });
+
+                setPhotoFile(file);
+                setCapturedImage(null);
+                setCurrentStep('VIDEO');
+                setMode('VIDEO');
+
+                toast.success('✓ Foto capturada. Ahora graba el video');
+                return;
+            } else if (currentStep === 'VIDEO' && capturedVideo) {
+                // Step 2: Video captured, save it and move to comments
+                const fileName = galleryFile ? galleryFile.name : "evidence_video.webm";
+                const fileType = galleryFile ? galleryFile.type : "video/webm";
+
+                const file = capturedVideo instanceof File
+                    ? capturedVideo
+                    : new File([capturedVideo], fileName, { type: fileType });
+
+                setVideoFile(file);
+                setCapturedVideo(null);
+                setCapturedVideoUrl(null);
+                setGalleryFile(null);
+                setCurrentStep('COMMENTS');
+
+                toast.success('✓ Video capturado. Agrega comentarios si es necesario');
+                return;
+            }
+            // COMMENTS step is handled by submitAll function
+            return;
+        }
+
+        // Original logic for single evidence type (PHOTO or VIDEO only)
         let file: File;
         let type: 'PHOTO' | 'VIDEO' = 'PHOTO';
 
-        if (galleryFile) {
-            // Use the original file from gallery (HEIC/JPG/PNG)
-            file = galleryFile;
-            type = 'PHOTO';
-        } else if (capturedImage) {
+        if (capturedImage) {
+            // Convert DataURL to File
             const res = await fetch(capturedImage);
             const blob = await res.blob();
-            file = new File([blob], "evidence.jpg", { type: "image/jpeg" });
+            file = new File([blob], "evidence_opt.jpg", { type: "image/jpeg" });
             type = 'PHOTO';
         } else if (capturedVideo) {
-            file = new File([capturedVideo], "evidence.webm", { type: "video/webm" });
+            // If it's from gallery (File) or camera (Blob), ensure it's a File
+            const fileName = galleryFile ? galleryFile.name : "evidence_opt.webm";
+            const fileType = galleryFile ? galleryFile.type : "video/webm";
+
+            // If it's already a file (gallery), use it, otherwise create from blob
+            if (capturedVideo instanceof File) {
+                file = capturedVideo;
+            } else {
+                file = new File([capturedVideo], fileName, { type: fileType });
+            }
             type = 'VIDEO';
         } else {
             return;
         }
 
         onCapture(file, {
-            lat: location.lat,
-            lng: location.lng,
+            lat: location?.lat || 0,
+            lng: location?.lng || 0,
             capturedAt: new Date(),
             type
         });
+    };
+
+    // New function to submit all evidence for BOTH type
+    const submitAll = () => {
+        if (!photoFile || !videoFile) {
+            toast.error('Faltan evidencias por capturar');
+            return;
+        }
+
+        const meta = {
+            lat: location?.lat || 0,
+            lng: location?.lng || 0,
+            capturedAt: new Date(),
+            comments: comments.trim() || undefined
+        };
+
+        // Submit photo first
+        onCapture(photoFile, { ...meta, type: 'PHOTO' });
+
+        // Submit video second
+        setTimeout(() => {
+            onCapture(videoFile, { ...meta, type: 'VIDEO' });
+        }, 100);
+
+        toast.success('Evidencias enviadas correctamente');
     };
 
     const retake = () => {
@@ -188,7 +370,6 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
         setGalleryFile(null);
     };
 
-    // Format seconds to MM:SS
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -197,14 +378,92 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
 
     if (error) {
         return (
-            <div className="bg-red-900/20 border border-red-500/50 p-6 rounded-xl text-center text-red-200">
-                <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-red-500" />
-                <p>{error}</p>
-                <button onClick={startCamera} className="mt-4 px-4 py-2 bg-red-600 rounded-lg text-white text-sm">
+            <div className="w-full aspect-[9/16] max-h-[70vh] bg-neutral-900 rounded-2xl flex flex-col items-center justify-center p-6 text-center border border-white/10">
+                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                    <AlertTriangle className="w-8 h-8 text-red-500" />
+                </div>
+                <h3 className="text-white font-bold mb-2">Error de Cámara</h3>
+                <p className="text-gray-400 text-sm mb-6">{error}</p>
+                <button
+                    onClick={() => startCamera()}
+                    className="px-6 py-2 bg-white text-black rounded-full font-bold text-sm"
+                >
                     Reintentar
                 </button>
             </div>
-        )
+        );
+    }
+
+    // Comments screen for BOTH type
+    if (evidenceType === 'BOTH' && currentStep === 'COMMENTS') {
+        return (
+            <div className="relative w-full aspect-[9/16] max-h-[70vh] bg-gradient-to-br from-neutral-900 to-neutral-800 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+                <div className="flex flex-col h-full p-6">
+                    {/* Header */}
+                    <div className="text-center mb-6">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-full text-green-200 text-sm font-bold mb-4">
+                            <Check className="w-4 h-4" />
+                            Evidencias Capturadas
+                        </div>
+                        <h3 className="text-white font-bold text-lg mb-2">Paso 3 de 3</h3>
+                        <p className="text-gray-400 text-sm">Agrega comentarios si es necesario</p>
+                    </div>
+
+                    {/* Preview thumbnails */}
+                    <div className="flex gap-3 mb-6">
+                        <div className="flex-1 bg-white/5 rounded-lg p-2 border border-white/10">
+                            <div className="text-xs text-gray-400 mb-1">📸 Foto</div>
+                            <div className="text-xs text-green-400">✓ Capturada</div>
+                        </div>
+                        <div className="flex-1 bg-white/5 rounded-lg p-2 border border-white/10">
+                            <div className="text-xs text-gray-400 mb-1">🎥 Video</div>
+                            <div className="text-xs text-green-400">✓ Capturado</div>
+                        </div>
+                    </div>
+
+                    {/* Comments textarea */}
+                    <div className="flex-1 mb-6">
+                        <label className="block text-white text-sm font-bold mb-2">
+                            Comentarios (opcional)
+                        </label>
+                        <textarea
+                            value={comments}
+                            onChange={(e) => setComments(e.target.value)}
+                            placeholder="Ej: Falta material de limpieza, se requiere más tiempo, etc..."
+                            className="w-full h-32 bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 resize-none"
+                            maxLength={500}
+                        />
+                        <div className="text-xs text-gray-500 mt-1 text-right">
+                            {comments.length}/500
+                        </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => {
+                                // Reset to start over
+                                setCurrentStep('PHOTO');
+                                setMode('PHOTO');
+                                setPhotoFile(null);
+                                setVideoFile(null);
+                                setComments('');
+                                toast.info('Reiniciando captura');
+                            }}
+                            className="flex-1 px-6 py-3 bg-white/10 text-white rounded-full font-bold text-sm hover:bg-white/20 transition-colors"
+                        >
+                            Reiniciar
+                        </button>
+                        <button
+                            onClick={submitAll}
+                            className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full font-bold text-sm hover:from-cyan-600 hover:to-blue-600 transition-colors shadow-lg"
+                        >
+                            Enviar Todo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -212,45 +471,76 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
             {/* Hidden Canvas */}
             <canvas ref={canvasRef} className="hidden" />
 
-            {/* Viewport */}
-            {!capturedImage && !capturedVideo ? (
-                <>
+            {/* Viewport: Live or Preview */}
+            <div className="absolute inset-0 bg-black">
+                {!capturedImage && !capturedVideo ? (
                     <video
-                        ref={videoRef}
+                        ref={setVideoNode}
                         autoPlay
                         playsInline
-                        muted // Muted for preview
+                        muted
                         className="w-full h-full object-cover"
                     />
+                ) : (
+                    capturedImage ? (
+                        <img src={capturedImage} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                        <video
+                            src={capturedVideoUrl!}
+                            controls
+                            className="w-full h-full object-contain bg-black"
+                        />
+                    )
+                )}
+            </div>
 
-                    {/* Controls Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent flex flex-col items-center z-20">
-                        {/* GPS Badge */}
-                        <div className="mb-4 flex items-center gap-2 px-3 py-1 bg-black/40 backdrop-blur rounded-full text-xs text-white/80 border border-white/10">
-                            <MapPin className="w-3 h-3 text-emerald-400" />
-                            {location ? "Ubicación Validada" : "Buscando GPS..."}
+            {/* Overlays (Only when live camera is active) */}
+            {!capturedImage && !capturedVideo && (
+                <div className="absolute inset-0 flex flex-col justify-between p-6 z-10 pointer-events-none">
+
+                    {/* Top Bar */}
+                    <div className="flex justify-center pointer-events-auto">
+                        <div className={`flex items-center gap-2 px-3 py-1.5 backdrop-blur-md rounded-full text-xs border ${location ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-200' : 'bg-yellow-500/20 border-yellow-500/30 text-yellow-200'}`}>
+                            <MapPin className="w-3 h-3" />
+                            {location ? "GPS Activo" : "Sin GPS (Permitido)"}
                         </div>
+                    </div>
 
-                        {/* Mode Switcher (If BOTH) */}
+                    {/* Bottom Controls */}
+                    <div className="flex flex-col items-center pointer-events-auto">
+
+                        {/* Progress Indicator for BOTH type */}
                         {evidenceType === 'BOTH' && !isRecording && (
-                            <div className="flex bg-white/10 rounded-full p-1 mb-6 backdrop-blur-md">
-                                <button
-                                    onClick={() => setMode('PHOTO')}
-                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${mode === 'PHOTO' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
-                                >
-                                    FOTO
-                                </button>
-                                <button
-                                    onClick={() => setMode('VIDEO')}
-                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${mode === 'VIDEO' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
-                                >
-                                    VIDEO
-                                </button>
+                            <div className="flex items-center gap-2 mb-6 backdrop-blur-md bg-white/10 rounded-full px-4 py-2">
+                                <div className={`flex items-center gap-1.5 ${currentStep === 'PHOTO' ? 'text-white' : 'text-green-400'}`}>
+                                    {currentStep === 'PHOTO' ? (
+                                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                                    ) : (
+                                        <Check className="w-3 h-3" />
+                                    )}
+                                    <span className="text-xs font-bold">Foto</span>
+                                </div>
+                                <div className="w-8 h-0.5 bg-white/30" />
+                                <div className={`flex items-center gap-1.5 ${currentStep === 'VIDEO' ? 'text-white' : currentStep === 'COMMENTS' ? 'text-green-400' : 'text-white/40'}`}>
+                                    {currentStep === 'VIDEO' ? (
+                                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                                    ) : currentStep === 'COMMENTS' ? (
+                                        <Check className="w-3 h-3" />
+                                    ) : (
+                                        <div className="w-2 h-2 bg-white/40 rounded-full" />
+                                    )}
+                                    <span className="text-xs font-bold">Video</span>
+                                </div>
+                                <div className="w-8 h-0.5 bg-white/30" />
+                                <div className={`flex items-center gap-1.5 ${currentStep === 'COMMENTS' ? 'text-white' : 'text-white/40'}`}>
+                                    <div className="w-2 h-2 bg-white/40 rounded-full" />
+                                    <span className="text-xs font-bold">Enviar</span>
+                                </div>
                             </div>
                         )}
 
-                        {/* Shutter Button */}
-                        <div className="relative">
+                        {/* Capture Button */}
+                        <div className="relative mb-6">
                             {mode === 'PHOTO' ? (
                                 <button
                                     onClick={takePhoto}
@@ -270,79 +560,59 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
                                     )}
                                 </button>
                             )}
+
+                            {/* Gallery Button (Bottom Right of capture) */}
+                            {!isRecording && mode === 'PHOTO' && (
+                                <div className="absolute left-[120%] top-1/2 -translate-y-1/2">
+                                    <label className="flex flex-col items-center gap-1 cursor-pointer text-white/80 hover:text-white transition-colors">
+                                        <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center">
+                                            <Square className="w-5 h-5" />
+                                        </div>
+                                        <input
+                                            type="file"
+                                            accept="image/*,video/*"
+                                            className="hidden"
+                                            onChange={handleGalleryUpload}
+                                        />
+                                    </label>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Recording Timer */}
+                        {/* Timer */}
                         {isRecording && (
-                            <div className="absolute top-[-40px] flex items-center gap-2">
+                            <div className="absolute top-[-50px] flex items-center gap-2 bg-black/50 px-3 py-1 rounded-full backdrop-blur">
                                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                <span className="text-white font-mono font-bold">{formatTime(recordingTime)}</span>
-                            </div>
-                        )}
-
-                        {/* Gallery Upload Button */}
-                        {!isRecording && mode === 'PHOTO' && (
-                            <div className="absolute right-8 bottom-8 z-30">
-                                <label className="flex flex-col items-center gap-1 cursor-pointer text-white/80 hover:text-white transition-colors">
-                                    <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center">
-                                        <Square className="w-6 h-6" />
-                                    </div>
-                                    <span className="text-[10px] font-medium">Galería</span>
-                                    <input
-                                        type="file"
-                                        accept="image/*,.heic,.heif"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) {
-                                                setGalleryFile(file);
-                                                setCapturedImage(URL.createObjectURL(file));
-                                                setCapturedVideo(null);
-                                            }
-                                        }}
-                                    />
-                                </label>
+                                <span className="text-white font-mono font-bold font-lg">{formatTime(recordingTime)}</span>
                             </div>
                         )}
 
                     </div>
-                </>
-            ) : (
-                <>
-                    {/* Review Mode */}
-                    {capturedImage ? (
-                        <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
-                    ) : (
-                        <video
-                            src={capturedVideoUrl!}
-                            controls
-                            className="w-full h-full object-contain bg-black"
-                        />
-                    )}
+                </div>
+            )}
 
-                    {/* Actions */}
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center gap-6 z-30">
-                        <div className="flex gap-6">
-                            <button
-                                onClick={retake}
-                                className="w-16 h-16 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20 transition-colors border border-white/20"
-                            >
-                                <RefreshCw className="w-7 h-7" />
-                            </button>
-                            <button
-                                onClick={confirmCapture}
-                                className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:scale-105 transition-transform"
-                            >
-                                <Check className="w-9 h-9" />
-                            </button>
-                        </div>
-                        <p className="text-white font-bold text-lg drop-shadow-md">
-                            Confirmar {capturedImage ? 'Foto' : 'Video'}
-                        </p>
+            {/* Actions (Review Mode) */}
+            {(capturedImage || capturedVideo) && (
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center gap-8 z-50">
+                    <p className="text-white font-bold text-xl drop-shadow-lg">
+                        ¿Usar esta evidencia?
+                    </p>
+                    <div className="flex gap-8">
+                        <button
+                            onClick={retake}
+                            className="w-16 h-16 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20 transition-all border border-white/20 shadow-lg"
+                        >
+                            <RefreshCw className="w-8 h-8" />
+                        </button>
+                        <button
+                            onClick={confirmCapture}
+                            className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/30 hover:scale-105 transition-all"
+                        >
+                            <Check className="w-10 h-10" />
+                        </button>
                     </div>
-                </>
+                </div>
             )}
         </div>
     );
 }
-

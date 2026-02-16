@@ -106,7 +106,11 @@ export async function sendInvitationEmail(
     inviterName: string,
     teamName: string,
     role: string,
-    inviteLink: string
+    inviteLink: string,
+    isOperator?: boolean,
+    code?: string,
+    firstName?: string,
+    jobTitle?: string
 ) {
     if (!to) return
 
@@ -114,19 +118,24 @@ export async function sendInvitationEmail(
         await resend.emails.send({
             from: SENDER,
             to: [to],
-            subject: `💌 ${inviterName} te invitó a unirte a HappyMeter`,
+            subject: isOperator
+                ? `🔢 Tu Código de Acceso para Operaciones: ${code}`
+                : `💌 ${inviterName} te invitó a unirte a HappyMeter`,
             react: InvitationEmail({
-                firstName: 'Colega', // Generic for now, as we don't have the invitee's name in `sendInvitationEmail` params typically
+                firstName: firstName || 'Colega',
                 inviterName,
                 teamName,
                 role,
-                inviteLink
+                inviteLink,
+                isOperator,
+                code,
+                jobTitle
             }),
         })
         console.log(`📧 Invitation sent to ${to}`)
     } catch (error) {
         console.error('Failed to send invitation email', error)
-        throw error // Rethrow so the UI knows it failed? Or suppress? Better to suppress usually but log.
+        throw error
     }
 }
 

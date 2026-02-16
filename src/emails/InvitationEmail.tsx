@@ -19,9 +19,12 @@ interface InvitationEmailProps {
     teamName: string; // The workspace name (or "Equipo de [Inviter]")
     inviteLink: string;
     role: string;
+    jobTitle?: string;
+    isOperator?: boolean;
+    code?: string;
 }
 
-export const InvitationEmail = ({ firstName, inviterName, teamName, inviteLink, role }: InvitationEmailProps) => {
+export const InvitationEmail = ({ firstName, inviterName, teamName, inviteLink, role, jobTitle, isOperator, code }: InvitationEmailProps) => {
     return (
         <Html>
             <Head />
@@ -30,17 +33,34 @@ export const InvitationEmail = ({ firstName, inviterName, teamName, inviteLink, 
                 <Body className="bg-white my-auto mx-auto font-sans">
                     <Container className="border border-solid border-[#eaeaea] rounded my-[40px] mx-auto p-[20px] max-w-[465px]">
                         <Heading className="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
-                            Invitación a <strong>HappyMeter</strong>
+                            {isOperator ? 'Únete al Equipo Operativo' : 'Invitación a HappyMeter'}
                         </Heading>
                         <Text className="text-black text-[14px] leading-[24px]">
                             Hola {firstName},
                         </Text>
                         <Text className="text-black text-[14px] leading-[24px]">
-                            <strong>{inviterName}</strong> te ha invitado a unirte al equipo <strong>{teamName}</strong> como <strong>{role}</strong>.
+                            <strong>{inviterName}</strong> te ha invitado a unirte al equipo <strong>{teamName}</strong>{jobTitle ? ` como <strong>${jobTitle}</strong>` : ''}.
                         </Text>
-                        <Text className="text-black text-[14px] leading-[24px]">
-                            HappyMeter les ayudará a medir la satisfacción de sus clientes y mejorar el desempeño del equipo.
-                        </Text>
+
+                        {!isOperator && (
+                            <Text className="text-black text-[14px] leading-[24px]">
+                                HappyMeter les ayudará a medir la satisfacción de sus clientes y mejorar el desempeño del equipo.
+                            </Text>
+                        )}
+
+                        {isOperator && (
+                            <Section className="bg-slate-50 p-6 rounded-lg my-6 text-center border border-slate-200">
+                                <Text className="text-slate-600 text-[14px] font-semibold m-0 mb-2 uppercase tracking-wide">
+                                    Tu Código de Acceso
+                                </Text>
+                                <Heading className="text-4xl text-slate-900 font-mono tracking-wider font-bold m-0 my-3">
+                                    {code}
+                                </Heading>
+                                <Text className="text-slate-500 text-[12px] m-0">
+                                    Usa este código para vincular tu cuenta.
+                                </Text>
+                            </Section>
+                        )}
 
                         <Section className="bg-gray-50 p-4 rounded-lg my-4 border border-gray-200">
                             <Text className="text-black text-[14px] font-bold m-0 mb-2">
@@ -61,7 +81,7 @@ export const InvitationEmail = ({ firstName, inviterName, teamName, inviteLink, 
                                 className="bg-[#8b5cf6] rounded text-white text-[12px] font-bold no-underline text-center px-5 py-3"
                                 href={inviteLink}
                             >
-                                Aceptar Invitación
+                                {isOperator ? 'Abrir App de Operaciones' : 'Aceptar Invitación'}
                             </Button>
                         </Section>
                         <Text className="text-gray-500 text-[12px] leading-[24px] text-center">

@@ -60,12 +60,16 @@ export async function processAndUploadImage(
         // 3. Upload to Vercel Blob
         console.log('Uploading to Vercel Blob...');
 
-        const newBlob = await upload(compressedFile.name, compressedFile, {
+        const uniqueName = `evidence-${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
+
+        const newBlob = await upload(uniqueName, compressedFile, {
             access: 'public',
             handleUploadUrl: '/api/upload',
+            clientPayload: JSON.stringify({
+                originalName: file.name
+            }),
             onUploadProgress: (progressEvent) => {
                 if (onProgress) {
-                    // Map upload progress (0-100)
                     onProgress(progressEvent.percentage);
                 }
             }

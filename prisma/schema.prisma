@@ -131,7 +131,10 @@ model UserSettings {
 
   // Loyalty
   loyaltyProgram      LoyaltyProgram?
-  processZones        ProcessZone[]
+  
+  // Processes
+  ownedProcessZones   ProcessZone[] @relation("ProcessZoneOwner")
+  branchProcessZones  ProcessZone[] @relation("ProcessZoneBranch")
   
   // Reservations
   reservationSettings Json? // Stores { standardTimeEnabled: boolean, standardDurationMinutes: number }
@@ -218,18 +221,32 @@ model Reservation {
 
 model TeamMember {
   id        String   @id @default(uuid())
-  userId    String
+  userId    String?  // Made optional for offline users
   ownerId   String   // The owner of the workspace
   role      TeamRole
   joinedAt  DateTime @default(now())
   isActive  Boolean  @default(true)
   
-  user      UserSettings @relation("MemberOf", fields: [userId], references: [userId], onDelete: Cascade)
+  // Offline/Internal fields
+  name      String?  // For offline users who don't have a UserSettings profile
+  jobTitle  String?  // e.g. "Mesero", "Gerente"
+  phone     String?
+  accessCode String? @unique // Unique code for login (simple PIN/Token)
+  isOffline Boolean  @default(false)
+
+  user      UserSettings? @relation("MemberOf", fields: [userId], references: [userId], onDelete: Cascade)
   owner     UserSettings @relation("OwnerOf", fields: [ownerId], references: [userId], onDelete: Cascade)
 
   assignedZones ProcessZone[] // Relation to ProcessZone
+  assignedTasks ProcessTask[] // Relation to ProcessTask
 
-  @@unique([userId, ownerId])
+  // Modified unique constraint to allow multiple null userId rows (offline users)
+  // But we still want unique userId per owner if userId is present.
+  // Prisma doesn't support partial unique indexes easily in the main schema block syntax without raw SQL sometimes, 
+  // but standard @@unique([userId, ownerId]) in Postgres allows multiple nulls.
+  // So validation for "one user per team" largely holds for online users.
+  @@unique([userId, ownerId]) 
+  
   @@index([ownerId])
   @@index([userId])
 }
@@ -577,6 +594,13 @@ model TeamInvitation {
   inviterId String
   token     String   @unique
   status    String   @default("PENDING") // PENDING, ACCEPTED
+  
+  // Pre-registration Data
+  name      String?
+  jobTitle  String?
+  phone     String?
+  meta      Json?    // Stores context like { assignedTaskId: "..." }
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -969,18 +993,21 @@ model LoyaltyEvent {
 model ProcessZone {
   id          String   @id @default(uuid())
   userId      String   // Owner / Business ID
+  branchId    String?  // Branch/Location ID (nullable for migration)
   name        String
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   tasks       ProcessTask[]
-  user        UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  user        UserSettings @relation("ProcessZoneOwner", fields: [userId], references: [userId], onDelete: Cascade)
+  branch      UserSettings? @relation("ProcessZoneBranch", fields: [branchId], references: [userId], onDelete: SetNull)
 
   assignedStaffId String?
   assignedStaff   TeamMember? @relation(fields: [assignedStaffId], references: [id])
 
   @@index([userId])
+  @@index([branchId])
   @@index([assignedStaffId])
 }
 
@@ -998,7 +1025,11 @@ model ProcessTask {
   zone        ProcessZone       @relation(fields: [zoneId], references: [id], onDelete: Cascade)
   evidences   ProcessEvidence[]
 
+  assignedStaffId String?
+  assignedStaff   TeamMember?   @relation(fields: [assignedStaffId], references: [id])
+
   @@index([zoneId])
+  @@index([assignedStaffId])
 }
 
 model ProcessEvidence {
@@ -1018,6 +1049,10 @@ model ProcessEvidence {
   validatedBy      String?
   aiAnalysis       Json?   // Stores AI insights
 
+  // Location Data (Optional)
+  latitude         Float?
+  longitude        Float?
+
   task        ProcessTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId])
@@ -1036,6 +1071,7 @@ enum ProcessEvidenceStatus {
   PENDING
   ON_TIME
   DELAYED
+  ISSUE_REPORTED
 }
 
 model ProcessTemplate {
@@ -1191,3 +1227,5 @@ model ProductReview {
   @@index([productId])
   @@index([customerId])
 }
+
+

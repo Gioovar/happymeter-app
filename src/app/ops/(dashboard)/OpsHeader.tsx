@@ -1,29 +1,83 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { ShieldCheck, Menu, X, CheckSquare, ScanLine, LogOut, Home, User } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { ShieldCheck, Menu, X, CheckSquare, ScanLine, LogOut, Home, User, ChevronDown, Building2 } from 'lucide-react'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
 
+interface Membership {
+    id: string
+    jobTitle: string | null
+    owner: {
+        businessName: string | null
+    }
+}
+
 export default function OpsHeader() {
     const [isOpen, setIsOpen] = useState(false)
+    const [showBranchSwitcher, setShowBranchSwitcher] = useState(false)
+    const [branchName, setBranchName] = useState<string>('Panel Operativo')
+    const [currentMembershipId, setCurrentMembershipId] = useState<string | null>(null)
+    const [allMemberships, setAllMemberships] = useState<Membership[]>([])
     const pathname = usePathname()
+    const router = useRouter()
+
+    useEffect(() => {
+        // Fetch branch name and all memberships from API
+        fetch('/api/ops/session')
+            .then(res => res.json())
+            .then(data => {
+                if (data?.member?.owner?.businessName) {
+                    setBranchName(data.member.owner.businessName)
+                    setCurrentMembershipId(data.member.id)
+                }
+                if (data?.allMemberships) {
+                    setAllMemberships(data.allMemberships)
+                }
+            })
+            .catch(err => console.error('Error fetching branch name:', err))
+    }, [])
+
+    const switchBranch = async (membershipId: string) => {
+        try {
+            const res = await fetch('/api/ops/switch-context', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ membershipId })
+            })
+
+            if (res.ok) {
+                setShowBranchSwitcher(false)
+                window.location.reload()
+            }
+        } catch (error) {
+            console.error('Error switching branch:', error)
+        }
+    }
 
     return (
         <>
             {/* Header Bar */}
             <header className="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur flex items-center justify-between px-4 sticky top-0 z-50">
-                <div className="flex items-center gap-2">
+                <button
+                    onClick={() => allMemberships.length > 1 && setShowBranchSwitcher(true)}
+                    className={`flex items-center gap-2 ${allMemberships.length > 1 ? 'hover:bg-white/5 rounded-lg px-2 py-1 -ml-2 transition-colors' : ''}`}
+                >
                     <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
                         <ShieldCheck className="w-5 h-5 text-white" />
                     </div>
                     <div>
                         <h1 className="font-bold text-sm text-white leading-none">Ops</h1>
-                        <p className="text-[10px] text-slate-400 font-medium">Panel Operativo</p>
+                        <div className="flex items-center gap-1">
+                            <p className="text-[10px] text-slate-400 font-medium">{branchName}</p>
+                            {allMemberships.length > 1 && (
+                                <ChevronDown className="w-3 h-3 text-slate-400" />
+                            )}
+                        </div>
                     </div>
-                </div>
+                </button>
 
                 <button
                     onClick={() => setIsOpen(true)}
@@ -32,6 +86,51 @@ export default function OpsHeader() {
                     <Menu className="w-6 h-6" />
                 </button>
             </header>
+
+            {/* Branch Switcher Modal */}
+            {showBranchSwitcher && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setShowBranchSwitcher(false)}
+                    />
+                    <div className="relative w-full max-w-md bg-slate-900 rounded-2xl border border-white/10 p-6 shadow-2xl">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                <Building2 className="w-5 h-5 text-indigo-400" />
+                                <h2 className="text-lg font-bold text-white">Cambiar Sucursal</h2>
+                            </div>
+                            <button
+                                onClick={() => setShowBranchSwitcher(false)}
+                                className="p-2 -mr-2 text-slate-400 hover:text-white"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            {allMemberships.map((membership) => (
+                                <button
+                                    key={membership.id}
+                                    onClick={() => switchBranch(membership.id)}
+                                    className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${membership.id === currentMembershipId
+                                        ? 'bg-indigo-500/20 border border-indigo-500/30 text-white'
+                                        : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10'
+                                        }`}
+                                >
+                                    <div className="text-left">
+                                        <div className="font-bold text-sm">{membership.owner.businessName}</div>
+                                        <div className="text-xs text-slate-400">{membership.jobTitle || 'Personal'}</div>
+                                    </div>
+                                    {membership.id === currentMembershipId && (
+                                        <div className="w-2 h-2 bg-indigo-400 rounded-full" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Mobile Menu Overlay */}
             {isOpen && (

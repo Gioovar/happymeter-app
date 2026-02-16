@@ -525,3 +525,37 @@ export async function sendCreatorApprovedAlert(userId: string) {
         return false
     }
 }
+
+export async function sendTaskIssueAlert(taskTitle: string, reason: string, reporterName: string, ownerId: string) {
+    try {
+        console.log('--- PROCESSING TASK ISSUE ALERT ---')
+
+        const title = '⚠️ Problema en Tarea de Staff'
+        const message = `El staff ${reporterName} reportó un problema en la tarea "${taskTitle}":\n"${reason}"`
+
+        // 1. Notify Owner (Branch Manager)
+        await prisma.notification.create({
+            data: {
+                userId: ownerId,
+                type: 'SYSTEM',
+                title: title,
+                message: message
+            }
+        })
+
+        await sendPushNotification(ownerId, {
+            title: title,
+            body: message,
+            url: `/dashboard/processes`, // Or deep link to task?
+            icon: '/happymeter_logo.png'
+        })
+
+        // 2. Mock WhatsApp (Optional, maybe for urgent issues?)
+        console.log(`[WHATSAPP MOCK] Notificando problema a Dueño (${ownerId})...`)
+
+        return true
+    } catch (error) {
+        console.error('Failed to send task issue alert', error)
+        return false
+    }
+}

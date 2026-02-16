@@ -46,7 +46,11 @@ interface EvidenceView {
     completedByPhoto?: string | null;
 }
 
-export default function DailyProcessReport() {
+interface DailyProcessReportProps {
+    branchId: string;
+}
+
+export default function DailyProcessReport({ branchId }: DailyProcessReportProps) {
     const [date, setDate] = useState<Date>(new Date());
     const [report, setReport] = useState<ReportData | null>(null);
     const [loading, setLoading] = useState(false);
@@ -58,7 +62,7 @@ export default function DailyProcessReport() {
             try {
                 // Format YYYY-MM-DD
                 const dateStr = format(date, 'yyyy-MM-dd');
-                const data = await getDailyTaskReport(dateStr);
+                const data = await getDailyTaskReport(dateStr, branchId);
                 setReport(data as any); // Type assertion if needed due to serialization
             } catch (error) {
                 console.error("Failed to fetch report", error);
@@ -68,7 +72,7 @@ export default function DailyProcessReport() {
         }
 
         fetchReport();
-    }, [date]);
+    }, [date, branchId]);
 
     return (
         <div className="bg-[#111] border border-white/10 rounded-2xl p-6 mb-8">

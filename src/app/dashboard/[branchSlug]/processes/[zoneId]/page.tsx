@@ -9,21 +9,34 @@ export default async function ProcessZonePage({ params }: { params: { branchSlug
     const context = await getDashboardContext(params.branchSlug);
     if (!context || !context.userId) return redirect('/dashboard');
 
-    const zone = await getProcessZone(params.zoneId)
+    let zone = null;
+    let errorMsg = "";
+
+    try {
+        zone = await getProcessZone(params.zoneId)
+    } catch (error: any) {
+        console.error("Error fetching zone:", error);
+        errorMsg = error.message || "Unknown error";
+    }
 
     if (!zone) {
         return (
             <div className="h-[50vh] flex flex-col items-center justify-center text-center text-gray-400">
                 <AlertCircle className="w-12 h-12 mb-4 opacity-50" />
-                <h2 className="text-xl font-bold text-white">Zona no encontrada</h2>
+                <h2 className="text-xl font-bold text-white">Zona no encontrada (Error)</h2>
                 <p>El flujo que buscas no existe o no tienes acceso.</p>
+                {errorMsg && <p className="text-red-500 mt-2 text-sm font-mono bg-black/50 p-2 rounded">{errorMsg}</p>}
             </div>
         )
     }
 
     return (
         <div className="w-full">
-            <ProcessZoneView zone={zone} branchSlug={params.branchSlug} branchName={context.name} />
+            <ProcessZoneView
+                zones={[zone]}
+                memberId={context.userId}
+                branchId={context.userId} // This is the branch's virtual user ID, not the logged-in user's ID
+            />
         </div>
     )
 }

@@ -19,6 +19,7 @@ import { getDashboardProcessStats } from '@/actions/processes';
 
 import ProcessTemplateGallery from '@/components/processes/ProcessTemplateGallery';
 import { ProcessZoneCard } from '@/components/processes/ProcessZoneCard'; // Correct import
+import StaffLeaderboard from '@/components/processes/StaffLeaderboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 
@@ -37,7 +38,8 @@ export default async function BranchProcessesPage({ params }: { params: { branch
         missed: 0,
         pending: 0,
         complianceRate: 0,
-        zonesCount: 0
+        zonesCount: 0,
+        staffStats: [] as any[] // Add this to match getDashboardProcessStats return
     };
 
     try {
@@ -208,6 +210,15 @@ export default async function BranchProcessesPage({ params }: { params: { branch
                     <ProcessTemplateGallery branchId={userId} />
                 </TabsContent>
             </Tabs>
+
+            {/* Staff Leaderboard Section - Only show if there is data */}
+            {stats.staffStats && stats.staffStats.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-1">
+                        <StaffLeaderboard stats={stats.staffStats} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

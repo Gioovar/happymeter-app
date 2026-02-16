@@ -273,3 +273,74 @@ export async function deleteProcessZone(zoneId: string) {
     revalidatePath('/dashboard/processes');
     return { success: true };
 }
+
+export async function assignTask(taskId: string, staffId: string | null) {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    // 1. Verify Ownership/Access
+    const task = await prisma.processTask.findUnique({
+        where: { id: taskId },
+        include: { zone: true }
+    });
+
+    if (!task) throw new Error("Task not found");
+
+    // Check if user owns the zone
+    if (task.zone.userId !== userId) {
+        // TODO: Add Manager check if needed
+        throw new Error("Unauthorized");
+    }
+
+    // 2. Update Task
+    await prisma.processTask.update({
+        where: { id: taskId },
+        data: {
+            assignedStaffId: staffId
+        }
+    });
+
+    // 3. Notify Staff (Optional, can be added later)
+    if (staffId) {
+        // Send notification logic here
+    }
+
+    revalidatePath(`/dashboard/processes/${task.zoneId}`);
+    return { success: true };
+}
+
+interface UpdateTaskPayload {
+    taskId: string;
+    title: string;
+    description?: string;
+    limitTime?: string;
+    evidenceType: ProcessEvidenceType;
+    days: string[];
+}
+
+export async function updateProcessTask(data: UpdateTaskPayload) {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const task = await prisma.processTask.findUnique({
+        where: { id: data.taskId },
+        include: { zone: true }
+    });
+
+    if (!task) throw new Error("Task not found");
+    if (task.zone.userId !== userId) throw new Error("Unauthorized");
+
+    await prisma.processTask.update({
+        where: { id: data.taskId },
+        data: {
+            title: data.title,
+            description: data.description,
+            limitTime: data.limitTime === "" ? null : data.limitTime,
+            evidenceType: data.evidenceType,
+            days: data.days
+        }
+    });
+
+    revalidatePath(`/dashboard/processes/${task.zoneId}`);
+    return { success: true };
+}

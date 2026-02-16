@@ -3,14 +3,7 @@
 import Link from "next/link"
 import { MapPin, ArrowUpRight, MoreVertical, Pencil, Trash2, GitMerge } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+// Dropdown imports removed
 import {
     Dialog,
     DialogContent,
@@ -43,6 +36,7 @@ interface ProcessZoneCardProps {
 
 export function ProcessZoneCard({ zone, branchSlug, branchId }: ProcessZoneCardProps) {
     const router = useRouter()
+    // Direct buttons don't need menu state
     const [isEditOpen, setIsEditOpen] = useState(false)
     const [isDeleteOpen, setIsDeleteOpen] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
@@ -62,9 +56,9 @@ export function ProcessZoneCard({ zone, branchSlug, branchId }: ProcessZoneCardP
     }
 
     return (
-        <div className="bg-[#111] border border-white/10 rounded-3xl p-6 h-full relative group hover:-translate-y-1 transition-transform duration-300">
-            {/* Hover Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-600/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+        <div className="bg-[#111] border border-white/10 rounded-3xl p-6 h-full relative group transition-colors duration-300 hover:bg-[#151515]">
+            {/* Hover Gradient - Simplified to avoid z-index issues */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-blue-600/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             <div className="flex justify-between items-start mb-6 relative z-10">
                 <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-cyan-500/20 group-hover:text-cyan-400 transition-colors">
@@ -76,23 +70,32 @@ export function ProcessZoneCard({ zone, branchSlug, branchId }: ProcessZoneCardP
                         <span className="text-xs font-mono text-gray-300">{zone._count?.tasks || 0} Tareas</span>
                     </div>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white rounded-full">
-                                <MoreVertical className="w-4 h-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-white/10 text-white">
-                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => setIsEditOpen(true)} className="cursor-pointer hover:bg-white/10">
-                                <Pencil className="w-4 h-4 mr-2" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-white/10" />
-                            <DropdownMenuItem onClick={() => setIsDeleteOpen(true)} className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-400/10">
-                                <Trash2 className="w-4 h-4 mr-2" /> Eliminar
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
+                            onClick={(e) => {
+                                e.preventDefault()
+                                setIsEditOpen(true)
+                            }}
+                            title="Editar Zona"
+                        >
+                            <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-full"
+                            onClick={(e) => {
+                                e.preventDefault()
+                                setIsDeleteOpen(true)
+                            }}
+                            title="Eliminar Zona"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </Button>
+                    </div>
                 </div>
             </div>
 
@@ -120,6 +123,7 @@ export function ProcessZoneCard({ zone, branchSlug, branchId }: ProcessZoneCardP
                         branchSlug={branchSlug}
                         initialData={zone}
                         onSuccess={() => setIsEditOpen(false)}
+                        onlyMetadata={true} // Simplify editing to just Zone info
                     />
                 </DialogContent>
             </Dialog>

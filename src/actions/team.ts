@@ -5,8 +5,10 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { PLAN_LIMITS } from '@/lib/plans'
+import { cookies } from 'next/headers' // For potential future use
 
-import { sendInvitationEmail } from '@/lib/email'
+
+import { sendInvitationEmail, sendTeamAddedEmail } from '@/lib/email'
 
 export async function getTeamData(branchId?: string) {
     const { userId } = await auth()
@@ -60,150 +62,219 @@ export async function getTeamData(branchId?: string) {
     return { members, invitations, isOwner, currentUserRole: 'OWNER' }
 }
 
+// Fixed getMembershipContexts to use valid fields
+export async function getMembershipContexts(userId: string) {
+    const memberships = await prisma.teamMember.findMany({
+        where: { userId, isActive: true },
+        select: {
+            id: true,
+            role: true,
+            // name and jobTitle DO exist on TeamMember model
+            name: true,
+            jobTitle: true,
+            owner: {
+                select: {
+                    businessName: true,
+                    logoUrl: true,
+                    userId: true // This is the branch/owner ID
+                }
+            }
+        }
+    })
+    return memberships
+}
+
+
 export async function inviteMember(formData: FormData) {
-    const { userId } = await auth()
-    if (!userId) throw new Error('Unauthorized')
-
-    const email = formData.get('email') as string
-    const role = formData.get('role') as 'ADMIN' | 'EDITOR' | 'OBSERVER' | 'OPERATOR'
-    const branchId = formData.get('branchId') as string | undefined
-    const branchSlug = formData.get('branchSlug') as string | undefined
-
-    if (!email) throw new Error('Email requerido')
-
-    let targetOwnerId = userId
-
-    if (branchId && branchId !== userId) {
-        // Verify Chain Ownership
-        const branch = await prisma.chainBranch.findFirst({
-            where: {
-                branchId: branchId,
-                chain: { ownerId: userId }
-            }
-        })
-        if (!branch) throw new Error('Unauthorized access to branch')
-        targetOwnerId = branchId
-    } else if (branchSlug) {
-        // Resolve Branch ID from Slug
-        const branch = await prisma.chainBranch.findFirst({
-            where: {
-                slug: branchSlug,
-                chain: { ownerId: userId }
-            }
-        })
-        if (!branch) throw new Error('Sucursal no encontrada o sin acceso')
-        targetOwnerId = branch.branchId
-    }
-
-    // Check Plan Limits (Check limits of the TARGET OWNER i.e. the branch or the user)
-    const userSettings = await prisma.userSettings.findUnique({
-        where: { userId: targetOwnerId }
-    })
-
-    // Default to FREE if no settings (safe fallback)
-    const planCode = (userSettings?.plan || 'FREE').toUpperCase() as keyof typeof PLAN_LIMITS
-    const currentPlan = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE
-    const maxMembers = currentPlan.limits.teamMembers
-
-    const currentMembers = await prisma.teamMember.count({ where: { ownerId: targetOwnerId } })
-    const pendingInvites = await prisma.teamInvitation.count({ where: { inviterId: targetOwnerId } })
-
-    if ((currentMembers + pendingInvites) >= maxMembers) {
-        throw new Error(`Has alcanzado el límite de ${maxMembers} empleados para tu plan ${currentPlan.name}.`)
-    }
-
-    // Check existing invite
-    const existingInvite = await prisma.teamInvitation.findFirst({
-        where: { email, inviterId: targetOwnerId }
-    })
-
-    if (existingInvite) {
-        throw new Error('Ya existe una invitación pendiente para este correo.')
-    }
-
-    // NEW LOGIC: Check if user already exists in Clerk
     try {
-        const client = await clerkClient()
-        const users = await client.users.getUserList({ emailAddress: [email] });
+        const { userId } = await auth()
+        if (!userId) throw new Error('Unauthorized')
 
-        if (users.data.length > 0) {
-            const existingUser = users.data[0];
+        const email = formData.get('email') as string
+        const role = formData.get('role') as 'ADMIN' | 'EDITOR' | 'OBSERVER' | 'OPERATOR'
+        const name = formData.get('name') as string | undefined
+        const jobTitle = formData.get('jobTitle') as string | undefined
+        const phone = formData.get('phone') as string | undefined
+        const branchId = formData.get('branchId') as string | undefined
+        const branchSlug = formData.get('branchSlug') as string | undefined
+        const assignedTaskId = formData.get('assignedTaskId') as string | undefined
 
-            // Check if already in the team
-            const existingMember = await prisma.teamMember.findUnique({
+        if (!email) throw new Error('Email requerido')
+
+        let targetOwnerId = userId
+
+        if (branchId && branchId !== userId) {
+            // Verify Chain Ownership
+            const branch = await prisma.chainBranch.findFirst({
                 where: {
-                    userId_ownerId: {
-                        userId: existingUser.id,
-                        ownerId: targetOwnerId
-                    }
+                    branchId: branchId,
+                    chain: { ownerId: userId }
                 }
-            });
+            })
+            if (!branch) throw new Error('Unauthorized access to branch')
+            targetOwnerId = branchId
+        } else if (branchSlug) {
+            // Resolve Branch ID from Slug
+            const branch = await prisma.chainBranch.findFirst({
+                where: {
+                    slug: branchSlug,
+                    chain: { ownerId: userId }
+                }
+            })
+            if (!branch) throw new Error('Sucursal no encontrada o sin acceso')
+            targetOwnerId = branch.branchId
+        }
 
-            if (existingMember) {
-                // Determine if we should throw error or update role. For now, error.
-                throw new Error('Este usuario ya es miembro del equipo.');
+        // Check Plan Limits (Check limits of the TARGET OWNER i.e. the branch or the user)
+        // BYPASS LIMIT FOR CHAINS: Check if targetOwnerId is a Chain Owner or a Branch
+        const isChainOwner = await prisma.chain.findFirst({ where: { ownerId: targetOwnerId } })
+        const isChainBranch = await prisma.chainBranch.findFirst({ where: { branchId: targetOwnerId } })
+
+        const isChainContext = !!(isChainOwner || isChainBranch)
+
+        if (!isChainContext) {
+            const userSettings = await prisma.userSettings.findUnique({
+                where: { userId: targetOwnerId }
+            })
+
+            // Default to FREE if no settings (safe fallback)
+            const planCode = (userSettings?.plan || 'FREE').toUpperCase() as keyof typeof PLAN_LIMITS
+            const currentPlan = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE
+            const maxMembers = currentPlan.limits.teamMembers
+
+            const currentMembers = await prisma.teamMember.count({ where: { ownerId: targetOwnerId } })
+            const pendingInvites = await prisma.teamInvitation.count({ where: { inviterId: targetOwnerId } })
+
+            if ((currentMembers + pendingInvites) >= maxMembers) {
+                throw new Error(`Has alcanzado el límite de ${maxMembers} empleados para tu plan ${currentPlan.name}.`)
             }
+        } else {
+            // Fetch basic settings for email templates if needed, even if unlimited
+            // We might need userSettings later for businessName
+        }
 
-            // Direct Add
-            await prisma.teamMember.create({
-                data: {
-                    userId: existingUser.id,
-                    ownerId: targetOwnerId,
-                    role: role
+        // Fetch UserSettings for business name if not fetched above
+        const userSettings = await prisma.userSettings.findUnique({
+            where: { userId: targetOwnerId }
+        })
+
+        // Check existing invite
+        const existingInvite = await prisma.teamInvitation.findFirst({
+            where: { email, inviterId: targetOwnerId }
+        })
+
+        if (existingInvite) {
+            throw new Error('Ya existe una invitación pendiente para este correo.')
+        }
+
+        // NEW LOGIC: Check if user already exists in Clerk
+        try {
+            const client = await clerkClient()
+            const users = await client.users.getUserList({ emailAddress: [email] });
+
+            if (users.data.length > 0) {
+                const existingUser = users.data[0];
+
+                // Check if already in the team
+                const existingMember = await prisma.teamMember.findUnique({
+                    where: {
+                        userId_ownerId: {
+                            userId: existingUser.id,
+                            ownerId: targetOwnerId
+                        }
+                    }
+                });
+
+                if (existingMember) {
+                    throw new Error('Este usuario ya es miembro del equipo.');
                 }
-            });
 
-            // Send "Added" Email
-            const inviterName = userSettings?.businessName || 'El Administrador'
-            const teamName = userSettings?.businessName || 'HappyMeter Team'
+                // Direct Add
+                await prisma.teamMember.create({
+                    data: {
+                        userId: existingUser.id,
+                        ownerId: targetOwnerId,
+                        role: role,
+                        // Store extra info if provided, even if they have a user account (as overrides or specific to this team)
+                        name: name,
+                        jobTitle: jobTitle,
+                        phone: phone
+                    }
+                });
 
-            // We import this dynamically to avoid circular deps if any, or just use the imported one
-            const { sendTeamAddedEmail } = await import('@/lib/email');
+                // Send "Added" Email
+                const inviterName = userSettings?.businessName || 'El Administrador'
+                const teamName = userSettings?.businessName || 'HappyMeter Team'
 
-            await sendTeamAddedEmail(email, teamName, role, inviterName);
+                await sendTeamAddedEmail(email, teamName, role, inviterName);
 
-            revalidatePath('/dashboard/team');
-            // Also revalidate branch path if possible, but generic is hard. 
-            // We rely on the client to refresh or the generic revalidate to hit the cache.
-            return { success: true, message: 'Usuario agregado directamente (ya tenía cuenta).' };
+                revalidatePath('/dashboard/team');
+                return { success: true, message: 'Usuario agregado directamente (ya tenía cuenta).' };
+            }
+        } catch (error: any) {
+            console.error('Error checking existing user:', error);
+            if (error.message === 'Este usuario ya es miembro del equipo.') {
+                throw error;
+            }
         }
-    } catch (error: any) {
-        console.error('Error checking existing user:', error);
-        // Continue to normal invitation flow if check fails or user not found
-        // However if the error was "Already member", rethrow it.
-        if (error.message === 'Este usuario ya es miembro del equipo.') {
-            throw error;
+
+        // Generate token
+        const isOperator = role === 'OPERATOR'
+
+        let token: string
+        if (isOperator) {
+            // Generate a 6-digit numeric code
+            token = Math.floor(100000 + Math.random() * 900000).toString()
+
+            // Simple collision check (optional but robust)
+            // In high volume this might need a loop, but for now a single check is likely consistent enough for low volume
+            const existing = await prisma.teamInvitation.findUnique({ where: { token } })
+            if (existing) {
+                token = Math.floor(100000 + Math.random() * 900000).toString()
+            }
+        } else {
+            // Standard long token for others
+            token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
         }
-    }
 
-    // Generate token
-    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+        await prisma.teamInvitation.create({
+            data: {
+                email,
+                role,
+                inviterId: targetOwnerId,
+                token,
+                name,
+                jobTitle,
+                phone,
+                meta: assignedTaskId ? { assignedTaskId } : undefined
+            }
+        })
 
-    await prisma.teamInvitation.create({
-        data: {
+        const inviteLink = isOperator
+            ? `${process.env.NEXT_PUBLIC_APP_URL}/ops/join?token=${token}`
+            : `${process.env.NEXT_PUBLIC_APP_URL}/join-team?token=${token}`
+
+        const inviterName = userSettings?.businessName || 'El Administrador'
+        const teamName = userSettings?.businessName || 'HappyMeter Team'
+
+        await sendInvitationEmail(
             email,
+            inviterName,
+            teamName,
             role,
-            inviterId: targetOwnerId,
-            token
-        }
-    })
+            inviteLink,
+            isOperator,
+            token, // Use token as the access code
+            name,
+            jobTitle
+        )
 
-    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/join-team?token=${token}`
-    const inviterName = userSettings?.businessName || 'El Administrador'
-    const teamName = userSettings?.businessName || 'HappyMeter Team'
-
-    const { sendInvitationEmail } = await import('@/lib/email'); // Ensure import
-
-    await sendInvitationEmail(
-        email,
-        inviterName,
-        teamName,
-        role,
-        inviteLink
-    )
-
-    revalidatePath('/dashboard/team')
-    return { success: true }
+        revalidatePath('/dashboard/team')
+        return { success: true }
+    } catch (error: any) {
+        console.error('Error inviting member:', error)
+        return { success: false, error: error.message || 'Error desconocido al invitar miembro' }
+    }
 }
 
 export async function removeMember(memberId: string) {
@@ -277,6 +348,31 @@ export async function acceptInvitation(token: string) {
     })
     if (!invite) return { success: false, error: "Invitación inválida o expirada" }
 
+    // Check if the current user email matches the invite email
+    // We need to fetch the user's email from Clerk or UserSettings to verify
+    try {
+        const client = await clerkClient()
+        const user = await client.users.getUser(userId)
+        const primaryEmail = user.emailAddresses.find(e => e.id === user.primaryEmailAddressId)?.emailAddress
+
+        console.log(`[acceptInvitation] User: ${userId}, Email: ${primaryEmail}, Invite Email: ${invite.email}`)
+
+        if (primaryEmail && invite.email && primaryEmail.toLowerCase() !== invite.email.toLowerCase()) {
+            console.log(`[acceptInvitation] Email mismatch`)
+            return {
+                success: false,
+                error: "Cuenta incorrecta",
+                errorCode: "EMAIL_MISMATCH",
+                expectedEmail: invite.email,
+                currentEmail: primaryEmail
+            }
+        }
+    } catch (e) {
+        console.error(`[acceptInvitation] Error fetching Clerk user:`, e)
+        // If we can't fetch user (e.g. offline user trying to accept? but auth() passed), proceed or fail?
+        // Offline users shouldn't use this flow usually? 
+    }
+
     // 2. Check if user is already a member
     const existingMember = await prisma.teamMember.findUnique({
         where: {
@@ -294,58 +390,173 @@ export async function acceptInvitation(token: string) {
     }
 
     // 3. Create Member
-    await prisma.teamMember.create({
-        data: {
-            userId,
-            ownerId: invite.inviterId,
-            role: invite.role
+    // Ensure UserSettings exists for the user
+    let userSettings = await prisma.userSettings.findUnique({ where: { userId } })
+    if (!userSettings) {
+        // Fetch user details from Clerk again if needed (we might have done it above)
+        try {
+            const client = await clerkClient()
+            const user = await client.users.getUser(userId)
+            const email = user.emailAddresses.find(e => e.id === user.primaryEmailAddressId)?.emailAddress
+
+            userSettings = await prisma.userSettings.create({
+                data: {
+                    userId,
+                    // email field does not exist in UserSettings schema
+                    fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || invite.name || "Usuario",
+                    photoUrl: user.imageUrl,
+                    isActive: true
+                }
+            })
+        } catch (e) {
+            console.error("[acceptInvitation] Error creating UserSettings:", e)
+            return { success: false, error: "Error interno creando perfil de usuario." }
         }
-    })
+    }
+
+    try {
+        await prisma.teamMember.create({
+            data: {
+                userId,
+                ownerId: invite.inviterId,
+                role: invite.role,
+                name: invite.name,
+                jobTitle: invite.jobTitle,
+                phone: invite.phone
+            }
+        })
+    } catch (error: any) {
+        console.error("[acceptInvitation] Error creating team member:", error)
+        if (error.code === 'P2002') {
+            return { success: false, error: "Ya eres miembro de este equipo (Unique Constraint)." }
+        }
+        return { success: false, error: `Error al crear miembro: ${error.message}` }
+    }
 
     // 4. Delete Invite
     await prisma.teamInvitation.delete({ where: { token } })
+
+    // 5. Handle Post-Acceptance Actions (e.g. Task Assignment)
+    if (invite.meta && typeof invite.meta === 'object' && !Array.isArray(invite.meta)) {
+        const meta = invite.meta as any;
+        if (meta.assignedTaskId) {
+            try {
+                // Find the new member ID
+                const newMember = await prisma.teamMember.findUnique({
+                    where: {
+                        userId_ownerId: {
+                            userId,
+                            ownerId: invite.inviterId
+                        }
+                    }
+                })
+
+                if (newMember) {
+                    await prisma.processTask.update({
+                        where: { id: meta.assignedTaskId },
+                        data: { assignedStaffId: newMember.id }
+                    })
+                    console.log(`[acceptInvitation] Automatically assigned task ${meta.assignedTaskId} to member ${newMember.id}`)
+                }
+            } catch (error) {
+                console.error("[acceptInvitation] Error assigning task from meta:", error)
+                // Don't fail the whole acceptance if this optional step fails
+            }
+        }
+    }
 
     return { success: true, role: invite.role }
 }
 
 // --- OPERATOR MANAGEMENT ---
 
-export async function getOperators() {
-    const { userId } = await auth()
-    if (!userId) throw new Error("Unauthorized")
+export async function getOperators(branchId?: string) {
+    try {
+        const { userId } = await auth()
+        if (!userId) throw new Error("Unauthorized")
 
-    // Verify user is owner or admin (simplified logic for now, using userSettings implicit check)
-    // We fetch members where the current user is the owner
-    const operators = await prisma.teamMember.findMany({
-        where: {
-            ownerId: userId,
-            role: 'OPERATOR'
-        },
-        include: {
-            user: {
-                select: {
-                    userId: true,
-                    // We need name/email from Clerk ideally, but for now we might rely on UserSettings or just return what we have
-                    // Note: UserSettings doesn't have name/email by default usually, it's in Auth. 
-                    // We will fetch UserSettings profile info (photo, phone)
-                    photoUrl: true,
-                    phone: true,
-                    businessName: true // Fallback for name if needed
-                }
+        console.log(`[getOperators] Called with branchId: ${branchId}, userId: ${userId}`)
+
+        // Determine the target owner ID
+        // If branchId is provided, use it. Otherwise use current userId.
+        let targetOwnerId = branchId || userId
+
+        // If no branchId provided, check if current user is a team member
+        // (acting as admin/manager) and use their owner's ID
+        if (!branchId) {
+            const membership = await prisma.teamMember.findFirst({
+                where: { userId: userId },
+                select: { ownerId: true }
+            })
+
+            console.log(`[getOperators] Membership check:`, membership)
+
+            if (membership) {
+                targetOwnerId = membership.ownerId
             }
         }
-    })
 
-    // To get names/emails, we might need to rely on what we have or fetch from Clerk if needed.
-    // For this implementation, we will assume we can rely on `businessName` or similar, 
-    // OR we might need to store email in UserSettings or TeamMember to display it.
-    // However, TeamInvitation has email. TeamMember links to UserSettings.
-    // Let's return the data we have. We might need to fetch email from Clerk in a real app, 
-    // but for now let's hope the user profile (businessName) or just the fact they are listed is enough.
-    // WAIT: We don't have email in TeamMember. We have it in Invite. 
-    // Let's just return what we have and maybe the frontend can show "Operador" if name is missing.
+        console.log(`[getOperators] Final targetOwnerId: ${targetOwnerId}`)
 
-    return operators
+        // Check if this is a branch (not the chain owner)
+        const branchInfo = await prisma.chainBranch.findFirst({
+            where: { branchId: targetOwnerId },
+            select: {
+                chain: {
+                    select: { ownerId: true }
+                }
+            }
+        })
+
+        // Build the query to include both branch employees AND chain owner employees
+        const ownerIds = [targetOwnerId]
+        if (branchInfo && branchInfo.chain.ownerId !== targetOwnerId) {
+            // This is a branch, also include chain owner's employees
+            ownerIds.push(branchInfo.chain.ownerId)
+            console.log(`[getOperators] Branch detected. Including chain owner: ${branchInfo.chain.ownerId}`)
+        }
+
+        // Fetch all active team members for this owner/branch AND chain owner
+        const operators = await prisma.teamMember.findMany({
+            where: {
+                ownerId: { in: ownerIds },
+                isActive: true
+            },
+            include: {
+                user: {
+                    select: {
+                        userId: true,
+                        photoUrl: true,
+                        phone: true,
+                        businessName: true,
+                        fullName: true,
+                    }
+                }
+            },
+            orderBy: {
+                joinedAt: 'desc'
+            }
+        })
+
+        console.log(`[getOperators] Found ${operators.length} operators for ownerIds ${ownerIds.join(', ')}`)
+        console.log(`[getOperators] Operators:`, operators.map(op => ({ id: op.id, userId: op.userId, ownerId: op.ownerId, role: op.role, name: op.name })))
+
+        // Map to ensure a display name exists
+        const mappedOperators = operators.map(op => ({
+            ...op,
+            user: op.user ? {
+                ...op.user,
+                businessName: op.user.businessName || op.user.fullName || 'Sin Nombre'
+            } : null
+        }))
+
+        return mappedOperators
+
+    } catch (error) {
+        console.error("Error getting operators:", error)
+        // Return empty array instead of throwing to prevent UI crash
+        return []
+    }
 }
 
 export async function toggleMemberStatus(memberId: string, isActive: boolean) {
@@ -369,4 +580,137 @@ export async function toggleMemberStatus(memberId: string, isActive: boolean) {
 
     revalidatePath('/dashboard/loyalty')
     return { success: true }
+}
+
+// --- OFFLINE OPERATORS ---
+
+export async function createOfflineOperator(name: string, branchId?: string) {
+    try {
+        const { userId } = await auth()
+        if (!userId) throw new Error("Unauthorized")
+
+        // Resolve owner - use branchId if provided, otherwise use userId
+        let targetOwnerId = branchId || userId
+
+        // If branchId is provided and different from userId, verify access
+        if (branchId && branchId !== userId) {
+            // Verify Chain Ownership
+            const branch = await prisma.chainBranch.findFirst({
+                where: {
+                    branchId: branchId,
+                    chain: { ownerId: userId }
+                }
+            })
+            if (!branch) {
+                // Check if I am a member behaving as admin
+                const membership = await prisma.teamMember.findFirst({
+                    where: { userId: userId },
+                    select: { ownerId: true }
+                })
+                if (membership && membership.ownerId === branchId) {
+                    targetOwnerId = branchId
+                } else {
+                    throw new Error("Unauthorized access to branch")
+                }
+            }
+        } else if (!branchId) {
+            // Check if I am a member behaving as admin (original logic)
+            const membership = await prisma.teamMember.findFirst({
+                where: { userId: userId },
+                select: { ownerId: true }
+            })
+            if (membership) {
+                targetOwnerId = membership.ownerId
+            }
+        }
+
+        // Check Plan Limits
+        const isChainOwner = await prisma.chain.findFirst({ where: { ownerId: targetOwnerId } })
+        const isChainBranch = await prisma.chainBranch.findFirst({ where: { branchId: targetOwnerId } })
+
+        const isChainContext = !!(isChainOwner || isChainBranch)
+
+        if (!isChainContext) {
+            const userSettings = await prisma.userSettings.findUnique({
+                where: { userId: targetOwnerId }
+            })
+            const planCode = (userSettings?.plan || 'FREE').toUpperCase() as keyof typeof PLAN_LIMITS
+            const currentPlan = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE
+            const maxMembers = currentPlan.limits.teamMembers
+
+            const currentMembers = await prisma.teamMember.count({ where: { ownerId: targetOwnerId } })
+            const pendingInvites = await prisma.teamInvitation.count({ where: { inviterId: targetOwnerId } })
+
+            if ((currentMembers + pendingInvites) >= maxMembers) {
+                throw new Error(`Has alcanzado el límite de ${maxMembers} empleados.`)
+            }
+        }
+
+        // Generate 6 digit pin
+        let accessCode = Math.floor(100000 + Math.random() * 900000).toString()
+
+        // Ensure uniqueness
+        let isUnique = false
+        let attempts = 0
+        while (!isUnique && attempts < 5) {
+            const existing = await prisma.teamMember.findUnique({ where: { accessCode } })
+            if (!existing) {
+                isUnique = true
+            } else {
+                accessCode = Math.floor(100000 + Math.random() * 900000).toString()
+                attempts++
+            }
+        }
+
+        if (!isUnique) throw new Error("Error generando código único, intenta de nuevo.")
+
+        const newMember = await prisma.teamMember.create({
+            data: {
+                ownerId: targetOwnerId,
+                role: 'OPERATOR',
+                name: name,
+                accessCode: accessCode,
+                isOffline: true
+            }
+        })
+
+        revalidatePath('/dashboard/team')
+
+        // Return success with accessCode
+        return { success: true, accessCode: accessCode }
+    } catch (error: any) {
+        console.error("Error creating offline operator:", error)
+        return { success: false, error: error.message || "Error al crear cuenta local" }
+    }
+}
+
+export async function loginOfflineOperator(accessCode: string) {
+    const member = await prisma.teamMember.findUnique({
+        where: { accessCode },
+        include: {
+            owner: {
+                select: { businessName: true }
+            }
+        }
+    })
+
+    if (!member) {
+        return { success: false, error: "Código inválido" }
+    }
+
+    if (!member.isActive) {
+        return { success: false, error: "Cuenta desactivada" }
+    }
+
+    // Set Cookie
+    const cookieStore = await cookies()
+    cookieStore.set('operator_session', accessCode, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30 // 30 days
+    })
+
+    return { success: true, member }
 }

@@ -1,9 +1,15 @@
 import Link from "next/link"
 import { QrCode, History, LogOut, CheckCircle2 } from "lucide-react"
+import { getStaffPerformanceMetrics } from "@/actions/ops-analytics"
+import StaffPerformanceCharts from "@/components/ops/StaffPerformanceCharts"
 
-export default function OpsPage() {
+export default async function OpsPage() {
+    const metrics = await getStaffPerformanceMetrics()
+
     return (
         <div className="flex flex-col gap-6">
+            <StaffPerformanceCharts metrics={metrics} />
+
             <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-6">
                 <h2 className="text-xl font-bold text-white mb-2">Panel de Staff</h2>
                 <p className="text-indigo-200 text-sm">

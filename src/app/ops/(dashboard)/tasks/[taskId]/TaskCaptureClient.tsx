@@ -23,7 +23,7 @@ export default function TaskCaptureClient({ task }: TaskCaptureClientProps) {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
 
-    const handleCapture = async (file: File, meta: { lat: number, lng: number, capturedAt: Date, type: 'PHOTO' | 'VIDEO' }) => {
+    const handleCapture = async (file: File, meta: { lat: number, lng: number, capturedAt: Date, type: 'PHOTO' | 'VIDEO', comments?: string }) => {
         setIsUploading(true);
         setUploadProgress(0);
         try {
@@ -57,6 +57,9 @@ export default function TaskCaptureClient({ task }: TaskCaptureClientProps) {
                 taskId: task.id,
                 fileUrl: publicUrl,
                 capturedAt: meta.capturedAt,
+                comments: meta.comments,
+                latitude: meta.lat || undefined,
+                longitude: meta.lng || undefined,
             });
 
             toast.success("Evidencia enviada correctamente");

@@ -1,5 +1,5 @@
 
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import ProfileSetupForm from '@/components/ops/ProfileSetupForm'
@@ -28,6 +28,9 @@ export default async function ProfileSetupPage() {
         photoUrl: userSettings.photoUrl
     } : undefined
 
+    const user = await currentUser()
+    const email = user?.emailAddresses[0]?.emailAddress
+
     return (
         <div className="max-w-md mx-auto mt-8">
             <div className="text-center mb-8">
@@ -35,7 +38,7 @@ export default async function ProfileSetupPage() {
                 <p className="text-slate-400 text-sm">Necesitamos tus datos para identificarte en el equipo.</p>
             </div>
 
-            <ProfileSetupForm initialData={initialData} />
+            <ProfileSetupForm initialData={initialData} email={email} />
         </div>
     )
 }
