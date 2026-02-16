@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import InviteMemberModal from './InviteMemberModal'
 import StaffDetailModal from './StaffDetailModal'
+import DeleteConfirmationDialog from './DeleteConfirmationDialog'
 import { cn } from '@/lib/utils'
 
 interface ProcessTeamManagerProps {
@@ -32,10 +33,13 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
     const [selectedStaff, setSelectedStaff] = useState<any>(null)
     const [loadingIds, setLoadingIds] = useState<string[]>([])
 
-    const handleRemove = async (id: string) => {
-        const ok = window.confirm('¿Eliminar este miembro permanentemente?')
-        if (!ok) return
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean, id: string, type: 'member' | 'invite' }>({
+        isOpen: false,
+        id: '',
+        type: 'member'
+    })
 
+    const handleRemove = async (id: string) => {
         setLoadingIds(prev => [...prev, id])
         try {
             await removeMember(id)
@@ -44,14 +48,11 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
             toast.error('Error al eliminar miembro')
         } finally {
             setLoadingIds(prev => prev.filter(item => item !== id))
+            setDeleteModal({ isOpen: false, id: '', type: 'member' })
         }
     }
 
     const handleCancel = async (id: string) => {
-        // Use a small delay or ensure we are outside of any conflicting re-renders
-        const ok = window.confirm('¿Eliminar esta invitación permanentemente?')
-        if (!ok) return
-
         setLoadingIds(prev => [...prev, id])
         try {
             await cancelInvitation(id)
@@ -60,6 +61,7 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
             toast.error('Error al eliminar invitación')
         } finally {
             setLoadingIds(prev => prev.filter(item => item !== id))
+            setDeleteModal({ isOpen: false, id: '', type: 'invite' })
         }
     }
 
@@ -177,7 +179,7 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                                 onClick={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
-                                                    handleRemove(staff.staffId);
+                                                    setDeleteModal({ isOpen: true, id: staff.staffId, type: 'member' });
                                                 }}
                                                 className="h-10 w-10 text-gray-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
                                                 title="Eliminar miembro"
@@ -254,7 +256,7 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
-                                                        handleCancel(invite.id);
+                                                        setDeleteModal({ isOpen: true, id: invite.id, type: 'invite' });
                                                     }}
                                                     className="h-10 w-10 text-gray-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
                                                     title="Eliminar invitación permanentemente"
@@ -307,6 +309,23 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                 isOpen={!!selectedStaff}
                 onOpenChange={(open) => !open && setSelectedStaff(null)}
                 staff={selectedStaff}
+            />
+
+            <DeleteConfirmationDialog
+                isOpen={deleteModal.isOpen}
+                onOpenChange={(open) => setDeleteModal(prev => ({ ...prev, isOpen: open }))}
+                onConfirm={() => {
+                    if (deleteModal.type === 'member') {
+                        handleRemove(deleteModal.id)
+                    } else {
+                        handleCancel(deleteModal.id)
+                    }
+                }}
+                isLoading={loadingIds.includes(deleteModal.id)}
+                title={deleteModal.type === 'member' ? '¿Eliminar miembro?' : '¿Eliminar invitación?'}
+                description={deleteModal.type === 'member'
+                    ? 'Esta acción desactivará el acceso de este empleado permanentemente de esta sucursal.'
+                    : 'Esta invitación será borrada y el código de acceso dejará de funcionar.'}
             />
         </div>
     )

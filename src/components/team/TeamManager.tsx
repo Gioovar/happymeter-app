@@ -7,11 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Trash2, Mail, UserPlus, Shield, RefreshCcw, Loader2 } from 'lucide-react'
 import InviteMemberModal from './InviteMemberModal'
+import DeleteConfirmationDialog from './DeleteConfirmationDialog'
 
 export default function TeamManager({ initialData, branchId }: { initialData: any, branchId?: string }) {
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
     const [loadingIds, setLoadingIds] = useState<string[]>([])
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean, id: string, type: 'member' | 'invite' }>({
+        isOpen: false,
+        id: '',
+        type: 'member'
+    })
 
     async function handleInvite(formData: FormData) {
         setLoading(true)
@@ -30,19 +36,19 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
     }
 
     async function handleRemove(id: string) {
-        if (!confirm('¿Eliminar miembro?')) return
+        setLoadingIds(prev => [...prev, id])
         try {
             await removeMember(id)
             toast.success('Miembro eliminado')
         } catch (e) {
-            toast.error('Error')
+            toast.error('Error al eliminar miembro')
+        } finally {
+            setLoadingIds(prev => prev.filter(item => item !== id))
+            setDeleteModal({ isOpen: false, id: '', type: 'member' })
         }
     }
 
     async function handleCancel(id: string) {
-        const ok = window.confirm('¿Eliminar esta invitación permanentemente?')
-        if (!ok) return
-
         setLoadingIds(prev => [...prev, id])
         try {
             await cancelInvitation(id)
@@ -51,6 +57,7 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
             toast.error('Error al eliminar invitación')
         } finally {
             setLoadingIds(prev => prev.filter(item => item !== id))
+            setDeleteModal({ isOpen: false, id: '', type: 'invite' })
         }
     }
 
@@ -122,8 +129,22 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
                                 </td>
                                 <td className="p-4 text-right">
                                     {(initialData.isOwner || (initialData.currentUserRole === 'ADMIN' && member.role !== 'ADMIN')) && (
-                                        <Button variant="ghost" size="icon" onClick={() => handleRemove(member.id)} className="text-red-400 hover:bg-red-500/10">
-                                            <Trash2 className="w-4 h-4" />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            disabled={loadingIds.includes(member.id)}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setDeleteModal({ isOpen: true, id: member.id, type: 'member' });
+                                            }}
+                                            className="text-red-400 hover:bg-red-500/10"
+                                        >
+                                            {loadingIds.includes(member.id) ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Trash2 className="w-4 h-4" />
+                                            )}
                                         </Button>
                                     )}
                                 </td>
@@ -181,7 +202,7 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
                                                 onClick={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
-                                                    handleCancel(invite.id);
+                                                    setDeleteModal({ isOpen: true, id: invite.id, type: 'invite' });
                                                 }}
                                                 className="text-gray-500 hover:text-red-400"
                                                 title="Eliminar invitación"
@@ -208,6 +229,23 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
                     </tbody>
                 </table>
             </div>
+
+            <DeleteConfirmationDialog
+                isOpen={deleteModal.isOpen}
+                onOpenChange={(open) => setDeleteModal(prev => ({ ...prev, isOpen: open }))}
+                onConfirm={() => {
+                    if (deleteModal.type === 'member') {
+                        handleRemove(deleteModal.id)
+                    } else {
+                        handleCancel(deleteModal.id)
+                    }
+                }}
+                isLoading={loadingIds.includes(deleteModal.id)}
+                title={deleteModal.type === 'member' ? '¿Eliminar miembro?' : '¿Eliminar invitación?'}
+                description={deleteModal.type === 'member'
+                    ? 'Esta acción desactivará el acceso de este empleado permanentemente de esta sucursal.'
+                    : 'Esta invitación será borrada y el código de acceso dejará de funcionar.'}
+            />
         </div>
     )
 }
