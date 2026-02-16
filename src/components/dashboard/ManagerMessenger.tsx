@@ -169,23 +169,35 @@ export default function ManagerMessenger({
                                     </div>
                                     <div className="flex flex-col items-start overflow-hidden min-w-0">
                                         <span className="text-sm font-bold truncate w-full">{member.name}</span>
-                                        <div className="flex items-center gap-2 w-full">
-                                            <span className="text-[10px] opacity-60 uppercase font-bold tracking-tighter truncate">{member.jobTitle}</span>
+                                        <div className="flex flex-col gap-0.5 w-full">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] opacity-60 uppercase font-bold tracking-tighter truncate">{member.jobTitle}</span>
+                                                {member.stats && member.stats.total > 0 && (
+                                                    <div className="flex items-center gap-1.5 ml-auto md:ml-0">
+                                                        <span className="w-1 h-1 rounded-full bg-white/20" />
+                                                        <span className={cn(
+                                                            "text-[10px] font-black tracking-tighter",
+                                                            member.stats.compliance >= 90 ? "text-emerald-400" :
+                                                                member.stats.compliance >= 70 ? "text-amber-400" :
+                                                                    "text-rose-400"
+                                                        )}>
+                                                            {member.stats.compliance}% de {member.stats.total} tareas
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             {member.stats && member.stats.total > 0 && (
-                                                <div className="flex items-center gap-1.5 ml-auto md:ml-0">
-                                                    <span className="w-1 h-1 rounded-full bg-white/20" />
-                                                    <span className={cn(
-                                                        "text-[10px] font-black tracking-tighter",
-                                                        member.stats.compliance >= 90 ? "text-emerald-400" :
-                                                            member.stats.compliance >= 70 ? "text-amber-400" :
-                                                                "text-rose-400"
-                                                    )}>
-                                                        {member.stats.compliance}%
-                                                    </span>
-                                                    <span className="text-[9px] font-bold text-gray-600 truncate">
-                                                        ({member.stats.done}/{member.stats.total})
-                                                    </span>
-                                                </div>
+                                                <span className={cn(
+                                                    "text-[9px] font-bold uppercase tracking-tight",
+                                                    member.stats.compliance >= 90 ? "text-emerald-500" :
+                                                        member.stats.compliance >= 70 ? "text-amber-500/80" :
+                                                            "text-rose-500"
+                                                )}>
+                                                    {member.stats.compliance >= 90 ? "¡Excelente empleado!" :
+                                                        member.stats.compliance >= 80 ? "Cumpliendo bien" :
+                                                            member.stats.compliance >= 50 ? "Puede mejorar" :
+                                                                "No está cumpliendo"}
+                                                </span>
                                             )}
                                         </div>
                                     </div>
