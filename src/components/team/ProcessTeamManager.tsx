@@ -33,12 +33,17 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
     const [loadingIds, setLoadingIds] = useState<string[]>([])
 
     const handleRemove = async (id: string) => {
-        if (!confirm('¿Eliminar miembro?')) return
+        const ok = window.confirm('¿Eliminar este miembro permanentemente?')
+        if (!ok) return
+
+        setLoadingIds(prev => [...prev, id])
         try {
             await removeMember(id)
             toast.success('Miembro eliminado')
         } catch (e) {
-            toast.error('Error')
+            toast.error('Error al eliminar miembro')
+        } finally {
+            setLoadingIds(prev => prev.filter(item => item !== id))
         }
     }
 
@@ -164,13 +169,33 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                         </div>
                                     </td>
                                     <td className="p-6 text-right">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-gray-500 hover:text-white group-hover:bg-white/5 rounded-xl px-4"
-                                        >
-                                            Reporte <ChevronRight className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
-                                        </Button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                disabled={loadingIds.includes(staff.staffId)}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleRemove(staff.staffId);
+                                                }}
+                                                className="h-10 w-10 text-gray-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                                                title="Eliminar miembro"
+                                            >
+                                                {loadingIds.includes(staff.staffId) ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="w-4 h-4" />
+                                                )}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-gray-500 hover:text-white group-hover:bg-white/5 rounded-xl px-4"
+                                            >
+                                                Reporte <ChevronRight className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
+                                            </Button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
