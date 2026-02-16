@@ -27,22 +27,19 @@ export async function getStaffPerformanceMetrics() {
         };
     }
 
-    const today = new Date();
-    const dayName = today.toLocaleDateString('en-US', { weekday: 'short' }); // Mon, Tue...
+    // 1. Get Mexico Operative Day Range
+    const { getMexicoTodayRange } = await import('@/actions/processes');
+    const { start: todayStart, end: todayEnd, dayOfWeek: dayName } = await getMexicoTodayRange();
 
     // 1. Compliance (Today)
     // Fetch all tasks assigned to this member OR their zone (if they are zone manager)
     // AND that are active today (days array includes today OR is empty/null)
 
-    // We reuse logic similar to getOpsTasks but simplified for counting.
-    // Actually, distinct tasks count is tricky because of the "Zone Manager" logic.
-    // Let's rely on explicit assignment + Zone assignment.
-
     const assignedZones = await prisma.processZone.findMany({
         where: {
             OR: [
                 { assignedStaffId: memberId },
-                { tasks: { some: { assignedStaffId: memberId } as any } }
+                { tasks: { some: { assignedStaffId: memberId } } }
             ]
         },
         include: {
@@ -50,15 +47,15 @@ export async function getStaffPerformanceMetrics() {
                 where: {
                     OR: [
                         { days: { has: dayName } },
-                        { days: { isEmpty: true } } // If empty, assume daily
+                        { days: { isEmpty: true } }
                     ]
                 },
                 include: {
                     evidences: {
                         where: {
                             submittedAt: {
-                                gte: startOfDay(today),
-                                lt: endOfDay(today)
+                                gte: todayStart,
+                                lt: todayEnd
                             }
                         },
                         take: 1
@@ -93,15 +90,15 @@ export async function getStaffPerformanceMetrics() {
     // Based on Validation Status: APPROVED = 100, REJECTED = 0, PENDING = Ignore (or 50?)
     // Also check AI Analysis score if strictly needed, but validation is the "truth".
 
+    const today = new Date();
     const recentEvidences = await prisma.processEvidence.findMany({
         where: {
-            // task: { ... } // We could filter by task assignment but staffId on evidence is safer source of truth for "my performance"
-            staffId: userId || memberId, // Evidences are linked to the user who submitted them
+            staffId: userId || memberId,
             submittedAt: {
                 gte: subDays(today, 7)
             },
             validationStatus: {
-                in: ['APPROVED', 'REJECTED'] // Only counted if validated? Or maybe just count submitted?
+                in: ['APPROVED', 'REJECTED']
             }
         },
         orderBy: { submittedAt: 'asc' }

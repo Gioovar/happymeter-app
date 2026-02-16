@@ -1,8 +1,21 @@
 import { getTeamData } from '@/actions/team'
-import TeamView from '@/components/team/TeamView'
+import ProcessTeamView from '@/components/team/ProcessTeamView'
+import { getProcessTeamStats } from '@/actions/processes'
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 
 export default async function ProcessesTeamPage() {
-    const data = await getTeamData()
+    const { userId } = await auth()
+    if (!userId) redirect('/dashboard')
 
-    return <TeamView initialData={data} />
+    const data = await getTeamData(userId)
+    const performanceStats = await getProcessTeamStats(userId)
+
+    return (
+        <ProcessTeamView
+            teamData={data}
+            performanceStats={performanceStats}
+            branchId={userId}
+        />
+    )
 }

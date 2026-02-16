@@ -43,7 +43,7 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
         { title: 'Crear Nueva', href: '/dashboard/create', icon: PlusCircle },
         { title: 'Buzón Staff', href: '/dashboard/create', query: { mode: 'anonymous' }, icon: Shield, feature: 'growth_locked' },
         { title: 'Respuestas', href: '/dashboard/responses', icon: MessageSquare, feature: 'growth_locked' },
-        { title: 'Equipo', href: '/dashboard/team', icon: Users, feature: 'growth_locked' },
+        { title: 'Gestión de Acceso', href: '/dashboard/team', icon: Users, feature: 'growth_locked' },
         { title: 'Estadísticas', href: '/dashboard/analytics', icon: PieChart, feature: 'ai_analytics' },
         { title: 'Reportes', href: '/dashboard/reports', icon: FileText, feature: 'ai_analytics' },
         { title: 'Campañas', href: '/dashboard/campaigns', icon: Megaphone, feature: 'growth_locked' },
@@ -63,7 +63,7 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
         { title: 'Flujos Activos', href: '/dashboard/processes/flows', icon: GitMerge },
         { title: 'Tiempos de Atención', href: '/dashboard/processes/times', icon: Clock },
         { title: 'Incidencias', href: '/dashboard/processes/issues', icon: AlertCircle },
-        { title: 'Equipo', href: '/dashboard/processes/team', icon: Users },
+        { title: 'Empleados', href: '/dashboard/processes/team', icon: Users },
     ],
     reservations: [
         { title: 'Agenda', href: '/dashboard/reservations', icon: CalendarDays },

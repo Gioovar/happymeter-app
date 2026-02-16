@@ -27,11 +27,11 @@ export default function TeamView({ initialData, branchId }: { initialData: any, 
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-white flex items-center gap-3 tracking-tight">
                     <Users className="w-8 h-8 text-violet-500" />
-                    Gestión de Equipo
+                    Administración de Acceso
                 </h1>
-                <p className="text-gray-400 mt-1">Invita colaboradores y define sus permisos.</p>
+                <p className="text-gray-400 mt-1">Gestiona los permisos y roles de los integrantes de tu cuenta.</p>
             </div>
 
             <TeamManager initialData={initialData} branchId={branchId} />

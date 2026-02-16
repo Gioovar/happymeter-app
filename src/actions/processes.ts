@@ -236,37 +236,33 @@ export async function reportTaskIssue(taskId: string, reason: string) {
  * (when it becomes 12am UTC).
  */
 export async function getMexicoTodayRange() {
-    // 1. Current UTC Date
     const now = new Date();
+    const mexicoOffset = -6; // UTC-6
 
-    // 2. Adjust to Mexico Time (UTC-6)
-    const mexicoOffset = -6;
+    // Adjust to Mexico Time (UTC-6)
     const mexicoTime = new Date(now.getTime() + (mexicoOffset * 60 * 60 * 1000));
 
-    // 3. Cycle logic: If it's between 00:00 and 05:59, we are still in "yesterday operative cycle"
-    const currentHour = mexicoTime.getUTCHours();
-    const isEarlyMorning = currentHour < 6;
+    // Cycle logic: If it's between 00:00 and 05:59, we are still in "yesterday operative cycle"
+    const currentMexicoHour = mexicoTime.getUTCHours();
+    const isEarlyMorning = currentMexicoHour < 6;
 
-    // The "Anchor Date" for calculations
     const operativeDate = new Date(mexicoTime);
     if (isEarlyMorning) {
         operativeDate.setUTCDate(operativeDate.getUTCDate() - 1);
     }
 
-    // 4. Start: 06:00 AM of the anchor date (Mexico Time)
+    // Start of operative day: 06:00 AM Mexico (12:00 UTC)
     const start = new Date(operativeDate);
     start.setUTCHours(6 - mexicoOffset, 0, 0, 0);
 
-    // 5. End: 05:59 AM of the next calendar day (Mexico Time)
+    // End of operative day: 05:59:59 AM Mexico (11:59:59 UTC Next Day)
     const end = new Date(start);
     end.setUTCHours(end.getUTCHours() + 23, 59, 59, 999);
 
-    // 6. Day of week for task recurrence selection (Uses the operative date)
     const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const dayOfWeek = dayMap[operativeDate.getUTCDay()];
 
-    console.log(`[getMexicoTodayRange] Mexico Operative Day (${isEarlyMorning ? 'Night Shift' : 'Regular'}): ${start.toISOString()} to ${end.toISOString()}, Day: ${dayOfWeek}`);
-    return { start, end, dayOfWeek };
+    return { start, end, dayOfWeek, operativeDate, mexicoNow: mexicoTime };
 }
 
 export async function getOpsTasks() {
@@ -304,7 +300,7 @@ export async function getOpsTasks() {
                             where: {
                                 submittedAt: {
                                     gte: todayStart,
-                                    lt: todayEnd
+                                    lte: todayEnd
                                 }
                             },
                             take: 10,
@@ -340,7 +336,7 @@ export async function getOpsTasks() {
                             where: {
                                 submittedAt: {
                                     gte: todayStart,
-                                    lt: todayEnd
+                                    lte: todayEnd
                                 }
                             },
                             take: 10,
@@ -401,7 +397,7 @@ export async function getOpsTasks() {
                             where: {
                                 submittedAt: {
                                     gte: todayStart,
-                                    lt: todayEnd
+                                    lte: todayEnd
                                 }
                             },
                             take: 10,
@@ -472,9 +468,10 @@ export async function getDailyTaskReport(dateStr?: string, branchId?: string) {
     let startOfDay: Date;
     let endOfDay: Date;
     let dayOfWeek: string;
-    const { start: todayStart, end: todayEnd, dayOfWeek: todayDay } = await getMexicoTodayRange();
+    const { start: todayStart, end: todayEnd, dayOfWeek: todayDay, operativeDate } = await getMexicoTodayRange();
+    const todayStr = operativeDate.toISOString().split('T')[0];
 
-    if (!dateStr || dateStr === new Date().toISOString().split('T')[0]) {
+    if (!dateStr || dateStr === todayStr) {
         // Use the operative day logic for "Today"
         startOfDay = todayStart;
         endOfDay = todayEnd;
@@ -586,6 +583,7 @@ export async function getDailyTaskReport(dateStr?: string, branchId?: string) {
 
 
     // 3. Combine Data
+    const { mexicoNow } = await getMexicoTodayRange();
     const reportData = relevantTasks.map(task => {
         // Find evidence (taking the latest if multiple, though usually 1 per day per task is the norm)
         const evidence = evidences.find(e => e.taskId === task.id);
@@ -604,9 +602,10 @@ export async function getDailyTaskReport(dateStr?: string, branchId?: string) {
             if (isHistorical) {
                 status = 'MISSED';
             } else if (startOfDay.getTime() === todayStart.getTime() && task.limitTime) {
-                const now = new Date();
                 const limitVal = getAdjustedTimeValue(task.limitTime);
-                const currentVal = getAdjustedTimeValue(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+                const currentVal = getAdjustedTimeValue(
+                    `${mexicoNow.getUTCHours().toString().padStart(2, '0')}:${mexicoNow.getUTCMinutes().toString().padStart(2, '0')}`
+                );
 
                 if (currentVal > limitVal) {
                     status = 'MISSED';
@@ -980,4 +979,104 @@ export async function getDashboardProcessStats(branchId: string) {
             staffStats: []
         };
     }
+}
+
+export async function getProcessTeamStats(branchId: string) {
+    const { userId: ownerId } = await auth();
+    if (!ownerId) throw new Error("Unauthorized");
+
+    const { start: todayStart, end: todayEnd, dayOfWeek } = await getMexicoTodayRange();
+
+    // 1. Fetch all active team members for this branch
+    const members = await prisma.teamMember.findMany({
+        where: { ownerId: branchId, isActive: true },
+        include: {
+            user: {
+                select: {
+                    businessName: true,
+                    fullName: true,
+                    photoUrl: true,
+                    phone: true,
+                }
+            }
+        }
+    });
+
+    // 2. Fetch all tasks for this branch that recur today
+    const zones = await prisma.processZone.findMany({
+        where: { branchId },
+        include: {
+            tasks: {
+                where: { days: { has: dayOfWeek } }
+            }
+        }
+    });
+
+    const allTasks = zones.flatMap(z => z.tasks.map(t => ({
+        ...t,
+        zoneAssignedStaffId: z.assignedStaffId
+    })));
+
+    // 3. Fetch evidences for these tasks in the operative range
+    const taskIds = allTasks.map(t => t.id);
+    const evidences = await prisma.processEvidence.findMany({
+        where: {
+            taskId: { in: taskIds },
+            submittedAt: { gte: todayStart, lte: todayEnd }
+        }
+    });
+
+    // 4. Group data per staff member
+    const { mexicoNow } = await getMexicoTodayRange();
+    const performanceReports = members.map(member => {
+        // Tasks assigned to this specific member (directly or via zone as manager)
+        const memberTasks = allTasks.filter(t =>
+            t.assignedStaffId === member.id ||
+            (t.assignedStaffId === null && t.zoneAssignedStaffId === member.id)
+        );
+
+        const stats = {
+            total: memberTasks.length,
+            completed: 0,
+            pending: 0,
+            missed: 0,
+            complianceRate: 0
+        };
+
+        memberTasks.forEach(task => {
+            const evidence = evidences.find(e => e.taskId === task.id);
+
+            if (evidence) {
+                stats.completed++;
+            } else {
+                const limitVal = getAdjustedTimeValue(task.limitTime || "23:59");
+                const currentVal = getAdjustedTimeValue(
+                    `${mexicoNow.getUTCHours().toString().padStart(2, '0')}:${mexicoNow.getUTCMinutes().toString().padStart(2, '0')}`
+                );
+
+                if (currentVal > limitVal) {
+                    stats.missed++;
+                } else {
+                    stats.pending++;
+                }
+            }
+        });
+
+        stats.complianceRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+
+        return {
+            staffId: member.id,
+            name: member.name || member.user?.fullName || member.user?.businessName || "Operador",
+            photo: member.user?.photoUrl || null,
+            role: member.role,
+            jobTitle: member.jobTitle,
+            stats,
+            contact: {
+                phone: member.phone || member.user?.phone || null,
+                email: null as string | null,
+            }
+        };
+    });
+
+    return performanceReports;
 }

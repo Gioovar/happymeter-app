@@ -1,5 +1,6 @@
 import { getTeamData } from '@/actions/team'
-import TeamView from '@/components/team/TeamView'
+import ProcessTeamView from '@/components/team/ProcessTeamView'
+import { getProcessTeamStats } from '@/actions/processes'
 import { getDashboardContext } from '@/lib/auth-context'
 import { redirect } from 'next/navigation'
 
@@ -8,6 +9,13 @@ export default async function ProcessesBranchTeamPage({ params }: { params: { br
     if (!context) redirect('/dashboard')
 
     const data = await getTeamData(context.userId)
+    const performanceStats = await getProcessTeamStats(context.userId)
 
-    return <TeamView initialData={data} branchId={context.userId} />
+    return (
+        <ProcessTeamView
+            teamData={data}
+            performanceStats={performanceStats}
+            branchId={context.userId}
+        />
+    )
 }
