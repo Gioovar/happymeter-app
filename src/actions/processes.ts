@@ -226,19 +226,45 @@ export async function reportTaskIssue(taskId: string, reason: string) {
     // Let's check schema for ProcessZone.
 
     // For now, let's just trigger revalidate and return. The alert logic will be added to alerts.ts and imported.
-
-    revalidatePath('/ops');
     return { success: true, evidenceId: evidence.id };
+}
+
+/**
+ * Helper to get the current date range (start and end) for "Today" 
+ * strictly in Mexico City Time (UTC-6), which is the primary market.
+ * This prevents tasks and evidences from "disappearing" at 6pm Mexico Time 
+ * (when it becomes 12am UTC).
+ */
+function getMexicoTodayRange() {
+    // Current UTC Date
+    const now = new Date();
+
+    // Adjust to Mexico Time (UTC-6)
+    const mexicoOffset = -6;
+    const mexicoTime = new Date(now.getTime() + (mexicoOffset * 60 * 60 * 1000));
+
+    const start = new Date(mexicoTime);
+    start.setUTCHours(0 - mexicoOffset, 0, 0, 0);
+
+    const end = new Date(mexicoTime);
+    end.setUTCHours(23 - mexicoOffset, 59, 59, 999);
+
+    const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const dayOfWeek = dayMap[mexicoTime.getUTCDay()];
+
+    console.log(`[getMexicoTodayRange] Mexico Today: ${start.toISOString()} to ${end.toISOString()}, Day: ${dayOfWeek}`);
+    return { start, end, dayOfWeek };
 }
 
 export async function getOpsTasks() {
     const { isAuthenticated, userId, member } = await getOpsSession();
     if (!isAuthenticated) return null;
 
+    const { start: todayStart, end: todayEnd, dayOfWeek } = getMexicoTodayRange();
+
     // 1. Check for Team Memberships (Staff View)
     // Use the member returned by getOpsSession if applicable
 
-    // If we have a direct member object from session (offline or online)
     // If we have a direct member object from session (offline or online)
     if (member) {
         // Strict Context: Use ONLY the member ID from the session (which respects the cookie)
@@ -257,12 +283,15 @@ export async function getOpsTasks() {
             },
             include: {
                 tasks: {
+                    where: {
+                        days: { has: dayOfWeek }
+                    },
                     include: {
                         evidences: {
                             where: {
                                 submittedAt: {
-                                    gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                                    lt: new Date(new Date().setHours(23, 59, 59, 999))
+                                    gte: todayStart,
+                                    lt: todayEnd
                                 }
                             },
                             take: 10,
@@ -277,7 +306,8 @@ export async function getOpsTasks() {
             where: {
                 tasks: {
                     some: {
-                        assignedStaffId: { in: memberIds }
+                        assignedStaffId: { in: memberIds },
+                        days: { has: dayOfWeek }
                     }
                 },
                 // Exclude zones where I am already the manager
@@ -289,14 +319,15 @@ export async function getOpsTasks() {
             include: {
                 tasks: {
                     where: {
-                        assignedStaffId: { in: memberIds }
+                        assignedStaffId: { in: memberIds },
+                        days: { has: dayOfWeek }
                     },
                     include: {
                         evidences: {
                             where: {
                                 submittedAt: {
-                                    gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                                    lt: new Date(new Date().setHours(23, 59, 59, 999))
+                                    gte: todayStart,
+                                    lt: todayEnd
                                 }
                             },
                             take: 10,
@@ -349,12 +380,15 @@ export async function getOpsTasks() {
             },
             include: {
                 tasks: {
+                    where: {
+                        days: { has: dayOfWeek }
+                    },
                     include: {
                         evidences: {
                             where: {
                                 submittedAt: {
-                                    gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                                    lt: new Date(new Date().setHours(23, 59, 59, 999))
+                                    gte: todayStart,
+                                    lt: todayEnd
                                 }
                             },
                             take: 10,
