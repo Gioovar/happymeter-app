@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
     Search,
     MessageSquare,
@@ -49,7 +50,32 @@ export default function ManagerMessenger({
     initialStaffList: BranchGroup[],
     currentUserId: string
 }) {
-    const [selectedMember, setSelectedMember] = useState<StaffMember | null>(null)
+    const searchParams = useSearchParams()
+    const router = useRouter()
+
+    // Get selected IDs from URL
+    const selectedId = searchParams.get('mid')
+    const selectedBranchId = searchParams.get('bid')
+
+    // Derive selectedMember from list based on URL
+    const selectedMember = useMemo(() => {
+        if (!selectedId || !selectedBranchId) return null
+        const group = initialStaffList.find(g => g.branchId === selectedBranchId)
+        return group?.members.find(m => m.id === selectedId) || null
+    }, [selectedId, selectedBranchId, initialStaffList])
+
+    const setSelection = (member: StaffMember | null) => {
+        const params = new URLSearchParams(searchParams.toString())
+        if (member) {
+            params.set('mid', member.id)
+            params.set('bid', member.branchId)
+        } else {
+            params.delete('mid')
+            params.delete('bid')
+        }
+        router.push(`?${params.toString()}`, { scroll: false })
+    }
+
     const [messages, setMessages] = useState<Message[]>([])
     const [newText, setNewText] = useState('')
     const [isSending, setIsSending] = useState(false)
@@ -153,7 +179,7 @@ export default function ManagerMessenger({
                             {group.members.map((member) => (
                                 <button
                                     key={member.id}
-                                    onClick={() => setSelectedMember(member)}
+                                    onClick={() => setSelection(member)}
                                     className={cn(
                                         "w-full flex items-center gap-3 p-3 rounded-2xl transition-all group",
                                         selectedMember?.id === member.id
@@ -233,7 +259,7 @@ export default function ManagerMessenger({
                         <div className="p-6 border-b border-white/5 bg-[#0f1115]/50 backdrop-blur-xl flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <button
-                                    onClick={() => setSelectedMember(null)}
+                                    onClick={() => setSelection(null)}
                                     className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white"
                                 >
                                     <ArrowLeft className="w-6 h-6" />

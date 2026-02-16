@@ -58,6 +58,7 @@ export async function sendInternalMessage(formData: FormData) {
     })
 
     revalidatePath('/ops/chat')
+    revalidatePath('/dashboard/team/chat')
     return { success: true, message }
 }
 
