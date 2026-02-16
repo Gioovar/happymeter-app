@@ -5,6 +5,8 @@ import { Send, User as UserIcon, ShieldCheck, ChevronLeft } from 'lucide-react'
 import { getInternalMessages, sendInternalMessage, markMessagesAsRead } from '@/actions/internal-communications'
 import { cn } from '@/lib/utils'
 
+import { useRouter } from 'next/navigation'
+
 interface Message {
     id: string
     content: string
@@ -28,6 +30,7 @@ export default function ChatView({
     const [newText, setNewText] = useState('')
     const [isSending, setIsSending] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const router = useRouter()
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -81,6 +84,12 @@ export default function ChatView({
         <div className="flex flex-col h-[calc(100vh-80px)] bg-[#0a0a0a]">
             {/* Header */}
             <div className="p-6 border-b border-white/5 bg-[#0f1115]/50 backdrop-blur-xl flex items-center gap-4">
+                <button
+                    onClick={() => router.push('/ops/chat')}
+                    className="p-2 -ml-2 text-gray-400 hover:text-white transition-colors"
+                >
+                    <ChevronLeft className="w-6 h-6" />
+                </button>
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
                     <ShieldCheck className="w-6 h-6 text-white" />
                 </div>

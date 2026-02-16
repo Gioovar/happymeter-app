@@ -212,6 +212,74 @@ export async function getChainStaffList() {
 }
 
 /**
+ * Obtiene la lista de hilos de conversación activos para un miembro del personal.
+ */
+export async function getInternalChatList(memberId: string, branchId: string) {
+    if (!memberId || !branchId) return []
+
+    // 1. Get all messages where our member is sender or receiver
+    const messages = await prisma.internalMessage.findMany({
+        where: {
+            branchId,
+            OR: [
+                { senderId: memberId },
+                { receiverId: memberId }
+            ]
+        },
+        orderBy: { createdAt: 'desc' }
+    })
+
+    // 2. Group by "the other person"
+    const conversationMap = new Map<string, {
+        otherId: string,
+        lastMessage: string,
+        lastDate: Date,
+        unreadCount: number
+    }>()
+
+    messages.forEach((msg: any) => {
+        const otherId = msg.senderId === memberId ? msg.receiverId : msg.senderId
+        if (!conversationMap.has(otherId)) {
+            conversationMap.set(otherId, {
+                otherId,
+                lastMessage: msg.content,
+                lastDate: msg.createdAt,
+                unreadCount: 0
+            })
+        }
+        if (!msg.isRead && msg.receiverId === memberId) {
+            const current = conversationMap.get(otherId)!
+            current.unreadCount++
+        }
+    })
+
+    // 3. Resolve names for the "otherId" (usually Clerk User IDs of managers)
+    const otherIds = Array.from(conversationMap.keys())
+    const userSettings = await prisma.userSettings.findMany({
+        where: { userId: { in: otherIds } },
+        select: { userId: true, businessName: true, fullName: true, photoUrl: true }
+    })
+
+    // Also check if any are other team members (though in this context it's mostly manager-staff)
+    const otherTeamMembers = await prisma.teamMember.findMany({
+        where: { id: { in: otherIds } },
+        select: { id: true, name: true, jobTitle: true }
+    })
+
+    return Array.from(conversationMap.values()).map(conv => {
+        const profile = userSettings.find(u => u.userId === conv.otherId)
+        const memberProfile = otherTeamMembers.find(m => m.id === conv.otherId)
+
+        return {
+            ...conv,
+            name: profile?.businessName || profile?.fullName || memberProfile?.name || 'Sistema / Soporte',
+            avatar: profile?.photoUrl || null,
+            jobTitle: memberProfile?.jobTitle || 'Administración'
+        }
+    }).sort((a, b) => b.lastDate.getTime() - a.lastDate.getTime())
+}
+
+/**
  * Helper para crear notificaciones internas desde otros procesos.
  */
 export async function createInternalNotification(
