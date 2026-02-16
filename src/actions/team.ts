@@ -169,56 +169,8 @@ export async function inviteMember(formData: FormData) {
             // We proceed with the same logic but we'll update the record below
         }
 
-        // NEW LOGIC: Check if user already exists in Clerk
-        try {
-            const client = await clerkClient()
-            const users = await client.users.getUserList({ emailAddress: [email] });
-
-            if (users.data.length > 0) {
-                const existingUser = users.data[0];
-
-                // Check if already in the team
-                const existingMember = await prisma.teamMember.findUnique({
-                    where: {
-                        userId_ownerId: {
-                            userId: existingUser.id,
-                            ownerId: targetOwnerId
-                        }
-                    }
-                });
-
-                if (existingMember) {
-                    throw new Error('Este usuario ya es miembro del equipo.');
-                }
-
-                // Direct Add
-                await prisma.teamMember.create({
-                    data: {
-                        userId: existingUser.id,
-                        ownerId: targetOwnerId,
-                        role: role,
-                        // Store extra info if provided, even if they have a user account (as overrides or specific to this team)
-                        name: name,
-                        jobTitle: jobTitle,
-                        phone: phone
-                    }
-                });
-
-                // Send "Added" Email
-                const inviterName = userSettings?.businessName || 'El Administrador'
-                const teamName = userSettings?.businessName || 'HappyMeter Team'
-
-                await sendTeamAddedEmail(email, teamName, role, inviterName);
-
-                revalidatePath('/dashboard/team');
-                return { success: true, message: 'Usuario agregado directamente (ya tenía cuenta).' };
-            }
-        } catch (error: any) {
-            console.error('Error checking existing user:', error);
-            if (error.message === 'Este usuario ya es miembro del equipo.') {
-                throw error;
-            }
-        }
+        // REMOVED: Direct add logic for existing Clerk users to satisfy the user request 
+        // of having a "from scratch" process for every invitation, ensuring emails are always sent.
 
         // Generate token
         const isOperator = role === 'OPERATOR'
