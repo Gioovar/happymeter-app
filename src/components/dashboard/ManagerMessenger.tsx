@@ -92,12 +92,12 @@ export default function ManagerMessenger({
         try {
             const data = await getInternalMessages(
                 selectedMember.branchId,
-                selectedMember.clerkUserId,
+                selectedMember.id, // Use TeamMember ID
                 currentUserId
             )
             setMessages(data)
             // Mark as read
-            await markMessagesAsRead(selectedMember.branchId, selectedMember.clerkUserId, currentUserId)
+            await markMessagesAsRead(selectedMember.branchId, selectedMember.id, currentUserId)
         } catch (error) {
             console.error('Error fetching messages:', error)
         }
@@ -126,7 +126,7 @@ export default function ManagerMessenger({
         try {
             const formData = new FormData()
             formData.append('content', newText)
-            formData.append('receiverId', selectedMember.clerkUserId)
+            formData.append('receiverId', selectedMember.id) // Use TeamMember ID
             formData.append('branchId', selectedMember.branchId)
 
             await sendInternalMessage(formData)
