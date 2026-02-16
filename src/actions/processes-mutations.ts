@@ -286,9 +286,27 @@ export async function assignTask(taskId: string, staffId: string | null) {
 
     if (!task) throw new Error("Task not found");
 
-    // Check if user owns the zone
-    if (task.zone.userId !== userId) {
-        // TODO: Add Manager check if needed
+    // Check if user owns the zone directly
+    let isAuthorized = task.zone.userId === userId;
+
+    // If not the direct owner, check if user is the chain owner
+    if (!isAuthorized) {
+        const branchInfo = await prisma.chainBranch.findFirst({
+            where: { branchId: task.zone.userId },
+            select: {
+                chain: {
+                    select: { ownerId: true }
+                }
+            }
+        });
+
+        // User is authorized if they are the chain owner
+        if (branchInfo && branchInfo.chain.ownerId === userId) {
+            isAuthorized = true;
+        }
+    }
+
+    if (!isAuthorized) {
         throw new Error("Unauthorized");
     }
 
