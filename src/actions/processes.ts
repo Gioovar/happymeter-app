@@ -235,7 +235,7 @@ export async function reportTaskIssue(taskId: string, reason: string) {
  * This prevents tasks and evidences from "disappearing" at 6pm Mexico Time 
  * (when it becomes 12am UTC).
  */
-function getMexicoTodayRange() {
+export function getMexicoTodayRange() {
     // 1. Current UTC Date
     const now = new Date();
 
@@ -465,30 +465,31 @@ export async function getProcessAnalytics() {
     };
 }
 
-export async function getDailyTaskReport(dateStr: string, branchId?: string) {
+export async function getDailyTaskReport(dateStr?: string, branchId?: string) {
     const { userId } = await auth();
     if (!userId) return null;
 
-    // Parse Date (YYYY-MM-DD local logic?)
-    // We assume the dateStr is "YYYY-MM-DD" from the client.
-    // We want to query the DB for evidences submitted on this "Calendar Day".
-    // Timezone handling is tricky. We'll approximate using the Server's timezone or assume UTC for storage.
-    // Ideally, we search from T00:00:00 to T23:59:59 of that date string.
+    let startOfDay: Date;
+    let endOfDay: Date;
+    let dayOfWeek: string;
+    const { start: todayStart, end: todayEnd, dayOfWeek: todayDay } = getMexicoTodayRange();
 
-    // Create Start/End Date objects
-    // Append T00:00:00 and T23:59:59 to query
-    const startOfDay = new Date(`${dateStr}T00:00:00`);
-    const endOfDay = new Date(`${dateStr}T23:59:59.999`);
+    if (!dateStr || dateStr === new Date().toISOString().split('T')[0]) {
+        // Use the operative day logic for "Today"
+        startOfDay = todayStart;
+        endOfDay = todayEnd;
+        dayOfWeek = todayDay;
+        console.log(`[getDailyTaskReport] Using Operative Day logic. Range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}, Day: ${dayOfWeek}`);
+    } else {
+        // Calendar Day logic for historical reports
+        startOfDay = new Date(`${dateStr}T00:00:00`);
+        endOfDay = new Date(`${dateStr}T23:59:59.999`);
 
-    // Determine Day of Week string (Mon, Tue...) for Task Filtering
-    // Note: ensure we get the day of week for the *intended* date.
-    // new Date("2023-10-25") might be UTC. 
-    // If we use the exact string year-month-day, we can construct a reliable day index.
-    const dateObj = new Date(dateStr + "T12:00:00"); // Noon to avoid timezone shift edge cases
-    const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const dayOfWeek = dayMap[dateObj.getDay()];
-
-    console.log(`[getDailyTaskReport] Date: ${dateStr}, Day: ${dayOfWeek}, BranchId: ${branchId || 'ALL'}`);
+        const dateObj = new Date(dateStr + "T12:00:00");
+        const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        dayOfWeek = dayMap[dateObj.getDay()];
+        console.log(`[getDailyTaskReport] Using Calendar Day logic (History). Date: ${dateStr}, Day: ${dayOfWeek}`);
+    }
 
     // 1. Fetch All Relevant Tasks (User's Zones filtered by branchId)
     // We fetch ALL tasks for the user in the specified branch
@@ -582,6 +583,8 @@ export async function getDailyTaskReport(dateStr: string, branchId?: string) {
         photo: m.user?.photoUrl || null
     }));
 
+
+
     // 3. Combine Data
     const reportData = relevantTasks.map(task => {
         // Find evidence (taking the latest if multiple, though usually 1 per day per task is the norm)
@@ -592,27 +595,20 @@ export async function getDailyTaskReport(dateStr: string, branchId?: string) {
         if (evidence) {
             status = 'COMPLETED';
         } else {
-            const today = new Date();
-            // Get local date string for comparison 'YYYY-MM-DD' via locale time if needed, 
-            // but for simplicity assuming server/client consistency or UTC handling.
-            // Using a simpler string comparison for date part.
-            // Note: dateStr comes from client which is selected date.
+            // Logic for MISSED:
+            // 1. If we are looking at a past operative day
+            // 2. If it is "today" but the adjusted limit time has passed
 
-            const todayStr = today.toISOString().split('T')[0];
+            const isHistorical = startOfDay.getTime() < todayStart.getTime();
 
-            if (dateStr < todayStr) {
+            if (isHistorical) {
                 status = 'MISSED';
-            } else if (dateStr === todayStr && task.limitTime) {
-                // If it's today, check time limit
-                // limitTime format is "HH:MM" (24h)
-                const nowHours = today.getHours();
-                const nowMinutes = today.getMinutes();
-                const currentTime = nowHours * 60 + nowMinutes;
+            } else if (startOfDay.getTime() === todayStart.getTime() && task.limitTime) {
+                const now = new Date();
+                const limitVal = getAdjustedTimeValue(task.limitTime);
+                const currentVal = getAdjustedTimeValue(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
 
-                const [limitHours, limitMinutes] = task.limitTime.split(':').map(Number);
-                const limitTimeMinutes = limitHours * 60 + limitMinutes;
-
-                if (currentTime > limitTimeMinutes) {
+                if (currentVal > limitVal) {
                     status = 'MISSED';
                 }
             }
