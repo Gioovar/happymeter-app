@@ -327,7 +327,7 @@ export async function sendSupportAlert(userEmail: string, userName: string, mess
         // We can create a notification for the USER confirming we got it.
         // And potentially email the ADMIN (simulated).
 
-        console.log(`[EMAIL MOCK] Enviando alerta a soporte@happymeter.com...`)
+        console.log(`[EMAIL MOCK] Enviando alerta a soporte@happymeters.com...`)
         console.log(`[EMAIL CONTENT] ${fullMessage}`)
 
         return true

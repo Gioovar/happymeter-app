@@ -229,7 +229,6 @@ export async function inviteMember(formData: FormData) {
             token = Math.floor(100000 + Math.random() * 900000).toString()
 
             // Simple collision check (optional but robust)
-            // In high volume this might need a loop, but for now a single check is likely consistent enough for low volume
             const existing = await prisma.teamInvitation.findUnique({ where: { token } })
             if (existing) {
                 token = Math.floor(100000 + Math.random() * 900000).toString()
@@ -237,6 +236,13 @@ export async function inviteMember(formData: FormData) {
         } else {
             // Standard long token for others
             token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+        }
+
+        // Clean up any existing invitation for this email + inviter to avoid unique constraint error
+        if (existingInvite) {
+            await prisma.teamInvitation.delete({
+                where: { id: existingInvite.id }
+            })
         }
 
         await prisma.teamInvitation.create({
