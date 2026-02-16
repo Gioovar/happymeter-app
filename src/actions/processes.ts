@@ -327,9 +327,24 @@ export async function getOpsTasks() {
     if (userId) {
         console.log(`[getOpsTasks] User ${userId} is Owner (or has no memberships). Showing all owned zones.`);
 
+        // Find all branches owned by this user
+        const ownedBranches = await prisma.chainBranch.findMany({
+            where: {
+                chain: {
+                    ownerId: userId
+                }
+            },
+            select: {
+                branchId: true
+            }
+        });
+
+        const branchIds = ownedBranches.map(b => b.branchId);
+        const ownerIds = [userId, ...branchIds];
+
         const zones = await prisma.processZone.findMany({
             where: {
-                userId: userId
+                userId: { in: ownerIds }
             },
             include: {
                 tasks: {
