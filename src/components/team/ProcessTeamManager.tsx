@@ -43,7 +43,10 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
     }
 
     const handleCancel = async (id: string) => {
-        if (!confirm('¿Eliminar esta invitación permanentemente?')) return
+        // Use a small delay or ensure we are outside of any conflicting re-renders
+        const ok = window.confirm('¿Eliminar esta invitación permanentemente?')
+        if (!ok) return
+
         setLoadingIds(prev => [...prev, id])
         try {
             await cancelInvitation(id)
@@ -205,7 +208,11 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                                     variant="ghost"
                                                     size="icon"
                                                     disabled={isLoading}
-                                                    onClick={(e) => { e.stopPropagation(); handleResend(invite.id); }}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleResend(invite.id);
+                                                    }}
                                                     className="h-10 w-10 text-gray-500 hover:text-violet-400 hover:bg-violet-500/10 rounded-xl transition-all"
                                                     title="Reenviar invitación"
                                                 >
@@ -219,7 +226,11 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                                     variant="ghost"
                                                     size="icon"
                                                     disabled={isLoading}
-                                                    onClick={(e) => { e.stopPropagation(); handleCancel(invite.id); }}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleCancel(invite.id);
+                                                    }}
                                                     className="h-10 w-10 text-gray-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
                                                     title="Eliminar invitación permanentemente"
                                                 >

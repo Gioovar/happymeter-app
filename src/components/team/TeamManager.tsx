@@ -40,7 +40,9 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
     }
 
     async function handleCancel(id: string) {
-        if (!confirm('¿Eliminar esta invitación permanentemente?')) return
+        const ok = window.confirm('¿Eliminar esta invitación permanentemente?')
+        if (!ok) return
+
         setLoadingIds(prev => [...prev, id])
         try {
             await cancelInvitation(id)
@@ -158,7 +160,11 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
                                                 variant="ghost"
                                                 size="icon"
                                                 disabled={isLoading}
-                                                onClick={() => handleResend(invite.id)}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleResend(invite.id);
+                                                }}
                                                 className="text-gray-500 hover:text-violet-400"
                                                 title="Reenviar invitación"
                                             >
@@ -172,7 +178,11 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
                                                 variant="ghost"
                                                 size="icon"
                                                 disabled={isLoading}
-                                                onClick={() => handleCancel(invite.id)}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleCancel(invite.id);
+                                                }}
                                                 className="text-gray-500 hover:text-red-400"
                                                 title="Eliminar invitación"
                                             >
