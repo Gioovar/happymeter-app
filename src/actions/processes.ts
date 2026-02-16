@@ -236,23 +236,36 @@ export async function reportTaskIssue(taskId: string, reason: string) {
  * (when it becomes 12am UTC).
  */
 function getMexicoTodayRange() {
-    // Current UTC Date
+    // 1. Current UTC Date
     const now = new Date();
 
-    // Adjust to Mexico Time (UTC-6)
+    // 2. Adjust to Mexico Time (UTC-6)
     const mexicoOffset = -6;
     const mexicoTime = new Date(now.getTime() + (mexicoOffset * 60 * 60 * 1000));
 
-    const start = new Date(mexicoTime);
-    start.setUTCHours(0 - mexicoOffset, 0, 0, 0);
+    // 3. Cycle logic: If it's between 00:00 and 05:59, we are still in "yesterday operative cycle"
+    const currentHour = mexicoTime.getUTCHours();
+    const isEarlyMorning = currentHour < 6;
 
-    const end = new Date(mexicoTime);
-    end.setUTCHours(23 - mexicoOffset, 59, 59, 999);
+    // The "Anchor Date" for calculations
+    const operativeDate = new Date(mexicoTime);
+    if (isEarlyMorning) {
+        operativeDate.setUTCDate(operativeDate.getUTCDate() - 1);
+    }
 
+    // 4. Start: 06:00 AM of the anchor date (Mexico Time)
+    const start = new Date(operativeDate);
+    start.setUTCHours(6 - mexicoOffset, 0, 0, 0);
+
+    // 5. End: 05:59 AM of the next calendar day (Mexico Time)
+    const end = new Date(start);
+    end.setUTCHours(end.getUTCHours() + 23, 59, 59, 999);
+
+    // 6. Day of week for task recurrence selection (Uses the operative date)
     const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const dayOfWeek = dayMap[mexicoTime.getUTCDay()];
+    const dayOfWeek = dayMap[operativeDate.getUTCDay()];
 
-    console.log(`[getMexicoTodayRange] Mexico Today: ${start.toISOString()} to ${end.toISOString()}, Day: ${dayOfWeek}`);
+    console.log(`[getMexicoTodayRange] Mexico Operative Day (${isEarlyMorning ? 'Night Shift' : 'Regular'}): ${start.toISOString()} to ${end.toISOString()}, Day: ${dayOfWeek}`);
     return { start, end, dayOfWeek };
 }
 
