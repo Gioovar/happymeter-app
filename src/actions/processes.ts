@@ -235,7 +235,7 @@ export async function reportTaskIssue(taskId: string, reason: string) {
  * This prevents tasks and evidences from "disappearing" at 6pm Mexico Time 
  * (when it becomes 12am UTC).
  */
-export function getMexicoTodayRange() {
+export async function getMexicoTodayRange() {
     // 1. Current UTC Date
     const now = new Date();
 
@@ -273,7 +273,7 @@ export async function getOpsTasks() {
     const { isAuthenticated, userId, member } = await getOpsSession();
     if (!isAuthenticated) return null;
 
-    const { start: todayStart, end: todayEnd, dayOfWeek } = getMexicoTodayRange();
+    const { start: todayStart, end: todayEnd, dayOfWeek } = await getMexicoTodayRange();
 
     // 1. Check for Team Memberships (Staff View)
     // Use the member returned by getOpsSession if applicable
@@ -472,7 +472,7 @@ export async function getDailyTaskReport(dateStr?: string, branchId?: string) {
     let startOfDay: Date;
     let endOfDay: Date;
     let dayOfWeek: string;
-    const { start: todayStart, end: todayEnd, dayOfWeek: todayDay } = getMexicoTodayRange();
+    const { start: todayStart, end: todayEnd, dayOfWeek: todayDay } = await getMexicoTodayRange();
 
     if (!dateStr || dateStr === new Date().toISOString().split('T')[0]) {
         // Use the operative day logic for "Today"
