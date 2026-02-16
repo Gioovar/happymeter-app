@@ -339,11 +339,109 @@ export async function cancelInvitation(inviteId: string) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
-    await prisma.teamInvitation.deleteMany({
-        where: { id: inviteId, inviterId: userId }
+    // Find the invitation first to check permissions
+    const invite = await prisma.teamInvitation.findUnique({
+        where: { id: inviteId }
     })
 
+    if (!invite) throw new Error('Invitación no encontrada')
+
+    // Verify ownership or chain access
+    const isOwner = invite.inviterId === userId
+    let isChainOwner = false
+
+    if (!isOwner) {
+        const branch = await prisma.chainBranch.findFirst({
+            where: {
+                branchId: invite.inviterId,
+                chain: { ownerId: userId }
+            }
+        })
+        if (branch) isChainOwner = true
+    }
+
+    if (!isOwner && !isChainOwner) {
+        throw new Error('No tienes permiso para cancelar esta invitación')
+    }
+
+    await prisma.teamInvitation.delete({
+        where: { id: inviteId }
+    })
+
+    revalidatePath('/dashboard/[branchSlug]/processes/team', 'page')
     revalidatePath('/dashboard/team')
+}
+
+export async function resendInvitation(inviteId: string) {
+    const { userId } = await auth()
+    if (!userId) throw new Error('Unauthorized')
+
+    const invite = await prisma.teamInvitation.findUnique({
+        where: { id: inviteId }
+    })
+
+    if (!invite) throw new Error('Invitación no encontrada')
+
+    // Verify ownership or chain access
+    const isOwner = invite.inviterId === userId
+    let isChainOwner = false
+
+    if (!isOwner) {
+        const branch = await prisma.chainBranch.findFirst({
+            where: {
+                branchId: invite.inviterId,
+                chain: { ownerId: userId }
+            }
+        })
+        if (branch) isChainOwner = true
+    }
+
+    if (!isOwner && !isChainOwner) {
+        throw new Error('No tienes permiso para reenviar esta invitación')
+    }
+
+    const userSettings = await prisma.userSettings.findUnique({
+        where: { userId: invite.inviterId }
+    })
+
+    // Update token to refresh it
+    const isOperator = invite.role === 'OPERATOR'
+    let newToken: string
+    if (isOperator) {
+        newToken = Math.floor(100000 + Math.random() * 900000).toString()
+        const existing = await prisma.teamInvitation.findUnique({ where: { token: newToken } })
+        if (existing) {
+            newToken = Math.floor(100000 + Math.random() * 900000).toString()
+        }
+    } else {
+        newToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    }
+
+    await prisma.teamInvitation.update({
+        where: { id: inviteId },
+        data: { token: newToken, updatedAt: new Date() }
+    })
+
+    const inviteLink = isOperator
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/ops/join?token=${newToken}`
+        : `${process.env.NEXT_PUBLIC_APP_URL}/join-team?token=${newToken}`
+
+    const inviterName = userSettings?.businessName || 'El Administrador'
+    const teamName = userSettings?.businessName || 'HappyMeter Team'
+
+    await sendInvitationEmail(
+        invite.email,
+        inviterName,
+        teamName,
+        invite.role,
+        inviteLink,
+        isOperator,
+        newToken,
+        invite.name || undefined,
+        invite.jobTitle || undefined
+    )
+
+    return { success: true }
 }
 
 export async function acceptInvitation(token: string) {

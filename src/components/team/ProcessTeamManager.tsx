@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { inviteMember, removeMember, cancelInvitation } from '@/actions/team'
+import { inviteMember, removeMember, cancelInvitation, resendInvitation } from '@/actions/team'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,7 +13,9 @@ import {
     CheckCircle2,
     ChevronRight,
     Zap,
-    Users
+    Users,
+    RefreshCcw,
+    Loader2
 } from 'lucide-react'
 import InviteMemberModal from './InviteMemberModal'
 import StaffDetailModal from './StaffDetailModal'
@@ -28,6 +30,7 @@ interface ProcessTeamManagerProps {
 export default function ProcessTeamManager({ initialData, branchId, performanceStats }: ProcessTeamManagerProps) {
     const [isInviteOpen, setIsInviteOpen] = useState(false)
     const [selectedStaff, setSelectedStaff] = useState<any>(null)
+    const [loadingIds, setLoadingIds] = useState<string[]>([])
 
     const handleRemove = async (id: string) => {
         if (!confirm('¿Eliminar miembro?')) return
@@ -40,12 +43,27 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
     }
 
     const handleCancel = async (id: string) => {
-        if (!confirm('¿Cancelar invitación?')) return
+        if (!confirm('¿Eliminar esta invitación permanentemente?')) return
+        setLoadingIds(prev => [...prev, id])
         try {
             await cancelInvitation(id)
-            toast.success('Invitación cancelada')
+            toast.success('Invitación eliminada')
         } catch (e) {
-            toast.error('Error')
+            toast.error('Error al eliminar invitación')
+        } finally {
+            setLoadingIds(prev => prev.filter(item => item !== id))
+        }
+    }
+
+    const handleResend = async (id: string) => {
+        setLoadingIds(prev => [...prev, id])
+        try {
+            await resendInvitation(id)
+            toast.success('Invitación reenviada correctamente')
+        } catch (e) {
+            toast.error('Error al reenviar invitación')
+        } finally {
+            setLoadingIds(prev => prev.filter(item => item !== id))
         }
     }
 
@@ -155,43 +173,67 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                             ))}
 
                             {/* Pending Invitations */}
-                            {initialData.invitations.map((invite: any) => (
-                                <tr key={invite.id} className="bg-gray-900/20 opacity-60">
-                                    <td className="p-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-gray-800 flex items-center justify-center text-gray-500 border border-white/5">
-                                                <Mail className="w-5 h-5" />
+                            {initialData.invitations.map((invite: any) => {
+                                const isLoading = loadingIds.includes(invite.id);
+                                return (
+                                    <tr key={invite.id} className="bg-gray-900/20 opacity-90 border-b border-white/5 last:border-0">
+                                        <td className="p-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-gray-800 flex items-center justify-center text-gray-500 border border-white/5">
+                                                    <Mail className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-300 truncate max-w-[150px]">{invite.email}</p>
+                                                    <p className="text-[9px] text-amber-500/70 font-black uppercase tracking-[0.1em] mt-1 italic">Pendiente de Aceptación</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="font-bold text-gray-400 italic truncate max-w-[150px]">{invite.email}</p>
-                                                <p className="text-[9px] text-amber-500/70 font-black uppercase tracking-[0.1em] mt-1">Pendiente de Aceptación</p>
+                                        </td>
+                                        <td className="p-6">
+                                            <Badge variant="outline" className="text-gray-500 border-gray-800 px-3 py-1 uppercase text-[10px] rounded-xl font-bold">
+                                                {invite.role}
+                                            </Badge>
+                                        </td>
+                                        <td className="p-6">
+                                            <div className="flex items-center gap-3 text-amber-500/30 italic text-xs font-medium">
+                                                <div className="w-2 h-2 bg-amber-500/20 rounded-full animate-pulse shrink-0" />
+                                                <span className="truncate">Sin datos de rendimiento</span>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-6">
-                                        <Badge variant="outline" className="text-gray-600 border-gray-800 px-3 py-1 uppercase text-[10px] rounded-xl">
-                                            {invite.role}
-                                        </Badge>
-                                    </td>
-                                    <td className="p-6">
-                                        <div className="flex items-center gap-3 text-amber-500/30 italic text-xs font-medium">
-                                            <div className="w-2 h-2 bg-amber-500/20 rounded-full animate-pulse" />
-                                            Sin datos de rendimiento
-                                        </div>
-                                    </td>
-                                    <td className="p-6 text-right">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={(e) => { e.stopPropagation(); handleCancel(invite.id); }}
-                                            className="h-10 w-10 text-gray-700 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
-                                            title="Cancelar invitación"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
+                                        </td>
+                                        <td className="p-6">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    disabled={isLoading}
+                                                    onClick={(e) => { e.stopPropagation(); handleResend(invite.id); }}
+                                                    className="h-10 w-10 text-gray-500 hover:text-violet-400 hover:bg-violet-500/10 rounded-xl transition-all"
+                                                    title="Reenviar invitación"
+                                                >
+                                                    {isLoading ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        <RefreshCcw className="w-4 h-4" />
+                                                    )}
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    disabled={isLoading}
+                                                    onClick={(e) => { e.stopPropagation(); handleCancel(invite.id); }}
+                                                    className="h-10 w-10 text-gray-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                                                    title="Eliminar invitación permanentemente"
+                                                >
+                                                    {isLoading ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="w-4 h-4" />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
 
                             {(performanceStats.length === 0 && initialData.invitations.length === 0) && (
                                 <tr>

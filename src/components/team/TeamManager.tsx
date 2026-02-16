@@ -1,16 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { inviteMember, removeMember, cancelInvitation } from '@/actions/team'
+import { inviteMember, removeMember, cancelInvitation, resendInvitation } from '@/actions/team'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Mail, UserPlus, Shield } from 'lucide-react'
+import { Trash2, Mail, UserPlus, Shield, RefreshCcw, Loader2 } from 'lucide-react'
 import InviteMemberModal from './InviteMemberModal'
 
 export default function TeamManager({ initialData, branchId }: { initialData: any, branchId?: string }) {
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
+    const [loadingIds, setLoadingIds] = useState<string[]>([])
 
     async function handleInvite(formData: FormData) {
         setLoading(true)
@@ -39,12 +40,27 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
     }
 
     async function handleCancel(id: string) {
-        if (!confirm('¿Cancelar invitación?')) return
+        if (!confirm('¿Eliminar esta invitación permanentemente?')) return
+        setLoadingIds(prev => [...prev, id])
         try {
             await cancelInvitation(id)
-            toast.success('Invitación cancelada')
+            toast.success('Invitación eliminada')
         } catch (e) {
-            toast.error('Error')
+            toast.error('Error al eliminar invitación')
+        } finally {
+            setLoadingIds(prev => prev.filter(item => item !== id))
+        }
+    }
+
+    async function handleResend(id: string) {
+        setLoadingIds(prev => [...prev, id])
+        try {
+            await resendInvitation(id)
+            toast.success('Invitación reenviada correctamente')
+        } catch (e) {
+            toast.error('Error al reenviar invitación')
+        } finally {
+            setLoadingIds(prev => prev.filter(item => item !== id))
         }
     }
 
@@ -113,34 +129,64 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
                         ))}
 
                         {/* Pending Invitations */}
-                        {initialData.invitations.map((invite: any) => (
-                            <tr key={invite.id} className="bg-white/[0.02]">
-                                <td className="p-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center text-gray-400">
-                                            <Mail className="w-4 h-4" />
+                        {initialData.invitations.map((invite: any) => {
+                            const isLoading = loadingIds.includes(invite.id);
+                            return (
+                                <tr key={invite.id} className="bg-white/[0.02]">
+                                    <td className="p-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center text-gray-400">
+                                                <Mail className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-300">{invite.email}</p>
+                                                <p className="text-xs text-gray-500 italic">Invitación enviada</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-gray-300">{invite.email}</p>
-                                            <p className="text-xs text-gray-500">Invitación enviada</p>
+                                    </td>
+                                    <td className="p-4">
+                                        <Badge variant="outline" className="text-gray-400 border-gray-800">
+                                            {invite.role}
+                                        </Badge>
+                                    </td>
+                                    <td className="p-4">
+                                        <Badge className="bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20">Pendiente</Badge>
+                                    </td>
+                                    <td className="p-4 text-right">
+                                        <div className="flex items-center justify-end gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                disabled={isLoading}
+                                                onClick={() => handleResend(invite.id)}
+                                                className="text-gray-500 hover:text-violet-400"
+                                                title="Reenviar invitación"
+                                            >
+                                                {isLoading ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <RefreshCcw className="w-4 h-4" />
+                                                )}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                disabled={isLoading}
+                                                onClick={() => handleCancel(invite.id)}
+                                                className="text-gray-500 hover:text-red-400"
+                                                title="Eliminar invitación"
+                                            >
+                                                {isLoading ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="w-4 h-4" />
+                                                )}
+                                            </Button>
                                         </div>
-                                    </div>
-                                </td>
-                                <td className="p-4">
-                                    <Badge variant="outline" className="text-gray-400 border-gray-800">
-                                        {invite.role}
-                                    </Badge>
-                                </td>
-                                <td className="p-4">
-                                    <Badge className="bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20">Pendiente</Badge>
-                                </td>
-                                <td className="p-4 text-right">
-                                    <Button variant="ghost" size="icon" onClick={() => handleCancel(invite.id)} className="text-gray-500 hover:text-white">
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
+                                    </td>
+                                </tr>
+                            );
+                        })}
 
                         {initialData.members.length === 0 && initialData.invitations.length === 0 && (
                             <tr>
