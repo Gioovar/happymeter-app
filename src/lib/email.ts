@@ -115,7 +115,7 @@ export async function sendInvitationEmail(
     if (!to) return
 
     try {
-        await resend.emails.send({
+        const response = await resend.emails.send({
             from: SENDER,
             to: [to],
             subject: isOperator
@@ -132,7 +132,7 @@ export async function sendInvitationEmail(
                 jobTitle
             }),
         })
-        console.log(`📧 Invitation sent to ${to}`)
+        console.log(`📧 Invitation sent to ${to}. ID: ${response.data?.id}`)
     } catch (error) {
         console.error('Failed to send invitation email', error)
         throw error

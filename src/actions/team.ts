@@ -90,7 +90,7 @@ export async function inviteMember(formData: FormData) {
         const { userId } = await auth()
         if (!userId) throw new Error('Unauthorized')
 
-        const email = formData.get('email') as string
+        const email = (formData.get('email') as string)?.trim().toLowerCase()
         const role = formData.get('role') as 'ADMIN' | 'EDITOR' | 'OBSERVER' | 'OPERATOR'
         const name = formData.get('name') as string | undefined
         const jobTitle = formData.get('jobTitle') as string | undefined
@@ -164,7 +164,9 @@ export async function inviteMember(formData: FormData) {
         })
 
         if (existingInvite) {
-            throw new Error('Ya existe una invitación pendiente para este correo.')
+            // Re-send invitation if it exists, instead of failing
+            console.log(`Re-sending invitation to ${email}`)
+            // We proceed with the same logic but we'll update the record below
         }
 
         // NEW LOGIC: Check if user already exists in Clerk
