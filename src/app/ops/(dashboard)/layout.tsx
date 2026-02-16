@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { ShieldCheck, Home, History as HistoryIcon } from "lucide-react" // Removed LogOut
+import { ShieldCheck, Home, History as HistoryIcon, ShieldX } from "lucide-react" // Removed LogOut
 import Link from "next/link"
 import OpsHeader from "./OpsHeader"
 import { getOpsSession } from "@/lib/ops-auth"
@@ -19,14 +19,23 @@ export default async function OpsLayout({
     if (member) {
         if (!member.isActive) {
             return (
-                <div className="min-h-screen flex items-center justify-center bg-black text-white p-6 text-center">
-                    <div>
-                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/50">
-                            <ShieldCheck className="w-8 h-8 text-red-500" />
+                <div className="min-h-screen flex items-center justify-center bg-[#050505] text-white p-8 text-center relative overflow-hidden">
+                    {/* Background effects */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rose-500/10 blur-[120px] rounded-full" />
+
+                    <div className="relative z-10 max-w-md w-full bg-white/5 border border-white/10 backdrop-blur-2xl p-10 rounded-[40px] shadow-2xl">
+                        <div className="w-20 h-20 bg-rose-500/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-rose-500/30 rotate-12 hover:rotate-0 transition-transform duration-500">
+                            < ShieldX className="w-10 h-10 text-rose-500" />
                         </div>
-                        <h1 className="text-xl font-bold mb-2">Acceso Desactivado</h1>
-                        <p className="text-gray-400">Tu cuenta de operador ha sido desactivada por el administrador.</p>
-                        <Link href="/" className="mt-8 inline-block text-indigo-400 hover:text-white transition-colors">
+                        <h1 className="text-3xl font-black mb-4 tracking-tight">Acceso Bloqueado</h1>
+                        <p className="text-gray-400 text-sm leading-relaxed mb-8">
+                            Oops! Tu acceso a esta sucursal ha sido desactivado temporalmente.
+                            <span className="block mt-2 font-bold text-white">Por favor, comunícate con tu supervisor para más información.</span>
+                        </p>
+                        <Link
+                            href="/"
+                            className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl block font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        >
                             Volver al inicio
                         </Link>
                     </div>

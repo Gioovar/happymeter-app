@@ -12,6 +12,7 @@ export default async function TaskCapturePage({ params }: { params: { taskId: st
         select: {
             id: true,
             title: true,
+            description: true,
             evidenceType: true
         }
     });

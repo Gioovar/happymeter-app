@@ -98,7 +98,14 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="font-bold text-white group-hover:text-violet-400 transition-colors truncate">{staff.name}</p>
-                                                <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[8px] h-4 mt-1">OPERADOR ACTIVO</Badge>
+                                                <Badge className={cn(
+                                                    "border-none text-[8px] h-4 mt-1 font-black leading-none",
+                                                    staff.isActive
+                                                        ? "bg-emerald-500/10 text-emerald-500"
+                                                        : "bg-rose-500/10 text-rose-500"
+                                                )}>
+                                                    {staff.isActive ? 'OPERADOR ACTIVO' : 'ACCESO BLOQUEADO'}
+                                                </Badge>
                                             </div>
                                         </div>
                                     </td>

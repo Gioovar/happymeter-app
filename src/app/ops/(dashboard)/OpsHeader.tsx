@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ShieldCheck, Menu, X, CheckSquare, ScanLine, LogOut, Home, User, ChevronDown, Building2, Store, ChevronRight } from 'lucide-react'
+import { ShieldCheck, Menu, X, CheckSquare, ScanLine, LogOut, Home, User, ChevronDown, Building2, Store, ChevronRight, MessageSquare } from 'lucide-react'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
 import { cn } from '@/lib/utils'
+import NotificationBell from './NotificationBell'
 
 interface Membership {
     id: string
@@ -83,12 +84,21 @@ export default function OpsHeader() {
                     </div>
                 </button>
 
-                <button
-                    onClick={() => setIsOpen(true)}
-                    className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-slate-200 transition-all duration-300"
-                >
-                    <Menu className="w-6 h-6" />
-                </button>
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/ops/chat"
+                        className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-slate-200 transition-all duration-300 relative group"
+                    >
+                        <MessageSquare className="w-5 h-5 transition-transform group-hover:scale-110" />
+                    </Link>
+                    <NotificationBell memberId={currentMembershipId || ''} />
+                    <button
+                        onClick={() => setIsOpen(true)}
+                        className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-slate-200 transition-all duration-300"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
+                </div>
             </header>
 
             {/* Branch Switcher Modal */}
@@ -203,6 +213,18 @@ export default function OpsHeader() {
                             >
                                 <CheckSquare className="w-5 h-5" />
                                 Mis Tareas
+                            </Link>
+
+                            <Link
+                                href="/ops/chat"
+                                onClick={() => setIsOpen(false)}
+                                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname.startsWith('/ops/chat')
+                                    ? 'bg-indigo-500/10 text-indigo-400 font-medium'
+                                    : 'text-slate-300 hover:bg-white/5'
+                                    }`}
+                            >
+                                <MessageSquare className="w-5 h-5" />
+                                Chat Interno
                             </Link>
 
                             {/* Assuming scanner page exists based on folder structure */}

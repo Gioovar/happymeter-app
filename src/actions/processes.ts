@@ -1066,6 +1066,8 @@ export async function getProcessTeamStats(branchId: string) {
 
         return {
             staffId: member.id,
+            branchId: member.ownerId,
+            isActive: member.isActive,
             name: member.name || member.user?.fullName || member.user?.businessName || "Operador",
             photo: member.user?.photoUrl || null,
             role: member.role,

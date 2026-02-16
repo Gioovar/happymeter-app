@@ -14,6 +14,7 @@ interface TaskCaptureClientProps {
     task: {
         id: string;
         title: string;
+        description?: string | null;
         evidenceType: 'PHOTO' | 'VIDEO' | 'BOTH';
     }
 }
@@ -91,13 +92,18 @@ export default function TaskCaptureClient({ task }: TaskCaptureClientProps) {
     return (
         <div className="flex flex-col h-screen bg-black">
             {/* Header */}
-            <header className="px-4 py-4 flex items-center gap-4">
+            <header className="px-4 py-4 flex items-center gap-4 bg-black/80 backdrop-blur-md sticky top-0 z-50 border-b border-white/5">
                 <Link href="/ops/tasks" className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
                     <ArrowLeft className="w-6 h-6" />
                 </Link>
-                <div>
-                    <h1 className="text-lg font-bold text-white">{task.title}</h1>
-                    <p className="text-xs text-gray-400">
+                <div className="flex-1 min-w-0">
+                    <h1 className="text-lg font-bold text-white truncate">{task.title}</h1>
+                    {task.description && (
+                        <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1 italic">
+                            {task.description}
+                        </p>
+                    )}
+                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1">
                         {task.evidenceType === 'BOTH' ? 'Sube Foto o Video' :
                             task.evidenceType === 'VIDEO' ? 'Graba un Video' : 'toma una Foto'}
                     </p>

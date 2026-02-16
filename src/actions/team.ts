@@ -695,3 +695,52 @@ export async function loginOfflineOperator(accessCode: string) {
 
     return { success: true, member }
 }
+
+export async function toggleTeamMemberStatus(memberId: string, isActive: boolean) {
+    try {
+        const { userId } = await auth()
+        if (!userId) throw new Error('Unauthorized')
+
+        // Verify that the current user has access to the member they are trying to toggle
+        // Access is allowed if the user is the owner of the team member
+        const member = await prisma.teamMember.findUnique({
+            where: { id: memberId },
+            include: {
+                owner: true
+            }
+        })
+
+        if (!member) throw new Error('Member not found')
+
+        // Check ownership or chain ownership (similar to getTeamData)
+        const isOwner = member.ownerId === userId
+
+        // Also check if member.ownerId is a branch of a chain owned by current user
+        let isChainOwner = false
+        if (!isOwner) {
+            const branch = await prisma.chainBranch.findFirst({
+                where: {
+                    branchId: member.ownerId,
+                    chain: { ownerId: userId }
+                }
+            })
+            if (branch) isChainOwner = true
+        }
+
+        if (!isOwner && !isChainOwner) {
+            throw new Error('Unauthorized to modify team member status')
+        }
+
+        const updatedMember = await prisma.teamMember.update({
+            where: { id: memberId },
+            data: { isActive }
+        })
+
+        revalidatePath('/dashboard/[branchSlug]/processes/team', 'page')
+
+        return { success: true, member: updatedMember }
+    } catch (error: any) {
+        console.error('Error toggling member status:', error)
+        return { success: false, error: error.message }
+    }
+}

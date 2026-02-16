@@ -1228,4 +1228,37 @@ model ProductReview {
   @@index([customerId])
 }
 
+model InternalMessage {
+  id          String   @id @default(uuid())
+  content     String   @db.Text
+  senderId    String   // ID can refer to TeamMember or UserSettings (Boss)
+  receiverId  String
+  branchId    String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  attachments Json?    // For future use (images, files)
+
+  @@index([branchId])
+  @@index([receiverId])
+  @@index([senderId, receiverId])
+}
+
+model InternalNotification {
+  id          String   @id @default(uuid())
+  userId      String   // Target TeamMember or UserSettings
+  branchId    String
+  title       String
+  body        String
+  type        String   // e.g., "TASK_REMINDER", "NEW_MESSAGE", "COMPLIANCE_ALERT"
+  actionUrl   String?  // For intelligent redirection
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([branchId])
+  @@index([isRead])
+}
+
 

@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useSearchParams, useParams } from 'next/navigation'
-import { Menu, X, Home, LogOut, Settings, LayoutDashboard, Shield, Store, Calendar, HelpCircle, ChevronDown, Users, Lock, Sparkles } from 'lucide-react'
+import { Menu, X, Home, LogOut, Settings, LayoutDashboard, Shield, Store, Calendar, HelpCircle, ChevronDown, Users, Lock, Sparkles, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
@@ -127,7 +127,7 @@ export default function DashboardSidebar({
     const firstBranchUrl = '/dashboard/chains'
 
     // Detect Chain Dashboard View (or Corporate Chat)
-    const isChainView = pathname === '/dashboard/chains' || pathname === '/dashboard/chat'
+    const isChainView = pathname === '/dashboard/chains' || pathname === '/dashboard/chat' || pathname === '/dashboard/team/chat'
 
     const SidebarContent = () => (
         <>
@@ -191,7 +191,7 @@ export default function DashboardSidebar({
                         <Link
                             href="/dashboard/chat"
                             onClick={() => toggleMobileMenu(false)}
-                            className="relative group w-full mb-6 rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-violet-900/20"
+                            className="relative group w-full mb-3 rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-violet-900/20"
                         >
                             {/* Main Background */}
                             <div className="relative w-full h-full bg-[#050505] rounded-xl px-4 py-3 flex items-center gap-4 group-hover:bg-[#0a0a0a] transition-colors border border-white/5">
@@ -228,6 +228,45 @@ export default function DashboardSidebar({
                             </div>
                         </Link>
                     </FeatureGuard>
+
+                    {/* NEW: Empleados Chat Button - REDESIGNED SMALLER */}
+                    <Link
+                        href="/dashboard/team/chat"
+                        onClick={() => toggleMobileMenu(false)}
+                        className={cn(
+                            "relative group w-full mb-6 mx-0 rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]",
+                            (pathname as string) === '/dashboard/team/chat' ? "bg-emerald-600/10 shadow-lg shadow-emerald-900/20" : "hover:bg-white/5"
+                        )}
+                    >
+                        <div className="relative w-full px-4 py-2.5 flex items-center gap-3 border border-white/5 rounded-xl">
+                            {/* Subtler Left Glow Line (Emerald) */}
+                            <div className={cn(
+                                "absolute left-0 top-1 bottom-1 w-1 z-10 overflow-hidden rounded-full transition-opacity duration-500",
+                                (pathname as string) === '/dashboard/team/chat' ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            )}>
+                                <div className="absolute inset-0 bg-gradient-to-b from-emerald-600 via-teal-400 to-emerald-600 bg-[length:100%_200%] animate-pulse" />
+                            </div>
+
+                            <div className={cn(
+                                "relative z-10 p-1.5 rounded-lg border border-white/5 transition-colors",
+                                (pathname as string) === '/dashboard/team/chat' ? "bg-emerald-600 text-white" : "bg-[#1a1a1a] text-emerald-500 group-hover:border-emerald-500/30"
+                            )}>
+                                <Users className="w-4 h-4" />
+                            </div>
+
+                            <div className="relative z-10 flex flex-col justify-center min-w-0">
+                                <span className="text-xs font-bold text-white truncate">Chat con Empleados</span>
+                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-none mt-0.5 group-hover:text-emerald-400/70">Centro de Mensajería</span>
+                            </div>
+
+                            <div className="ml-auto relative z-10">
+                                <MessageSquare className={cn(
+                                    "w-4 h-4 transition-all",
+                                    (pathname as string) === '/dashboard/team/chat' ? "text-emerald-400" : "text-gray-600 group-hover:text-emerald-500"
+                                )} />
+                            </div>
+                        </div>
+                    </Link>
 
                     <p className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Selecciona una Sucursal</p>
 

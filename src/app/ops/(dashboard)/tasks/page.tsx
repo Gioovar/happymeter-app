@@ -63,20 +63,27 @@ export default async function OpsTasksPage() {
                                 >
                                     <StatusIcon className={`w-6 h-6 shrink-0 ${statusColor}`} />
 
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-medium text-white">{task.title}</h4>
-                                        {task.limitTime && (
-                                            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                                                <Clock className="w-3 h-3" />
-                                                Límite: {task.limitTime}
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-sm font-medium text-white truncate">{task.title}</h4>
+                                        {task.description && (
+                                            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-tight">
+                                                {task.description}
                                             </p>
                                         )}
-                                        {isLate && (
-                                            <p className="text-xs text-amber-500 mt-1 flex items-center gap-1">
-                                                <AlertTriangle className="w-3 h-3" />
-                                                Completado con Retraso
-                                            </p>
-                                        )}
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5">
+                                            {task.limitTime && (
+                                                <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                                                    <Clock className="w-2.5 h-2.5" />
+                                                    Límite: {task.limitTime}
+                                                </p>
+                                            )}
+                                            {isLate && (
+                                                <p className="text-[10px] text-amber-500 flex items-center gap-1">
+                                                    <AlertTriangle className="w-2.5 h-2.5" />
+                                                    Atrasado
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {!isDone && (
