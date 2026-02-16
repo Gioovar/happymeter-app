@@ -20,8 +20,9 @@ export default function ModeSelector() {
     const params = useParams();
     const branchSlug = params?.branchSlug as string;
 
-    // Hide on Chain Dashboard (Exclusive Selection View)
-    if (pathname === '/dashboard/chains') return null;
+    // Hide on Chain Dashboard and Corporate Chat views
+    const isChainView = pathname === '/dashboard/chains' || pathname === '/dashboard/chat' || pathname === '/dashboard/team/chat';
+    if (isChainView) return null;
 
     // Determine active mode based on path
     const activeMode: NavigationMode = useMemo(() => {
