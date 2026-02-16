@@ -280,10 +280,11 @@ export async function getOpsTasks() {
                         assignedStaffId: { in: memberIds }
                     }
                 },
-                // Exclude zones where I'm already the manager (to avoid duplicates)
-                NOT: {
-                    assignedStaffId: { in: memberIds }
-                }
+                // Exclude zones where I am already the manager
+                OR: [
+                    { assignedStaffId: null },
+                    { NOT: { assignedStaffId: { in: memberIds } } }
+                ]
             },
             include: {
                 tasks: {

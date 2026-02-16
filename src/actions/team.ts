@@ -498,28 +498,10 @@ export async function getOperators(branchId?: string) {
 
         console.log(`[getOperators] Final targetOwnerId: ${targetOwnerId}`)
 
-        // Check if this is a branch (not the chain owner)
-        const branchInfo = await prisma.chainBranch.findFirst({
-            where: { branchId: targetOwnerId },
-            select: {
-                chain: {
-                    select: { ownerId: true }
-                }
-            }
-        })
-
-        // Build the query to include both branch employees AND chain owner employees
-        const ownerIds = [targetOwnerId]
-        if (branchInfo && branchInfo.chain.ownerId !== targetOwnerId) {
-            // This is a branch, also include chain owner's employees
-            ownerIds.push(branchInfo.chain.ownerId)
-            console.log(`[getOperators] Branch detected. Including chain owner: ${branchInfo.chain.ownerId}`)
-        }
-
-        // Fetch all active team members for this owner/branch AND chain owner
+        // Fetch all active team members for this owner/branch
         const operators = await prisma.teamMember.findMany({
             where: {
-                ownerId: { in: ownerIds },
+                ownerId: targetOwnerId,
                 isActive: true
             },
             include: {
@@ -538,8 +520,7 @@ export async function getOperators(branchId?: string) {
             }
         })
 
-        console.log(`[getOperators] Found ${operators.length} operators for ownerIds ${ownerIds.join(', ')}`)
-        console.log(`[getOperators] Operators:`, operators.map(op => ({ id: op.id, userId: op.userId, ownerId: op.ownerId, role: op.role, name: op.name })))
+        console.log(`[getOperators] Found ${operators.length} operators for ownerId ${targetOwnerId}`)
 
         // Map to ensure a display name exists
         const mappedOperators = operators.map(op => ({
