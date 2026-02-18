@@ -186,7 +186,7 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
             </Dialog>
 
             <Dialog open={!!selectedEvidence} onOpenChange={(open) => !open && setSelectedEvidence(null)}>
-                <DialogContent className="max-w-[100vw] w-full h-full md:w-auto md:h-auto md:max-w-7xl md:border-white/10 p-0 bg-transparent border-none shadow-none flex items-center justify-center">
+                <DialogContent className="max-w-[100vw] w-full h-full md:w-auto md:h-auto md:max-w-7xl md:border-white/10 p-0 bg-transparent border-none shadow-none flex items-center justify-center [&>button]:hidden">
                     {/* Evidence Detail Card (Ficha Responsive Premium - Cinema Mode Desktop) */}
                     {selectedEvidence && (
                         <div
@@ -256,7 +256,7 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                 <div className="flex flex-col gap-6 md:gap-8 flex-1">
                                     {/* Staff Profile */}
                                     <div className="flex items-center gap-4 md:flex-col md:items-center md:text-center md:gap-4 md:mt-4">
-                                        <Avatar className="w-16 h-16 border-2 border-white/10 shadow-lg md:w-28 md:h-28 ring-4 ring-black/40">
+                                        <Avatar key={selectedEvidence.id} className="w-16 h-16 border-2 border-white/10 shadow-lg md:w-28 md:h-28 ring-4 ring-black/40">
                                             <AvatarImage src={selectedEvidence.completedByPhoto || undefined} />
                                             <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-blue-700 text-white font-bold text-xl md:text-4xl">
                                                 {selectedEvidence.completedBy[0]}
