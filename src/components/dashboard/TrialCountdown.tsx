@@ -11,7 +11,7 @@ interface TrialCountdownProps {
 }
 
 export default function TrialCountdown({ createdAt, isCollapsed }: TrialCountdownProps) {
-    const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number } | null>(null)
+    const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number, seconds: number } | null>(null)
     const [isExpired, setIsExpired] = useState(false)
 
     useEffect(() => {
@@ -33,23 +33,22 @@ export default function TrialCountdown({ createdAt, isCollapsed }: TrialCountdow
             const days = Math.floor(difference / (1000 * 60 * 60 * 24))
             const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
             const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000)
 
-            setTimeLeft({ days, hours, minutes })
+            setTimeLeft({ days, hours, minutes, seconds })
         }
 
         calculateTimeLeft()
-        const timer = setInterval(calculateTimeLeft, 60000) // Update every minute
+        const timer = setInterval(calculateTimeLeft, 1000) // Update every second
 
         return () => clearInterval(timer)
     }, [createdAt])
 
     if (!createdAt || isExpired) return null
 
-    // If less than 24 hours, show hours/minutes. Else show days.
+    // Format: 6d 23h 35m 34s
     const displayText = timeLeft
-        ? (timeLeft.days > 0
-            ? `${timeLeft.days} días de prueba`
-            : `${timeLeft.hours}h ${timeLeft.minutes}m restantes`)
+        ? `${timeLeft.days}d ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`
         : 'Calculando...'
 
     const isUrgent = timeLeft && timeLeft.days <= 2
