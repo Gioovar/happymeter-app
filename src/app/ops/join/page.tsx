@@ -174,6 +174,24 @@ function OpsJoinContent() {
                                 {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verificar Código'}
                             </Button>
 
+                            {/* UX Improvement: If signed in and error, offer to go to dashboard */}
+                            {isSignedIn && error && (
+                                <div className="pt-2 animate-in fade-in slide-in-from-top-2">
+                                    <div className="text-center mb-3">
+                                        <p className="text-gray-400 text-xs">
+                                            ¿Ya eres parte del equipo?
+                                        </p>
+                                    </div>
+                                    <Button
+                                        className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/10 h-11"
+                                        onClick={() => router.push('/ops')}
+                                    >
+                                        Ir al Portal Operativo
+                                        <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </div>
+                            )}
+
                             {isSignedIn && (
                                 <div className="text-center">
                                     <p className="text-xs text-gray-500 mb-2">Sesión iniciada como</p>
