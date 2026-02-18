@@ -1102,14 +1102,47 @@ export async function getTaskHistory(taskId: string) {
         orderBy: {
             submittedAt: 'desc'
         },
-        take: 20, // Last 20 executions
-        include: {
-            task: true, // To get task details if needed
-            // Join with user or member to get name/photo if possible?
-            // The schema stores 'completedBy' string and 'completedByPhoto' string directly on the evidence record (denormalized).
-            // So we don't strictly need a join for basic display.
-        }
+        take: 20,
     })
 
-    return history
+    // Manual resolution of staff details
+    const staffIds = Array.from(new Set(history.map(h => h.staffId).filter(Boolean) as string[]));
+
+    const [members, users] = await Promise.all([
+        prisma.teamMember.findMany({
+            where: { id: { in: staffIds } },
+            include: { user: true }
+        }),
+        prisma.userSettings.findMany({
+            where: { userId: { in: staffIds } }
+        })
+    ]);
+
+    const staffMap = new Map<string, { name: string, photo: string | null }>();
+
+    members.forEach(m => {
+        staffMap.set(m.id, {
+            name: m.name || m.user?.businessName || "Miembro del Equipo",
+            photo: m.user?.photoUrl || null
+        })
+    });
+
+    users.forEach(u => {
+        staffMap.set(u.userId, {
+            name: u.fullName || u.businessName || "Administrador",
+            photo: null // UserSettings might not have photoUrl directly if it's not a TeamMember linked? 
+            // Actually UserSettings doesn't have photoUrl usually, it's in Clerk... unique case.
+            // But let's check schema for UserSettings.
+            // Update: UserSettings usually doesn't have photoUrl. We might use businessName.
+        })
+    });
+
+    return history.map(h => {
+        const staff = h.staffId ? staffMap.get(h.staffId) : null;
+        return {
+            ...h,
+            completedBy: staff?.name || "Desconocido",
+            completedByPhoto: staff?.photo || null
+        }
+    })
 }
