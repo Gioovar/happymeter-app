@@ -13,12 +13,13 @@ import Image from 'next/image'
 
 interface TaskHistory {
     id: string
-    fileUrl: string
+    // fileUrl: string // Removed in favor of media array
     submittedAt: Date | string
     completedBy: string
     completedByPhoto?: string | null
     status: string // ON_TIME, LATE
     comments?: string | null
+    media: { id: string, url: string, type: 'PHOTO' | 'VIDEO' }[]
 }
 
 interface TaskHistoryDialogProps {
@@ -126,14 +127,26 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                     onClick={() => setSelectedEvidence(record)}
                                 >
                                     {/* Thumbnail */}
-                                    <div className="w-12 h-12 rounded-lg bg-black shrink-0 overflow-hidden relative border border-white/5">
-                                        {record.fileUrl.endsWith('.mp4') || record.fileUrl.endsWith('.webm') ? (
-                                            <video src={record.fileUrl} className="w-full h-full object-cover" />
+                                    <div className="w-12 h-12 rounded-lg bg-black shrink-0 overflow-hidden relative border border-white/5 flex items-center justify-center">
+                                        {record.media && record.media.length > 0 ? (
+                                            record.media[0].type === 'VIDEO' ? (
+                                                <video src={record.media[0].url} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <img src={record.media[0].url} alt="Evidence" className="w-full h-full object-cover" />
+                                            )
                                         ) : (
-                                            /* Use standard img to avoid Next.js Image domain config missing errors */
-                                            <img src={record.fileUrl} alt="Evidence" className="w-full h-full object-cover" />
+                                            <div className="bg-gray-800 w-full h-full flex items-center justify-center">
+                                                <Camera className="w-4 h-4 text-gray-500" />
+                                            </div>
                                         )}
-                                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+
+                                        {record.media && record.media.length > 1 && (
+                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                                <span className="text-xs font-bold text-white">+{record.media.length - 1}</span>
+                                            </div>
+                                        )}
+
+                                        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                                     </div>
 
                                     {/* Info */}
@@ -181,13 +194,20 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                 <XCircle className="w-6 h-6" />
                             </button>
 
-                            {/* Media Section */}
-                            <div className="relative w-full md:w-1/2 aspect-square md:aspect-auto bg-black">
-                                {selectedEvidence.fileUrl.endsWith('.mp4') || selectedEvidence.fileUrl.endsWith('.webm') ? (
-                                    <video src={selectedEvidence.fileUrl} controls className="w-full h-full object-contain" autoPlay />
-                                ) : (
-                                    <img src={selectedEvidence.fileUrl} alt="Full Evidence" className="w-full h-full object-cover" />
-                                )}
+                            {/* Media Section - Scrollable if multiple */}
+                            <div className="relative w-full md:w-1/2 bg-black flex flex-col overflow-y-auto custom-scrollbar max-h-[50vh] md:max-h-full">
+                                {selectedEvidence.media && selectedEvidence.media.map((item, index) => (
+                                    <div key={item.id} className="relative w-full shrink-0 border-b border-white/10 last:border-0">
+                                        {item.type === 'VIDEO' ? (
+                                            <video src={item.url} controls className="w-full max-h-[400px] object-contain" />
+                                        ) : (
+                                            <img src={item.url} alt={`Evidence ${index + 1}`} className="w-full h-auto object-contain" />
+                                        )}
+                                        <div className="absolute top-2 left-2 bg-black/60 px-2 py-1 rounded text-[10px] text-white backdrop-blur-sm">
+                                            {item.type === 'VIDEO' ? 'VIDEO' : 'FOTO'}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
 
                             {/* Details Section */}

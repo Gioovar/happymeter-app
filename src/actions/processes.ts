@@ -1102,7 +1102,7 @@ export async function getTaskHistory(taskId: string) {
         orderBy: {
             submittedAt: 'desc'
         },
-        take: 20,
+        take: 40, // Fetch more to ensure we have enough for grouping
     })
 
     // Manual resolution of staff details
@@ -1130,19 +1130,55 @@ export async function getTaskHistory(taskId: string) {
     users.forEach(u => {
         staffMap.set(u.userId, {
             name: u.fullName || u.businessName || "Administrador",
-            photo: null // UserSettings might not have photoUrl directly if it's not a TeamMember linked? 
-            // Actually UserSettings doesn't have photoUrl usually, it's in Clerk... unique case.
-            // But let's check schema for UserSettings.
-            // Update: UserSettings usually doesn't have photoUrl. We might use businessName.
+            photo: null
         })
     });
 
-    return history.map(h => {
-        const staff = h.staffId ? staffMap.get(h.staffId) : null;
-        return {
-            ...h,
+    // Grouping Logic
+    const groupedHistory: any[] = [];
+    const processedIds = new Set<string>();
+
+    history.forEach((item) => {
+        if (processedIds.has(item.id)) return;
+
+        const itemTime = item.submittedAt.getTime();
+
+        // Find other items from same staff within 2 minutes
+        const relatedItems = history.filter(h =>
+            !processedIds.has(h.id) &&
+            h.staffId === item.staffId &&
+            Math.abs(h.submittedAt.getTime() - itemTime) < 2 * 60 * 1000 // 2 minutes tolerance
+        );
+
+        // Mark all related items as processed
+        relatedItems.forEach(r => processedIds.add(r.id));
+
+        // Create a unified entry
+        const staff = item.staffId ? staffMap.get(item.staffId) : null;
+
+        // Sort related items to put photos first? Or just by time?
+        // Usually we want to show all media.
+        const media = relatedItems.map(r => ({
+            id: r.id,
+            url: r.fileUrl,
+            type: (r.fileUrl.endsWith('.mp4') || r.fileUrl.endsWith('.webm')) ? 'VIDEO' : 'PHOTO'
+        }));
+
+        // Use the latest item for main metadata
+        const mainItem = relatedItems[0];
+
+        groupedHistory.push({
+            id: mainItem.id, // Use one ID as key
+            uniqueId: mainItem.id,
+            submittedAt: mainItem.submittedAt,
+            staffId: mainItem.staffId,
+            status: mainItem.status,
+            comments: relatedItems.find(r => r.comments)?.comments || null, // Find first non-empty comment
             completedBy: staff?.name || "Desconocido",
-            completedByPhoto: staff?.photo || null
-        }
-    })
+            completedByPhoto: staff?.photo || null,
+            media: media
+        });
+    });
+
+    return groupedHistory;
 }
