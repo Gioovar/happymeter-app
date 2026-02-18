@@ -184,149 +184,122 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
 
                 {/* Evidence Preview Overlay */}
                 {/* Evidence Detail Card (Ficha) */}
-                {/* Evidence Detail Card (Ficha Premium) */}
+                {/* Evidence Detail Card (Ficha Vertical Premium) */}
                 {selectedEvidence && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedEvidence(null)}>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedEvidence(null)}>
                         <div
-                            className="bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden w-full max-w-5xl shadow-2xl relative flex flex-col md:flex-row max-h-[90vh]"
+                            className="bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden w-full max-w-xl shadow-2xl relative flex flex-col max-h-[90vh]"
                             onClick={e => e.stopPropagation()}
                         >
-                            {/* Close Button Mobile - Floating */}
-                            <button
-                                onClick={() => setSelectedEvidence(null)}
-                                className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full hover:bg-white/20 z-30 md:hidden backdrop-blur-md border border-white/10"
-                            >
-                                <XCircle className="w-6 h-6" />
-                            </button>
+                            {/* Header / Info Section */}
+                            <div className="p-6 bg-[#0f0f0f] border-b border-white/5 relative shrink-0">
+                                <button
+                                    onClick={() => setSelectedEvidence(null)}
+                                    className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                                >
+                                    <XCircle className="w-6 h-6" />
+                                </button>
 
-                            {/* Media Section - Scrollable List */}
-                            <div className="relative w-full md:w-3/5 bg-black flex flex-col overflow-y-auto custom-scrollbar border-r border-white/5">
-                                {selectedEvidence.media && selectedEvidence.media.length > 0 ? (
-                                    selectedEvidence.media.map((item, index) => (
-                                        <div key={item.id} className="relative w-full shrink-0 border-b border-white/10 last:border-0 group flex flex-col items-center justify-center min-h-[300px] bg-black">
-                                            {item.type === 'VIDEO' ? (
-                                                <div className="relative w-full aspect-video bg-black flex items-center justify-center max-h-[60vh]">
-                                                    <video
-                                                        src={item.url}
-                                                        controls
-                                                        className="w-full h-full object-contain max-h-[60vh]"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="relative w-full flex items-center justify-center max-h-[60vh] bg-black">
-                                                    <img
-                                                        src={item.url}
-                                                        alt={`Evidence ${index + 1}`}
-                                                        className="w-full h-auto object-contain max-h-[60vh]"
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {/* Type Badge */}
-                                            <div className="absolute top-4 left-4 bg-black/60 px-3 py-1.5 rounded-lg text-xs font-bold text-white backdrop-blur-md border border-white/10 flex items-center gap-2 z-10">
-                                                {item.type === 'VIDEO' ? <Camera className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full bg-cyan-500" />}
-                                                {item.type === 'VIDEO' ? 'VIDEO EVIDENCIA' : 'FOTO EVIDENCIA'}
-                                                <span className="text-gray-400 border-l border-white/20 pl-2 ml-2">
-                                                    {index + 1} de {selectedEvidence.media.length}
-                                                </span>
-                                            </div>
+                                <div className="flex flex-col gap-6">
+                                    {/* Staff Profile */}
+                                    <div className="flex items-center gap-4">
+                                        <Avatar className="w-16 h-16 border-2 border-white/10 shadow-lg">
+                                            <AvatarImage src={selectedEvidence.completedByPhoto || undefined} />
+                                            <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-blue-700 text-white font-bold text-xl">
+                                                {selectedEvidence.completedBy[0]}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="text-xs text-cyan-500 font-bold uppercase tracking-wider mb-1">Realizado por</p>
+                                            <h3 className="text-white font-bold text-xl leading-tight">{selectedEvidence.completedBy}</h3>
+                                            <p className="text-sm text-gray-400">Colaborador</p>
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center h-full text-gray-500 p-10">
-                                        <AlertTriangle className="w-12 h-12 mb-4 opacity-20" />
-                                        <p>No hay archivos multimedia disponibles.</p>
                                     </div>
-                                )}
+
+                                    {/* Sub Info Grid */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-black/40 p-3 rounded-xl border border-white/5">
+                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Fecha y Hora</p>
+                                            <p className="text-white text-sm font-medium flex items-center gap-2">
+                                                <Calendar className="w-3.5 h-3.5 text-cyan-500" />
+                                                {format(new Date(selectedEvidence.submittedAt), "d MMM, HH:mm a", { locale: es })}
+                                            </p>
+                                        </div>
+
+                                        {/* Status Badge */}
+                                        <div className={`p-3 rounded-xl border flex items-center gap-3 ${selectedEvidence.status === 'LATE'
+                                                ? 'bg-red-500/10 border-red-500/20'
+                                                : 'bg-green-500/10 border-green-500/20'
+                                            }`}>
+                                            {selectedEvidence.status === 'LATE' ? (
+                                                <>
+                                                    <AlertTriangle className="w-4 h-4 text-red-500 mb-0.5" />
+                                                    <div>
+                                                        <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Estado</p>
+                                                        <p className="text-red-400 font-bold text-sm">Tarde</p>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CheckCircle2 className="w-4 h-4 text-green-500 mb-0.5" />
+                                                    <div>
+                                                        <p className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Estado</p>
+                                                        <p className="text-green-400 font-bold text-sm">A Tiempo</p>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <Button className="w-full bg-[#1a1a1a] hover:bg-[#252525] text-white border border-white/10 h-10 rounded-xl font-medium gap-2 transition-all">
+                                        <span>💬</span> Enviar mensaje a {selectedEvidence.completedBy.split(' ')[0]}
+                                    </Button>
+                                </div>
                             </div>
 
-                            {/* Details Section - Fixed Sidebar */}
-                            <div className="w-full md:w-2/5 flex flex-col bg-[#0f0f0f] relative z-20">
-                                {/* Header with Close for Desktop */}
-                                <div className="p-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#0f0f0f]/95 backdrop-blur z-10">
-                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <CheckCircle2 className="w-5 h-5 text-cyan-500" />
-                                        Detalle de Ejecución
-                                    </h3>
-                                    <button
-                                        onClick={() => setSelectedEvidence(null)}
-                                        className="hidden md:flex p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors"
-                                    >
-                                        <XCircle className="w-6 h-6" />
-                                    </button>
-                                </div>
-
-                                {/* Scrollable Content */}
-                                <div className="p-6 space-y-8 overflow-y-auto custom-scrollbar flex-1">
-                                    {/* User Info Card */}
-                                    <div className="bg-gradient-to-br from-white/5 to-transparent p-5 rounded-2xl border border-white/5">
-                                        <p className="text-xs text-cyan-500 font-bold uppercase tracking-wider mb-4">Realizado por</p>
-                                        <div className="flex items-center gap-4">
-                                            <Avatar className="w-16 h-16 border-2 border-white/10 shadow-xl">
-                                                <AvatarImage src={selectedEvidence.completedByPhoto || undefined} />
-                                                <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-blue-700 text-white font-bold text-xl">
-                                                    {selectedEvidence.completedBy[0]}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="text-white font-bold text-xl leading-tight">{selectedEvidence.completedBy}</p>
-                                                <p className="text-sm text-gray-400 mt-1">Colaborador</p>
-                                            </div>
-                                        </div>
+                            {/* Media Section - Scrollable */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-0 bg-black">
+                                {selectedEvidence.comments && (
+                                    <div className="p-4 bg-[#111] border-b border-white/5">
+                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Comentarios</p>
+                                        <p className="text-sm text-gray-300 italic">"{selectedEvidence.comments}"</p>
                                     </div>
+                                )}
 
-                                    {/* Metadata Grid */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-[#050505] p-4 rounded-2xl border border-white/5">
-                                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Fecha</p>
-                                            <p className="text-white font-medium flex items-center gap-2">
-                                                <Calendar className="w-4 h-4 text-cyan-500" />
-                                                {format(new Date(selectedEvidence.submittedAt), "dd MMM", { locale: es })}
-                                            </p>
-                                        </div>
-                                        <div className="bg-[#050505] p-4 rounded-2xl border border-white/5">
-                                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Hora</p>
-                                            <p className="text-white font-medium flex items-center gap-2">
-                                                <Clock className="w-4 h-4 text-cyan-500" />
-                                                {format(new Date(selectedEvidence.submittedAt), "HH:mm a")}
-                                            </p>
-                                        </div>
-                                    </div>
+                                <div className="p-1 space-y-1">
+                                    {selectedEvidence.media && selectedEvidence.media.length > 0 ? (
+                                        selectedEvidence.media.map((item, index) => (
+                                            <div key={item.id} className="relative w-full group">
+                                                {item.type === 'VIDEO' ? (
+                                                    <div className="relative w-full aspect-video bg-[#050505]">
+                                                        <video
+                                                            src={item.url}
+                                                            controls
+                                                            className="w-full h-full object-contain"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="relative w-full bg-[#050505]">
+                                                        <img
+                                                            src={item.url}
+                                                            alt={`Evidence ${index + 1}`}
+                                                            className="w-full h-auto object-contain max-h-[50vh] mx-auto"
+                                                        />
+                                                    </div>
+                                                )}
 
-                                    {/* Status Section */}
-                                    <div>
-                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-3">Estado de Entrega</p>
-                                        {selectedEvidence.status === 'LATE' ? (
-                                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-red-500/10 border border-red-500/20">
-                                                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
-                                                    <AlertTriangle className="w-5 h-5 text-red-500" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-red-400 font-bold">Entrega Tardía</p>
-                                                    <p className="text-xs text-red-400/60">Se realizó después de la hora límite.</p>
+                                                {/* Type Badge Overlay */}
+                                                <div className="absolute top-3 left-3 bg-black/70 px-2.5 py-1 rounded-md text-[10px] font-bold text-white backdrop-blur border border-white/10 flex items-center gap-1.5 pointer-events-none">
+                                                    {item.type === 'VIDEO' ? <Camera className="w-3 h-3 text-cyan-400" /> : <div className="w-2 h-2 rounded-full bg-purple-500" />}
+                                                    {item.type === 'VIDEO' ? 'VIDEO' : 'FOTO'}
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-green-500/10 border border-green-500/20">
-                                                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
-                                                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-green-400 font-bold">A Tiempo</p>
-                                                    <p className="text-xs text-green-400/60">Registro exitoso dentro del horario.</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Comments Section */}
-                                    {selectedEvidence.comments && (
-                                        <div>
-                                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-3">Comentarios Adicionales</p>
-                                            <div className="bg-white/5 rounded-2xl p-5 text-sm text-gray-300 border border-white/5 italic relative">
-                                                <span className="absolute top-2 left-2 text-4xl text-white/5 font-serif">"</span>
-                                                <p className="relative z-10 pl-2">{selectedEvidence.comments}</p>
-                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                                            <AlertTriangle className="w-10 h-10 mb-3 opacity-20" />
+                                            <p className="text-sm">Sin evidencia visual</p>
                                         </div>
                                     )}
                                 </div>
