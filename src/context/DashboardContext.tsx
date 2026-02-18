@@ -286,6 +286,7 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
             subscriptionStatus,
             daysRemaining,
             isLocked,
+            userCreatedAt: createdDate, // Expose calculated date or raw input
             checkFeature,
             checkModuleAccess: (module: string) => {
                 // 1. Paid Plans -> Allow All
