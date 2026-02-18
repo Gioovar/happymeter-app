@@ -203,27 +203,27 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                             <div className="relative w-full md:w-3/5 bg-black flex flex-col overflow-y-auto custom-scrollbar border-r border-white/5">
                                 {selectedEvidence.media && selectedEvidence.media.length > 0 ? (
                                     selectedEvidence.media.map((item, index) => (
-                                        <div key={item.id} className="relative w-full shrink-0 border-b border-white/10 last:border-0 group">
+                                        <div key={item.id} className="relative w-full shrink-0 border-b border-white/10 last:border-0 group flex flex-col items-center justify-center min-h-[300px] bg-black">
                                             {item.type === 'VIDEO' ? (
-                                                <div className="relative w-full aspect-video bg-black flex items-center justify-center">
+                                                <div className="relative w-full aspect-video bg-black flex items-center justify-center max-h-[60vh]">
                                                     <video
                                                         src={item.url}
                                                         controls
-                                                        className="w-full h-full object-contain"
+                                                        className="w-full h-full object-contain max-h-[60vh]"
                                                     />
                                                 </div>
                                             ) : (
-                                                <div className="relative w-full">
+                                                <div className="relative w-full flex items-center justify-center max-h-[60vh] bg-black">
                                                     <img
                                                         src={item.url}
                                                         alt={`Evidence ${index + 1}`}
-                                                        className="w-full h-auto object-contain max-h-[80vh]"
+                                                        className="w-full h-auto object-contain max-h-[60vh]"
                                                     />
                                                 </div>
                                             )}
 
                                             {/* Type Badge */}
-                                            <div className="absolute top-4 left-4 bg-black/60 px-3 py-1.5 rounded-lg text-xs font-bold text-white backdrop-blur-md border border-white/10 flex items-center gap-2">
+                                            <div className="absolute top-4 left-4 bg-black/60 px-3 py-1.5 rounded-lg text-xs font-bold text-white backdrop-blur-md border border-white/10 flex items-center gap-2 z-10">
                                                 {item.type === 'VIDEO' ? <Camera className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full bg-cyan-500" />}
                                                 {item.type === 'VIDEO' ? 'VIDEO EVIDENCIA' : 'FOTO EVIDENCIA'}
                                                 <span className="text-gray-400 border-l border-white/20 pl-2 ml-2">
