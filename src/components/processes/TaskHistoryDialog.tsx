@@ -156,7 +156,7 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                                 <span className="text-white font-medium text-sm">
                                                     {format(new Date(record.submittedAt), "EEEE d 'de' MMMM", { locale: es })}
                                                 </span>
-                                                {record.status === 'LATE' && (
+                                                {record.status === 'DELAYED' && (
                                                     <span className="text-[10px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded border border-red-500/20">
                                                         Tarde
                                                     </span>
@@ -282,11 +282,11 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                         </div>
 
                                         {/* Status Badge */}
-                                        <div className={`p-3 rounded-xl border flex items-center gap-3 md:p-4 ${selectedEvidence.status === 'LATE'
+                                        <div className={`p-3 rounded-xl border flex items-center gap-3 md:p-4 ${selectedEvidence.status === 'DELAYED'
                                             ? 'bg-red-500/5 border-red-500/20'
                                             : 'bg-green-500/5 border-green-500/20'
                                             }`}>
-                                            {selectedEvidence.status === 'LATE' ? (
+                                            {selectedEvidence.status === 'DELAYED' ? (
                                                 <>
                                                     <div className="p-2 bg-red-500/10 rounded-full md:p-2.5 shrink-0">
                                                         <AlertTriangle className="w-4 h-4 text-red-500 md:w-5 md:h-5" />
