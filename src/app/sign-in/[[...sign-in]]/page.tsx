@@ -367,7 +367,7 @@ export default function Page() {
             <div className="hidden lg:flex flex-col relative justify-between p-12 bg-[#050505] overflow-hidden border-r border-white/5">
 
                 {/* Antigravity Particles */}
-                <div className="absolute inset-0 z-0 opacity-50">
+                <div className="absolute inset-0 z-0 opacity-100">
                     <ParticleBackground />
                 </div>
 

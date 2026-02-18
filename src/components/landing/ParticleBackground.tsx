@@ -196,11 +196,12 @@ export default function ParticleBackground() {
                     const g = Math.floor(182 * (1 - t) + 70 * t)
                     const b = Math.floor(212 * (1 - t) + 239 * t)
 
-                    const alpha = Math.max(0.1, (1 - (p.z / 800)) * 0.5)
+                    // Increased alpha for better visibility
+                    const alpha = Math.max(0.3, (1 - (p.z / 800)) * 0.8)
 
                     ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`
 
-                    const size = scale * 1.2
+                    const size = scale * 1.5 // Slightly larger (was 1.2)
 
                     ctx.beginPath()
                     ctx.arc(projX, projY, size, 0, Math.PI * 2)
