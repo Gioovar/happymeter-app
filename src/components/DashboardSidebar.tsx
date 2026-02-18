@@ -18,6 +18,7 @@ import CreateBranchModal from './chains/CreateBranchModal'
 import InviteMemberModal from '@/components/team/InviteMemberModal'
 import UserProfile from './dashboard/UserProfile'
 import FeatureGuard from '@/components/common/FeatureGuard'
+import TrialCountdown from '@/components/dashboard/TrialCountdown'
 
 
 // Helper to determine mode from pathname
@@ -601,6 +602,16 @@ export default function DashboardSidebar({
                     </div >
                 )
             }
+
+            <div className="mt-auto"> {/* Push this loop section to the bottom if flex-col, wait sidebar content isn't flex-col h-full... */}
+                {/* Wait, SidebarContent is just a fragment inside a scroll container? No, let's verify layout. */}
+                {/* SidebarContent usage: 'flex-col h-full' in parent */}
+                {userPlan === 'FREE' && user?.createdAt && (
+                    <Suspense fallback={null}>
+                        <TrialCountdown createdAt={user.createdAt} />
+                    </Suspense>
+                )}
+            </div>
 
             <div className="p-4 border-t border-white/10 bg-[#111]">
                 <UserProfile

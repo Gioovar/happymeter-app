@@ -14,6 +14,27 @@ export default function SubscriptionGuard({ children }: { children: React.ReactN
     const { isLocked, checkModuleAccess } = useDashboard()
     const pathname = usePathname()
 
+    // 0. GLOBAL TRIAL EXPIRATION CHECK
+    const { userCreatedAt, plan } = useDashboard()
+
+    // Check if trial is expired
+    let isTrialExpired = false
+    if (plan === 'FREE' && userCreatedAt) {
+        const start = new Date(userCreatedAt).getTime()
+        const trialDuration = 7 * 24 * 60 * 60 * 1000 // 7 Days
+        const end = start + trialDuration
+        const now = new Date().getTime()
+
+        if (now > end) {
+            isTrialExpired = true
+        }
+    }
+
+    // Force block if trial expired, regardless of module
+    if (isTrialExpired) {
+        return <TrialExpiredWall />
+    }
+
     // 1. Identify which module we are in
     let currentModule = 'surveys'
     if (pathname?.includes('/dashboard/loyalty') || pathname?.includes('/dashboard/games')) currentModule = 'loyalty'
