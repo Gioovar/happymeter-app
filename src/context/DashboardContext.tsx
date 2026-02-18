@@ -84,6 +84,7 @@ interface DashboardContextType {
     subscriptionStatus: 'ACTIVE' | 'TRIALING' | 'EXPIRED'
     daysRemaining: number
     isLocked: boolean
+    userCreatedAt?: string | Date
     checkFeature: (feature: string) => boolean
     checkModuleAccess: (module: string) => boolean
 }
