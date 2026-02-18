@@ -125,7 +125,8 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                         {record.fileUrl.endsWith('.mp4') || record.fileUrl.endsWith('.webm') ? (
                                             <video src={record.fileUrl} className="w-full h-full object-cover" />
                                         ) : (
-                                            <Image src={record.fileUrl} alt="Evidence" fill className="object-cover" sizes="48px" />
+                                            /* Use standard img to avoid Next.js Image domain config missing errors */
+                                            <img src={record.fileUrl} alt="Evidence" className="w-full h-full object-cover" />
                                         )}
                                         <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
                                     </div>
@@ -178,7 +179,7 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                 {selectedEvidence.fileUrl.endsWith('.mp4') || selectedEvidence.fileUrl.endsWith('.webm') ? (
                                     <video src={selectedEvidence.fileUrl} controls className="w-full h-full object-contain" autoPlay />
                                 ) : (
-                                    <Image src={selectedEvidence.fileUrl} alt="Full Evidence" fill className="object-contain" />
+                                    <img src={selectedEvidence.fileUrl} alt="Full Evidence" className="w-full h-full object-contain" />
                                 )}
                             </div>
 
