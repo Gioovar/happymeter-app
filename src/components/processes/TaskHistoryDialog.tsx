@@ -60,133 +60,135 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
     if (!task) return null
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-[#0a0a0a] border-white/10 text-white sm:max-w-2xl p-0 overflow-hidden shadow-2xl max-h-[85vh] flex flex-col">
-                <div className="bg-[#111] p-4 border-b border-white/10 shrink-0 z-20">
-                    <div className="flex justify-between items-start gap-4">
-                        <div>
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                {task.title}
-                            </h2>
-                            <p className="text-gray-400 text-sm mt-1">{task.description || 'Sin descripción'}</p>
-                            {task.limitTime && (
-                                <div className="flex items-center gap-2 mt-2">
-                                    <Clock className="w-3.5 h-3.5 text-orange-400" />
-                                    <span className="text-xs text-orange-400 font-mono">Límite: {task.limitTime}</span>
-                                </div>
-                            )}
-                        </div>
-                        <div className="flex gap-2">
-                            {onEdit && (
-                                <Button variant="ghost" size="sm" onClick={onEdit} className="hidden sm:flex text-gray-400 hover:text-white hover:bg-white/5">
-                                    <span className="mr-2">✏️</span> Editar
+        <>
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent className="bg-[#0a0a0a] border-white/10 text-white sm:max-w-2xl p-0 overflow-hidden shadow-2xl max-h-[85vh] flex flex-col">
+                    <div className="bg-[#111] p-4 border-b border-white/10 shrink-0 z-20">
+                        <div className="flex justify-between items-start gap-4">
+                            <div>
+                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                    {task.title}
+                                </h2>
+                                <p className="text-gray-400 text-sm mt-1">{task.description || 'Sin descripción'}</p>
+                                {task.limitTime && (
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <Clock className="w-3.5 h-3.5 text-orange-400" />
+                                        <span className="text-xs text-orange-400 font-mono">Límite: {task.limitTime}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                {onEdit && (
+                                    <Button variant="ghost" size="sm" onClick={onEdit} className="hidden sm:flex text-gray-400 hover:text-white hover:bg-white/5">
+                                        <span className="mr-2">✏️</span> Editar
+                                    </Button>
+                                )}
+                                {onAssign && (
+                                    <Button variant="outline" size="sm" onClick={onAssign} className="hidden sm:flex border-white/10 hover:bg-white/5">
+                                        Asignar
+                                    </Button>
+                                )}
+                                <Button
+                                    onClick={() => {
+                                        onOpenChange(false)
+                                        onStartTask()
+                                    }}
+                                    className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-900/20"
+                                >
+                                    <Camera className="w-4 h-4 mr-2" />
+                                    Realizar Tarea
                                 </Button>
-                            )}
-                            {onAssign && (
-                                <Button variant="outline" size="sm" onClick={onAssign} className="hidden sm:flex border-white/10 hover:bg-white/5">
-                                    Asignar
-                                </Button>
-                            )}
-                            <Button
-                                onClick={() => {
-                                    onOpenChange(false)
-                                    onStartTask()
-                                }}
-                                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-900/20"
-                            >
-                                <Camera className="w-4 h-4 mr-2" />
-                                Realizar Tarea
-                            </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-black/20">
-                    <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        Historial de Ejecución
-                    </h3>
+                    <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-black/20">
+                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            Historial de Ejecución
+                        </h3>
 
-                    {loading ? (
-                        <div className="space-y-3">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />
-                            ))}
-                        </div>
-                    ) : history.length === 0 ? (
-                        <div className="text-center py-10 text-gray-500 border border-dashed border-white/10 rounded-xl">
-                            <Clock className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                            <p>No hay registros previos de esta tarea.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {history.map((record) => (
-                                <div
-                                    key={record.id}
-                                    className="group bg-[#111] border border-white/10 hover:border-white/20 rounded-xl p-3 flex items-center gap-4 transition-all hover:bg-white/5 cursor-pointer"
-                                    onClick={() => setSelectedEvidence(record)}
-                                >
-                                    {/* Thumbnail */}
-                                    <div className="w-12 h-12 rounded-lg bg-black shrink-0 overflow-hidden relative border border-white/5 flex items-center justify-center">
-                                        {record.media && record.media.length > 0 ? (
-                                            record.media[0].type === 'VIDEO' ? (
-                                                <video src={record.media[0].url} className="w-full h-full object-cover" />
+                        {loading ? (
+                            <div className="space-y-3">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />
+                                ))}
+                            </div>
+                        ) : history.length === 0 ? (
+                            <div className="text-center py-10 text-gray-500 border border-dashed border-white/10 rounded-xl">
+                                <Clock className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                                <p>No hay registros previos de esta tarea.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {history.map((record) => (
+                                    <div
+                                        key={record.id}
+                                        className="group bg-[#111] border border-white/10 hover:border-white/20 rounded-xl p-3 flex items-center gap-4 transition-all hover:bg-white/5 cursor-pointer"
+                                        onClick={() => setSelectedEvidence(record)}
+                                    >
+                                        {/* Thumbnail */}
+                                        <div className="w-12 h-12 rounded-lg bg-black shrink-0 overflow-hidden relative border border-white/5 flex items-center justify-center">
+                                            {record.media && record.media.length > 0 ? (
+                                                record.media[0].type === 'VIDEO' ? (
+                                                    <video src={record.media[0].url} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <img src={record.media[0].url} alt="Evidence" className="w-full h-full object-cover" />
+                                                )
                                             ) : (
-                                                <img src={record.media[0].url} alt="Evidence" className="w-full h-full object-cover" />
-                                            )
-                                        ) : (
-                                            <div className="bg-gray-800 w-full h-full flex items-center justify-center">
-                                                <Camera className="w-4 h-4 text-gray-500" />
-                                            </div>
-                                        )}
-
-                                        {record.media && record.media.length > 1 && (
-                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                                <span className="text-xs font-bold text-white">+{record.media.length - 1}</span>
-                                            </div>
-                                        )}
-
-                                        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                                    </div>
-
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-0.5">
-                                            <span className="text-white font-medium text-sm">
-                                                {format(new Date(record.submittedAt), "EEEE d 'de' MMMM", { locale: es })}
-                                            </span>
-                                            {record.status === 'LATE' && (
-                                                <span className="text-[10px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded border border-red-500/20">
-                                                    Tarde
-                                                </span>
+                                                <div className="bg-gray-800 w-full h-full flex items-center justify-center">
+                                                    <Camera className="w-4 h-4 text-gray-500" />
+                                                </div>
                                             )}
+
+                                            {record.media && record.media.length > 1 && (
+                                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                                    <span className="text-xs font-bold text-white">+{record.media.length - 1}</span>
+                                                </div>
+                                            )}
+
+                                            <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                                         </div>
-                                        <div className="flex items-center gap-4 text-xs text-gray-400">
-                                            <span className="flex items-center gap-1">
-                                                <Clock className="w-3 h-3" />
-                                                {format(new Date(record.submittedAt), "HH:mm a")}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <User className="w-3 h-3" />
-                                                {record.completedBy}
-                                            </span>
+
+                                        {/* Info */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <span className="text-white font-medium text-sm">
+                                                    {format(new Date(record.submittedAt), "EEEE d 'de' MMMM", { locale: es })}
+                                                </span>
+                                                {record.status === 'LATE' && (
+                                                    <span className="text-[10px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded border border-red-500/20">
+                                                        Tarde
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-4 text-xs text-gray-400">
+                                                <span className="flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    {format(new Date(record.submittedAt), "HH:mm a")}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <User className="w-3 h-3" />
+                                                    {record.completedBy}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="text-gray-600 group-hover:text-cyan-400 transition-colors">
+                                            <ArrowRight className="w-4 h-4" />
                                         </div>
                                     </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
 
-                                    <div className="text-gray-600 group-hover:text-cyan-400 transition-colors">
-                                        <ArrowRight className="w-4 h-4" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Evidence Preview Overlay */}
-                {/* Evidence Detail Card (Ficha) */}
-                {/* Evidence Detail Card (Ficha Responsive Premium - Cinema Mode Desktop) */}
-                {selectedEvidence && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedEvidence(null)}>
+            <Dialog open={!!selectedEvidence} onOpenChange={(open) => !open && setSelectedEvidence(null)}>
+                <DialogContent className="max-w-[100vw] w-full h-full md:w-auto md:h-auto md:max-w-7xl md:border-white/10 p-0 bg-transparent border-none shadow-none flex items-center justify-center">
+                    {/* Evidence Detail Card (Ficha Responsive Premium - Cinema Mode Desktop) */}
+                    {selectedEvidence && (
                         <div
                             className="bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden w-full max-w-xl md:max-w-7xl md:w-[90vw] md:h-[90vh] shadow-2xl relative flex flex-col md:flex-row max-h-[90vh] md:max-h-[90vh]"
                             onClick={e => e.stopPropagation()}
@@ -281,8 +283,8 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
 
                                         {/* Status Badge */}
                                         <div className={`p-3 rounded-xl border flex items-center gap-3 md:p-4 ${selectedEvidence.status === 'LATE'
-                                                ? 'bg-red-500/5 border-red-500/20'
-                                                : 'bg-green-500/5 border-green-500/20'
+                                            ? 'bg-red-500/5 border-red-500/20'
+                                            : 'bg-green-500/5 border-green-500/20'
                                             }`}>
                                             {selectedEvidence.status === 'LATE' ? (
                                                 <>
@@ -326,9 +328,9 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </DialogContent>
-        </Dialog>
+                    )}
+                </DialogContent>
+            </Dialog>
+        </>
     )
 }
