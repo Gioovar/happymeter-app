@@ -17,6 +17,7 @@ import ProcessHistoryView from './ProcessHistoryView'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import AssignTaskDialog from './AssignTaskDialog'
 import EditTaskDialog from './EditTaskDialog'
+import TaskHistoryDialog from './TaskHistoryDialog'
 import TaskCamera from '@/components/ops/TaskCamera'
 // @ts-ignore
 import { upload } from '@vercel/blob/client'
@@ -72,6 +73,9 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
     // Edit State
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null)
+
+    const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
+    const [taskForHistory, setTaskForHistory] = useState<Task | null>(null)
 
     const [evidenceComment, setEvidenceComment] = useState('')
 
@@ -432,7 +436,10 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                                 <div
                                     key={task.id}
                                     className={`group relative bg-[#111] border border-white/10 rounded-xl p-4 hover:border-cyan-500/30 transition-all cursor-pointer overflow-hidden flex flex-col md:flex-row md:items-center gap-4 ${task.evidences?.[0] ? 'opacity-75' : ''}`}
-                                    onClick={() => !task.evidences?.[0] && startTask(task)}
+                                    onClick={() => {
+                                        setTaskForHistory(task)
+                                        setHistoryDialogOpen(true)
+                                    }}
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
@@ -784,6 +791,35 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                 onOpenChange={setEditDialogOpen}
                 task={taskToEdit}
                 onSuccess={() => router.refresh()}
+            />
+            {/* Task History Dialog */}
+            <TaskHistoryDialog
+                open={historyDialogOpen}
+                onOpenChange={setHistoryDialogOpen}
+                task={taskForHistory}
+                onStartTask={() => {
+                    if (taskForHistory) {
+                        startTask(taskForHistory)
+                    }
+                }}
+                onAssign={() => {
+                    if (taskForHistory) {
+                        // Open Assign Dialog
+                        setTaskToAssign(taskForHistory)
+                        setAssignDialogOpen(true)
+                        // Load staff logic repeated or moved? 
+                        // It's cleaner to trigger the existing openAssignDialog logic, but we need the event object there.
+                        // Simplified:
+                        setLoadingStaff(true)
+                        getOperators(branchId).then(staff => {
+                            setStaffList(staff)
+                            setLoadingStaff(false)
+                        }).catch(() => {
+                            setLoadingStaff(false)
+                            toast.error("Error cargando empleados")
+                        })
+                    }
+                }}
             />
         </div>
     )

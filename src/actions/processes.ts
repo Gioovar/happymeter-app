@@ -1087,3 +1087,29 @@ export async function getProcessTeamStats(branchId: string) {
 
     return performanceReports;
 }
+
+export async function getTaskHistory(taskId: string) {
+    const { isAuthenticated, userId, member } = await getOpsSession();
+
+    if (!isAuthenticated || (!userId && !member)) {
+        throw new Error("Unauthorized");
+    }
+
+    const history = await prisma.processEvidence.findMany({
+        where: {
+            taskId: taskId
+        },
+        orderBy: {
+            submittedAt: 'desc'
+        },
+        take: 20, // Last 20 executions
+        include: {
+            task: true, // To get task details if needed
+            // Join with user or member to get name/photo if possible?
+            // The schema stores 'completedBy' string and 'completedByPhoto' string directly on the evidence record (denormalized).
+            // So we don't strictly need a join for basic display.
+        }
+    })
+
+    return history
+}
