@@ -184,47 +184,47 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
 
                 {/* Evidence Preview Overlay */}
                 {/* Evidence Detail Card (Ficha) */}
-                {/* Evidence Detail Card (Ficha Responsive Premium) */}
+                {/* Evidence Detail Card (Ficha Responsive Premium - Cinema Mode Desktop) */}
                 {selectedEvidence && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedEvidence(null)}>
                         <div
-                            className="bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden w-full max-w-xl md:max-w-6xl shadow-2xl relative flex flex-col md:flex-row max-h-[90vh]"
+                            className="bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden w-full max-w-xl md:max-w-7xl md:w-[90vw] md:h-[90vh] shadow-2xl relative flex flex-col md:flex-row max-h-[90vh] md:max-h-[90vh]"
                             onClick={e => e.stopPropagation()}
                         >
                             {/* Close Button Desktop - Absolute */}
                             <button
                                 onClick={() => setSelectedEvidence(null)}
-                                className="hidden md:flex absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors z-30"
+                                className="hidden md:flex absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors z-30 bg-black/50 backdrop-blur-md border border-white/10"
                             >
                                 <XCircle className="w-8 h-8" />
                             </button>
 
-                            {/* Media Section - Left on Desktop, Bottom on Mobile */}
-                            <div className="flex-1 overflow-y-auto custom-scrollbar bg-black order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/5 md:w-3/5">
-                                <div className="p-1 space-y-1 md:p-0 md:space-y-0">
+                            {/* Media Section - Cinema View (Left) */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar bg-black order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/5 relative flex flex-col items-center justify-center">
+                                <div className="w-full h-full flex flex-col items-center p-1 space-y-1 md:p-0 md:space-y-0 overflow-y-auto custom-scrollbar">
                                     {selectedEvidence.media && selectedEvidence.media.length > 0 ? (
                                         selectedEvidence.media.map((item, index) => (
-                                            <div key={item.id} className="relative w-full group md:min-h-[500px] md:flex md:items-center md:justify-center md:bg-black/50 md:border-b md:border-white/5">
+                                            <div key={item.id} className="relative w-full group shrink-0 md:h-full md:flex md:items-center md:justify-center md:bg-black">
                                                 {item.type === 'VIDEO' ? (
-                                                    <div className="relative w-full aspect-video bg-[#050505] md:bg-transparent md:h-full md:aspect-auto">
+                                                    <div className="relative w-full aspect-video bg-[#050505] md:w-full md:h-full md:aspect-auto flex items-center justify-center">
                                                         <video
                                                             src={item.url}
                                                             controls
-                                                            className="w-full h-full object-contain md:max-h-[80vh]"
+                                                            className="w-full h-full object-contain max-h-[50vh] md:max-h-full"
                                                         />
                                                     </div>
                                                 ) : (
-                                                    <div className="relative w-full bg-[#050505] md:bg-transparent md:h-full md:flex md:items-center md:justify-center">
+                                                    <div className="relative w-full bg-[#050505] md:w-full md:h-full md:flex md:items-center md:justify-center">
                                                         <img
                                                             src={item.url}
                                                             alt={`Evidence ${index + 1}`}
-                                                            className="w-full h-auto object-contain max-h-[50vh] md:max-h-[80vh] mx-auto"
+                                                            className="w-full h-auto object-contain max-h-[50vh] md:max-h-full md:max-w-full mx-auto"
                                                         />
                                                     </div>
                                                 )}
 
                                                 {/* Type Badge Overlay */}
-                                                <div className="absolute top-3 left-3 bg-black/70 px-2.5 py-1 rounded-md text-[10px] font-bold text-white backdrop-blur border border-white/10 flex items-center gap-1.5 pointer-events-none md:top-6 md:left-6">
+                                                <div className="absolute top-3 left-3 bg-black/70 px-2.5 py-1.5 rounded-md text-[10px] font-bold text-white backdrop-blur border border-white/10 flex items-center gap-1.5 pointer-events-none md:top-6 md:left-6 z-20">
                                                     {item.type === 'VIDEO' ? <Camera className="w-3 h-3 text-cyan-400" /> : <div className="w-2 h-2 rounded-full bg-purple-500" />}
                                                     {item.type === 'VIDEO' ? 'VIDEO' : 'FOTO'}
                                                     <span className="hidden md:inline text-gray-400 ml-2 pl-2 border-l border-white/20">
@@ -234,7 +234,7 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-20 text-gray-500 h-full">
+                                        <div className="flex flex-col items-center justify-center py-20 text-gray-500 h-full w-full">
                                             <AlertTriangle className="w-12 h-12 mb-3 opacity-20" />
                                             <p className="text-sm">Sin evidencia visual</p>
                                         </div>
@@ -242,8 +242,8 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                 </div>
                             </div>
 
-                            {/* Info Section - Right on Desktop, Top on Mobile */}
-                            <div className="p-6 bg-[#0f0f0f] border-b md:border-b-0 md:bg-[#0a0a0a] relative shrink-0 order-1 md:order-2 md:w-2/5 md:overflow-y-auto md:p-10 flex flex-col justify-center">
+                            {/* Info Section - Sidebar (Right) */}
+                            <div className="p-6 bg-[#0f0f0f] border-b md:border-b-0 md:bg-[#0a0a0a] relative shrink-0 order-1 md:order-2 md:w-[400px] md:border-l md:border-white/5 md:overflow-y-auto md:p-8 flex flex-col">
                                 <button
                                     onClick={() => setSelectedEvidence(null)}
                                     className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors md:hidden"
@@ -251,25 +251,27 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                     <XCircle className="w-6 h-6" />
                                 </button>
 
-                                <div className="flex flex-col gap-6 md:gap-10">
+                                <div className="flex flex-col gap-6 md:gap-8 flex-1">
                                     {/* Staff Profile */}
-                                    <div className="flex items-center gap-4 md:flex-col md:items-start md:gap-6">
-                                        <Avatar className="w-16 h-16 border-2 border-white/10 shadow-lg md:w-24 md:h-24">
+                                    <div className="flex items-center gap-4 md:flex-col md:items-center md:text-center md:gap-4 md:mt-4">
+                                        <Avatar className="w-16 h-16 border-2 border-white/10 shadow-lg md:w-28 md:h-28 ring-4 ring-black/40">
                                             <AvatarImage src={selectedEvidence.completedByPhoto || undefined} />
-                                            <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-blue-700 text-white font-bold text-xl md:text-3xl">
+                                            <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-blue-700 text-white font-bold text-xl md:text-4xl">
                                                 {selectedEvidence.completedBy[0]}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="text-xs text-cyan-500 font-bold uppercase tracking-wider mb-1">Realizado por</p>
-                                            <h3 className="text-white font-bold text-xl leading-tight md:text-3xl">{selectedEvidence.completedBy}</h3>
-                                            <p className="text-sm text-gray-400 md:text-base">Colaborador</p>
+                                            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 text-[10px] font-bold uppercase tracking-wider mb-2 border border-cyan-500/20 md:mb-3">
+                                                Realizado por
+                                            </div>
+                                            <h3 className="text-white font-bold text-xl leading-tight md:text-2xl mb-1">{selectedEvidence.completedBy}</h3>
+                                            <p className="text-sm text-gray-400">Colaborador</p>
                                         </div>
                                     </div>
 
                                     {/* Sub Info Grid */}
-                                    <div className="grid grid-cols-2 gap-4 md:grid-cols-1 md:gap-6">
-                                        <div className="bg-black/40 p-3 rounded-xl border border-white/5 md:p-5">
+                                    <div className="grid grid-cols-2 gap-4 md:grid-cols-1 md:gap-4 md:mt-4">
+                                        <div className="bg-gradient-to-br from-white/5 to-transparent p-3 rounded-xl border border-white/5 md:p-4">
                                             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 md:mb-2">Fecha y Hora</p>
                                             <p className="text-white text-sm font-medium flex items-center gap-2 md:text-lg">
                                                 <Calendar className="w-3.5 h-3.5 text-cyan-500 md:w-5 md:h-5" />
@@ -278,28 +280,28 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                         </div>
 
                                         {/* Status Badge */}
-                                        <div className={`p-3 rounded-xl border flex items-center gap-3 md:p-5 ${selectedEvidence.status === 'LATE'
-                                                ? 'bg-red-500/10 border-red-500/20'
-                                                : 'bg-green-500/10 border-green-500/20'
+                                        <div className={`p-3 rounded-xl border flex items-center gap-3 md:p-4 ${selectedEvidence.status === 'LATE'
+                                                ? 'bg-red-500/5 border-red-500/20'
+                                                : 'bg-green-500/5 border-green-500/20'
                                             }`}>
                                             {selectedEvidence.status === 'LATE' ? (
                                                 <>
-                                                    <div className="p-2 bg-red-500/20 rounded-full md:p-3">
-                                                        <AlertTriangle className="w-4 h-4 text-red-500 md:w-6 md:h-6" />
+                                                    <div className="p-2 bg-red-500/10 rounded-full md:p-2.5 shrink-0">
+                                                        <AlertTriangle className="w-4 h-4 text-red-500 md:w-5 md:h-5" />
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider md:text-xs">Estado</p>
-                                                        <p className="text-red-400 font-bold text-sm md:text-lg">Tarde</p>
+                                                        <p className="text-red-400 font-bold text-sm md:text-base">Tarde</p>
                                                     </div>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div className="p-2 bg-green-500/20 rounded-full md:p-3">
-                                                        <CheckCircle2 className="w-4 h-4 text-green-500 md:w-6 md:h-6" />
+                                                    <div className="p-2 bg-green-500/10 rounded-full md:p-2.5 shrink-0">
+                                                        <CheckCircle2 className="w-4 h-4 text-green-500 md:w-5 md:h-5" />
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] font-bold text-green-400 uppercase tracking-wider md:text-xs">Estado</p>
-                                                        <p className="text-green-400 font-bold text-sm md:text-lg">A Tiempo</p>
+                                                        <p className="text-green-400 font-bold text-sm md:text-base">A Tiempo</p>
                                                     </div>
                                                 </>
                                             )}
@@ -308,14 +310,17 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
 
                                     {/* Comments */}
                                     {selectedEvidence.comments && (
-                                        <div className="p-4 bg-[#111] border border-white/5 rounded-xl md:p-6">
-                                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Comentarios</p>
-                                            <p className="text-sm text-gray-300 italic md:text-base">"{selectedEvidence.comments}"</p>
+                                        <div className="p-4 bg-[#111] border border-white/5 rounded-xl md:p-5 relative md:bg-transparent">
+                                            <span className="text-2xl text-white/10 absolute top-2 left-2 font-serif select-none">"</span>
+                                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 pl-2">Comentarios</p>
+                                            <p className="text-sm text-gray-300 italic md:text-base pl-2 relative z-10">{selectedEvidence.comments}</p>
                                         </div>
                                     )}
 
+                                    <div className="flex-1 hidden md:block" />
+
                                     {/* Action Button */}
-                                    <Button className="w-full bg-[#1a1a1a] hover:bg-[#252525] text-white border border-white/10 h-10 rounded-xl font-medium gap-2 transition-all md:h-12 md:text-lg">
+                                    <Button className="w-full bg-white text-black hover:bg-gray-200 border border-transparent h-10 rounded-xl font-bold gap-2 transition-all md:h-12 md:text-base shadow-lg shadow-white/5">
                                         <span>💬</span> Enviar mensaje
                                     </Button>
                                 </div>
