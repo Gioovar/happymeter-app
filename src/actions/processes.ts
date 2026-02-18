@@ -89,33 +89,20 @@ export async function submitTaskEvidence({ taskId, fileUrl, capturedAt, timezone
     let status: ProcessEvidenceStatus = 'ON_TIME';
 
     if (task.limitTime) {
-        // task.limitTime is "HH:MM" (e.g., "14:00")
-        // We need to see if capturedAt > deadline for THAT day.
+        // Correct Logic: Compare "Time of Day" in Mexico City Time
+        // This handles the timezone difference correctly regardless of server UTC time.
 
-        // Adjust capturedAt to the relevant Timezone logic if needed. 
-        // For simplicity, we compare hours/minutes of the capturedAt directly against the limitTime string
-        // assuming the limitTime refers to the SAME day as collection.
+        // 1. Get captured time in Mexico City
+        const mexicoDate = new Date(capturedAt.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
+        const mexicoHour = mexicoDate.getHours();
+        const mexicoMin = mexicoDate.getMinutes();
 
-        // Parse limit "14:30"
-        const [limitHour, limitMinute] = task.limitTime.split(':').map(Number);
+        // 2. Calculate values using the operative day adjustment (0-6 AM = Next Day)
+        const capturedTimeVal = getAdjustedTimeValue(`${mexicoHour.toString().padStart(2, '0')}:${mexicoMin.toString().padStart(2, '0')}`);
+        const limitTimeVal = getAdjustedTimeValue(task.limitTime);
 
-        // Get capture time parts
-        // Use timezoneOffset if provided to get local time of user, otherwise UTC or Server local
-        // Ideally we use date-fns-tz, but here is a simple shift:
-        // capturedAt is UTC usually in server. calculate local user Date.
-        // User Local Date = capturedAt - (timezoneOffset minutes)
-        // timezoneOffset is usually (UTC - Local) in minutes. e.g. UTC-6 is 360.
-        // So Local = UTC - (+360)? No, Date.getTime() is UTC. 
-        // Let's reconstruct the local hours.
-
-        // Simpler approach: construct the deadline date using the capturedAt date components (in local time? tricky).
-        // Let's assume capturedAt is comparable.
-
-        const captureLimit = new Date(capturedAt);
-        captureLimit.setHours(limitHour, limitMinute, 0, 0);
-
-        // If capturedAt is AFTER the limit
-        if (capturedAt > captureLimit) {
+        // 3. Compare
+        if (capturedTimeVal > limitTimeVal) {
             status = 'DELAYED';
         }
     }
