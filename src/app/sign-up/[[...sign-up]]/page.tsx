@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getPublicLoyaltyProgramInfo } from "@/actions/loyalty";
 import { Sparkles, Mail, Phone, ArrowLeft, Loader2 } from "lucide-react";
-import { dark } from "@clerk/themes";
+// import { dark } from "@clerk/themes"; // Removing dark theme
 import { esES } from "@clerk/localizations";
 
 export default function Page() {
@@ -72,96 +72,64 @@ export default function Page() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] grid lg:grid-cols-2">
+        <div className="min-h-screen bg-white grid lg:grid-cols-2">
 
-            {/* Left Column - Hero (Hidden on Mobile) */}
-            <div className="hidden lg:flex flex-col relative justify-between p-12 bg-[#050505] overflow-hidden border-r border-white/5">
-                {/* Background Gradients */}
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-violet-600/20 blur-[150px] rounded-full mix-blend-screen pointer-events-none translate-x-1/2 -translate-y-1/2" />
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-600/10 blur-[150px] rounded-full mix-blend-screen pointer-events-none -translate-x-1/3 translate-y-1/3" />
-
-                {/* Top Branding */}
-                <div className="relative z-10">
-                    <BrandLogo />
+            {/* Left Column - Image (Hidden on Mobile) */}
+            <div className="hidden lg:block relative overflow-hidden bg-gray-100">
+                <div className="absolute inset-0">
+                    <img
+                        src="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2670&auto=format&fit=crop"
+                        alt="Office Background"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-violet-900/40 to-transparent mix-blend-multiply" />
                 </div>
 
-                {/* Center Content */}
-                <div className="relative z-10 max-w-lg">
-                    <h1 className="text-5xl font-bold text-white mb-6 leading-tight">
-                        {programInfo ? (
-                            <>
-                                Únete a <span className="text-violet-400">{programInfo.businessName}</span>
-                            </>
-                        ) : (
-                            <>
-                                <span className="block text-4xl font-semibold text-white mb-2">
-                                    Convierte opiniones en
-                                </span>
-                                <span className="block text-5xl md:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400 drop-shadow-[0_0_15px_rgba(167,139,250,0.3)]">
-                                    Crecimiento Real
-                                </span>
-                            </>
-                        )}
-                    </h1>
-                    <p className="text-xl text-gray-400 leading-relaxed text-balance">
-                        {programInfo
-                            ? "Crea tu cuenta en segundos para empezar a acumular puntos, recibir recompensas exclusivas y subir de nivel."
-                            : "Únete a miles de negocios que usan HappyMeter para medir la satisfacción de sus clientes y fidelizarlos automáticamente."
-                        }
-                    </p>
-                </div>
-
-                {/* Bottom Stats/Trust */}
-                <div className="relative z-10 flex items-center gap-8 text-sm font-medium text-gray-400">
-                    <div className="flex items-center gap-2">
-                        <div className="flex -space-x-2">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className="w-8 h-8 rounded-full border-2 border-[#050505] bg-gray-800" />
-                            ))}
+                <div className="absolute bottom-12 left-12 right-12 text-white">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-8 h-8 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center">
+                            <Sparkles className="w-5 h-5 text-white" />
                         </div>
-                        <span>+2,000 usuarios activos</span>
+                        <span className="font-semibold tracking-wide uppercase text-sm">HappyMeters</span>
                     </div>
+                    <h1 className="text-4xl font-bold mb-4 leading-tight">
+                        Eleva la experiencia de tus clientes al siguiente nivel.
+                    </h1>
+                    <p className="text-lg text-gray-200">
+                        Únete a las empresas que están transformando la satisfacción en crecimiento.
+                    </p>
                 </div>
             </div>
 
             {/* Right Column - Form */}
-            <div className="flex flex-col items-center justify-center p-6 md:p-12 relative">
-                {/* Mobile Background Elements */}
-                <div className="lg:hidden absolute top-0 left-0 w-full h-[500px] bg-fuchsia-600/20 blur-[120px] rounded-full mix-blend-screen pointer-events-none" />
+            <div className="flex flex-col items-center justify-center p-6 md:p-12 relative bg-white">
 
                 <div className="w-full max-w-md relative z-10">
                     {/* Mobile Logo */}
                     <div className="lg:hidden mb-8 flex justify-center">
-                        {programInfo ? (
-                            <div className="flex flex-col items-center">
-                                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/25 mb-4 overflow-hidden">
-                                    {programInfo.logoUrl ? (
-                                        <img src={programInfo.logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <Sparkles className="w-8 h-8 text-white" />
-                                    )}
-                                </div>
-                                <h2 className="text-xl font-bold text-white">{programInfo.businessName}</h2>
-                            </div>
-                        ) : (
-                            <BrandLogo size="lg" />
-                        )}
+                        <BrandLogo variant="dark" size="lg" />
                     </div>
+
+                    {/* Desktop Logo (Top Right of container if needed, or just keep minimal) */}
+                    <div className="hidden lg:flex justify-end mb-12 absolute top-0 right-0">
+                        {/* Optional top right placement, or just use form header */}
+                    </div>
+
 
                     {view === 'selection' ? (
                         <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="text-center lg:text-left mb-8">
-                                <h2 className="text-3xl font-bold text-white mb-2">Crear Cuenta</h2>
-                                <p className="text-gray-400">Elige cómo quieres empezar</p>
+                            <div className="text-center mb-8">
+                                <h2 className="text-3xl font-bold text-gray-900 mb-2">Crear Cuenta</h2>
+                                <p className="text-gray-500">Comienza tu prueba gratuita hoy</p>
                             </div>
 
                             <div className="space-y-4">
                                 {/* Google Button */}
                                 <button
                                     onClick={handleGoogleSignUp}
-                                    className="w-full h-16 bg-white hover:bg-gray-100 text-black font-bold text-lg rounded-2xl flex items-center justify-center gap-3 transition-transform active:scale-[0.98]"
+                                    className="w-full h-14 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-lg rounded-xl border border-gray-200 flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-sm"
                                 >
-                                    <svg className="w-6 h-6" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24">
                                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                                         <path d="M5.84 14.11c-.22-.66-.35-1.36-.35-2.11s.13-1.45.35-2.11V7.05H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.95l3.66-2.84z" fill="#FBBC05" />
@@ -172,36 +140,36 @@ export default function Page() {
 
                                 <div className="relative py-4">
                                     <div className="absolute inset-0 flex items-center">
-                                        <span className="w-full border-t border-white/10"></span>
+                                        <span className="w-full border-t border-gray-200"></span>
                                     </div>
                                     <div className="relative flex justify-center text-xs uppercase tracking-widest">
-                                        <span className="bg-[#0a0a0a] px-4 text-gray-500 font-semibold">O continúa con</span>
+                                        <span className="bg-white px-4 text-gray-400 font-semibold">o regístrate con</span>
                                     </div>
                                 </div>
 
                                 <div className="space-y-3">
                                     <button
                                         onClick={() => setView('phone_entry')}
-                                        className="w-full h-14 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group"
+                                        className="w-full h-12 bg-gray-50 hover:bg-gray-100 text-gray-900 border border-gray-200 font-medium rounded-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group"
                                     >
-                                        <Phone className="w-5 h-5 text-violet-500 group-hover:text-violet-400 transition-colors" />
-                                        <span className="group-hover:text-gray-200">Continuar con teléfono</span>
+                                        <Phone className="w-4 h-4 text-gray-500 group-hover:text-violet-600 transition-colors" />
+                                        <span>Teléfono</span>
                                     </button>
 
                                     <button
                                         onClick={() => setView('email_entry')}
-                                        className="w-full h-14 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group"
+                                        className="w-full h-12 bg-gray-50 hover:bg-gray-100 text-gray-900 border border-gray-200 font-medium rounded-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group"
                                     >
-                                        <Mail className="w-5 h-5 text-violet-500 group-hover:text-violet-400 transition-colors" />
-                                        <span className="group-hover:text-gray-200">Continuar con correo electrónico</span>
+                                        <Mail className="w-4 h-4 text-gray-500 group-hover:text-violet-600 transition-colors" />
+                                        <span>Correo electrónico</span>
                                     </button>
                                 </div>
                             </div>
 
                             <div className="mt-8 text-center">
-                                <p className="text-gray-500">
+                                <p className="text-gray-500 text-sm">
                                     ¿Ya tienes cuenta?{' '}
-                                    <a href={`/sign-in?intent=${intent || ''}&program_id=${programId || ''}&redirect_url=${finalRedirect || ''}`} className="text-white hover:underline decoration-violet-500/50 font-medium hover:text-violet-400 transition-colors">Inicia sesión</a>
+                                    <a href={`/sign-in?intent=${intent || ''}&program_id=${programId || ''}&redirect_url=${finalRedirect || ''}`} className="text-violet-600 hover:underline font-semibold transition-colors">Inicia sesión</a>
                                 </p>
                             </div>
                         </div>
@@ -209,35 +177,35 @@ export default function Page() {
                         <div className="w-full animate-in fade-in slide-in-from-right-8 duration-500">
                             <button
                                 onClick={() => setView('selection')}
-                                className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors font-medium text-sm group"
+                                className="flex items-center gap-2 text-gray-500 hover:text-gray-900 mb-8 transition-colors font-medium text-sm group"
                             >
-                                <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
+                                <div className="p-2 rounded-full bg-gray-100 group-hover:bg-gray-200 transition-colors">
                                     <ArrowLeft className="w-4 h-4" />
                                 </div>
                                 Volver
                             </button>
 
                             <div className="text-center lg:text-left mb-8">
-                                <h2 className="text-3xl font-bold text-white mb-2">Introduce tu número</h2>
-                                <p className="text-gray-400">Te enviaremos un código de seguridad</p>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-2">Ingresa tu teléfono</h2>
+                                <p className="text-gray-500">Te enviaremos un código de seguridad</p>
                             </div>
 
                             <form onSubmit={handlePhoneSubmit} className="space-y-6">
                                 <div>
-                                    <label className="block text-gray-400 font-medium ml-1 mb-1.5 text-sm">Número de teléfono</label>
+                                    <label className="block text-gray-700 font-medium ml-1 mb-1.5 text-sm">Número de teléfono</label>
                                     <input
                                         type="tel"
                                         placeholder="+52..."
                                         value={tempPhone}
                                         onChange={(e) => setTempPhone(e.target.value)}
-                                        className="w-full bg-[#111] border border-white/10 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 h-12 rounded-xl px-4 text-lg outline-none transition-all"
+                                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:bg-white h-12 rounded-xl px-4 text-lg outline-none transition-all placeholder:text-gray-400"
                                         autoFocus
                                         required
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full h-12 bg-white hover:bg-gray-200 text-black font-bold rounded-xl transition-colors"
+                                    className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-violet-500/30"
                                 >
                                     Continuar
                                 </button>
@@ -247,35 +215,35 @@ export default function Page() {
                         <div className="w-full animate-in fade-in slide-in-from-right-8 duration-500">
                             <button
                                 onClick={() => setView('selection')}
-                                className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors font-medium text-sm group"
+                                className="flex items-center gap-2 text-gray-500 hover:text-gray-900 mb-8 transition-colors font-medium text-sm group"
                             >
-                                <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
+                                <div className="p-2 rounded-full bg-gray-100 group-hover:bg-gray-200 transition-colors">
                                     <ArrowLeft className="w-4 h-4" />
                                 </div>
                                 Volver
                             </button>
 
                             <div className="text-center lg:text-left mb-8">
-                                <h2 className="text-3xl font-bold text-white mb-2">Introduce tu correo</h2>
-                                <p className="text-gray-400">Te enviaremos un enlace de verificación</p>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-2">Ingresa tu correo</h2>
+                                <p className="text-gray-500">Te enviaremos un enlace de verificación</p>
                             </div>
 
                             <form onSubmit={handleEmailSubmit} className="space-y-6">
                                 <div>
-                                    <label className="block text-gray-400 font-medium ml-1 mb-1.5 text-sm">Correo electrónico</label>
+                                    <label className="block text-gray-700 font-medium ml-1 mb-1.5 text-sm">Correo electrónico</label>
                                     <input
                                         type="email"
                                         placeholder="ejemplo@correo.com"
                                         value={tempEmail}
                                         onChange={(e) => setTempEmail(e.target.value)}
-                                        className="w-full bg-[#111] border border-white/10 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 h-12 rounded-xl px-4 text-lg outline-none transition-all"
+                                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:bg-white h-12 rounded-xl px-4 text-lg outline-none transition-all placeholder:text-gray-400"
                                         autoFocus
                                         required
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full h-12 bg-white hover:bg-gray-200 text-black font-bold rounded-xl transition-colors"
+                                    className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-violet-500/30"
                                 >
                                     Continuar
                                 </button>
@@ -285,9 +253,9 @@ export default function Page() {
                         <div className="w-full animate-in fade-in slide-in-from-right-8 duration-500">
                             <button
                                 onClick={() => setView('selection')}
-                                className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors font-medium text-sm group"
+                                className="flex items-center gap-2 text-gray-500 hover:text-gray-900 mb-8 transition-colors font-medium text-sm group"
                             >
-                                <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
+                                <div className="p-2 rounded-full bg-gray-100 group-hover:bg-gray-200 transition-colors">
                                     <ArrowLeft className="w-4 h-4" />
                                 </div>
                                 Volver a opciones
@@ -295,27 +263,33 @@ export default function Page() {
 
                             <SignUp
                                 initialValues={formValues}
+                                // localization={esES} // Handled globally in layout.tsx
                                 appearance={{
-                                    baseTheme: dark,
+                                    // baseTheme: dark, // Removed Dark Theme
+                                    layout: {
+                                        socialButtonsPlacement: 'bottom',
+                                        showOptionalFields: false,
+                                    },
                                     variables: {
-                                        colorPrimary: '#8b5cf6',
-                                        colorTextSecondary: '#9ca3af',
-                                        colorBackground: 'transparent'
+                                        colorPrimary: '#7c3aed', // violet-600
+                                        colorText: '#111827', // gray-900
+                                        colorTextSecondary: '#6b7280', // gray-500
+                                        colorBackground: '#ffffff',
+                                        borderRadius: '0.75rem',
                                     },
                                     elements: {
                                         rootBox: "w-full",
                                         card: "bg-transparent shadow-none p-0",
-                                        headerTitle: "text-3xl font-bold text-white mb-2",
-                                        headerSubtitle: "text-gray-400 text-base",
+                                        headerTitle: "text-2xl font-bold text-gray-900 mb-2",
+                                        headerSubtitle: "text-gray-500 text-base",
 
-                                        socialButtonsBlockButton: "hidden",
-                                        dividerLine: "hidden",
-                                        dividerText: "hidden",
+                                        socialButtonsBlockButton: "w-full h-12 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-xl",
 
-                                        formFieldLabel: "text-gray-400 font-medium ml-1 mb-1.5",
-                                        formFieldInput: "bg-[#111] border-white/10 text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 h-12 rounded-xl transition-all",
-                                        footerActionText: "text-gray-400",
-                                        footerActionLink: "text-violet-400 hover:text-violet-300 font-bold"
+                                        formFieldLabel: "text-gray-700 font-medium ml-1 mb-1.5",
+                                        formFieldInput: "bg-gray-50 border-gray-200 text-gray-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 h-12 rounded-xl transition-all",
+
+                                        footerActionText: "text-gray-500",
+                                        footerActionLink: "text-violet-600 hover:text-violet-700 font-bold"
                                     }
                                 }}
                                 forceRedirectUrl={redirectUrl}

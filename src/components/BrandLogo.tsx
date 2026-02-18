@@ -4,6 +4,7 @@ import Link from 'next/link'
 interface BrandLogoProps {
     className?: string
     size?: 'sm' | 'md' | 'lg' | 'xl'
+    variant?: 'light' | 'dark'
     withText?: boolean
     textClassName?: string
 }
@@ -11,6 +12,7 @@ interface BrandLogoProps {
 export default function BrandLogo({
     className = "",
     size = 'md',
+    variant = 'light',
     withText = true,
     textClassName = ""
 }: BrandLogoProps) {
@@ -23,11 +25,11 @@ export default function BrandLogo({
     }
 
     const currentSize = sizeMap[size]
+    const textColor = variant === 'dark' ? 'text-gray-900' : 'text-white'
 
     return (
         <div className={`flex items-center gap-2 ${className}`}>
             <div className="relative animate-[pulse_4s_ease-in-out_infinite] hover:animate-[spin_1s_ease-in-out]">
-                {/* Glow user liked */}
                 {/* Glow user liked */}
                 <div className="absolute inset-0 bg-green-500/20 blur-lg rounded-full" />
 
@@ -41,7 +43,7 @@ export default function BrandLogo({
             </div>
 
             {withText && (
-                <span className={`font-bold tracking-tight text-white ${currentSize.text} ${textClassName}`}>
+                <span className={`font-bold tracking-tight ${textColor} ${currentSize.text} ${textClassName}`}>
                     Happy<span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-text-gradient">Meter</span>
                 </span>
             )}
