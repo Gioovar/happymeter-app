@@ -189,7 +189,7 @@ export default async function DashboardLayout({
                             userRole={realRole}
                             hasChain={hasChain}
                             userPlan={userPlan}
-                            user={userData ? { ...userData, fullName: (settings as any)?.fullName, businessName: (settings as any)?.businessName } : null}
+                            user={userData ? { ...userData, fullName: (settings as any)?.fullName, businessName: (settings as any)?.businessName, createdAt: (settings as any)?.createdAt?.toISOString() } : null}
                         // We will let Sidebar handle resolutions or passing slug
                         />
                     </Suspense>
