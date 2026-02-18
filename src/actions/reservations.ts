@@ -80,12 +80,9 @@ export async function getFloorPlans(branchId?: string) {
                 data: {
                     userId: effectiveUserId,
                     name: "Piso 1",
+                    isConfigured: false, // Explicitly false until they save
                     tables: {
-                        create: [
-                            { label: "Mesa 1", x: 100, y: 100, type: "RECT", capacity: 4 },
-                            { label: "Mesa 2", x: 300, y: 100, type: "RECT", capacity: 4 },
-                            { label: "Barra", x: 100, y: 300, width: 200, height: 60, type: "BAR", capacity: 5 },
-                        ]
+                        create: [] // Start empty
                     }
                 },
                 include: { tables: true }
