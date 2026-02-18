@@ -75,7 +75,8 @@ export default async function BranchReservationsPage({ params }: { params: { bra
     const setupLink = `/dashboard/${branchSlug}/reservations/setup`
 
     // Blocking check removed. Now using Popup.
-    const isConfigured = floorPlans && floorPlans.length > 0;
+    // Enhanced check: Verify if floor plan is actually configured, not just present (since we auto-create defaults)
+    const isConfigured = floorPlans && floorPlans.some((fp: any) => fp.isConfigured);
 
 
     return (
