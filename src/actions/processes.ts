@@ -1004,7 +1004,12 @@ export async function getProcessTeamStats(branchId: string) {
 
     // 2. Fetch all tasks for this branch that recur today
     const zones = await prisma.processZone.findMany({
-        where: { branchId },
+        where: {
+            OR: [
+                { branchId },
+                { userId: branchId } // Also include zones owned by this user directly
+            ]
+        },
         include: {
             tasks: {
                 where: { days: { has: dayOfWeek } }
