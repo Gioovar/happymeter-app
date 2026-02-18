@@ -202,25 +202,25 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                             </button>
 
                             {/* Media Section - Cinema View (Left) */}
-                            <div className="flex-1 overflow-y-auto custom-scrollbar bg-black order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/5 relative flex flex-col items-center justify-center">
-                                <div className="w-full h-full flex flex-col items-center p-1 space-y-1 md:p-0 md:space-y-0 overflow-y-auto custom-scrollbar">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar bg-black order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/5 relative flex flex-col">
+                                <div className="w-full h-auto min-h-0 md:h-full flex flex-col items-center">
                                     {selectedEvidence.media && selectedEvidence.media.length > 0 ? (
                                         selectedEvidence.media.map((item, index) => (
-                                            <div key={item.id} className="relative w-full group shrink-0 md:h-full md:flex md:items-center md:justify-center md:bg-black">
+                                            <div key={item.id} className="relative w-full shrink-0 min-h-[50vh] md:min-h-[90vh] flex items-center justify-center bg-black border-b border-white/5 last:border-0">
                                                 {item.type === 'VIDEO' ? (
-                                                    <div className="relative w-full aspect-video bg-[#050505] md:w-full md:h-full md:aspect-auto flex items-center justify-center">
+                                                    <div className="relative w-full h-full flex items-center justify-center p-4">
                                                         <video
                                                             src={item.url}
                                                             controls
-                                                            className="w-full h-full object-contain max-h-[50vh] md:max-h-full"
+                                                            className="w-full h-full object-contain max-h-[85vh]"
                                                         />
                                                     </div>
                                                 ) : (
-                                                    <div className="relative w-full bg-[#050505] md:w-full md:h-full md:flex md:items-center md:justify-center">
+                                                    <div className="relative w-full h-full flex items-center justify-center p-4">
                                                         <img
                                                             src={item.url}
                                                             alt={`Evidence ${index + 1}`}
-                                                            className="w-full h-auto object-contain max-h-[50vh] md:max-h-full md:max-w-full mx-auto"
+                                                            className="w-full h-full object-contain max-h-[85vh]"
                                                         />
                                                     </div>
                                                 )}
@@ -236,7 +236,7 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-20 text-gray-500 h-full w-full">
+                                        <div className="flex flex-col items-center justify-center h-[50vh] md:h-full w-full text-gray-500">
                                             <AlertTriangle className="w-12 h-12 mb-3 opacity-20" />
                                             <p className="text-sm">Sin evidencia visual</p>
                                         </div>
