@@ -804,12 +804,8 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                 }}
                 onAssign={() => {
                     if (taskForHistory) {
-                        // Open Assign Dialog
                         setTaskToAssign(taskForHistory)
                         setAssignDialogOpen(true)
-                        // Load staff logic repeated or moved? 
-                        // It's cleaner to trigger the existing openAssignDialog logic, but we need the event object there.
-                        // Simplified:
                         setLoadingStaff(true)
                         getOperators(branchId).then(staff => {
                             setStaffList(staff)
@@ -818,6 +814,18 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                             setLoadingStaff(false)
                             toast.error("Error cargando empleados")
                         })
+                    }
+                }}
+                onEdit={() => {
+                    if (taskForHistory) {
+                        // Close history dialog? Or keep it open underneath?
+                        // User might want to return to history. 
+                        // But EditDialog is modal.
+                        // Let's close history for now to avoid z-index hell, or assume EditDialog stacks on top.
+                        // EditDialog usually has high z-index.
+                        setHistoryDialogOpen(false)
+                        setTaskToEdit(taskForHistory)
+                        setEditDialogOpen(true)
                     }
                 }}
             />
