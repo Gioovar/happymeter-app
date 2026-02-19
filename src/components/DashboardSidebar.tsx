@@ -188,17 +188,6 @@ export default function DashboardSidebar({
             {/* --- CHAIN DASHBOARD SIDEBAR (EXCLUSIVE VIEW) --- */}
             {isChainView ? (
                 <div className="px-4 py-4 space-y-3">
-                    {/* BACK TO DASHBOARD BUTTON */}
-                    <Link
-                        href={branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'}
-                        onClick={() => toggleMobileMenu(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 mb-6 rounded-xl border border-white/5 hover:bg-white/5 text-gray-400 hover:text-white transition-all group"
-                    >
-                        <div className="p-1.5 rounded-lg bg-gray-800 text-gray-400 group-hover:text-white">
-                            <Home className="w-4 h-4" />
-                        </div>
-                        <span className="text-sm font-bold">Regresar al Dashboard</span>
-                    </Link>
 
                     <FeatureGuard feature="ai_analytics">
                         <Link
