@@ -176,7 +176,7 @@ export async function sendCustomerReward(response: Response, survey: Survey, ans
             where: { branchId: survey.userId }
         })
         const slug = chainBranch?.slug || survey.userId
-        const loyaltyLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://happymeter.app'}/loyalty/${slug}/register`
+        const loyaltyLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://happymeter.app'}/loyalty/${slug}?action=signup`
 
         const smsMessage = `Hola ${response.customerName || 'Cliente'}, ¡Gracias por tu visita! Tu regalo: ${appliedReward.offer}. Muestra el código: ${appliedReward.code}. Regístrate para más beneficios: ${loyaltyLink}`
         console.log(`Sending Reward SMS to Customer: ${response.customerPhone}`)
