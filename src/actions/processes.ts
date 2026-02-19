@@ -1097,11 +1097,17 @@ export async function getTaskHistory(taskId: string) {
 
     const [members, users] = await Promise.all([
         prisma.teamMember.findMany({
-            where: { id: { in: staffIds } },
+            where: {
+                OR: [
+                    { id: { in: staffIds } },
+                    { userId: { in: staffIds } }
+                ]
+            },
             include: { user: true }
         }),
         prisma.userSettings.findMany({
-            where: { userId: { in: staffIds } }
+            where: { userId: { in: staffIds } },
+            select: { userId: true, businessName: true, fullName: true, photoUrl: true, jobTitle: true }
         })
     ]);
 
@@ -1121,30 +1127,25 @@ export async function getTaskHistory(taskId: string) {
     const targetBranchId = task?.zone?.branchId || (task?.zone?.userId ? task.zone.userId : null)
 
     members.forEach(m => {
-        staffMap.set(m.id, {
+        const details = {
             name: m.name || m.user?.businessName || "Miembro del Equipo",
             photo: m.user?.photoUrl || null,
-            // Store a fallback branchId if available on the member's owner
             branchId: m.ownerId,
             jobTitle: m.jobTitle || "Colaborador"
-        })
+        };
+        staffMap.set(m.id, details);
+        if (m.userId) staffMap.set(m.userId, details);
     });
 
     // Also map users found directly via UserSettings (fallback for owner doing tasks)
-    if (staffIds.length > 0) {
-        // ... (existing logic for users fallback, ensure it sets photo)
-        const users = await prisma.userSettings.findMany({
-            where: { userId: { in: staffIds } },
-            select: { userId: true, businessName: true, fullName: true, photoUrl: true }
-        });
-
+    if (users && users.length > 0) {
         users.forEach(u => {
             if (!staffMap.has(u.userId)) {
                 staffMap.set(u.userId, {
                     name: u.fullName || u.businessName || "Administrador",
                     photo: u.photoUrl || null,
-                    branchId: targetBranchId || u.userId, // Fallback to self as branch context if owner
-                    jobTitle: "Administración"
+                    branchId: targetBranchId || u.userId,
+                    jobTitle: u.jobTitle || "Administración"
                 })
             }
         });
