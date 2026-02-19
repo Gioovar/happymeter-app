@@ -47,7 +47,7 @@ export default async function OpsPage() {
                         </div>
                         <div>
                             <h3 className="text-2xl font-bold text-white mb-1">Escanear Cliente</h3>
-                            <p className="text-indigo-100 text-sm font-medium">Registrar visitas o canjear premios</p>
+                            <p className="text-indigo-100 text-sm font-medium">Visitas, puntos, premios y reservaciones</p>
                         </div>
                     </div>
                 </Link>

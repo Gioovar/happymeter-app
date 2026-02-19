@@ -383,9 +383,9 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
             <div className="bg-white rounded-xl shadow-lg border border-slate-100 p-4">
                 <div className="text-center mb-4">
                     <h2 className="text-lg font-bold text-slate-800 flex items-center justify-center gap-2">
-                        <ScanLine className="w-5 h-5 text-indigo-600" /> Escaner de Lealtad
+                        <ScanLine className="w-5 h-5 text-indigo-600" /> Escáner Operativo
                     </h2>
-                    <p className="text-sm text-slate-500">Escanea el QR del cliente o su premio</p>
+                    <p className="text-sm text-slate-500">Visitas, puntos, premios o reservaciones</p>
                 </div>
 
                 <div className="relative">
