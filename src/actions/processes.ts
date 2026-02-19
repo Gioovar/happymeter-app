@@ -1105,7 +1105,7 @@ export async function getTaskHistory(taskId: string) {
         })
     ]);
 
-    const staffMap = new Map<string, { name: string, photo: string | null, branchId?: string }>();
+    const staffMap = new Map<string, { name: string, photo: string | null, branchId?: string, jobTitle?: string }>();
 
 
 
@@ -1125,7 +1125,8 @@ export async function getTaskHistory(taskId: string) {
             name: m.name || m.user?.businessName || "Miembro del Equipo",
             photo: m.user?.photoUrl || null,
             // Store a fallback branchId if available on the member's owner
-            branchId: m.ownerId
+            branchId: m.ownerId,
+            jobTitle: m.jobTitle || "Colaborador"
         })
     });
 
@@ -1142,7 +1143,8 @@ export async function getTaskHistory(taskId: string) {
                 staffMap.set(u.userId, {
                     name: u.fullName || u.businessName || "Administrador",
                     photo: u.photoUrl || null,
-                    branchId: targetBranchId || u.userId // Fallback to self as branch context if owner
+                    branchId: targetBranchId || u.userId, // Fallback to self as branch context if owner
+                    jobTitle: "Administración"
                 })
             }
         });
@@ -1191,6 +1193,7 @@ export async function getTaskHistory(taskId: string) {
             completedBy: staff?.name || "Desconocido",
             completedByPhoto: staff?.photo || null,
             completedByBranchId: targetBranchId || staff?.branchId || null, // Priority: Task Branch -> Member Owner -> Null
+            completedByJobTitle: staff?.jobTitle || "Colaborador",
             media: media
         });
     });

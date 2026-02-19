@@ -20,6 +20,7 @@ interface TaskHistory {
     completedByPhoto?: string | null
     staffId?: string | null
     completedByBranchId?: string | null
+    completedByJobTitle?: string
     status: string // ON_TIME, LATE
     comments?: string | null
     media: { id: string, url: string, type: 'PHOTO' | 'VIDEO' }[]
@@ -270,7 +271,7 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                                 Realizado por
                                             </div>
                                             <h3 className="text-white font-bold text-xl leading-tight md:text-2xl mb-1">{selectedEvidence.completedBy}</h3>
-                                            <p className="text-sm text-gray-400">Colaborador</p>
+                                            <p className="text-sm text-gray-400">{selectedEvidence.completedByJobTitle || 'Colaborador'}</p>
                                         </div>
                                     </div>
 
