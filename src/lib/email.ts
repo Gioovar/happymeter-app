@@ -4,7 +4,8 @@ import { NewResponseEmail } from '@/emails/NewResponseEmail'
 import { InvitationEmail } from '@/emails/InvitationEmail'
 
 // Default sender
-const SENDER = 'HappyMeter <notificaciones@happymeters.com>'
+// Default sender
+export const DEFAULT_SENDER = 'HappyMeter <notificaciones@happymeters.com>'
 
 // In Production, this should be 'HappyMeter <alerts@tudominio.com>'
 
@@ -18,7 +19,7 @@ export async function sendDiplomaEmail(
 
     try {
         await resend.emails.send({
-            from: SENDER,
+            from: DEFAULT_SENDER,
             to: [to],
             // bcc: ['admin@happymeter.app'], // Optional monitoring
             subject: `🏆 Diploma del Mes: ${winnerName}`,
@@ -55,7 +56,7 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
 
     try {
         await resend.emails.send({
-            from: SENDER,
+            from: DEFAULT_SENDER,
             to: [to],
             subject: '¡Bienvenido a HappyMeter! 🚀',
             react: WelcomeEmail({ firstName }),
@@ -83,7 +84,7 @@ export async function sendResponseAlert(
         const subject = `${emoji} Nueva Calificación: ${npsScore}/10 en ${surveyName}`
 
         await resend.emails.send({
-            from: SENDER,
+            from: DEFAULT_SENDER,
             to: [to],
             // Add Reply-To so they can reply to the customer if we had their email, 
             // but for now it's just a noreply alert.
@@ -116,7 +117,7 @@ export async function sendInvitationEmail(
 
     try {
         const response = await resend.emails.send({
-            from: SENDER,
+            from: DEFAULT_SENDER,
             to: [to],
             subject: isOperator
                 ? `🔢 Tu Código de Acceso para Operaciones: ${code}`
@@ -149,7 +150,7 @@ export async function sendStaffAssignmentEmail(
 
     try {
         await resend.emails.send({
-            from: SENDER,
+            from: DEFAULT_SENDER,
             to: [to],
             subject: `📋 Nueva Asignación: Responsable de ${zoneName}`,
             html: `
@@ -182,7 +183,7 @@ export async function sendTeamAddedEmail(
 
     try {
         await resend.emails.send({
-            from: SENDER,
+            from: DEFAULT_SENDER,
             to: [to],
             subject: `🚀 Has sido unido al equipo de ${teamName}`,
             html: `

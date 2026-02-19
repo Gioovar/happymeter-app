@@ -8,6 +8,7 @@ import { resend } from "@/lib/resend"
 import { sendSMS } from "@/lib/sms"
 import { sendWhatsAppNotification } from "@/lib/whatsapp"
 import { ReservationConfirmationEmail } from "@/emails/ReservationConfirmation"
+import { DEFAULT_SENDER } from "@/lib/email"
 
 // Helper to resolve and verify access
 async function resolveEffectiveUserId(currentUserId: string, targetBranchId?: string) {
@@ -860,40 +861,38 @@ export async function createReservation(data: {
 
         // [NOTIFICATIONS] Async send (Email + SMS + WhatsApp)
         if (newReservationId && reservationDate && tableInfo) {
+            console.log(`[Reservation Debug] Starting notifications for ${newReservationId}. Email: ${data.customer.email}`)
             try {
-                // Fallback business name lookup
+                // ... Existing logic ...
                 let businessName = "HappyMeters Place"
                 let loyaltyUrl = ""
 
-                // Safely access nested properties
                 const fp = tableInfo?.floorPlan
                 if (fp?.user) {
                     const settings = fp.user
                     if (settings.businessName) businessName = settings.businessName
-
-                    // Find loyalty program
                     const program = settings.loyaltyProgram
                     if (program) {
-                        // Construct URL (assume production domain or localhost)
                         const domain = process.env.NEXT_PUBLIC_APP_URL || "https://www.happymeters.com"
                         loyaltyUrl = `${domain}/loyalty/${program.id}`
                     }
                 }
 
-                // 1. Generate QR Code
                 const qrData = `RESERVATION:${newReservationId}`
                 const qrCodeUrl = await QRCode.toDataURL(qrData)
+                console.log(`[Reservation Debug] QR Code generated successfully`)
 
                 const dateStr = new Date(reservationDate!).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
                 const timeStr = new Date(reservationDate!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 
-                const notificationPromises = []
+                const notificationPromises: any[] = []
 
                 // 2. EMAIL (Resend)
                 if (data.customer.email) {
+                    console.log(`[Reservation Debug] Queueing EMAIL to ${data.customer.email}`)
                     notificationPromises.push(
                         resend.emails.send({
-                            from: 'Reservas <noreply@happymeters.app>',
+                            from: DEFAULT_SENDER,
                             to: [data.customer.email],
                             subject: `Confirmación de Reserva - ${businessName}`,
                             react: ReservationConfirmationEmail({
@@ -907,39 +906,60 @@ export async function createReservation(data: {
                                 reservationId: newReservationId!,
                                 loyaltyUrl: loyaltyUrl || undefined
                             })
-                        })
+                        }).then(res => ({ type: 'EMAIL', ...res }))
                     )
                 }
 
                 // 3. SMS (Twilio)
                 if (data.customer.phone) {
+                    console.log(`[Reservation Debug] Queueing SMS to ${data.customer.phone}`)
                     const shortDate = new Date(reservationDate!).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
                     const shortTime = new Date(reservationDate!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
                     let smsBody = `Reserva confirmada en ${businessName}. ${shortDate} ${shortTime}, ${data.reservations[0].partySize} pers. Muestra este código: ${newReservationId}.`
                     if (loyaltyUrl) smsBody += ` Únete al club: ${loyaltyUrl}`
 
-                    notificationPromises.push(sendSMS(data.customer.phone, smsBody))
+                    notificationPromises.push(sendSMS(data.customer.phone, smsBody).then(res => ({ type: 'SMS', ...res })))
                 }
 
-                // 4. WHATSAPP (Meta) - Only if explicitly integrated
+                // 4. WHATSAPP (Meta)
                 if (data.customer.phone) {
+                    console.log(`[Reservation Debug] Queueing WHATSAPP to ${data.customer.phone}`)
                     notificationPromises.push(
                         sendWhatsAppNotification(data.customer.phone, 'reservation_confirmed_v1', {
                             1: data.customer.name,
                             2: businessName,
                             3: `${dateStr} a las ${timeStr}`,
-                            4: newReservationId!, // Unique Code
-                            5: loyaltyUrl || "https://happymeters.app" // Loyalty Link
-                        })
+                            4: newReservationId!,
+                            5: loyaltyUrl || "https://happymeters.app"
+                        }).then(res => ({ type: 'WHATSAPP', success: !!res }))
                     )
                 }
 
-                // Await all notifications to ensure delivery in serverless environment
-                await Promise.allSettled(notificationPromises)
+                const results = await Promise.allSettled(notificationPromises)
+                const mappedResults = results.map(r => r.status === 'fulfilled' ? r.value : { error: r.reason })
 
-            } catch (notifyError) {
-                console.error("Notification Error:", notifyError)
+                // [POST-RESERVATION LOGIC] Return success with Action
+                const program = tableInfo?.floorPlan?.user?.loyaltyProgram
+
+                if (program) {
+                    const businessName = program.businessName || tableInfo?.floorPlan?.user?.businessName || "HappyMeters"
+                    return {
+                        success: true,
+                        action: 'REDIRECT_LOYALTY',
+                        programId: program.id,
+                        businessName: businessName,
+                        joinMessage: "Únete a nuestro programa de lealtad",
+                        notificationResults: mappedResults
+                    }
+                }
+
+                return { success: true, notificationResults: mappedResults }
+            } catch (notifyError: any) {
+                console.error("[Reservation Debug] Notification Block Error:", notifyError)
+                return { success: true, notificationError: notifyError.message }
             }
+        } else {
+            console.log(`[Reservation Debug] Skipping notifications. ID: ${newReservationId}, Date: ${reservationDate}, TableInfo: ${!!tableInfo}`)
         }
 
         // [POST-RESERVATION LOGIC] Return success with Action

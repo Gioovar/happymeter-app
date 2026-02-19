@@ -84,6 +84,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
     const [postReservationAction, setPostReservationAction] = useState<any>(null)
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
     const [showEmptyState, setShowEmptyState] = useState(false)
+    const [serverError, setServerError] = useState<string | null>(null)
 
     // Check for empty floor on load
     useEffect(() => {
@@ -241,25 +242,29 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             return
         }
 
-        const combinedDate = new Date(selectedDate || new Date())
-        const [hours, minutes] = selectedTime.split(':').map(Number)
-        combinedDate.setHours(hours, minutes)
-
-        setIsBooking(true)
         const bookingData = {
             reservations: selectedTables.map(t => ({
                 tableId: t.id,
-                date: combinedDate.toISOString(), // USE ISO STRING
+                date: selectedDate?.toISOString() || new Date().toISOString(), // Use the date confirmed during search
                 partySize: t.capacity || 4
             })),
             customer: customerForm
         }
+        setServerError(null)
 
         try {
             const result = await createReservation(bookingData)
 
             if (result?.success) {
                 const res = result as any
+                console.log("[Reservation Notification Debug] Server Result:", res);
+                if (res.notificationResults) {
+                    console.table(res.notificationResults);
+                }
+                if (res.notificationError) {
+                    console.error("[Reservation Notification Debug] Server Error in Notification Block:", res.notificationError);
+                }
+
                 if (isAdmin) {
                     toast.success("Reserva Creada (Admin)", {
                         description: "La reserva se ha guardado correctamente.",
@@ -292,12 +297,14 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                     setIsSuccessModalOpen(true)
                 }
             } else {
+                setServerError(result?.error || "Intenta de nuevo más tarde.")
                 toast.error("Error al reservar", {
                     description: result?.error || "Intenta de nuevo más tarde."
                 })
             }
         } catch (err) {
             console.error("Client reservation error:", err)
+            setServerError("Hubo un problema de conexión. Intenta de nuevo.")
             toast.error("Error inesperado", { description: "Hubo un problema de conexión. Intenta de nuevo." })
         } finally {
             setIsBooking(false)
@@ -316,8 +323,11 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
         try {
             // Construct full date in Client Timezone (Local)
             const [hours, minutes] = selectedTime.split(':').map(Number)
-            const targetDate = new Date(selectedDate) // Clone date
+            const targetDate = new Date(selectedDate || new Date()) // Clone date
             targetDate.setHours(hours, minutes, 0, 0)
+
+            // Update the main selectedDate state to include the time
+            setSelectedDate(targetDate)
 
             console.log("Searching Tables:", { targetDate, activeFloorId, programId })
             // Pass programId as fallback context, using ISO string for Safe Serialization
@@ -817,6 +827,11 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                 className="contents"
                             >
                                 <div className="py-4 space-y-4">
+                                    {serverError && (
+                                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 text-xs font-medium animate-in fade-in slide-in-from-top-1">
+                                            ⚠️ {serverError}
+                                        </div>
+                                    )}
                                     {/* Customer Form */}
                                     <div className="space-y-3 p-3 bg-zinc-800/50 rounded-xl border border-white/5">
                                         <div className="space-y-1">
@@ -862,11 +877,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                         <span className="text-sm font-bold">{totalCapacity}</span>
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl w-full hover:bg-zinc-800 transition"
-                                        onClick={() => setIsDatePickerOpen(true)}
-                                    >
+                                    <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-xl w-full">
                                         <div className="flex items-center gap-3">
                                             <Calendar className="w-5 h-5 text-zinc-400" />
                                             <div className="text-left">
@@ -876,8 +887,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                                 </p>
                                             </div>
                                         </div>
-                                        <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-md">Editar</span>
-                                    </button>
+                                    </div>
 
                                     {totalPrice > 0 && (
                                         <div className="flex items-center justify-between p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
@@ -942,7 +952,7 @@ function EmptyStateDialog({ open, phone, programId }: { open: boolean, phone?: s
 
     return (
         <Dialog open={open}>
-            <DialogContent className="max-w-sm bg-zinc-900 border-zinc-800 text-white p-6 rounded-3xl" disableOutsideClick={true}>
+            <DialogContent className="max-w-sm bg-zinc-900 border-zinc-800 text-white p-6 rounded-3xl">
                 <DialogHeader className="mb-4">
                     <DialogTitle className="text-center text-xl font-bold">¡Lo sentimos!</DialogTitle>
                     <DialogDescription className="text-zinc-400 text-center">
