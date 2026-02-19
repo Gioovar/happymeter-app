@@ -331,7 +331,12 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
             console.log("Searching Tables:", { targetDate, activeFloorId, programId })
             // Pass programId as fallback context, using ISO string for Safe Serialization
-            const result = await getAvailableTables(targetDate.toISOString(), activeFloorId, programId)
+            const result = await getAvailableTables(
+                targetDate.toISOString(),
+                activeFloorId,
+                programId,
+                new Date().getTimezoneOffset()
+            )
 
             if (result.success) {
                 setOccupiedTableIds(result.occupiedTableIds || [])

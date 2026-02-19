@@ -646,7 +646,7 @@ async function checkTableAvailability(
 }
 
 // Note: We use string date to avoid serialization issues across server boundary
-export async function getAvailableTables(targetDateIso: string, floorPlanId?: string, programId?: string) {
+export async function getAvailableTables(targetDateIso: string, floorPlanId?: string, programId?: string, timezoneOffsetMinutes?: number) {
     console.log("SERVER: getAvailableTables called", { targetDateIso, floorPlanId, programId })
 
     try {
@@ -677,20 +677,27 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
             return { success: false, occupiedTableIds: [] }
         }
 
-        const settings = await getEffectiveReservationSettings(effectiveOwnerId)
+        // Calculate "Local Day" boundaries
         const requestDate = new Date(targetDateIso)
+        const offsetMs = (timezoneOffsetMinutes || 0) * 60 * 1000
 
-        if (isNaN(requestDate.getTime())) {
-            console.error("Invalid date received:", targetDateIso)
-            return { success: false, occupiedTableIds: [] }
-        }
+        // adjust start/end to be local midnight of that day in UTC
+        // If we subtract offset from UTC date, we get local time but in UTC format.
+        // e.g. Feb 19 20:00 UTC (Feb 19 14:00 Local @ -6h)
+        // localTimestamp = 20:00 - (-6:00) = 26:00 (Wait, offset is usually positive for West)
+        // JS offset: -360 for Mexico (UTC-6)
+        // So localTimestamp = UTC - (offset * 60000)
 
-        // Get all tables for this owner/floor (Optimization: Fetch only needed)
-        // Actually we scan ALL reservations for the day for this owner effectively.
-        const dayStart = new Date(requestDate)
-        dayStart.setHours(0, 0, 0, 0)
-        const dayEnd = new Date(requestDate)
-        dayEnd.setHours(23, 59, 59, 999)
+        const localTimestamp = requestDate.getTime() - offsetMs
+        const localDate = new Date(localTimestamp)
+
+        localDate.setUTCHours(0, 0, 0, 0)
+        const dayStart = new Date(localDate.getTime() + offsetMs)
+
+        localDate.setUTCHours(23, 59, 59, 999)
+        const dayEnd = new Date(localDate.getTime() + offsetMs)
+
+        console.log("SERVER: Day Range (UTC):", { dayStart: dayStart.toISOString(), dayEnd: dayEnd.toISOString() })
 
         // Fetch relevant reservations only
         const dayReservations = await prisma.reservation.findMany({
