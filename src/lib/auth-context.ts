@@ -29,6 +29,11 @@ export async function getEffectiveUserId(branchSlug?: string): Promise<string> {
         return userId;
     }
 
+    // Allow accessing own scope via User ID
+    if (branchSlug === userId) {
+        return userId;
+    }
+
     // Context Switch Requested
     try {
         // Find the branch where the slug matches AND the chain is owned by the current user
@@ -91,6 +96,22 @@ export async function getDashboardContext(branchSlug?: string) {
             isBranch: false,
             name: 'Mi Negocio' // Or fetch real name
         };
+    }
+
+    // Allow accessing own scope via User ID (Single Business Mode / Owner Context)
+    if (branchSlug === userId) {
+        // We fetch settings to get the real business name if possible, or fallback
+        const settings = await prisma.userSettings.findUnique({
+            where: { userId },
+            select: { businessName: true }
+        });
+
+        return {
+            userId,
+            isBranch: true, // Treat as "Branch Mode" for layout compatibility
+            name: settings?.businessName || 'Mi Negocio',
+            params: { branchSlug }
+        }
     }
 
     const branch = await prisma.chainBranch.findFirst({
