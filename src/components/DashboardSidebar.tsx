@@ -128,7 +128,7 @@ export default function DashboardSidebar({
     const firstBranchUrl = '/dashboard/chains'
 
     // Detect Chain Dashboard View (or Corporate Chat)
-    const isChainView = pathname === '/dashboard/chains' || pathname === '/dashboard/chat' || pathname === '/dashboard/team/chat'
+    const isChainView = pathname === '/dashboard/chains' || (pathname === '/dashboard/chat' && !branchSlug) || pathname === '/dashboard/team/chat'
 
     const SidebarContent = () => (
         <>
@@ -188,6 +188,18 @@ export default function DashboardSidebar({
             {/* --- CHAIN DASHBOARD SIDEBAR (EXCLUSIVE VIEW) --- */}
             {isChainView ? (
                 <div className="px-4 py-4 space-y-3">
+                    {/* BACK TO DASHBOARD BUTTON */}
+                    <Link
+                        href={branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'}
+                        onClick={() => toggleMobileMenu(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 mb-6 rounded-xl border border-white/5 hover:bg-white/5 text-gray-400 hover:text-white transition-all group"
+                    >
+                        <div className="p-1.5 rounded-lg bg-gray-800 text-gray-400 group-hover:text-white">
+                            <Home className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-bold">Regresar al Dashboard</span>
+                    </Link>
+
                     <FeatureGuard feature="ai_analytics">
                         <Link
                             href="/dashboard/chat"
@@ -279,24 +291,47 @@ export default function DashboardSidebar({
                                     key={branch.id}
                                     href={`/dashboard/${bSlug}`}
                                     onClick={() => toggleMobileMenu(false)}
-                                    className="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-violet-500/30 text-gray-300 hover:text-white transition-all group shadow-sm hover:shadow-lg hover:shadow-violet-900/10"
+                                    className={cn(
+                                        "flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-violet-500/30 text-gray-300 hover:text-white transition-all group shadow-sm hover:shadow-lg hover:shadow-violet-900/10",
+                                        branchSlug === bSlug && "bg-violet-600/10 border-violet-500/50 text-white"
+                                    )}
                                 >
-                                    <div className="p-2 rounded-lg bg-gradient-to-br from-violet-600/20 to-indigo-600/20 text-violet-400 group-hover:text-white transition-colors">
+                                    <div className={cn(
+                                        "p-2 rounded-lg bg-gradient-to-br transition-colors",
+                                        branchSlug === bSlug ? "from-violet-600 to-indigo-600 text-white" : "from-violet-600/20 to-indigo-600/20 text-violet-400 group-hover:text-white"
+                                    )}>
                                         <Store className="w-5 h-5" />
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-sm font-bold leading-tight group-hover:text-violet-200">
                                             {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.branch.businessName || branch.name || 'Sucursal')}
                                         </span>
-                                        <span className="text-[10px] text-gray-500 group-hover:text-gray-400">Administrar</span>
+                                        <span className="text-[10px] text-gray-500 group-hover:text-gray-400">
+                                            {branchSlug === bSlug ? "Gestionando ahora" : "Administrar"}
+                                        </span>
                                     </div>
                                 </Link>
                             )
                         })
                     ) : (
-                        <div className="p-4 rounded-xl bg-white/5 border border-dashed border-white/10 text-center">
-                            <Store className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                            <p className="text-sm text-gray-400">No tienes sucursales vinculadas.</p>
+                        <div className="space-y-3">
+                            {/* If no chains, look for user business name (single branch user) */}
+                            <Link
+                                href={branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'}
+                                onClick={() => toggleMobileMenu(false)}
+                                className="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-violet-500/30 text-gray-300 hover:text-white transition-all group shadow-sm"
+                            >
+                                <div className="p-2 rounded-lg bg-gradient-to-br from-violet-600/20 to-indigo-600/20 text-violet-400 group-hover:text-white transition-colors">
+                                    <Store className="w-5 h-5" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-bold leading-tight group-hover:text-violet-200">
+                                        {user?.businessName || 'Mi Negocio'}
+                                    </span>
+                                    <span className="text-[10px] text-gray-500 group-hover:text-gray-400">Panel Principal</span>
+                                </div>
+                            </Link>
+                            <p className="px-2 text-[9px] text-gray-600 uppercase tracking-tighter italic">No tienes otras sucursales configuradas en cadena.</p>
                         </div>
                     )}
 
@@ -309,7 +344,12 @@ export default function DashboardSidebar({
                     <div className="px-4 pb-2 pt-2">
                         <FeatureGuard feature="ai_analytics">
                             <Link
-                                href={branchSlug ? `/dashboard/${branchSlug}/chat` : `/dashboard/chat`}
+                                href={(() => {
+                                    if (branchSlug) return `/dashboard/${branchSlug}/chat`
+                                    const firstBranch = chains.flatMap(c => c.branches)[0]
+                                    if (firstBranch) return `/dashboard/${firstBranch.slug || firstBranch.branchId}/chat`
+                                    return `/dashboard/chat`
+                                })()}
                                 id="nav-item-ai-chat"
                                 onClick={() => toggleMobileMenu(false)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
