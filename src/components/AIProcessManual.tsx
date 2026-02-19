@@ -27,11 +27,12 @@ interface AIProcessManualProps {
     initialAutoStart?: boolean
     initialFrom?: Date
     initialTo?: Date
-    targetUserId?: string; // New Prop for Branch Context
-    branchName?: string; // New Prop for Branch Name
+    targetUserId?: string
+    branchName?: string
+    initialAutoDownload?: boolean // New Prop
 }
 
-export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys, initialAutoStart = false, initialFrom, initialTo, targetUserId, branchName }: AIProcessManualProps) {
+export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys, initialAutoStart = false, initialFrom, initialTo, targetUserId, branchName, initialAutoDownload = false }: AIProcessManualProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
     const [loading, setLoading] = useState(true)
@@ -54,6 +55,9 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
     // El algoritmo detectWeaknesses ahora las genera dinámicamente.
 
     // Actualizar industria si cambia prop initialIndustry
+    // Auto-Download Effect
+    // Auto-download effect moved below function definition
+
     useEffect(() => {
         if (initialIndustry) setIndustry(initialIndustry)
     }, [initialIndustry])
@@ -293,6 +297,16 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
             toast.error("Error al generar PDF")
         }
     }
+
+    // Auto-Download Effect (Correctly placed)
+    useEffect(() => {
+        if (!loading && initialAutoDownload) {
+            const timer = setTimeout(() => {
+                downloadPDF()
+            }, 1500)
+            return () => clearTimeout(timer)
+        }
+    }, [loading, initialAutoDownload])
 
 
 

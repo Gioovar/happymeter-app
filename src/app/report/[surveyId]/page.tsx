@@ -46,6 +46,7 @@ export default async function PublicReportPage({ params, searchParams }: PagePro
                     surveyTitle={meta.title}
                     initialIndustry={meta.industry || 'restaurant'}
                     publicToken={token}
+                    initialAutoDownload={resolvedSearchParams.action === 'download'}
                 />
             </div>
         )
