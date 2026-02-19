@@ -677,6 +677,8 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
             return { success: false, occupiedTableIds: [] }
         }
 
+        const settings = await getEffectiveReservationSettings(effectiveOwnerId)
+
         // Calculate "Local Day" boundaries
         const requestDate = new Date(targetDateIso)
         const offsetMs = (timezoneOffsetMinutes || 0) * 60 * 1000
