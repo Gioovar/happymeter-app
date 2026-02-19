@@ -1105,12 +1105,13 @@ export async function getTaskHistory(taskId: string) {
         })
     ]);
 
-    const staffMap = new Map<string, { name: string, photo: string | null }>();
+    const staffMap = new Map<string, { name: string, photo: string | null, branchId?: string }>();
 
     members.forEach(m => {
         staffMap.set(m.id, {
             name: m.name || m.user?.businessName || "Miembro del Equipo",
-            photo: m.user?.photoUrl || null
+            photo: m.user?.photoUrl || null,
+            branchId: m.branchId
         })
     });
 
@@ -1119,6 +1120,12 @@ export async function getTaskHistory(taskId: string) {
             name: u.fullName || u.businessName || "Administrador",
             photo: null
         })
+    });
+
+    // Fetch task to get branch context
+    const task = await prisma.processTask.findUnique({
+        where: { id: taskId },
+        include: { zone: true }
     });
 
     // Grouping Logic
@@ -1163,6 +1170,7 @@ export async function getTaskHistory(taskId: string) {
             comments: relatedItems.find(r => r.comments)?.comments || null, // Find first non-empty comment
             completedBy: staff?.name || "Desconocido",
             completedByPhoto: staff?.photo || null,
+            completedByBranchId: task?.zone?.branchId || null, // Use task's branch context
             media: media
         });
     });

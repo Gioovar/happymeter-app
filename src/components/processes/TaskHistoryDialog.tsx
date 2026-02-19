@@ -1,6 +1,7 @@
 
 'use client'
 
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,8 @@ interface TaskHistory {
     submittedAt: Date | string
     completedBy: string
     completedByPhoto?: string | null
+    staffId?: string | null
+    completedByBranchId?: string | null
     status: string // ON_TIME, LATE
     comments?: string | null
     media: { id: string, url: string, type: 'PHOTO' | 'VIDEO' }[]
@@ -322,9 +325,13 @@ export default function TaskHistoryDialog({ open, onOpenChange, task, onStartTas
                                     <div className="flex-1 hidden md:block" />
 
                                     {/* Action Button */}
-                                    <Button className="w-full bg-white text-black hover:bg-gray-200 border border-transparent h-10 rounded-xl font-bold gap-2 transition-all md:h-12 md:text-base shadow-lg shadow-white/5">
-                                        <span>💬</span> Enviar mensaje
-                                    </Button>
+                                    {selectedEvidence.staffId && selectedEvidence.completedByBranchId && (
+                                        <Link href={`/dashboard/team/chat?bid=${selectedEvidence.completedByBranchId}&mid=${selectedEvidence.staffId}`}>
+                                            <Button className="w-full bg-white text-black hover:bg-gray-200 border border-transparent h-10 rounded-xl font-bold gap-2 transition-all md:h-12 md:text-base shadow-lg shadow-white/5">
+                                                <span>💬</span> Enviar mensaje
+                                            </Button>
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         </div>
