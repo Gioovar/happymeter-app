@@ -1009,3 +1009,58 @@ export async function updateReservationStatus(id: string, status: string) {
         return { success: false, error: "Failed to update status" }
     }
 }
+
+export async function validateReservationScan(reservationId: string) {
+    try {
+        const reservation = await prisma.reservation.findUnique({
+            where: { id: reservationId },
+            include: {
+                table: {
+                    include: {
+                        floorPlan: {
+                            include: {
+                                user: true
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        if (!reservation) {
+            return { success: false, error: "Reservación no encontrada" }
+        }
+
+        return {
+            success: true,
+            reservationId: reservation.id,
+            customerName: reservation.customerName,
+            customerPhone: reservation.customerPhone,
+            date: reservation.date,
+            partySize: reservation.partySize,
+            tableLabel: reservation.table?.label || "Mesa",
+            businessName: reservation.table?.floorPlan?.user?.businessName || "Negocio",
+            status: reservation.status
+        }
+    } catch (error) {
+        console.error("Error validating reservation scan:", error)
+        return { success: false, error: "Error al validar el código" }
+    }
+}
+
+export async function confirmReservationCheckin(reservationId: string) {
+    try {
+        // Here we can set status to 'CONFIRMED' or a new 'CHECKED_IN' status if we add it to schema.
+        // For now, let's use 'CONFIRMED' as it marks the successful arrival.
+        await prisma.reservation.update({
+            where: { id: reservationId },
+            data: { status: 'CONFIRMED' }
+        })
+
+        revalidatePath('/dashboard/reservations')
+        return { success: true }
+    } catch (error) {
+        console.error("Error confirming reservation checkin:", error)
+        return { success: false, error: "Error al confirmar llegada" }
+    }
+}

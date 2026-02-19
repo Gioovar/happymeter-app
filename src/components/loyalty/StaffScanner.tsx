@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Html5Qrcode } from "html5-qrcode"
 import { toast } from "sonner"
 import { validateVisitScan, logCustomerVisit, redeemReward } from "@/actions/loyalty"
+import { validateReservationScan, confirmReservationCheckin } from "@/actions/reservations"
 import { Loader2, ScanLine, Tag, UtensilsCrossed, X, DollarSign, Camera, RefreshCcw, UploadCloud, Image as ImageIcon } from "lucide-react"
 import Image from "next/image"
 
@@ -34,6 +35,10 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
     const [showRedemptionModal, setShowRedemptionModal] = useState(false)
     const [pendingRedemptionCode, setPendingRedemptionCode] = useState<string | null>(null)
     const [evidenceBase64, setEvidenceBase64] = useState<string | null>(null)
+
+    // Reservation State
+    const [showReservationModal, setShowReservationModal] = useState(false)
+    const [pendingReservation, setPendingReservation] = useState<any>(null)
 
     useEffect(() => {
         // Initialize scanner instance once
@@ -148,6 +153,9 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
         } else if (data.startsWith("R:")) {
             type = "REDEEM"
             payload = data.substring(2)
+        } else if (data.includes("/reservations/checkin/")) {
+            type = "RESERVATION"
+            payload = data.split("/reservations/checkin/")[1]?.split("?")[0] || data
         }
 
         console.log(`Scan handling: Raw=${data}, Type=${type}, Payload=${payload}`)
@@ -206,6 +214,19 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
             setEvidenceBase64(null)
             setShowRedemptionModal(true)
             setIsProcessing(false) // Wait for user interaction
+        } else if (type === 'RESERVATION') {
+            toast.loading("Buscando reservación...")
+            const res = await validateReservationScan(payload)
+            toast.dismiss()
+
+            if (res.success) {
+                setPendingReservation(res)
+                setShowReservationModal(true)
+            } else {
+                toast.error(res.error || "No se encontró la reservación")
+                resumeScanner(2000)
+            }
+            setIsProcessing(false)
         } else {
             // Unknown type
             toast.error("Formato QR no reconocido")
@@ -278,6 +299,25 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                 }
             }
         }, delayMs)
+    }
+
+    const handleConfirmCheckin = async () => {
+        if (!pendingReservation) return
+        toast.loading("Confirmando llegada...")
+        const res = await confirmReservationCheckin(pendingReservation.reservationId)
+        toast.dismiss()
+
+        if (res.success) {
+            toast.success("¡Llegada confirmada!", {
+                description: `Cliente: ${pendingReservation.customerName}`,
+                duration: 5000
+            })
+            setShowReservationModal(false)
+            setPendingReservation(null)
+            resumeScanner(3000)
+        } else {
+            toast.error(res.error || "Error al confirmar")
+        }
     }
 
     const submitVisit = async (token: string, amount: number = 0) => {
@@ -528,6 +568,57 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                                 className="flex-1 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-200"
                             >
                                 Confirmar Entrega
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* RESERVATION CHECK-IN MODAL */}
+            {showReservationModal && pendingReservation && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900">
+                                    Reservación
+                                </h3>
+                                <p className="text-slate-500 text-sm">
+                                    Confirmar llegada del cliente
+                                </p>
+                            </div>
+                            <button onClick={() => { setShowReservationModal(false); setPendingReservation(null); resumeScanner(500); }} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center">
+                                <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <UtensilsCrossed className="w-8 h-8" />
+                                </div>
+                                <p className="text-indigo-900 font-bold text-lg">
+                                    {pendingReservation.customerName}
+                                </p>
+                                <div className="mt-2 text-sm text-indigo-600 space-y-1">
+                                    <p>Mesa: <span className="font-bold">{pendingReservation.tableLabel}</span></p>
+                                    <p>Personas: <span className="font-bold">{pendingReservation.partySize}</span></p>
+                                    <p>Hora: <span className="font-bold">{new Date(pendingReservation.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => { setShowReservationModal(false); setPendingReservation(null); resumeScanner(500); }}
+                                className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition-colors"
+                            >
+                                Cerrar
+                            </button>
+                            <button
+                                onClick={handleConfirmCheckin}
+                                className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                            >
+                                Confirmar Llegada
                             </button>
                         </div>
                     </div>
