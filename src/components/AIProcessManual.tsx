@@ -28,9 +28,10 @@ interface AIProcessManualProps {
     initialFrom?: Date
     initialTo?: Date
     targetUserId?: string; // New Prop for Branch Context
+    branchName?: string; // New Prop for Branch Name
 }
 
-export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys, initialAutoStart = false, initialFrom, initialTo, targetUserId }: AIProcessManualProps) {
+export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys, initialAutoStart = false, initialFrom, initialTo, targetUserId, branchName }: AIProcessManualProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
     const [loading, setLoading] = useState(true)
@@ -338,6 +339,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                                 <span style={{ fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#7c3aed' }}>HappyMeter Intelligence</span>
                                             </div>
                                             <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, lineHeight: 1.1 }}>Reporte Ejecutivo</h1>
+                                            {branchName && <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '5px 0 0 0', color: '#475569' }}>{branchName}</h2>}
                                             <p style={{ fontSize: '18px', color: '#64748b', margin: '5px 0 0 0' }}>{surveyTitle}</p>
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
@@ -709,6 +711,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                                 <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-violet-400" />
                                             </div>
                                             <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">Reporte de IA HappyMeter</h1>
+                                            {branchName && <h2 className="text-2xl md:text-3xl font-bold text-violet-400 mb-2">{branchName}</h2>}
                                             <p className="text-sm md:text-xl text-gray-400 px-4">Análisis detallado y estrategias de optimización para <br className="hidden md:block" />{surveyTitle}</p>
                                             <div className="mt-4 flex justify-center">
                                                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs md:text-sm text-gray-400">

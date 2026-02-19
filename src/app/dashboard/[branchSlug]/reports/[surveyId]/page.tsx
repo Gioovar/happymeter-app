@@ -83,6 +83,7 @@ export default async function BranchReportPage({
                     initialFrom={initialFrom}
                     initialTo={initialTo}
                     targetUserId={survey.userId}
+                    branchName={context.name}
                 />
             </div>
         </div>
