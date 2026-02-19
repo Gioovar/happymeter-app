@@ -119,20 +119,26 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
         // Normalize payload logic
         let hintType: "POINTS" | "VISITS" | null = null
 
-        // Try to parse as URL first
-        if (data.includes("http") || data.includes("happymeters.com")) {
+        if (data.includes("/reservations/checkin/") || data.startsWith("RESERVATION:")) {
+            type = "RESERVATION"
+            if (data.startsWith("RESERVATION:")) {
+                payload = data.substring(12)
+            } else {
+                payload = data.split("/reservations/checkin/")[1]?.split("?")[0] || data
+            }
+        } else if (data.includes("http") || data.includes("happymeters.com")) {
             try {
                 const urlObj = new URL(data)
-                // Path: /admin/scan/TOKEN
-                const parts = urlObj.pathname.split('/')
-                // Filter empty parts
-                const cleanParts = parts.filter(p => p.length > 0)
 
-                // extract token (last part)
-                const tokenCandidate = cleanParts[cleanParts.length - 1]
-                if (tokenCandidate && tokenCandidate !== 'scan') {
-                    payload = tokenCandidate
-                    type = 'VISIT'
+                // Specific Check for Loyalty Scan Path
+                if (urlObj.pathname.includes("/scan/")) {
+                    payload = urlObj.pathname.split("/scan/")[1]?.split("?")[0] || ""
+                    type = "VISIT"
+                } else {
+                    // General fallback: last part of path
+                    const parts = urlObj.pathname.split('/').filter(p => p.length > 0)
+                    payload = parts[parts.length - 1] || ""
+                    type = "VISIT"
                 }
 
                 // Extract hint
@@ -141,7 +147,6 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                 if (typeParam === 'VISITS') hintType = 'VISITS'
 
             } catch (e) {
-                // Fallback to simple split if URL parsing fails (e.g. partial URL)
                 if (data.includes("/scan/")) {
                     payload = data.split("/scan/")[1]?.split("?")[0] || data
                     type = "VISIT"
@@ -153,9 +158,6 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
         } else if (data.startsWith("R:")) {
             type = "REDEEM"
             payload = data.substring(2)
-        } else if (data.includes("/reservations/checkin/")) {
-            type = "RESERVATION"
-            payload = data.split("/reservations/checkin/")[1]?.split("?")[0] || data
         }
 
         console.log(`Scan handling: Raw=${data}, Type=${type}, Payload=${payload}`)
