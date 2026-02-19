@@ -3,6 +3,7 @@ import { sendResponseAlert } from '@/lib/email'
 
 import { prisma } from '@/lib/prisma'
 import { sendPushNotification } from '@/lib/push-service'
+import { sendSMS } from '@/lib/sms'
 
 export async function sendCrisisAlert(response: Response, survey: Survey, answers: any[]) {
     try {
@@ -110,6 +111,16 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
                     response.id,
                     issueText
                 ).catch(console.error)
+            }
+        }
+
+        // Send SMS to collected phones
+        if (phones.size > 0) {
+            console.log(`Sending SMS to: ${Array.from(phones).join(', ')}`)
+            const smsBody = `🚨 Alerta HappyMeter: Nueva reseña baja (${rating}⭐) en ${survey.title}. Cliente: ${customerName}. "${issueText.substring(0, 50)}..."`
+
+            for (const phone of Array.from(phones)) {
+                sendSMS(phone, smsBody).catch(console.error)
             }
         }
 
