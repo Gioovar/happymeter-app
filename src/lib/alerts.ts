@@ -170,6 +170,11 @@ export async function sendCustomerReward(response: Response, survey: Survey, ans
             { type: 'text', text: `Gracias por tu visita. Tu regalo: ${appliedReward.offer}. Código: ${appliedReward.code}. ¡Te esperamos!` } // Originally Comment, now full proper message
         ])
 
+        // Send SMS to Customer
+        const smsMessage = `Hola ${response.customerName || 'Cliente'}, ¡Gracias por tu visita! Tu regalo: ${appliedReward.offer}. Muestra el código: ${appliedReward.code} en tu próxima visita.`
+        console.log(`Sending Reward SMS to Customer: ${response.customerPhone}`)
+        await sendSMS(response.customerPhone, smsMessage)
+
     } catch (error) {
         console.error('Error sending customer reward:', error)
     }
