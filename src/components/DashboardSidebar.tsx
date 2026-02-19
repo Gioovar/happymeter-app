@@ -346,8 +346,16 @@ export default function DashboardSidebar({
                             <Link
                                 href={(() => {
                                     if (branchSlug) return `/dashboard/${branchSlug}/chat`
+
+                                    // 1. Try from Chains
                                     const firstBranch = chains.flatMap(c => c.branches)[0]
                                     if (firstBranch) return `/dashboard/${firstBranch.slug || firstBranch.branchId}/chat`
+
+                                    // 2. Fallback for Single Business (No Chain) - Use User ID as Slug/ID
+                                    // The main dashboard handles this by looking up user ID if no slug.
+                                    // We need to pass the ID to the chat.
+                                    if (user?.id) return `/dashboard/${user.id}/chat`
+
                                     return `/dashboard/chat`
                                 })()}
                                 id="nav-item-ai-chat"
