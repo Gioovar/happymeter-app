@@ -648,12 +648,6 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     <h1 className="text-sm font-bold text-white text-center max-w-[200px] leading-tight text-balance">
                                         {businessName}
                                     </h1>
-                                    {occupiedTableIds.length > 0 && (
-                                        <div className="bg-red-500/20 text-red-100 text-[10px] px-2 py-0.5 rounded-full mt-1 border border-red-500/30 flex items-center gap-1 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
-                                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(239,68,68,0.8)]" />
-                                            {occupiedTableIds.length} {occupiedTableIds.length === 1 ? 'ocupada' : 'ocupadas'}
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 

@@ -948,6 +948,7 @@ export async function createReservation(data: {
 
                 const results = await Promise.allSettled(notificationPromises)
                 const mappedResults = results.map(r => r.status === 'fulfilled' ? r.value : { error: r.reason })
+                console.log(`[Reservation Debug] Notification Results for ${newReservationId}:`, JSON.stringify(mappedResults, null, 2))
 
                 // [POST-RESERVATION LOGIC] Return success with Action
                 const program = tableInfo?.floorPlan?.user?.loyaltyProgram
