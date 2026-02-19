@@ -27,6 +27,7 @@ export default async function DashboardLayout({
 
     // Sanitize User Data for Client Component (Avoid Serialization Error)
     const userData = clerkUser ? {
+        id: clerkUser.id,
         firstName: clerkUser.firstName,
         lastName: clerkUser.lastName,
         imageUrl: clerkUser.imageUrl,
