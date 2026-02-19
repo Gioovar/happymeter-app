@@ -644,9 +644,17 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                         <div className="flex flex-col items-center bg-black/60 backdrop-blur-xl rounded-[24px] px-6 py-3 border border-white/10 shadow-2xl">
                             <div className="flex flex-col items-center gap-1 mb-2">
                                 <span className="text-[9px] text-zinc-400 uppercase tracking-[0.2em] font-medium">Reservando en</span>
-                                <h1 className="text-sm font-bold text-white text-center max-w-[200px] leading-tight text-balance">
-                                    {businessName} {occupiedTableIds.length > 0 && <span className="text-[10px] text-red-500 ml-1">({occupiedTableIds.length})</span>}
-                                </h1>
+                                <div className="flex flex-col items-center">
+                                    <h1 className="text-sm font-bold text-white text-center max-w-[200px] leading-tight text-balance">
+                                        {businessName}
+                                    </h1>
+                                    {occupiedTableIds.length > 0 && (
+                                        <div className="bg-red-500/20 text-red-100 text-[10px] px-2 py-0.5 rounded-full mt-1 border border-red-500/30 flex items-center gap-1 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+                                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(239,68,68,0.8)]" />
+                                            {occupiedTableIds.length} {occupiedTableIds.length === 1 ? 'ocupada' : 'ocupadas'}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-3 bg-white/5 rounded-full px-4 py-1.5 border border-white/5">
@@ -750,17 +758,22 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     transform: `rotate(${table.rotation || 0}deg)`,
                                     borderRadius: table.type === 'ROUND' ? '50%' : '12px',
                                     // Visual Status: Red (Reserved) > Indigo (Paid) > Zinc (Free)
-                                    backgroundColor: isDeco
-                                        ? '#3f3f46' // Zinc 700 for Deco
-                                        : isReserved
-                                            ? '#ef4444' // Bright Red 500 for better visibility
-                                            : isPaid ? '#4f46e5' : '#27272a',
-                                    border: isReserved ? '2px solid rgba(255, 255, 255, 0.4)' : 'none',
+                                    backgroundColor: isReserved
+                                        ? '#ef4444' // Bright Red 500
+                                        : isPaid ? '#4f46e5' : '#18181b', // Indigo 600 or Zinc 950
+                                    border: isReserved ? '2px solid white' : (isSelected ? '2px solid white' : '1px solid rgba(255,255,255,0.1)'),
                                     color: 'white',
-                                    boxShadow: isReserved ? '0 0 20px rgba(239, 68, 68, 0.3)' : (isDeco ? 'none' : undefined),
+                                    zIndex: isReserved ? 5 : (isSelected ? 50 : 10),
+                                    boxShadow: isReserved ? '0 0 20px rgba(239,68,68,0.4)' : (isSelected ? '0 0 30px rgba(99,102,241,0.5)' : 'none'),
                                     pointerEvents: isReserved ? 'none' : 'auto'
                                 }}
                             >
+                                {/* NEW: UNMISTAKABLE RESERVED OVERLAY */}
+                                {isReserved && (
+                                    <div className="absolute inset-0 bg-red-600/60 rounded-[inherit] flex flex-col items-center justify-center pointer-events-none ring-2 ring-red-400">
+                                        <span className="text-[8px] font-black text-white uppercase tracking-tighter drop-shadow-md">OCUPADA</span>
+                                    </div>
+                                )}
                                 <div className="flex flex-col items-center justify-center text-center transform" style={{ transform: `rotate(-${table.rotation || 0}deg)` }}>
                                     <span className={`font-bold select-none truncate px-1 max-w-full ${isDeco ? 'text-[8px] text-zinc-400' : 'text-[10px] opacity-80'}`}>
                                         {table.label}
