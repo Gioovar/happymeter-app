@@ -680,27 +680,22 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
 
         const settings = await getEffectiveReservationSettings(effectiveOwnerId)
 
-        // Calculate "Local Day" boundaries
+        // Calculate "Local Day" boundaries robustly
         const requestDate = new Date(targetDateIso)
-        const offsetMs = (timezoneOffsetMinutes || 0) * 60 * 1000
+        const offset = typeof timezoneOffsetMinutes === 'number' ? timezoneOffsetMinutes : 0
+        const offsetMs = offset * 60000
 
-        // adjust start/end to be local midnight of that day in UTC
-        // If we subtract offset from UTC date, we get local time but in UTC format.
-        // e.g. Feb 19 20:00 UTC (Feb 19 14:00 Local @ -6h)
-        // localTimestamp = 20:00 - (-6:00) = 26:00 (Wait, offset is usually positive for West)
-        // JS offset: -360 for Mexico (UTC-6)
-        // So localTimestamp = UTC - (offset * 60000)
+        // 1. Convert to local "moment"
+        const localMoment = new Date(requestDate.getTime() - offsetMs)
+        const y = localMoment.getUTCFullYear()
+        const m = localMoment.getUTCMonth()
+        const d = localMoment.getUTCDate()
 
-        const localTimestamp = requestDate.getTime() - offsetMs
-        const localDate = new Date(localTimestamp)
+        // 2. Define Day Start/End in UTC based on those local components
+        const dayStart = new Date(Date.UTC(y, m, d, 0, 0, 0, 0) + offsetMs)
+        const dayEnd = new Date(Date.UTC(y, m, d, 23, 59, 59, 999) + offsetMs)
 
-        localDate.setUTCHours(0, 0, 0, 0)
-        const dayStart = new Date(localDate.getTime() + offsetMs)
-
-        localDate.setUTCHours(23, 59, 59, 999)
-        const dayEnd = new Date(localDate.getTime() + offsetMs)
-
-        debug.dayRange = { start: dayStart.toISOString(), end: dayEnd.toISOString() }
+        debug.dayRange = { start: dayStart.toISOString(), end: dayEnd.toISOString(), offsetUsed: offset }
         console.log("SERVER: Day Range (UTC):", debug.dayRange)
 
         // Fetch relevant reservations only
