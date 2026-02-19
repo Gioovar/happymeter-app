@@ -339,9 +339,11 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
             )
 
             if (result.success) {
+                console.log("[DEBUG] getAvailableTables result:", result)
                 setOccupiedTableIds(result.occupiedTableIds || [])
                 setBookingStep('SELECT')
             } else {
+                console.error("[DEBUG] getAvailableTables failed:", result)
                 toast.error("Error al buscar mesas", { description: "Intenta de nuevo." })
             }
         } catch (error) {

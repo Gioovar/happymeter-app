@@ -647,7 +647,8 @@ async function checkTableAvailability(
 
 // Note: We use string date to avoid serialization issues across server boundary
 export async function getAvailableTables(targetDateIso: string, floorPlanId?: string, programId?: string, timezoneOffsetMinutes?: number) {
-    console.log("SERVER: getAvailableTables called", { targetDateIso, floorPlanId, programId })
+    const debug: any = { targetDateIso, floorPlanId, programId, timezoneOffsetMinutes }
+    console.log("SERVER: getAvailableTables called", debug)
 
     try {
         let userId: string | null = null
@@ -699,7 +700,8 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
         localDate.setUTCHours(23, 59, 59, 999)
         const dayEnd = new Date(localDate.getTime() + offsetMs)
 
-        console.log("SERVER: Day Range (UTC):", { dayStart: dayStart.toISOString(), dayEnd: dayEnd.toISOString() })
+        debug.dayRange = { start: dayStart.toISOString(), end: dayEnd.toISOString() }
+        console.log("SERVER: Day Range (UTC):", debug.dayRange)
 
         // Fetch relevant reservations only
         const dayReservations = await prisma.reservation.findMany({
@@ -736,11 +738,16 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
 
         // De-duplicate
         const uniqueOccupied = Array.from(new Set(occupiedTableIds))
-        return { success: true, occupiedTableIds: uniqueOccupied }
+        debug.foundReservationsCount = dayReservations.length
+        debug.occupiedTableIds = uniqueOccupied
+        debug.effectiveOwnerId = effectiveOwnerId
+
+        console.log("SERVER: getAvailableTables result", debug)
+        return { success: true, occupiedTableIds: uniqueOccupied, debug }
 
     } catch (error) {
         console.error("Error checking availability:", error)
-        return { success: false, occupiedTableIds: [] }
+        return { success: false, occupiedTableIds: [], error: String(error) }
     }
 }
 
