@@ -1107,26 +1107,46 @@ export async function getTaskHistory(taskId: string) {
 
     const staffMap = new Map<string, { name: string, photo: string | null, branchId?: string }>();
 
-    members.forEach(m => {
-        staffMap.set(m.id, {
-            name: m.name || m.user?.businessName || "Miembro del Equipo",
-            photo: m.user?.photoUrl || null,
-            branchId: m.branchId
-        })
-    });
 
-    users.forEach(u => {
-        staffMap.set(u.userId, {
-            name: u.fullName || u.businessName || "Administrador",
-            photo: null
-        })
-    });
 
     // Fetch task to get branch context
+    // We need to know which branch the task belongs to, so the chat button redirects correctly.
+    // If it's a personal workspace, branchId might be null, but we can direct chat to the owner?
+    // Actually, chat requires a branch context usually. Let's see if zone has branchId.
     const task = await prisma.processTask.findUnique({
         where: { id: taskId },
         include: { zone: true }
     });
+
+    const targetBranchId = task?.zone?.branchId || (task?.zone?.userId ? task.zone.userId : null)
+
+    members.forEach(m => {
+        staffMap.set(m.id, {
+            name: m.name || m.user?.businessName || "Miembro del Equipo",
+            photo: m.user?.photoUrl || null,
+            // Store a fallback branchId if available on the member's owner
+            branchId: m.ownerId
+        })
+    });
+
+    // Also map users found directly via UserSettings (fallback for owner doing tasks)
+    if (staffIds.length > 0) {
+        // ... (existing logic for users fallback, ensure it sets photo)
+        const users = await prisma.userSettings.findMany({
+            where: { userId: { in: staffIds } },
+            select: { userId: true, businessName: true, fullName: true, photoUrl: true }
+        });
+
+        users.forEach(u => {
+            if (!staffMap.has(u.userId)) {
+                staffMap.set(u.userId, {
+                    name: u.fullName || u.businessName || "Administrador",
+                    photo: u.photoUrl || null,
+                    branchId: targetBranchId || u.userId // Fallback to self as branch context if owner
+                })
+            }
+        });
+    }
 
     // Grouping Logic
     const groupedHistory: any[] = [];
@@ -1170,7 +1190,7 @@ export async function getTaskHistory(taskId: string) {
             comments: relatedItems.find(r => r.comments)?.comments || null, // Find first non-empty comment
             completedBy: staff?.name || "Desconocido",
             completedByPhoto: staff?.photo || null,
-            completedByBranchId: task?.zone?.branchId || null, // Use task's branch context
+            completedByBranchId: targetBranchId || staff?.branchId || null, // Priority: Task Branch -> Member Owner -> Null
             media: media
         });
     });
