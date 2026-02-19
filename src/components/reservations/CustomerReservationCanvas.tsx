@@ -728,7 +728,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                 className={`absolute flex items-center justify-center transition-all duration-300 
                                     ${isDeco
                                         ? 'cursor-default opacity-90'
-                                        : 'cursor-pointer'
+                                        : isReserved ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
                                     }
                                     ${isSelected
                                         ? 'ring-4 ring-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.5)] z-20 scale-105'
@@ -746,11 +746,12 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                                     backgroundColor: isDeco
                                         ? '#3f3f46' // Zinc 700 for Deco
                                         : isReserved
-                                            ? 'rgba(127, 29, 29, 0.8)' // Red 900
+                                            ? '#ef4444' // Bright Red 500 for better visibility
                                             : isPaid ? '#4f46e5' : '#27272a',
-                                    border: isReserved ? '1px solid rgba(248, 113, 113, 0.3)' : 'none',
+                                    border: isReserved ? '2px solid rgba(255, 255, 255, 0.4)' : 'none',
                                     color: 'white',
-                                    boxShadow: isDeco ? 'none' : undefined
+                                    boxShadow: isReserved ? '0 0 20px rgba(239, 68, 68, 0.3)' : (isDeco ? 'none' : undefined),
+                                    pointerEvents: isReserved ? 'none' : 'auto'
                                 }}
                             >
                                 <div className="flex flex-col items-center justify-center text-center transform" style={{ transform: `rotate(-${table.rotation || 0}deg)` }}>
