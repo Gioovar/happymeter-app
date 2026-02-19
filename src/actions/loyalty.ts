@@ -320,8 +320,43 @@ export async function getLoyaltyProgram(userId: string) {
 
 
 
-export async function getPublicLoyaltyProgramInfo(programId: string) {
+export async function getPublicLoyaltyProgramInfo(programIdOrSlug: string) {
     try {
+        let programId = programIdOrSlug
+
+        // 1. Check if it's a UUID (Direct ID)
+        // Simple regex or length check. UUID is 36 chars.
+        // If not UUID, we try to resolve it.
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(programIdOrSlug)
+
+        if (!isUuid) {
+            // A. Try as Branch Slug
+            const branch = await prisma.chainBranch.findFirst({
+                where: { slug: programIdOrSlug },
+                select: { branchId: true }
+            })
+
+            let targetUserId = branch?.branchId
+
+            // B. If not branch slug, allows userId as slug?
+            // If the slug IS the userId (clerk ID or user ID)
+            if (!targetUserId) {
+                // Check if a user exists with this ID (if it looks like a user ID, e.g. clerk)
+                // Clerk IDs usually "user_..."
+                if (programIdOrSlug.startsWith('user_')) {
+                    targetUserId = programIdOrSlug
+                }
+            }
+
+            if (targetUserId) {
+                const prog = await prisma.loyaltyProgram.findUnique({
+                    where: { userId: targetUserId },
+                    select: { id: true }
+                })
+                if (prog) programId = prog.id
+            }
+        }
+
         const program = await prisma.loyaltyProgram.findUnique({
             where: { id: programId },
             include: {

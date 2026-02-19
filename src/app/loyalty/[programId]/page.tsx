@@ -37,36 +37,24 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
     useEffect(() => {
         const load = async () => {
             try {
-                // Parallel fetch
-                const [info, sessionCustomer] = await Promise.all([
-                    getPublicLoyaltyProgramInfo(params.programId),
-                    getLoyaltySession()
-                ])
+                // Resolve Program ID from Slug (if needed)
+                // We fetch public info which now handles the resolution
+                const info = await getPublicLoyaltyProgramInfo(params.programId)
 
-                if (info) setProgramInfo(info)
+                if (info) {
+                    setProgramInfo(info)
 
-                if (sessionCustomer) {
-                    if (sessionCustomer.programId === params.programId) {
-                        setCustomer(sessionCustomer)
-                        // Trigger install prompt for returning users too? Maybe random or check logic.
-                        // setTimeout(() => setShowInstallPrompt(true), 3000)
-                    } else {
-                        // Cookie exists but for different program?
-                        // Logic: The session cookie is global 'loyalty_token' linking to a customer record.
-                        // Should a customer have ONE 'LoyaltyCustomer' record per program? YES.
-                        // So if I have a cookie for Program A, and I visit Program B...
-                        // 'getLoyaltySession' validates the token. The token maps to ONE specific LoyaltyCustomer row.
-                        // So if I visit a different program, I am effectively "Logged Out" of that program (or I need a new record).
-                        // CURRENT ARCHITECTURE: One `LoyaltyCustomer` row = One Program Membership.
-                        // So a single user needs a different 'login' (and different cookie?) for each program?
-                        // OR we make 'LoyaltyUser' a parent entity.
-                        // FOR NOW (SIMPLE): One Cookie = One Session.
-                        // If I visit Program B, `getLoyaltySession` returns my Program A profile.
-                        // We check `sessionCustomer.programId === params.programId`. 
-                        // If mismatch, we treat as logged out (and form submit will create new record + overwrite cookie).
-                        // Improve this later for multi-program wallet.
-                        console.log("Session mismatch or invalid for this program")
+                    // Now check session with the REAL ID
+                    const sessionCustomer = await getLoyaltySession()
+                    if (sessionCustomer) {
+                        if (sessionCustomer.programId === info.id) {
+                            setCustomer(sessionCustomer)
+                        } else {
+                            console.log("Session mismatch")
+                        }
                     }
+                } else {
+                    toast.error("Programa no encontrado")
                 }
             } catch (e) {
                 console.error(e)
@@ -181,7 +169,7 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
     if (!customer) {
         return (
             <LoyaltyAuthForm
-                programId={params.programId}
+                programId={programInfo?.id || params.programId}
                 businessName={programInfo?.businessName || "Programa Rewards"}
                 logoUrl={programInfo?.logoUrl}
                 initialData={{

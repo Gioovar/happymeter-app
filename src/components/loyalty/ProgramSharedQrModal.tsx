@@ -3,7 +3,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { QRCodeSVG } from "qrcode.react"
 import { Button } from "@/components/ui/button"
-import { Download, Smartphone, Share2, X, Printer, FileDown } from "lucide-react"
+import { Download, Smartphone, Share2, X, Printer, FileDown, Copy } from "lucide-react"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -229,6 +229,19 @@ export function ProgramSharedQrModal({ isOpen, onClose, programName, programType
                     >
                         <Download className="w-5 h-5 mr-2" />
                         {downloadMode === "mobile" ? "Descargar para Celular" : "Descargar para Imprimir"}
+                    </Button>
+
+                    <Button
+                        size="lg"
+                        variant="outline"
+                        className="w-full border-white/10 text-white hover:bg-white/10 hover:text-white font-bold mt-4"
+                        onClick={() => {
+                            navigator.clipboard.writeText(programUrl)
+                            toast.success("Enlace copiado al portapapeles")
+                        }}
+                    >
+                        <Copy className="w-5 h-5 mr-2" />
+                        Copiar Enlace
                     </Button>
 
                 </div>

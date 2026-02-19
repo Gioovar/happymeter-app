@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, Download, Smartphone, Printer, HelpCircle, ExternalLink } from 'lucide-react'
+import { X, Download, Smartphone, Printer, HelpCircle, ExternalLink, Copy } from 'lucide-react'
 import QRCode from 'qrcode'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 interface QRCodeModalProps {
     isOpen: boolean
@@ -86,6 +87,11 @@ export default function QRCodeModal({ isOpen, onClose, surveyUrl, surveyTitle }:
         link.click()
     }
 
+    const handleCopyUrl = () => {
+        navigator.clipboard.writeText(surveyUrl)
+        toast.success("Enlace copiado al portapapeles")
+    }
+
     if (!isOpen) return null
 
     return (
@@ -166,6 +172,14 @@ export default function QRCodeModal({ isOpen, onClose, surveyUrl, surveyTitle }:
                         >
                             <Download className="w-5 h-5" />
                             {activeTab === 'mobile' ? 'Descargar Imagen' : 'Descargar PNG'}
+                        </button>
+
+                        <button
+                            onClick={handleCopyUrl}
+                            className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition flex items-center justify-center gap-2"
+                        >
+                            <Copy className="w-5 h-5" />
+                            Copiar Enlace
                         </button>
 
                         <Link href="/dashboard/help/qr" className="block text-center">
