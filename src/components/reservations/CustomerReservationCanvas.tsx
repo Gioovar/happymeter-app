@@ -645,7 +645,7 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                             <div className="flex flex-col items-center gap-1 mb-2">
                                 <span className="text-[9px] text-zinc-400 uppercase tracking-[0.2em] font-medium">Reservando en</span>
                                 <h1 className="text-sm font-bold text-white text-center max-w-[200px] leading-tight text-balance">
-                                    {businessName}
+                                    {businessName} {occupiedTableIds.length > 0 && <span className="text-[10px] text-red-500 ml-1">({occupiedTableIds.length})</span>}
                                 </h1>
                             </div>
 
