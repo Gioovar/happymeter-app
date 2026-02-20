@@ -486,9 +486,10 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
                     gte: start,
                     lte: end
                 },
-                table: {
-                    floorPlanId: { in: floorPlanIds }
-                }
+                OR: [
+                    { table: { floorPlanId: { in: floorPlanIds } } },
+                    { userId: userId }
+                ]
             },
             include: {
                 table: true
