@@ -235,12 +235,12 @@ export async function sendPromoterNotification(promoterId: string, type: 'sms' |
         if (!loyaltyProgram) return { success: false, error: "No se encontró un programa de reservaciones activo" }
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
-        const referralLink = `${appUrl}/book/${loyaltyProgram.id}?rp=${promoter.slug}`
+        const portalLink = `${appUrl}/rps/${promoter.slug}`
         const businessName = promoter.business?.businessName || 'nuestro negocio'
 
         if (type === 'sms') {
             if (!promoter.phone) return { success: false, error: "El promotor no tiene teléfono registrado" }
-            const message = `Hola ${promoter.name}, este es tu link de reserva para ${businessName}: ${referralLink}. ¡Gracias por ser parte de nuestro equipo!`
+            const message = `Hola ${promoter.name}, este es el acceso a tu App de RP para ${businessName}: ${portalLink}. ¡Aquí podrás ver tus reservas y comisiones!`
             return await sendSMS(promoter.phone, message)
         } else {
             if (!promoter.email) return { success: false, error: "El promotor no tiene correo registrado" }
@@ -248,17 +248,16 @@ export async function sendPromoterNotification(promoterId: string, type: 'sms' |
             await resend.emails.send({
                 from: DEFAULT_SENDER,
                 to: [promoter.email],
-                subject: `🚀 Tu Link de Reservas para ${businessName}`,
+                subject: `🚀 Tu App de RPs para ${businessName}`,
                 html: `
                     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; padding: 24px;">
                         <h1 style="color: #4f46e5;">¡Hola ${promoter.name}!</h1>
-                        <p>Ya eres parte de nuestra red de RPs en <strong>${businessName}</strong>.</p>
-                        <p>Este es tu link único para que tus clientes hagan sus reservaciones:</p>
+                        <p>Ya tienes acceso a tu panel personal de RP para <strong>${businessName}</strong>.</p>
+                        <p>Desde este link podrás ver cuánta gente has traído, tus comisiones y descargar tu QR personalizado:</p>
                         <div style="background: f9fafb; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
-                            <a href="${referralLink}" style="color: #4f46e5; font-weight: bold; text-decoration: none; font-size: 18px;">${referralLink}</a>
+                            <a href="${portalLink}" style="color: #4f46e5; font-weight: bold; text-decoration: none; font-size: 18px;">${portalLink}</a>
                         </div>
-                        <p>Cualquier reserva hecha a través de este link se registrará a tu nombre automáticamente.</p>
-                        <p>¡Mucho éxito!</p>
+                        <p>¡Mucho éxito con tus reservaciones!</p>
                         <hr style="border: 0; border-top: 1px solid #eee; margin: 24px 0;">
                         <p style="font-size: 12px; color: #666;">Enviado vía HappyMeter Dashboard</p>
                     </div>
@@ -269,6 +268,68 @@ export async function sendPromoterNotification(promoterId: string, type: 'sms' |
     } catch (error) {
         console.error("Error sending promoter notification:", error)
         return { success: false, error: "Error al enviar notificación" }
+    }
+}
+
+export async function getPublicPromoterPortal(slug: string) {
+    try {
+        const promoter = await prisma.promoterProfile.findUnique({
+            where: { slug },
+            include: {
+                business: {
+                    select: {
+                        businessName: true,
+                        logoUrl: true
+                    }
+                },
+                reservations: {
+                    select: {
+                        id: true,
+                        status: true,
+                        partySize: true,
+                        createdAt: true
+                    }
+                }
+            }
+        })
+
+        if (!promoter) return { success: false, data: null }
+
+        // Fetch Loyalty Program for the base referral link
+        const loyaltyProgram = await prisma.loyaltyProgram.findFirst({
+            where: { userId: promoter.businessId }
+        })
+
+        const confirmed = promoter.reservations
+            .filter(r => r.status === 'CONFIRMED' || r.status === 'CHECKED_IN')
+            .reduce((sum, r) => sum + r.partySize, 0)
+
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
+        const referralLink = loyaltyProgram
+            ? `${appUrl}/book/${loyaltyProgram.id}?rp=${promoter.slug}`
+            : null
+
+        const stats = {
+            totalReservations: promoter.reservations.length,
+            confirmedAttendees: confirmed,
+            commission: promoter.commissionType === 'PER_PERSON'
+                ? confirmed * promoter.commissionValue
+                : 0, // Simplified for now
+            referralLink
+        }
+
+        return {
+            success: true,
+            data: {
+                name: promoter.name,
+                businessName: promoter.business?.businessName,
+                logoUrl: promoter.business?.logoUrl,
+                stats
+            }
+        }
+    } catch (error) {
+        console.error("Error fetching public promoter portal:", error)
+        return { success: false, data: null }
     }
 }
 

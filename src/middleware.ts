@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 export default clerkMiddleware(async (auth, req) => {
     // Allow public access to /play/*, /s/* (surveys), /install, and SEO files
     if (
+        req.nextUrl.pathname.startsWith('/rps') ||
+        req.nextUrl.pathname.startsWith('/book') ||
         req.nextUrl.pathname.startsWith('/play') ||
         req.nextUrl.pathname.startsWith('/s') ||
         req.nextUrl.pathname.startsWith('/report') ||

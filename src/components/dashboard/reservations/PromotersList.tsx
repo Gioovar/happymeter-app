@@ -42,10 +42,16 @@ export function PromotersList({ initialPromoters, programId }: PromotersListProp
         }
     }
 
-    const copyLink = (slug: string) => {
+    const copyPortalLink = (slug: string) => {
+        const url = `${window.location.origin}/rps/${slug}`
+        navigator.clipboard.writeText(url)
+        toast.success('Link del Portal copiado')
+    }
+
+    const copyReservationLink = (slug: string) => {
         const url = `${window.location.origin}/book/${programId}?rp=${slug}`
         navigator.clipboard.writeText(url)
-        toast.success('Link copiado al portapapeles')
+        toast.success('Link de Reservas copiado')
     }
 
     const handleSendNotification = async (id: string, type: 'sms' | 'email') => {
@@ -110,14 +116,17 @@ export function PromotersList({ initialPromoters, programId }: PromotersListProp
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 text-zinc-300">
-                                            <DropdownMenuItem onClick={() => copyLink(promoter.slug)} className="hover:bg-white/5 cursor-pointer flex gap-2">
-                                                <Share2 className="w-4 h-4" /> Copiar Link
+                                            <DropdownMenuItem onClick={() => copyPortalLink(promoter.slug)} className="hover:bg-white/5 cursor-pointer flex gap-2">
+                                                <Share2 className="w-4 h-4" /> Enlace del Portal (para RP)
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => copyReservationLink(promoter.slug)} className="hover:bg-white/5 cursor-pointer flex gap-2">
+                                                <ExternalLink className="w-4 h-4" /> Enlace de Reservas (clientes)
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => handleSendNotification(promoter.id, 'sms')} className="hover:bg-white/5 cursor-pointer flex gap-2">
-                                                <MessageSquare className="w-4 h-4" /> Enviar Link (SMS)
+                                                <MessageSquare className="w-4 h-4" /> Enviar App (SMS)
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => handleSendNotification(promoter.id, 'email')} className="hover:bg-white/5 cursor-pointer flex gap-2">
-                                                <Mail className="w-4 h-4" /> Enviar Link (Email)
+                                                <Mail className="w-4 h-4" /> Enviar App (Correo)
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
                                                 <Link href={`/dashboard/reservations/rps/${promoter.id}`} className="w-full flex gap-2 items-center px-2 py-1.5 hover:bg-white/5 cursor-pointer rounded-sm">
