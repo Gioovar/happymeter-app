@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { updateReservationSettings } from '@/actions/reservations'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Clock } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface ReservationSettingsProps {
     initialSettings: {
@@ -15,12 +16,20 @@ interface ReservationSettingsProps {
         standardDurationMinutes: number
         simpleMode?: boolean
         dailyPaxLimit?: number
+        availability?: any[]
     }
 }
 
 export default function ReservationSettings({ initialSettings }: ReservationSettingsProps) {
     const [settings, setSettings] = useState(initialSettings)
     const [isPending, startTransition] = useTransition()
+
+    const handleAvailabilityChange = (id: string, field: string, value: any) => {
+        setSettings(prev => ({
+            ...prev,
+            availability: prev.availability?.map((d: any) => d.id === id ? { ...d, [field]: value } : d)
+        }))
+    }
 
     const handleSave = () => {
         startTransition(async () => {
@@ -105,6 +114,65 @@ export default function ReservationSettings({ initialSettings }: ReservationSett
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* Availability Matrix */}
+            <div className="pt-6 border-t border-white/5 space-y-6">
+                <div>
+                    <h3 className="text-white font-bold text-base">Horarios de Operación</h3>
+                    <p className="text-sm text-gray-500">Define qué días y en qué horarios aceptas reservaciones.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {settings.availability?.map((day: any) => (
+                        <div key={day.id} className="flex flex-col gap-3 p-4 rounded-xl bg-zinc-900/50 border border-white/5">
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor={`switch-${day.id}`} className="font-bold flex items-center gap-2 cursor-pointer text-white">
+                                    <div className={`w-2 h-2 rounded-full ${day.isOpen ? 'bg-indigo-500' : 'bg-zinc-700'}`} />
+                                    {day.label}
+                                </Label>
+                                <Switch
+                                    id={`switch-${day.id}`}
+                                    checked={day.isOpen}
+                                    onCheckedChange={(c) => handleAvailabilityChange(day.id, 'isOpen', c)}
+                                />
+                            </div>
+
+                            <AnimatePresence>
+                                {day.isOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="flex flex-col gap-2 pt-2"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <div className="relative flex-1">
+                                                <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400" />
+                                                <Input
+                                                    type="time"
+                                                    className="pl-9 bg-zinc-800 border-zinc-700 text-sm text-white"
+                                                    value={day.openTime}
+                                                    onChange={(e) => handleAvailabilityChange(day.id, 'openTime', e.target.value)}
+                                                />
+                                            </div>
+                                            <span className="text-zinc-500 text-xs font-medium">A</span>
+                                            <div className="relative flex-1">
+                                                <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400" />
+                                                <Input
+                                                    type="time"
+                                                    className="pl-9 bg-zinc-800 border-zinc-700 text-sm focus:border-indigo-500 text-white"
+                                                    value={day.closeTime}
+                                                    onChange={(e) => handleAvailabilityChange(day.id, 'closeTime', e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             <div className="pt-4 border-t border-white/5 flex justify-end">

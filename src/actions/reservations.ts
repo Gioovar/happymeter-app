@@ -535,22 +535,32 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
 }
 
 // --- SETTINGS MANAGEMENT ---
+const DEFAULT_AVAILABILITY = [
+    { id: 'mon', label: 'Lunes', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+    { id: 'tue', label: 'Martes', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+    { id: 'wed', label: 'Miércoles', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+    { id: 'thu', label: 'Jueves', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+    { id: 'fri', label: 'Viernes', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+    { id: 'sat', label: 'Sábado', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+    { id: 'sun', label: 'Domingo', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+]
+
 export async function getReservationSettings() {
     const { userId } = await auth()
-    if (!userId) return { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 }
+    const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50, availability: DEFAULT_AVAILABILITY }
+    if (!userId) return defaults
 
     const user = await prisma.userSettings.findUnique({
         where: { userId },
         select: { reservationSettings: true }
     })
 
-    const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 }
     if (!user?.reservationSettings) return defaults
 
     return { ...defaults, ...(user.reservationSettings as any) }
 }
 
-export async function updateReservationSettings(settings: { standardTimeEnabled: boolean, standardDurationMinutes: number, simpleMode?: boolean, dailyPaxLimit?: number }) {
+export async function updateReservationSettings(settings: { standardTimeEnabled: boolean, standardDurationMinutes: number, simpleMode?: boolean, dailyPaxLimit?: number, availability?: any[] }) {
     console.log("SERVER: updateReservationSettings started", settings)
     try {
         const { userId } = await auth()
@@ -587,7 +597,7 @@ async function getEffectiveReservationSettings(userId: string) {
     })
 
     // Default: Disabled (All Day Blocking), Default Duration 120m, Simple Mode Off
-    const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 }
+    const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50, availability: DEFAULT_AVAILABILITY }
 
     if (!user?.reservationSettings) return defaults
 

@@ -1,13 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronLeft, ChevronRight, Wand2, Settings, Clock, Check } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight, Wand2 } from "lucide-react"
 import { generateReservationListPDF } from "@/lib/pdf-generator"
 
 interface ReservationCalendarProps {
@@ -15,29 +9,9 @@ interface ReservationCalendarProps {
     onDateSelect?: (date: Date) => void
 }
 
-const DAYS = [
-    { id: 'mon', label: 'Lunes' },
-    { id: 'tue', label: 'Martes' },
-    { id: 'wed', label: 'Miércoles' },
-    { id: 'thu', label: 'Jueves' },
-    { id: 'fri', label: 'Viernes' },
-    { id: 'sat', label: 'Sábado' },
-    { id: 'sun', label: 'Domingo' },
-]
-
 export function ReservationCalendar({ reservations = [], onDateSelect }: ReservationCalendarProps) {
     const [currentDate, setCurrentDate] = useState(new Date()) // Starts on current real date
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-
-    // Availability State (Mock for now)
-    const [availability, setAvailability] = useState(
-        DAYS.map(d => ({ ...d, isOpen: true, openTime: "09:00", closeTime: "22:00" }))
-    )
-
-    const handleAvailabilityChange = (id: string, field: string, value: any) => {
-        setAvailability(prev => prev.map(d => d.id === id ? { ...d, [field]: value } : d))
-    }
 
     // Helpers
     const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate()
@@ -112,13 +86,7 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
 
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
-                <button
-                    onClick={() => setIsSettingsOpen(true)}
-                    className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                    title="Configurar Horarios"
-                >
-                    <Settings className="w-5 h-5" />
-                </button>
+                <div className="w-9" /> {/* Spacer */}
 
                 <h3 className="text-xl font-bold text-white capitalize">
                     {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
@@ -182,85 +150,7 @@ export function ReservationCalendar({ reservations = [], onDateSelect }: Reserva
                 Imprimir Lista de Reservas
             </button>
 
-            {/* Availability Settings Modal */}
-            <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-                <DialogContent className="max-w-md bg-zinc-950 border-zinc-800 text-white max-h-[85vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>Configuración de Disponibilidad</DialogTitle>
-                        <DialogDescription className="text-zinc-400">
-                            Define qué días y en qué horarios aceptas reservaciones.
-                        </DialogDescription>
-                    </DialogHeader>
 
-                    <div className="space-y-4 py-4">
-                        {availability.map((day) => (
-                            <div key={day.id} className="flex flex-col gap-3 p-3 rounded-xl bg-zinc-900/50 border border-white/5">
-                                <div className="flex items-center justify-between">
-                                    <Label htmlFor={`switch-${day.id}`} className="font-bold flex items-center gap-2 cursor-pointer">
-                                        <div className={`w-2 h-2 rounded-full ${day.isOpen ? 'bg-indigo-500' : 'bg-zinc-700'}`} />
-                                        {day.label}
-                                    </Label>
-                                    <Switch
-                                        id={`switch-${day.id}`}
-                                        checked={day.isOpen}
-                                        onCheckedChange={(c) => handleAvailabilityChange(day.id, 'isOpen', c)}
-                                    />
-                                </div>
-
-                                {day.isOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        className="flex items-center gap-2 pl-4"
-                                    >
-                                        <div className="relative flex-1">
-                                            <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-white" />
-                                            <Input
-                                                type="time"
-                                                className="pl-9 bg-zinc-800 border-zinc-700 text-sm"
-                                                value={day.openTime}
-                                                onChange={(e) => handleAvailabilityChange(day.id, 'openTime', e.target.value)}
-                                            />
-                                        </div>
-                                        <span className="text-zinc-500 text-xs font-medium">A</span>
-
-                                        <div className="relative flex-1 group">
-                                            {/* Animated Gradient Border Layer */}
-                                            <motion.div
-                                                className="absolute -inset-[2px] rounded-lg opacity-70 blur-[2px]"
-                                                animate={{
-                                                    background: [
-                                                        "linear-gradient(90deg, #f97316, #f59e0b, #f97316)",
-                                                        "linear-gradient(90deg, #f59e0b, #f97316, #f59e0b)"
-                                                    ]
-                                                }}
-                                                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                                            />
-
-                                            {/* Input Content */}
-                                            <div className="relative bg-zinc-900 rounded-md">
-                                                <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-orange-500" />
-                                                <Input
-                                                    type="time"
-                                                    className="pl-9 bg-zinc-900 border-orange-500/30 text-sm focus:border-orange-500 focus:ring-0 text-white"
-                                                    value={day.closeTime}
-                                                    onChange={(e) => handleAvailabilityChange(day.id, 'closeTime', e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    <DialogFooter>
-                        <Button onClick={() => setIsSettingsOpen(false)} className="w-full bg-white text-black hover:bg-zinc-200">
-                            <Check className="w-4 h-4 mr-2" /> Guardar Horarios
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </div>
     )
 }
