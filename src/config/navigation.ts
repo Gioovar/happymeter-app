@@ -66,9 +66,8 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
         { title: 'Empleados', href: '/dashboard/processes/team', icon: Users },
     ],
     reservations: [
-        { title: 'Agenda', href: '/dashboard/reservations', icon: CalendarDays },
-        { title: 'Capacidad', href: '/dashboard/reservations/setup', icon: Armchair },
-        { title: 'Configuración', href: '/dashboard/settings', icon: Settings },
+        { title: 'Agenda', href: '/dashboard/reservations', icon: CalendarDays, feature: 'reservations' },
+        { title: 'Configuración', href: '/dashboard/reservations/setup', icon: Settings },
     ]
 };
 

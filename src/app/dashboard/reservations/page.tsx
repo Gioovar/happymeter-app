@@ -14,7 +14,7 @@ import { NewReservationButton } from "@/components/dashboard/reservations/NewRes
 import { ReservationsList } from "@/components/dashboard/reservations/ReservationsList"
 import { prisma } from "@/lib/prisma"
 import { ReservationLinkButton } from "@/components/dashboard/reservations/ReservationLinkButton"
-import { ReservationSettingsDialog } from "@/components/dashboard/reservations/ReservationSettingsDialog"
+
 
 export const dynamic = 'force-dynamic'
 
@@ -126,17 +126,12 @@ export default async function ReservationsPage() {
                 <div className="flex flex-wrap gap-3 w-full md:w-auto">
                     {program && <ReservationLinkButton programId={program.id} />}
 
-                    {/* SETTINGS DIALOG */}
-                    <ReservationSettingsDialog settings={
-                        (userSettings?.reservationSettings as any) || { enabled: false, durationMinutes: 120 }
-                    } />
-
                     <Link
                         href="/dashboard/reservations/setup"
                         className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2.5 rounded-xl font-medium text-sm text-white transition-all flex items-center gap-2"
                     >
                         <Settings className="w-4 h-4" />
-                        Editar Plano
+                        Configuración
                     </Link>
 
                     {/* NEW RESERVATION BUTTON CLIENT COMPONENT */}
