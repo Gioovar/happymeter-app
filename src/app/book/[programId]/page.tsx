@@ -12,6 +12,11 @@ const CustomerReservationCanvas = dynamic(
     }
 )
 
+const SimpleReservationForm = dynamic(
+    () => import("@/components/reservations/SimpleReservationForm"),
+    { ssr: false }
+)
+
 export default async function ReservationPage({
     params,
     searchParams
@@ -87,6 +92,21 @@ export default async function ReservationPage({
     }
 
     // Default to first floor for compatibility if needed, but passing all is better
+    const settings = (result as any).settings
+    const ownerId = (result as any).ownerId || (result as any).userId // getProgramFloorPlan returns userId as ownerId
+
+    if (settings && settings.simpleMode) {
+        return (
+            <main className="min-h-screen bg-black text-white p-4 flex items-center justify-center">
+                <SimpleReservationForm
+                    programId={programId}
+                    userId={ownerId}
+                    settings={settings}
+                />
+            </main>
+        )
+    }
+
     return (
         <main className="min-h-screen bg-black text-white">
             <CustomerReservationCanvas

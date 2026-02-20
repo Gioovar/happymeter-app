@@ -107,6 +107,7 @@ model UserSettings {
   whatsappContact         String?
   extraSurveys            Int                    @default(0)
   reservationSettings     Json?
+  reservations            Reservation[]          @relation("BusinessReservations")
   fullName                String?
   affiliateProfile        AffiliateProfile?
   ownedChains             Chain[]
@@ -162,7 +163,7 @@ model Table {
 
 model Reservation {
   id            String   @id @default(uuid())
-  tableId       String
+  tableId       String?
   customerName  String
   customerPhone String?
   customerEmail String?
@@ -173,7 +174,10 @@ model Reservation {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   duration      Int      @default(120)
-  table         Table    @relation(fields: [tableId], references: [id], onDelete: Cascade)
+
+  userId        String?
+  table         Table?   @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  user          UserSettings? @relation("BusinessReservations", fields: [userId], references: [userId], onDelete: Cascade)
 
   @@index([tableId])
   @@index([date])

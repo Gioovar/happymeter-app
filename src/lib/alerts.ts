@@ -4,6 +4,7 @@ import { sendResponseAlert } from '@/lib/email'
 import { prisma } from '@/lib/prisma'
 import { sendPushNotification } from '@/lib/push-service'
 import { sendSMS } from '@/lib/sms'
+import crypto from 'crypto'
 
 export async function sendCrisisAlert(response: Response, survey: Survey, answers: any[]) {
     try {
@@ -159,6 +160,81 @@ export async function sendCustomerReward(response: Response, survey: Survey, ans
 
         if (!appliedReward) return
 
+        // --- LINK TO LOYALTY PROGRAM (Create Reward First) ---
+        try {
+            // 1. Find Loyalty Program for this User (Business)
+            const program = await prisma.loyaltyProgram.findUnique({
+                where: { userId: survey.userId }
+            })
+
+            if (program) {
+                // 2. Find or Create Loyalty Customer
+                const safePhone = response.customerPhone?.replace(/\s/g, '').trim() || ""
+                if (safePhone) {
+                    let customer = await prisma.loyaltyCustomer.findUnique({
+                        where: {
+                            programId_phone: {
+                                programId: program.id,
+                                phone: safePhone
+                            }
+                        }
+                    })
+
+                    if (!customer) {
+                        customer = await prisma.loyaltyCustomer.create({
+                            data: {
+                                programId: program.id,
+                                phone: safePhone,
+                                name: response.customerName || "Cliente",
+                                email: response.customerEmail,
+                                joinDate: new Date(),
+                                magicToken: crypto.randomUUID()
+                            }
+                        })
+                    }
+
+                    // 3. Ensure "SYSTEM_GIFT" Reward Exists
+                    let reward = await prisma.loyaltyReward.findFirst({
+                        where: {
+                            programId: program.id,
+                            name: appliedReward.offer,
+                            description: "SYSTEM_GIFT",
+                            isActive: true
+                        }
+                    })
+
+                    if (!reward) {
+                        reward = await prisma.loyaltyReward.create({
+                            data: {
+                                programId: program.id,
+                                name: appliedReward.offer,
+                                description: "SYSTEM_GIFT",
+                                costInVisits: 0,
+                                costInPoints: 0,
+                                isActive: true,
+                                imageUrl: "https://cdn-icons-png.flaticon.com/512/744/744922.png"
+                            }
+                        })
+                    }
+
+                    // 4. Grant the Reward
+                    await prisma.loyaltyRedemption.create({
+                        data: {
+                            programId: program.id,
+                            customerId: customer.id,
+                            rewardId: reward.id,
+                            status: 'PENDING',
+                            // let DB generate uuid for redemptionCode
+                        }
+                    })
+                    console.log(`[LoyaltyLink] Reward granted to ${safePhone}: ${reward.name}`)
+                }
+            }
+        } catch (e) {
+            console.error("Failed to link loyalty reward:", e)
+            // Do not block notifications
+        }
+
         console.log(`Sending Reward WhatsApp to Customer: ${response.customerPhone}`)
 
         // Using 'new_survey_alertt' as requested by user.
@@ -181,6 +257,8 @@ export async function sendCustomerReward(response: Response, survey: Survey, ans
         const smsMessage = `Hola ${response.customerName || 'Cliente'}, ¡Gracias por tu visita! Tu regalo: ${appliedReward.offer}. Muestra el código: ${appliedReward.code}. Regístrate para más beneficios: ${loyaltyLink}`
         console.log(`Sending Reward SMS to Customer: ${response.customerPhone}`)
         await sendSMS(response.customerPhone, smsMessage)
+
+
 
     } catch (error) {
         console.error('Error sending customer reward:', error)

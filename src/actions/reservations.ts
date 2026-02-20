@@ -271,7 +271,9 @@ export async function getProgramFloorPlan(programId: string) {
                     select: {
                         businessName: true,
                         phone: true,
-                        whatsappContact: true
+                        whatsappContact: true,
+                        reservationSettings: true,
+                        userId: true
                     }
                 }
             }
@@ -305,7 +307,9 @@ export async function getProgramFloorPlan(programId: string) {
             success: true,
             floorPlans: JSON.parse(JSON.stringify(finalFloorPlans)),
             businessName: displayName,
-            businessPhone
+            businessPhone,
+            settings: program.user?.reservationSettings || { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 },
+            userId: program.user?.userId || program.userId
         }
     } catch (error) {
         console.error("Error fetching program floor plan:", error)
@@ -530,7 +534,22 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
 }
 
 // --- SETTINGS MANAGEMENT ---
-export async function updateReservationSettings(settings: { standardTimeEnabled: boolean, standardDurationMinutes: number }) {
+export async function getReservationSettings() {
+    const { userId } = await auth()
+    if (!userId) return { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 }
+
+    const user = await prisma.userSettings.findUnique({
+        where: { userId },
+        select: { reservationSettings: true }
+    })
+
+    const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 }
+    if (!user?.reservationSettings) return defaults
+
+    return { ...defaults, ...(user.reservationSettings as any) }
+}
+
+export async function updateReservationSettings(settings: { standardTimeEnabled: boolean, standardDurationMinutes: number, simpleMode?: boolean, dailyPaxLimit?: number }) {
     console.log("SERVER: updateReservationSettings started", settings)
     try {
         const { userId } = await auth()
@@ -566,8 +585,8 @@ async function getEffectiveReservationSettings(userId: string) {
         select: { reservationSettings: true }
     })
 
-    // Default: Disabled (All Day Blocking), Default Duration 120m
-    const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120 }
+    // Default: Disabled (All Day Blocking), Default Duration 120m, Simple Mode Off
+    const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 }
 
     if (!user?.reservationSettings) return defaults
 
@@ -748,7 +767,7 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
 
 export async function createReservation(data: {
     reservations: {
-        tableId: string
+        tableId?: string | null
         date: string
         partySize: number
     }[]
@@ -757,243 +776,132 @@ export async function createReservation(data: {
         phone?: string
         email?: string
     }
+    programId?: string // Optional context for Simple Mode
+    userId?: string // Optional context for Simple Mode
 }) {
     try {
-        // ... (Existing Auth/Context logic for owner resolution needed here ideally)
-        // For now, we fetch owner from the table (most reliable)
-        const firstTable = await prisma.table.findUnique({
-            where: { id: data.reservations[0].tableId },
-            include: { floorPlan: { include: { user: true } } } // Get UserSettings via FloorPlan
+        // Resolve Owner ID
+        let ownerId = data.userId
+
+        // Prioritize table owner if tableId exists
+        if (data.reservations[0].tableId) {
+            const firstTable = await prisma.table.findUnique({
+                where: { id: data.reservations[0].tableId },
+                include: { floorPlan: { include: { user: true } } }
+            })
+            if (firstTable && firstTable.floorPlan) {
+                ownerId = firstTable.floorPlan.userId
+            }
+        } else if (data.programId && !ownerId) {
+            const prog = await prisma.loyaltyProgram.findUnique({ where: { id: data.programId }, select: { userId: true } })
+            if (prog) ownerId = prog.userId
+        }
+
+        if (!ownerId) throw new Error("No se pudo identificar el negocio para la reserva")
+
+        // Helper to fetch settings by OWNER ID
+        const ownerSettings = await prisma.userSettings.findUnique({
+            where: { userId: ownerId },
+            select: { reservationSettings: true }
         })
+        const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 }
+        const finalSettings = { ...defaults, ...(ownerSettings?.reservationSettings as any) }
 
-        if (!firstTable) throw new Error("Mesa no encontrada")
+        // Determine Duration
+        const durationToStore = finalSettings.standardDurationMinutes || 120
 
-        const ownerId = firstTable.floorPlan.userId
-        const settings = await getEffectiveReservationSettings(ownerId)
-
-        // Determine Duration: Use setting or default 120
-        const durationToStore = settings.standardDurationMinutes || 120
-
-        // Capture the first reservation ID created
+        // Capture results
         let newReservationId: string | null = null;
         let reservationDate: Date | null = null;
         let reservationTableId: string | null = null;
 
         await prisma.$transaction(async (tx) => {
             for (const res of data.reservations) {
-                // Parse Date safely
                 const targetDate = new Date(res.date)
                 if (isNaN(targetDate.getTime())) throw new Error("Fecha inválida")
 
-                // --- AVAILABILITY CHECK AT WRITE TIME ---
-                // We must replicate the availability logic here to be safe (Double Check)
-
-                if (!settings.standardTimeEnabled) {
-                    // Block All Day Check
-                    const dayStart = new Date(res.date)
+                // --- AVAILABILITY CHECK ---
+                if (finalSettings.simpleMode && !res.tableId) {
+                    // Check Daily Limit
+                    const dayStart = new Date(targetDate)
                     dayStart.setHours(0, 0, 0, 0)
-                    const dayEnd = new Date(res.date)
+                    const dayEnd = new Date(targetDate)
                     dayEnd.setHours(23, 59, 59, 999)
 
-                    const existing = await tx.reservation.findFirst({
+                    const dayReservations = await tx.reservation.findMany({
                         where: {
-                            tableId: res.tableId,
+                            userId: ownerId,
                             date: { gte: dayStart, lte: dayEnd },
                             status: { notIn: ['CANCELED', 'REJECTED'] }
-                        }
-                    })
-                    if (existing) throw new Error(`Mesa ya reservada para este día (Modo Día Completo)`)
-                } else {
-                    // Time Window Check
-                    const requestStart = new Date(res.date).getTime()
-                    const requestEnd = requestStart + (durationToStore * 60 * 1000)
-
-                    // Simple overlap: find any reservation that ends after my start AND starts before my end
-                    // We need raw DB query or efficient prisma check
-                    // Fetch for table on that day
-                    const dayStart = new Date(res.date)
-                    dayStart.setHours(0, 0, 0, 0)
-                    const dayEnd = new Date(res.date)
-                    dayEnd.setHours(23, 59, 59, 999)
-
-                    const candidates = await tx.reservation.findMany({
-                        where: {
-                            tableId: res.tableId,
-                            date: { gte: dayStart, lte: dayEnd },
-                            status: { notIn: ['CANCELED', 'REJECTED'] }
-                        }
+                        },
+                        select: { partySize: true }
                     })
 
-                    for (const cand of candidates) {
-                        const cStart = new Date(cand.date).getTime()
-                        const cDur = cand.duration || settings.standardDurationMinutes
-                        const cEnd = cStart + (cDur * 60 * 1000)
+                    const currentPax = dayReservations.reduce((sum, r) => sum + r.partySize, 0)
+                    const limit = finalSettings.dailyPaxLimit || 50
 
-                        if (cStart < requestEnd && cEnd > requestStart) {
-                            throw new Error(`Mesa ocupada en horario traslapado`)
-                        }
+                    if (currentPax + res.partySize > limit) {
+                        throw new Error(`Cupo lleno. (Disponible: ${Math.max(0, limit - currentPax)})`)
                     }
+
+                } else if (res.tableId) {
+                    // Table Mode Checks
+                    if (!finalSettings.standardTimeEnabled) {
+                        // Block All Day
+                        const dayStart = new Date(res.date)
+                        dayStart.setHours(0, 0, 0, 0)
+                        const dayEnd = new Date(res.date)
+                        dayEnd.setHours(23, 59, 59, 999)
+
+                        const existing = await tx.reservation.findFirst({
+                            where: {
+                                tableId: res.tableId,
+                                date: { gte: dayStart, lte: dayEnd },
+                                status: { notIn: ['CANCELED', 'REJECTED'] }
+                            }
+                        })
+
+                        if (existing) throw new Error("Mesa reservada para este día")
+                    } else {
+                        const check = await checkTableAvailability(ownerId, res.tableId, targetDate, durationToStore)
+                        if (!check.available) throw new Error(check.error || "Mesa no disponible")
+                    }
+                } else {
+                    throw new Error("Se requiere mesa")
                 }
 
-                const created = await tx.reservation.create({
+                // Create
+                const newRes = await tx.reservation.create({
                     data: {
-                        tableId: res.tableId,
-                        date: targetDate, // Store as Date object
+                        tableId: res.tableId || null,
+                        userId: ownerId,
+                        date: targetDate,
                         partySize: res.partySize,
                         customerName: data.customer.name,
                         customerPhone: data.customer.phone,
                         customerEmail: data.customer.email,
                         status: 'CONFIRMED',
-                        duration: durationToStore // Store duration
+                        duration: durationToStore
                     }
                 })
-                // ...
 
                 if (!newReservationId) {
-                    newReservationId = created.id
-                    reservationDate = created.date
-                    reservationTableId = created.tableId
+                    newReservationId = newRes.id
+                    reservationDate = newRes.date
+                    reservationTableId = newRes.tableId
                 }
             }
         })
 
-        revalidatePath('/dashboard/reservations')
+        return { success: true, reservationId: newReservationId }
 
-        // [NOTIFICATIONS] Async send (Email + SMS + WhatsApp)
-        // Fetch details for notifications and return (Business Name, Table Name)
-        // Ensure we fetch user to get loyalty programs
-        let tableInfo: any = null
-        if (reservationTableId) {
-            tableInfo = await prisma.table.findUnique({
-                where: { id: reservationTableId },
-                include: { floorPlan: { include: { user: { include: { loyaltyProgram: true } } } } }
-            })
-        }
-
-        // [NOTIFICATIONS] Async send (Email + SMS + WhatsApp)
-        if (newReservationId && reservationDate && tableInfo) {
-            console.log(`[Reservation Debug] Starting notifications for ${newReservationId}. Email: ${data.customer.email}`)
-            try {
-                // ... Existing logic ...
-                let businessName = "HappyMeters Place"
-                let loyaltyUrl = ""
-
-                const fp = tableInfo?.floorPlan
-                if (fp?.user) {
-                    const settings = fp.user
-                    if (settings.businessName) businessName = settings.businessName
-                    const program = settings.loyaltyProgram
-                    if (program) {
-                        const domain = process.env.NEXT_PUBLIC_APP_URL || "https://www.happymeters.com"
-                        loyaltyUrl = `${domain}/loyalty/${program.id}`
-                    }
-                }
-
-                const qrData = `RESERVATION:${newReservationId}`
-                const qrCodeUrl = await QRCode.toDataURL(qrData)
-                console.log(`[Reservation Debug] QR Code generated successfully`)
-
-                const dateStr = new Date(reservationDate!).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-                const timeStr = new Date(reservationDate!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-
-                const notificationPromises: any[] = []
-
-                // 2. EMAIL (Resend)
-                if (data.customer.email) {
-                    console.log(`[Reservation Debug] Queueing EMAIL to ${data.customer.email}`)
-                    notificationPromises.push(
-                        resend.emails.send({
-                            from: DEFAULT_SENDER,
-                            to: [data.customer.email],
-                            subject: `Confirmación de Reserva - ${businessName}`,
-                            react: ReservationConfirmationEmail({
-                                customerName: data.customer.name,
-                                businessName: businessName,
-                                date: dateStr,
-                                time: timeStr,
-                                pax: data.reservations[0].partySize,
-                                table: tableInfo?.label || "Mesa",
-                                qrCodeUrl: qrCodeUrl,
-                                reservationId: newReservationId!,
-                                loyaltyUrl: loyaltyUrl || undefined
-                            })
-                        }).then(res => ({ type: 'EMAIL', ...res }))
-                    )
-                }
-
-                // 3. SMS (Twilio)
-                if (data.customer.phone) {
-                    console.log(`[Reservation Debug] Queueing SMS to ${data.customer.phone}`)
-                    const shortDate = new Date(reservationDate!).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
-                    const shortTime = new Date(reservationDate!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-                    let smsBody = `Reserva confirmada en ${businessName}. ${shortDate} ${shortTime}, ${data.reservations[0].partySize} pers. Muestra este código: ${newReservationId}.`
-                    if (loyaltyUrl) smsBody += ` Únete al club: ${loyaltyUrl}`
-
-                    notificationPromises.push(sendSMS(data.customer.phone, smsBody).then(res => ({ type: 'SMS', ...res })))
-                }
-
-                // 4. WHATSAPP (Meta)
-                if (data.customer.phone) {
-                    console.log(`[Reservation Debug] Queueing WHATSAPP to ${data.customer.phone}`)
-                    notificationPromises.push(
-                        sendWhatsAppNotification(data.customer.phone, 'reservation_confirmed_v1', {
-                            1: data.customer.name,
-                            2: businessName,
-                            3: `${dateStr} a las ${timeStr}`,
-                            4: newReservationId!,
-                            5: loyaltyUrl || "https://happymeters.app"
-                        }).then(res => ({ type: 'WHATSAPP', success: !!res }))
-                    )
-                }
-
-                const results = await Promise.allSettled(notificationPromises)
-                const mappedResults = results.map(r => r.status === 'fulfilled' ? r.value : { error: r.reason })
-                console.log(`[Reservation Debug] Notification Results for ${newReservationId}:`, JSON.stringify(mappedResults, null, 2))
-
-                // [POST-RESERVATION LOGIC] Return success with Action
-                const program = tableInfo?.floorPlan?.user?.loyaltyProgram
-
-                if (program) {
-                    const businessName = program.businessName || tableInfo?.floorPlan?.user?.businessName || "HappyMeters"
-                    return {
-                        success: true,
-                        action: 'REDIRECT_LOYALTY',
-                        programId: program.id,
-                        businessName: businessName,
-                        joinMessage: "Únete a nuestro programa de lealtad",
-                        notificationResults: mappedResults
-                    }
-                }
-
-                return { success: true, notificationResults: mappedResults }
-            } catch (notifyError: any) {
-                console.error("[Reservation Debug] Notification Block Error:", notifyError)
-                return { success: true, notificationError: notifyError.message }
-            }
-        } else {
-            console.log(`[Reservation Debug] Skipping notifications. ID: ${newReservationId}, Date: ${reservationDate}, TableInfo: ${!!tableInfo}`)
-        }
-
-        // [POST-RESERVATION LOGIC] Return success with Action
-        const program = tableInfo?.floorPlan?.user?.loyaltyProgram
-
-        if (program) {
-            const businessName = program.businessName || tableInfo?.floorPlan?.user?.businessName || "HappyMeters"
-            return {
-                success: true,
-                action: 'REDIRECT_LOYALTY',
-                programId: program.id,
-                businessName: businessName,
-                joinMessage: "Únete a nuestro programa de lealtad"
-            }
-        }
-
-        return { success: true }
     } catch (error: any) {
         console.error("Error creating reservation:", error)
-        return { success: false, error: error.message || "Error al crear la reserva" }
+        return { success: false, error: error.message || "Failed to create reservation" }
     }
 }
+
+
 
 export async function updateReservationStatus(id: string, status: string) {
     try {
