@@ -58,7 +58,7 @@ export default function ResponsesClientPage({ initialResponses }: { initialRespo
         to: undefined
     })
     const [currentPage, setCurrentPage] = useState(1)
-    const ITEMS_PER_PAGE = 30
+    const ITEMS_PER_PAGE = 12
 
     // --- FILTERING LOGIC ---
     const filteredResponses = useMemo(() => {
@@ -121,7 +121,7 @@ export default function ResponsesClientPage({ initialResponses }: { initialRespo
             }
 
             return matchesType && matchesDate
-        })
+        }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     }, [initialResponses, filterType, dateRange])
 
     // --- PAGINATION LOGIC ---
