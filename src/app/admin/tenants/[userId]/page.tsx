@@ -108,7 +108,7 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ u
                             <CreditCard className="w-4 h-4" /> Suscripción
                         </h3>
                         {/* God Mode Buttons */}
-                        <div className="flex items-center gap-2 scale-90 origin-top-right">
+                        <div className="flex items-center gap-2">
                             <GodModeButton tenant={{
                                 userId: user.userId,
                                 businessName: user.businessName,
