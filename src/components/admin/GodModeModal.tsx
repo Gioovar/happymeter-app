@@ -103,10 +103,10 @@ export default function GodModeModal({ isOpen, onClose, tenant }: GodModeModalPr
                     <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500" />
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 flex flex-col md:flex-row gap-8 bg-[#0a0a0a]">
+                <div className="flex-1 overflow-hidden p-6 flex flex-col md:flex-row gap-8 bg-[#0a0a0a]">
 
                     {/* Left Column: Configuration */}
-                    <div className="flex-1 space-y-8 min-w-0">
+                    <div className="flex-1 space-y-8 min-w-0 overflow-y-auto pr-2 pb-8">
 
                         {/* 1. Plan Selection */}
                         <div>
@@ -254,8 +254,8 @@ export default function GodModeModal({ isOpen, onClose, tenant }: GodModeModalPr
                     </div>
 
                     {/* Right Column: Confirmation */}
-                    <div className="w-full md:w-80 shrink-0 bg-[#111] border border-white/10 rounded-2xl p-6 flex flex-col h-fit sticky top-0">
-                        <div className="mb-6 pb-4 border-b border-white/10">
+                    <div className="w-full md:w-80 shrink-0 bg-[#111] border border-white/10 rounded-2xl p-6 flex flex-col h-fit md:h-full overflow-y-auto">
+                        <div className="mb-6 pb-4 border-b border-white/10 shrink-0">
                             <h3 className="text-xs font-bold text-gray-500 uppercase mb-3 tracking-wider flex items-center gap-2">
                                 <Sparkles className="w-3 h-3 text-yellow-500" /> Acciones Rápidas
                             </h3>
@@ -269,7 +269,7 @@ export default function GodModeModal({ isOpen, onClose, tenant }: GodModeModalPr
 
                         <h3 className="text-lg font-bold text-white mb-6">Resumen de Asignación</h3>
 
-                        <div className="space-y-4 mb-6 flex-1">
+                        <div className="space-y-4 mb-6 flex-1 shrink-0">
                             <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                                 <p className="text-orange-200 text-xs font-mono mb-1">USUARIO DESTINO:</p>
                                 <p className="text-white font-bold text-lg">{tenant.businessName || tenant.userId}</p>
@@ -291,7 +291,7 @@ export default function GodModeModal({ isOpen, onClose, tenant }: GodModeModalPr
                             </div>
                         </div>
 
-                        <div className="border-t border-white/10 pt-4 mt-auto">
+                        <div className="border-t border-white/10 pt-4 mt-auto shrink-0">
                             <button
                                 onClick={handleGrant}
                                 disabled={isLoading}
