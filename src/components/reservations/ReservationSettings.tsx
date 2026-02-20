@@ -144,27 +144,33 @@ export default function ReservationSettings({ initialSettings }: ReservationSett
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
                                         exit={{ opacity: 0, height: 0 }}
-                                        className="flex flex-col gap-2 pt-2"
+                                        className="flex flex-col gap-3 pt-3 mt-2 border-t border-white/5"
                                     >
-                                        <div className="flex items-center gap-2">
-                                            <div className="relative flex-1">
-                                                <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400" />
-                                                <Input
-                                                    type="time"
-                                                    className="pl-9 bg-zinc-800 border-zinc-700 text-sm text-white"
-                                                    value={day.openTime}
-                                                    onChange={(e) => handleAvailabilityChange(day.id, 'openTime', e.target.value)}
-                                                />
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-1 space-y-1.5">
+                                                <Label className="text-xs text-zinc-500 ml-1">Apertura</Label>
+                                                <div className="relative">
+                                                    <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-indigo-400" />
+                                                    <Input
+                                                        type="time"
+                                                        className="pl-9 bg-[#111] border-zinc-800 text-sm text-white focus:border-indigo-500"
+                                                        value={day.openTime}
+                                                        onChange={(e) => handleAvailabilityChange(day.id, 'openTime', e.target.value)}
+                                                    />
+                                                </div>
                                             </div>
-                                            <span className="text-zinc-500 text-xs font-medium">A</span>
-                                            <div className="relative flex-1">
-                                                <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400" />
-                                                <Input
-                                                    type="time"
-                                                    className="pl-9 bg-zinc-800 border-zinc-700 text-sm focus:border-indigo-500 text-white"
-                                                    value={day.closeTime}
-                                                    onChange={(e) => handleAvailabilityChange(day.id, 'closeTime', e.target.value)}
-                                                />
+
+                                            <div className="flex-1 space-y-1.5">
+                                                <Label className="text-xs text-zinc-500 ml-1">Cierre</Label>
+                                                <div className="relative">
+                                                    <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-orange-400" />
+                                                    <Input
+                                                        type="time"
+                                                        className="pl-9 bg-[#111] border-zinc-800 text-sm text-white focus:border-orange-500"
+                                                        value={day.closeTime}
+                                                        onChange={(e) => handleAvailabilityChange(day.id, 'closeTime', e.target.value)}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </motion.div>
