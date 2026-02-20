@@ -983,3 +983,214 @@ export async function confirmReservationCheckin(reservationId: string) {
         return { success: false, error: "Error al confirmar llegada" }
     }
 }
+
+// --- PRO RESERVATION MANAGEMENT ACTIONS ---
+export async function getAllReservationsList(userIdOverride?: string) {
+    try {
+        const { userId: authUserId } = await auth()
+        if (!authUserId) return { success: false, reservations: [] }
+
+        const targetUserId = userIdOverride || authUserId
+
+        // Find floor plans owned by user
+        const floorPlans = await prisma.floorPlan.findMany({
+            where: { userId: targetUserId },
+            select: { id: true }
+        })
+        const floorPlanIds = floorPlans.map(fp => fp.id)
+
+        const reservations = await prisma.reservation.findMany({
+            where: {
+                OR: [
+                    { table: { floorPlanId: { in: floorPlanIds } } },
+                    { userId: targetUserId }
+                ]
+            },
+            include: {
+                table: true
+            },
+            orderBy: { date: 'desc' }
+        })
+
+        return { success: true, reservations }
+    } catch (error) {
+        console.error("Error fetching all reservations:", error)
+        return { success: false, error: "Error al cargar la cartera de reservas" }
+    }
+}
+
+export async function updateReservationState(reservationId: string, status: string) {
+    try {
+        await prisma.reservation.update({
+            where: { id: reservationId },
+            data: { status }
+        })
+        revalidatePath('/dashboard/reservations/list')
+        revalidatePath('/dashboard/reservations')
+        return { success: true }
+    } catch (error) {
+        console.error("Error updating reservation state:", error)
+        return { success: false, error: "Error al actualizar estado" }
+    }
+}
+
+export async function updateReservationNotes(reservationId: string, notes: string) {
+    try {
+        await prisma.reservation.update({
+            where: { id: reservationId },
+            data: { notes }
+        })
+        revalidatePath('/dashboard/reservations/list')
+        return { success: true }
+    } catch (error) {
+        console.error("Error updating reservation notes:", error)
+        return { success: false, error: "Error al actualizar notas" }
+    }
+}
+
+export async function getReservationsAnalytics(userIdOverride?: string) {
+    try {
+        const { userId: authUserId } = await auth()
+        if (!authUserId) return { success: false }
+
+        const targetUserId = userIdOverride || authUserId
+        const floorPlans = await prisma.floorPlan.findMany({
+            where: { userId: targetUserId },
+            select: { id: true }
+        })
+        const floorPlanIds = floorPlans.map(fp => fp.id)
+
+        const reservations = await prisma.reservation.findMany({
+            where: {
+                OR: [
+                    { table: { floorPlanId: { in: floorPlanIds } } },
+                    { userId: targetUserId }
+                ]
+            }
+        })
+
+        // Metrics Calculation
+        const totalReservations = reservations.length
+        const totalPax = reservations.reduce((sum, r) => sum + r.partySize, 0)
+
+        const noShows = reservations.filter(r => r.status === 'NO_SHOW').length
+        const cancellations = reservations.filter(r => r.status === 'CANCELED').length
+        const confirmed = reservations.filter(r => r.status === 'CONFIRMED').length
+
+        const noShowRate = totalReservations ? ((noShows / totalReservations) * 100).toFixed(1) : "0"
+        const cancelRate = totalReservations ? ((cancellations / totalReservations) * 100).toFixed(1) : "0"
+        const confirmedRate = totalReservations ? ((confirmed / totalReservations) * 100).toFixed(1) : "0"
+
+        // Peak Hours Calculation
+        const hourCounts: Record<string, number> = {}
+        reservations.forEach(r => {
+            const hour = r.date.getHours()
+            const timeString = `${hour.toString().padStart(2, '0')}:00`
+            if (!hourCounts[timeString]) hourCounts[timeString] = 0
+            hourCounts[timeString]++
+        })
+
+        const peakHours = Object.entries(hourCounts)
+            .map(([time, count]) => ({ time, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5) // Top 5 peak hours
+
+        // Reservations by Day of Week
+        const dayCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }
+        reservations.forEach(r => {
+            const day = r.date.getDay() // 0 = Sunday
+            dayCounts[day]++
+        })
+        const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+        const weekDistribution = Object.entries(dayCounts).map(([dayIdx, count]) => ({
+            day: dayNames[Number(dayIdx)],
+            count
+        }))
+
+        return {
+            success: true,
+            data: {
+                totalReservations,
+                totalPax,
+                noShowRate,
+                cancelRate,
+                confirmedRate,
+                peakHours,
+                weekDistribution,
+                statusDistribution: [
+                    { name: 'Confirmadas', value: confirmed },
+                    { name: 'No Shows', value: noShows },
+                    { name: 'Canceladas', value: cancellations },
+                    { name: 'Pendientes', value: totalReservations - (confirmed + noShows + cancellations) }
+                ]
+            }
+        }
+    } catch (error) {
+        console.error("Error generating reservation analytics:", error)
+        return { success: false, error: "Error al generar reportes" }
+    }
+}
+
+export async function getReservationsClients(userIdOverride?: string) {
+    try {
+        const { userId: authUserId } = await auth()
+        if (!authUserId) return { success: false, clients: [] }
+
+        const targetUserId = userIdOverride || authUserId
+        const floorPlans = await prisma.floorPlan.findMany({
+            where: { userId: targetUserId },
+            select: { id: true }
+        })
+        const floorPlanIds = floorPlans.map(fp => fp.id)
+
+        const reservations = await prisma.reservation.findMany({
+            where: {
+                OR: [
+                    { table: { floorPlanId: { in: floorPlanIds } } },
+                    { userId: targetUserId }
+                ]
+            },
+            orderBy: { date: 'desc' }
+        })
+
+        // Group by customer telephone or name
+        const clientMap = new Map<string, any>()
+
+        reservations.forEach(res => {
+            const key = res.customerPhone || res.customerName.toLowerCase().trim()
+            if (!clientMap.has(key)) {
+                clientMap.set(key, {
+                    name: res.customerName,
+                    phone: res.customerPhone,
+                    email: res.customerEmail,
+                    totalReservations: 0,
+                    noShows: 0,
+                    cancellations: 0,
+                    lastVisit: res.date
+                })
+            }
+
+            const client = clientMap.get(key)
+            client.totalReservations++
+            if (res.status === 'NO_SHOW') client.noShows++
+            if (res.status === 'CANCELED') client.cancellations++
+            // keep the most recent date
+            if (res.date > client.lastVisit) client.lastVisit = res.date
+        })
+
+        const clients = Array.from(clientMap.values()).map(c => {
+            const noShowRate = (c.noShows / c.totalReservations) * 100
+            return {
+                ...c,
+                noShowRate: Number(noShowRate.toFixed(1)),
+                isHighRisk: noShowRate >= 30 && c.totalReservations >= 2
+            }
+        }).sort((a, b) => b.noShowRate - a.noShowRate) // sort highest risk first
+
+        return { success: true, clients }
+
+    } catch (error) {
+        console.error("Error generating reservation clients:", error)
+        return { success: false, error: "Error al cargar base de clientes" }
+    }
+}

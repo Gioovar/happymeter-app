@@ -1,0 +1,32 @@
+import { getAllReservationsList } from "@/actions/reservations"
+import { ReservationsDataTable } from "@/components/dashboard/reservations/ReservationsDataTable"
+import { getDashboardContext } from "@/lib/auth-context"
+import { redirect } from "next/navigation"
+
+export const dynamic = 'force-dynamic'
+
+export default async function BranchReservationsListPage({ params }: { params: { branchSlug: string } }) {
+    const context = await getDashboardContext(params.branchSlug)
+    if (!context || !context.userId) return redirect('/dashboard')
+
+    const { success, reservations = [] } = await getAllReservationsList(context.userId)
+
+    return (
+        <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0">
+                <div>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">Revisión de Reservas <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 align-middle">{context.name}</span></h1>
+                    <p className="text-gray-400 mt-2">Gestión de turnos de la sucursal.</p>
+                </div>
+            </div>
+
+            {!success ? (
+                <div className="bg-[#111] border border-white/5 rounded-2xl p-8 text-center text-red-400">
+                    <p>Error al cargar la cartera de reservas locales.</p>
+                </div>
+            ) : (
+                <ReservationsDataTable data={reservations as any} />
+            )}
+        </div>
+    )
+}
