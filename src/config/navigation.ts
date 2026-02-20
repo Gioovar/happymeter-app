@@ -68,7 +68,6 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
     reservations: [
         { title: 'Agenda', href: '/dashboard/reservations', icon: CalendarDays },
         { title: 'Capacidad', href: '/dashboard/reservations/setup', icon: Armchair },
-        { title: 'Próximas', href: '/dashboard/reservations/upcoming', icon: CalendarCheck },
         { title: 'Configuración', href: '/dashboard/settings', icon: Settings },
     ]
 };
