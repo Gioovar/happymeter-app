@@ -28,7 +28,7 @@ export default async function ReservationsPage() {
 
     // Fetch existing floor plan
     const floorPlans = await getFloorPlans()
-    
+
     // Fetch User Settings for Reservation Config
     const userSettings = await prisma.userSettings.findUnique({
         where: { userId: user?.id }
@@ -65,6 +65,32 @@ export default async function ReservationsPage() {
     } catch (error) {
         console.error("Error fetching/creating loyalty program:", error)
     }
+
+    // Compute dynamic stats
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const nextWeek = new Date(today)
+    nextWeek.setDate(today.getDate() + 7)
+
+    const stats = { hoy: 0, personasHoy: 0, semana: 0, canceladas: 0 }
+
+    reservations.forEach((res: any) => {
+        const resDate = new Date(res.date)
+        resDate.setHours(0, 0, 0, 0)
+
+        if (resDate.getTime() === today.getTime() && res.status !== 'CANCELED') {
+            stats.hoy++
+            stats.personasHoy += (res.pax || res.partySize || 0)
+        }
+
+        if (resDate >= today && resDate <= nextWeek && res.status !== 'CANCELED') {
+            stats.semana++
+        }
+
+        if (res.status === 'CANCELED') {
+            stats.canceladas++
+        }
+    })
 
     if (!floorPlans || floorPlans.length === 0) {
         return (
@@ -131,7 +157,7 @@ export default async function ReservationsPage() {
                     </div>
                     <div>
                         <p className="text-xs text-gray-400 uppercase font-bold">Hoy</p>
-                        <p className="text-2xl font-bold text-white">12</p>
+                        <p className="text-2xl font-bold text-white">{stats.hoy}</p>
                     </div>
                 </div>
                 <div className="bg-[#111] border border-white/10 p-4 rounded-xl flex items-center gap-4">
@@ -140,7 +166,7 @@ export default async function ReservationsPage() {
                     </div>
                     <div>
                         <p className="text-xs text-gray-400 uppercase font-bold">Personas</p>
-                        <p className="text-2xl font-bold text-white">48</p>
+                        <p className="text-2xl font-bold text-white">{stats.personasHoy}</p>
                     </div>
                 </div>
                 <div className="bg-[#111] border border-white/10 p-4 rounded-xl flex items-center gap-4">
@@ -149,7 +175,7 @@ export default async function ReservationsPage() {
                     </div>
                     <div>
                         <p className="text-xs text-gray-400 uppercase font-bold">Semana</p>
-                        <p className="text-2xl font-bold text-white">84</p>
+                        <p className="text-2xl font-bold text-white">{stats.semana}</p>
                     </div>
                 </div>
                 <div className="bg-[#111] border border-white/10 p-4 rounded-xl flex items-center gap-4">
@@ -158,7 +184,7 @@ export default async function ReservationsPage() {
                     </div>
                     <div>
                         <p className="text-xs text-gray-400 uppercase font-bold">Canceladas</p>
-                        <p className="text-2xl font-bold text-white">2</p>
+                        <p className="text-2xl font-bold text-white">{stats.canceladas}</p>
                     </div>
                 </div>
             </div>

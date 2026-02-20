@@ -78,6 +78,31 @@ export default async function BranchReservationsPage({ params }: { params: { bra
     // Enhanced check: Verify if floor plan actually has tables
     const isConfigured = floorPlans && floorPlans.some((fp: any) => fp.tables && fp.tables.length > 0);
 
+    // Compute dynamic stats
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const nextWeek = new Date(today)
+    nextWeek.setDate(today.getDate() + 7)
+
+    const stats = { hoy: 0, personasHoy: 0, semana: 0, canceladas: 0 }
+
+    reservations.forEach((res: any) => {
+        const resDate = new Date(res.date)
+        resDate.setHours(0, 0, 0, 0)
+
+        if (resDate.getTime() === today.getTime() && res.status !== 'CANCELED') {
+            stats.hoy++
+            stats.personasHoy += (res.pax || res.partySize || 0)
+        }
+
+        if (resDate >= today && resDate <= nextWeek && res.status !== 'CANCELED') {
+            stats.semana++
+        }
+
+        if (res.status === 'CANCELED') {
+            stats.canceladas++
+        }
+    })
 
     return (
         <div className="space-y-8">
@@ -106,20 +131,44 @@ export default async function BranchReservationsPage({ params }: { params: { bra
                 </div>
             </div>
 
-            {/* Stats - MOCK Calculations or Real? Using same static numbers as original for now until actions provide stats */}
-            {/* ... Keeping existing layout ... */}
+            {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Reusing existing static placeholders or we can calculate from `reservations` array */}
                 <div className="bg-[#111] border border-white/10 p-4 rounded-xl flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
                         <CalendarCheck className="w-6 h-6 text-orange-500" />
                     </div>
                     <div>
-                        <p className="text-xs text-gray-400 uppercase font-bold">Total (Mes)</p>
-                        <p className="text-2xl font-bold text-white">{reservations.length}</p>
+                        <p className="text-xs text-gray-400 uppercase font-bold">Hoy</p>
+                        <p className="text-2xl font-bold text-white">{stats.hoy}</p>
                     </div>
                 </div>
-                {/* ... other stats omitted for brevity / handled by generic components if possible ... */}
+                <div className="bg-[#111] border border-white/10 p-4 rounded-xl flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <Users className="w-6 h-6 text-emerald-500" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-400 uppercase font-bold">Personas</p>
+                        <p className="text-2xl font-bold text-white">{stats.personasHoy}</p>
+                    </div>
+                </div>
+                <div className="bg-[#111] border border-white/10 p-4 rounded-xl flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                        <CalendarDays className="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-400 uppercase font-bold">Semana</p>
+                        <p className="text-2xl font-bold text-white">{stats.semana}</p>
+                    </div>
+                </div>
+                <div className="bg-[#111] border border-white/10 p-4 rounded-xl flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                        <CalendarX className="w-6 h-6 text-red-500" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-400 uppercase font-bold">Canceladas</p>
+                        <p className="text-2xl font-bold text-white">{stats.canceladas}</p>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
