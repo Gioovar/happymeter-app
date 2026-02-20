@@ -146,27 +146,27 @@ export default function ReservationSettings({ initialSettings }: ReservationSett
                                         exit={{ opacity: 0, height: 0 }}
                                         className="flex flex-col gap-3 pt-3 mt-2 border-t border-white/5"
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex-1 space-y-1.5">
-                                                <Label className="text-xs text-zinc-500 ml-1">Apertura</Label>
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex-1 space-y-1 min-w-0">
+                                                <Label className="text-[10px] uppercase tracking-wider text-zinc-500 ml-1">Apertura</Label>
                                                 <div className="relative">
-                                                    <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-indigo-400" />
+                                                    <Clock className="absolute left-2 top-2.5 w-3.5 h-3.5 text-indigo-400" />
                                                     <Input
                                                         type="time"
-                                                        className="pl-9 bg-[#111] border-zinc-800 text-sm text-white focus:border-indigo-500"
+                                                        className="pl-7 pr-2 bg-[#111] border-zinc-800 text-xs text-white focus:border-indigo-500 w-full"
                                                         value={day.openTime}
                                                         onChange={(e) => handleAvailabilityChange(day.id, 'openTime', e.target.value)}
                                                     />
                                                 </div>
                                             </div>
 
-                                            <div className="flex-1 space-y-1.5">
-                                                <Label className="text-xs text-zinc-500 ml-1">Cierre</Label>
+                                            <div className="flex-1 space-y-1 min-w-0">
+                                                <Label className="text-[10px] uppercase tracking-wider text-zinc-500 ml-1">Cierre</Label>
                                                 <div className="relative">
-                                                    <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-orange-400" />
+                                                    <Clock className="absolute left-2 top-2.5 w-3.5 h-3.5 text-orange-400" />
                                                     <Input
                                                         type="time"
-                                                        className="pl-9 bg-[#111] border-zinc-800 text-sm text-white focus:border-orange-500"
+                                                        className="pl-7 pr-2 bg-[#111] border-zinc-800 text-xs text-white focus:border-orange-500 w-full"
                                                         value={day.closeTime}
                                                         onChange={(e) => handleAvailabilityChange(day.id, 'closeTime', e.target.value)}
                                                     />
