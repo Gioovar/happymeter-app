@@ -1,14 +1,40 @@
 'use client'
 
 import { updateSettings } from '@/actions/settings'
-import { Loader2, Save, Store, Phone, Instagram, Facebook } from 'lucide-react'
+import { Loader2, Save, Store, Phone, Instagram, Facebook, UploadCloud } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { upload } from '@vercel/blob/client'
 import PhoneInput from '@/components/PhoneInput'
 
 export function SettingsForm({ userSettings, branchId }: { userSettings: any, branchId?: string }) {
     const [loading, setLoading] = useState(false)
+    const [uploading, setUploading] = useState(false)
     const [phone, setPhone] = useState(userSettings.phone || '')
+    const [logoUrl, setLogoUrl] = useState(userSettings.logoUrl || '')
+    const [bannerUrl, setBannerUrl] = useState(userSettings.bannerUrl || '')
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => {
+        if (!e.target.files?.[0]) return
+
+        const file = e.target.files[0]
+        setUploading(true)
+
+        try {
+            const newBlob = await upload(file.name, file, {
+                access: 'public',
+                handleUploadUrl: '/api/upload',
+            })
+            if (type === 'logo') setLogoUrl(newBlob.url)
+            else setBannerUrl(newBlob.url)
+            toast.success(`${type === 'logo' ? 'Logo' : 'Banner'} subido correctamente`)
+        } catch (err) {
+            console.error(err)
+            toast.error('Error al subir imagen')
+        } finally {
+            setUploading(false)
+        }
+    }
 
     const handleSubmit = async (formData: FormData) => {
         setLoading(true)
@@ -16,6 +42,10 @@ export function SettingsForm({ userSettings, branchId }: { userSettings: any, br
             if (branchId) {
                 formData.append('branchId', branchId)
             }
+            // Append explicit states since hidden inputs might fail on some browsers if not refreshed properly
+            formData.set('logoUrl', logoUrl)
+            formData.set('bannerUrl', bannerUrl)
+
             const result = await updateSettings(formData)
             if (result.success) {
                 toast.success('Configuración actualizada correctamente')
@@ -86,6 +116,65 @@ export function SettingsForm({ userSettings, branchId }: { userSettings: any, br
                             onChange={(val) => setPhone(val)}
                         /> */}
                         <input type="hidden" name="phone" value={phone} />
+                    </div>
+                </div>
+            </div>
+
+            {/* Visual Identity Section */}
+            <div className="space-y-6">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
+                    <UploadCloud className="w-5 h-5 text-indigo-400" /> Identidad Visual
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                    {/* Logo Upload */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300">Logo del Negocio</label>
+                        <div className={`relative border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-violet-500/50 transition-colors cursor-pointer bg-[#1a1a1a] group overflow-hidden ${!logoUrl ? 'border-red-500/30' : 'border-white/10'}`}>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e, 'logo')}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                disabled={uploading}
+                            />
+                            {logoUrl ? (
+                                <img src={logoUrl} alt="Logo" className="w-full h-32 object-contain mb-2 rounded-lg" />
+                            ) : (
+                                <>
+                                    <div className="w-12 h-12 bg-violet-500/10 rounded-full flex items-center justify-center mb-3 group-hover:bg-violet-500/20 transition-colors">
+                                        <UploadCloud className="w-6 h-6 text-violet-400" />
+                                    </div>
+                                    <p className="text-sm font-bold">{uploading ? 'Subiendo...' : 'Subir Logo'}</p>
+                                    <p className="text-xs text-red-500 mt-1">* Recomendado 1:1</p>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Banner Upload */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300">Banner / Portada</label>
+                        <div className={`relative border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-violet-500/50 transition-colors cursor-pointer bg-[#1a1a1a] group overflow-hidden ${!bannerUrl ? 'border-red-500/30' : 'border-white/10'}`}>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e, 'banner')}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                disabled={uploading}
+                            />
+                            {bannerUrl ? (
+                                <img src={bannerUrl} alt="Banner" className="w-full h-32 object-cover mb-2 rounded-lg" />
+                            ) : (
+                                <>
+                                    <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center mb-3 group-hover:bg-indigo-500/20 transition-colors">
+                                        <UploadCloud className="w-6 h-6 text-indigo-400" />
+                                    </div>
+                                    <p className="text-sm font-bold">{uploading ? 'Subiendo...' : 'Subir Portada'}</p>
+                                    <p className="text-xs text-red-500 mt-1">* Recomendado 16:9</p>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

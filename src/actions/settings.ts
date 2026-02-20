@@ -30,6 +30,8 @@ export async function updateSettings(formData: FormData) {
     const instagram = formData.get('instagram') as string
     const facebook = formData.get('facebook') as string
     const whatsappEnabled = formData.get('whatsappEnabled') === 'on'
+    const logoUrl = formData.get('logoUrl') as string | undefined
+    const bannerUrl = formData.get('bannerUrl') as string | undefined
 
     if (!businessName) throw new Error('Business name is required')
 
@@ -51,7 +53,9 @@ export async function updateSettings(formData: FormData) {
                 industry,
                 phone,
                 socialLinks,
-                notificationPreferences
+                notificationPreferences,
+                ...(logoUrl ? { logoUrl } : {}),
+                ...(bannerUrl ? { bannerUrl } : {})
             },
             create: {
                 userId: targetUserId,
@@ -60,6 +64,8 @@ export async function updateSettings(formData: FormData) {
                 phone,
                 socialLinks,
                 notificationPreferences,
+                ...(logoUrl ? { logoUrl } : {}),
+                ...(bannerUrl ? { bannerUrl } : {}),
                 isOnboarded: true,
                 plan: 'FREE'
             }
