@@ -250,7 +250,6 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
                                                 </div>
                                             )
                                         })}
-                                        })}
                                 </div>
                             )}
                         </div>
