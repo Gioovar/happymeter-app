@@ -47,14 +47,19 @@ export default function SettingsView({ userSettings, branchId, user }: SettingsV
                     <Settings className="w-8 h-8" />
                 </div>
                 <div>
-                    <h1 className="text-3xl font-bold">Plan y facturación</h1>
+                    <h1 className="text-3xl font-bold">Ajustes</h1>
                 </div>
             </div>
 
+            <div className="bg-[#111] border border-white/10 rounded-2xl p-8 shadow-xl mb-8">
+                <SettingsForm userSettings={userSettings} branchId={branchId} />
+            </div>
+
+            <h2 className="text-2xl font-bold mb-6">Plan y facturación</h2>
             <div className="bg-[#111] border border-white/10 rounded-2xl p-8 mb-8">
                 {/* Plan Details */}
                 <div className="mb-8 pb-8 border-b border-white/10">
-                    <h2 className="text-xl font-bold mb-6">Plan</h2>
+                    <h3 className="text-xl font-bold mb-6">Plan</h3>
                     <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                         <div>
                             <div className="text-lg font-bold mb-1">
@@ -172,10 +177,6 @@ export default function SettingsView({ userSettings, branchId, user }: SettingsV
                 onOpenChange={setIsInviteModalOpen}
                 branchSlug={branchId}
             />
-
-            <div className="bg-[#111] border border-white/10 rounded-2xl p-8 shadow-xl mt-8">
-                <SettingsForm userSettings={userSettings} branchId={branchId} />
-            </div>
         </div>
     )
 }

@@ -363,7 +363,8 @@ export async function getPublicLoyaltyProgramInfo(programIdOrSlug: string) {
                 user: {
                     select: {
                         businessName: true,
-                        photoUrl: true
+                        photoUrl: true,
+                        logoUrl: true
                     }
                 }
             }
@@ -374,7 +375,7 @@ export async function getPublicLoyaltyProgramInfo(programIdOrSlug: string) {
         return {
             id: program.id,
             businessName: program.user?.businessName || program.businessName,
-            logoUrl: program.user?.photoUrl || program.logoUrl,
+            logoUrl: program.user?.logoUrl || program.user?.photoUrl || program.logoUrl,
             themeColor: program.themeColor,
             cardDesign: program.cardDesign
         }
