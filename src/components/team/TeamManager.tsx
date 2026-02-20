@@ -107,10 +107,10 @@ export default function TeamManager({ initialData, branchId }: { initialData: an
                                 <td className="p-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 font-bold">
-                                            {member.user.businessName?.[0] || 'U'}
+                                            {member.user?.businessName?.[0] || member.name?.[0] || 'U'}
                                         </div>
                                         <div>
-                                            <p className="font-medium text-white">{member.user.businessName || 'Usuario'}</p>
+                                            <p className="font-medium text-white">{member.user?.businessName || member.name || 'Usuario'}</p>
                                             {/* We rely on businessName usually, but email isn't directly on UserSettings unless we synced it? 
                                                 Ah, UserSettings doesn't have email. We might only show businessName. 
                                                 If we need email, we need to fetch from Clerk or store it. 
