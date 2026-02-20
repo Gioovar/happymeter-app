@@ -26,7 +26,8 @@ import {
     Calendar,
     BarChart2,
     ListTodo,
-    UserX
+    UserX,
+    Target
 } from 'lucide-react'
 
 export type NavigationMode = 'surveys' | 'loyalty' | 'processes' | 'reservations';
@@ -73,6 +74,7 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
         { title: 'Gestión Completa', href: '/dashboard/reservations/list', icon: ListTodo },
         { title: 'Reportes y Analítica', href: '/dashboard/reservations/analytics', icon: BarChart2 },
         { title: 'Clientes y No-Shows', href: '/dashboard/reservations/clients', icon: UserX },
+        { title: 'RPs', href: '/dashboard/reservations/rps', icon: Target },
         { title: 'Configuración', href: '/dashboard/reservations/setup', icon: Settings },
     ]
 };

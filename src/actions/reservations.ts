@@ -789,8 +789,21 @@ export async function createReservation(data: {
     }
     programId?: string // Optional context for Simple Mode
     userId?: string // Optional context for Simple Mode
+    promoterSlug?: string // New: RP tracking
 }) {
     try {
+        let promoterId: string | undefined
+
+        if (data.promoterSlug) {
+            const promoter = await prisma.promoterProfile.findUnique({
+                where: { slug: data.promoterSlug },
+                select: { id: true }
+            })
+            if (promoter) {
+                promoterId = promoter.id
+            }
+        }
+
         // Resolve Owner ID
         let ownerId = data.userId
 
@@ -886,6 +899,7 @@ export async function createReservation(data: {
                     data: {
                         tableId: res.tableId || null,
                         userId: ownerId,
+                        promoterId: promoterId, // Link to RP
                         date: targetDate,
                         partySize: res.partySize,
                         customerName: data.customer.name,

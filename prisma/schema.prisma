@@ -123,6 +123,7 @@ model UserSettings {
   representativeProfile   RepresentativeProfile?
   teamMembers             TeamMember[]           @relation("OwnerOf")
   memberships             TeamMember[]           @relation("MemberOf")
+  promoterProfiles        PromoterProfile[]      @relation("BusinessPromoters")
 }
 
 model FloorPlan {
@@ -176,11 +177,14 @@ model Reservation {
   duration      Int      @default(120)
 
   userId        String?
+  promoterId    String?
   table         Table?   @relation(fields: [tableId], references: [id], onDelete: Cascade)
   user          UserSettings? @relation("BusinessReservations", fields: [userId], references: [userId], onDelete: Cascade)
+  promoter      PromoterProfile? @relation("PromoterReservations", fields: [promoterId], references: [id])
 
   @@index([tableId])
   @@index([date])
+  @@index([promoterId])
 }
 
 model TeamMember {
@@ -1084,6 +1088,49 @@ enum CouponType {
 enum ReferralStatus {
   LEAD
   CONVERTED
+}
+
+enum PromoterCommissionType {
+  PER_PERSON
+  PERCENTAGE
+}
+
+model PromoterProfile {
+  id              String                 @id @default(uuid())
+  businessId      String
+  userId          String?
+  name            String
+  phone           String?
+  email           String?
+  slug            String                 @unique
+  commissionType  PromoterCommissionType @default(PER_PERSON)
+  commissionValue Float                  @default(0)
+  branchId        String?
+  isActive        Boolean                @default(true)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  reservations    Reservation[]          @relation("PromoterReservations")
+  settlements     PromoterSettlement[]
+  business        UserSettings           @relation("BusinessPromoters", fields: [businessId], references: [userId], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([branchId])
+}
+
+model PromoterSettlement {
+  id         String          @id @default(uuid())
+  promoterId String
+  amount     Float
+  startDate  DateTime
+  endDate    DateTime
+  status     String          @default("PENDING")
+  paidAt     DateTime?
+  notes      String?
+  createdAt  DateTime        @default(now())
+  promoter   PromoterProfile @relation(fields: [promoterId], references: [id], onDelete: Cascade)
+
+  @@index([promoterId])
 }
 
 enum CommissionStatus {

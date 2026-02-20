@@ -12,6 +12,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import { useSearchParams } from 'next/navigation'
 
 interface SimpleReservationFormProps {
     programId: string
@@ -24,6 +25,8 @@ interface SimpleReservationFormProps {
 }
 
 export default function SimpleReservationForm({ programId, userId, settings }: SimpleReservationFormProps) {
+    const searchParams = useSearchParams()
+    const rpSlug = searchParams.get('rp') || undefined
     const [date, setDate] = useState<Date | undefined>(new Date())
     const [time, setTime] = useState("14:00")
     const [pax, setPax] = useState(2)
@@ -64,7 +67,8 @@ export default function SimpleReservationForm({ programId, userId, settings }: S
                     email: customerEmail
                 },
                 programId,
-                userId
+                userId,
+                promoterSlug: rpSlug
             })
 
             if (res.success) {

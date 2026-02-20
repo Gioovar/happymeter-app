@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react"
 import { motion, AnimatePresence, useMotionValue } from "framer-motion"
 import { Users, DollarSign, Calendar, ChevronLeft, Check, Sparkles, Gift } from "lucide-react"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -48,6 +48,8 @@ interface CustomerReservationCanvasProps {
 
 export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorPlan, businessName, businessPhone, currentUser, programId, className, isAdmin = false }: CustomerReservationCanvasProps) {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const rpSlug = searchParams.get('rp') || undefined
 
     // Resolve initial floor (prioritize array)
     const allFloors = floorPlans || (initialFloorPlan ? [initialFloorPlan] : [])
@@ -248,7 +250,8 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
                 date: selectedDate?.toISOString() || new Date().toISOString(), // Use the date confirmed during search
                 partySize: t.capacity || 4
             })),
-            customer: customerForm
+            customer: customerForm,
+            promoterSlug: rpSlug
         }
         setServerError(null)
 
