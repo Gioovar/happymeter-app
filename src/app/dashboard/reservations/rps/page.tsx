@@ -1,6 +1,7 @@
 import { getDashboardContext } from "@/lib/auth-context"
 import { getPromoters } from "@/actions/promoters"
 import { getChainDetails } from "@/actions/chain"
+import { prisma } from "@/lib/prisma"
 import { PromotersList } from "@/components/dashboard/reservations/PromotersList"
 import { Target, Plus, TrendingUp, DollarSign, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,12 @@ export default async function PromotersPage() {
 
     const { promoters } = await getPromoters() as { promoters: any[] }
     const chains = await getChainDetails()
+
+    // Fetch Loyalty Program for link generation
+    const loyaltyProgram = await prisma.loyaltyProgram.findFirst({
+        where: { userId: context.userId }
+    })
+    const programId = loyaltyProgram?.id || ''
 
     // Flatten branches for selection
     const branches = chains?.flatMap(c => c.branches.map(b => ({
@@ -90,7 +97,7 @@ export default async function PromotersPage() {
                 </Card>
             </div>
 
-            <PromotersList initialPromoters={promoters} />
+            <PromotersList initialPromoters={promoters} programId={programId} />
         </div>
     )
 }

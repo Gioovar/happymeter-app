@@ -227,8 +227,15 @@ export async function sendPromoterNotification(promoterId: string, type: 'sms' |
 
         if (!promoter) return { success: false, error: "Promotor no encontrado" }
 
+        // Fetch Loyalty Program ID for the referral link
+        const loyaltyProgram = await prisma.loyaltyProgram.findFirst({
+            where: { userId: ownerId }
+        })
+
+        if (!loyaltyProgram) return { success: false, error: "No se encontró un programa de reservaciones activo" }
+
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
-        const referralLink = `${appUrl}/reserve?rp=${promoter.slug}`
+        const referralLink = `${appUrl}/book/${loyaltyProgram.id}?rp=${promoter.slug}`
         const businessName = promoter.business?.businessName || 'nuestro negocio'
 
         if (type === 'sms') {

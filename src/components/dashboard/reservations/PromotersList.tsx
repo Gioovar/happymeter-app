@@ -24,9 +24,10 @@ import { Badge } from "@/components/ui/badge"
 
 interface PromotersListProps {
     initialPromoters: any[]
+    programId: string
 }
 
-export function PromotersList({ initialPromoters }: PromotersListProps) {
+export function PromotersList({ initialPromoters, programId }: PromotersListProps) {
     const [promoters, setPromoters] = useState(initialPromoters)
 
     const handleDelete = async (id: string) => {
@@ -42,7 +43,7 @@ export function PromotersList({ initialPromoters }: PromotersListProps) {
     }
 
     const copyLink = (slug: string) => {
-        const url = `${window.location.origin}/reserva?rp=${slug}`
+        const url = `${window.location.origin}/book/${programId}?rp=${slug}`
         navigator.clipboard.writeText(url)
         toast.success('Link copiado al portapapeles')
     }
