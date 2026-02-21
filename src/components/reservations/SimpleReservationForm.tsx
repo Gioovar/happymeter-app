@@ -152,8 +152,15 @@ export default function SimpleReservationForm({ programId, userId, settings }: S
                             type="number"
                             min={1}
                             max={20}
-                            value={pax}
-                            onChange={(e) => setPax(parseInt(e.target.value) || 1)}
+                            value={pax === 0 ? "" : pax}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === "") {
+                                    setPax(0);
+                                } else {
+                                    setPax(parseInt(val));
+                                }
+                            }}
                             className="pl-9 bg-black border-zinc-800 text-white"
                         />
                     </div>
