@@ -747,10 +747,13 @@ export async function getAvailableTables(targetDateIso: string, floorPlanId?: st
 
         if (!settings.standardTimeEnabled) {
             // Block All Day Mode
-            dayReservations.forEach(r => occupiedTableIds.push(r.tableId))
+            dayReservations.forEach(r => {
+                if (r.tableId) occupiedTableIds.push(r.tableId)
+            })
         } else {
             // Time Slot Mode
             for (const res of dayReservations) {
+                if (!res.tableId) continue
                 const existingStart = new Date(res.date).getTime()
                 const existingDuration = res.duration || durationMinutes
                 const existingEnd = existingStart + (existingDuration * 60 * 1000)
@@ -824,12 +827,21 @@ export async function createReservation(data: {
         if (!ownerId) throw new Error("No se pudo identificar el negocio para la reserva")
 
         // Helper to fetch settings by OWNER ID
-        const ownerSettings = await prisma.userSettings.findUnique({
+        const ownerData = await prisma.userSettings.findUnique({
             where: { userId: ownerId },
-            select: { reservationSettings: true }
+            select: {
+                reservationSettings: true,
+                businessName: true,
+                phone: true,
+                whatsappContact: true,
+                loyaltyProgram: { select: { id: true } }
+            }
         })
         const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 }
-        const finalSettings = { ...defaults, ...(ownerSettings?.reservationSettings as any) }
+        const finalSettings = { ...defaults, ...(ownerData?.reservationSettings as any) }
+        const businessName = ownerData?.businessName || "Nuestro Negocio"
+        const businessPhone = ownerData?.whatsappContact || ownerData?.phone || ""
+        const loyaltyProgramId = ownerData?.loyaltyProgram?.id
 
         // Determine Duration
         const durationToStore = finalSettings.standardDurationMinutes || 120
@@ -917,6 +929,73 @@ export async function createReservation(data: {
                 }
             }
         })
+
+        // --- NOTIFICATIONS BLOCK ---
+        if (newReservationId && reservationDate) {
+            console.log(`[Notification Debug] Starting notifications for ${newReservationId}`);
+            try {
+                const qrCodeDataUrl = await QRCode.toDataURL(newReservationId)
+                const finalDate = reservationDate as Date
+
+                // Use Intl.DateTimeFormat for robustness
+                const dateFormatter = new Intl.DateTimeFormat('es-MX', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long'
+                })
+                const timeFormatter = new Intl.DateTimeFormat('es-MX', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                })
+
+                const formattedDate = dateFormatter.format(finalDate)
+                const formattedTime = timeFormatter.format(finalDate)
+
+                const tableLabel = reservationTableId ?
+                    (await prisma.table.findUnique({ where: { id: reservationTableId }, select: { label: true } }))?.label || "Mesa"
+                    : "Área General"
+
+                // 1. Send Email
+                if (data.customer.email) {
+                    console.log(`[Notification Debug] Attempting to send Email to: ${data.customer.email}`);
+                    const loyaltyUrl = loyaltyProgramId
+                        ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'}/loyalty/${loyaltyProgramId}`
+                        : undefined
+
+                    const pax = data.reservations?.[0]?.partySize || 0;
+
+                    const emailResult = await resend.emails.send({
+                        from: DEFAULT_SENDER,
+                        to: [data.customer.email.trim().toLowerCase()],
+                        subject: `✅ Confirmación de Reserva: ${businessName}`,
+                        react: ReservationConfirmationEmail({
+                            customerName: data.customer.name,
+                            businessName: businessName,
+                            date: formattedDate,
+                            time: formattedTime,
+                            pax: pax,
+                            table: tableLabel,
+                            qrCodeUrl: qrCodeDataUrl,
+                            reservationId: newReservationId,
+                            loyaltyUrl
+                        })
+                    })
+                    console.log(`[Notification Debug] Email result:`, emailResult);
+                }
+
+                // 2. Send SMS
+                if (data.customer.phone) {
+                    console.log(`[Notification Debug] Attempting to send SMS to: ${data.customer.phone}`);
+                    const smsMessage = `¡Hola ${data.customer.name}! Tu reserva en ${businessName} para el ${formattedDate} a las ${formattedTime} ha sido CONFIRMADA. Presenta tu confirmación al llegar. ¡Te esperamos!`
+                    const smsResult = await sendSMS(data.customer.phone, smsMessage)
+                    console.log(`[Notification Debug] SMS result:`, smsResult);
+                }
+
+            } catch (notifyError) {
+                console.error("Error sending reservation notifications:", notifyError)
+            }
+        }
 
         return { success: true, reservationId: newReservationId }
 
