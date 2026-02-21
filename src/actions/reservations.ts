@@ -997,7 +997,12 @@ export async function createReservation(data: {
             }
         }
 
-        return { success: true, reservationId: newReservationId }
+        return {
+            success: true,
+            reservationId: newReservationId,
+            action: loyaltyProgramId ? 'REDIRECT_LOYALTY' : undefined,
+            programId: loyaltyProgramId
+        }
 
     } catch (error: any) {
         console.error("Error creating reservation:", error)

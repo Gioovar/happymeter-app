@@ -73,15 +73,18 @@ export default function SimpleReservationForm({ programId, userId, settings }: S
 
             if (res.success) {
                 toast.success("¡Reservación confirmada!")
+                // Cleanup form
+                setCustomerName("")
+                setCustomerPhone("")
+                setCustomerEmail("")
+
                 // Redirect or show success
-                // If redirect logic is in action, it might return action type
-                if ((res as any).action === 'REDIRECT_LOYALTY') {
-                    window.location.href = `/loyalty/${(res as any).programId}?new=true`
+                if ((res as any).action === 'REDIRECT_LOYALTY' && (res as any).programId) {
+                    toast.message("Redirigiendo a tu perfil...")
+                    setTimeout(() => {
+                        window.location.href = `/loyalty/${(res as any).programId}?new=true`
+                    }, 1500)
                 } else {
-                    // Reset form or show success message
-                    setCustomerName("")
-                    setCustomerPhone("")
-                    setCustomerEmail("")
                     toast.message("Te hemos enviado los detalles.")
                 }
             } else {

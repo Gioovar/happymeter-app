@@ -297,7 +297,17 @@ export function CustomerReservationCanvas({ floorPlans, floorPlan: initialFloorP
 
                     // CRITICAL: Move to SUCCESS step, DO NOT go to SEARCH
                     setBookingStep('SUCCESS')
-                    setIsSuccessModalOpen(true)
+
+                    if (res.action === 'REDIRECT_LOYALTY' && res.programId) {
+                        toast.success("¡Redirigiendo a tu perfil de lealtad!", {
+                            description: "Podrás ver tu reserva allí."
+                        })
+                        setTimeout(() => {
+                            window.location.href = `/loyalty/${res.programId}?new=true`
+                        }, 2000)
+                    } else {
+                        setIsSuccessModalOpen(true)
+                    }
                 }
             } else {
                 setServerError(result?.error || "Intenta de nuevo más tarde.")

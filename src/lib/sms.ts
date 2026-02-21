@@ -14,11 +14,21 @@ export async function sendSMS(to: string, body: string) {
     try {
         const client = twilio(accountSid, authToken)
 
-        // Normalize: If it doesn't start with +, assume Mexico (+52)
-        let normalizedTo = to.trim()
+        // Normalize: Remove spaces, hyphens and characters
+        let normalizedTo = to.trim().replace(/[\s\-\(\)]/g, '')
+
         if (!normalizedTo.startsWith('+')) {
-            // Remove any leading 0s or spaces
-            normalizedTo = `+52${normalizedTo.replace(/^0+/, '')}`
+            // For Mexico: Remove common mobile prefixes (044, 045) and leading 0 or 1 
+            // if it helps reach the 10-digit base number.
+            let clean = normalizedTo.replace(/^(044|045|0|1)/, '')
+            if (clean.length === 10) {
+                normalizedTo = `+52${clean}`
+            } else if (normalizedTo.length === 12 && normalizedTo.startsWith('52')) {
+                normalizedTo = `+${normalizedTo}`
+            } else {
+                // Fallback for other cases
+                normalizedTo = `+52${normalizedTo}`
+            }
         }
 
         console.log(`[SMS] Sending to: ${normalizedTo} (Original: ${to}) from: ${fromNumber}`)
@@ -28,8 +38,8 @@ export async function sendSMS(to: string, body: string) {
             from: fromNumber,
             to: normalizedTo
         })
-        console.log(`[SMS] Sent: ${message.sid}`)
-        return { success: true, sid: message.sid }
+        console.log(`[SMS] Successfully sent to Twilio. SID: ${message.sid} | Status: ${message.status}`)
+        return { success: true, sid: message.sid, status: message.status }
     } catch (error) {
         console.error("Error sending SMS via Twilio:", error)
         return { success: false, error: "Failed to send SMS" }
