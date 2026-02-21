@@ -158,7 +158,12 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
         } else if (data.startsWith("R:")) {
             type = "REDEEM"
             payload = data.substring(2)
+        } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data)) {
+            // Raw UUIDs are likely reservations in this context
+            type = "RESERVATION"
+            payload = data
         }
+
 
         console.log(`Scan handling: Raw=${data}, Type=${type}, Payload=${payload}`)
 

@@ -934,7 +934,7 @@ export async function createReservation(data: {
         if (newReservationId && reservationDate) {
             console.log(`[Notification Debug] Starting notifications for ${newReservationId}`);
             try {
-                const qrCodeDataUrl = await QRCode.toDataURL(newReservationId)
+                const qrCodeDataUrl = await QRCode.toDataURL(`RESERVATION:${newReservationId}`)
                 const finalDate = reservationDate as Date
 
                 // Use Intl.DateTimeFormat for robustness
