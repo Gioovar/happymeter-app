@@ -36,6 +36,14 @@ const nextConfig = {
             bodySizeLimit: '10mb',
         },
     },
+    async rewrites() {
+        return [
+            { source: '/ops/manifest.json', destination: '/ops/manifest.json' },
+            { source: '/rps/manifest.json', destination: '/rps/manifest.json' },
+            // fallback to default manifest for other routes
+            { source: '/manifest.json', destination: '/manifest.json' },
+        ];
+    },
 };
 
 const pwaConfig = withPWA({

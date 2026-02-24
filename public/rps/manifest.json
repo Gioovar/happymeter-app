@@ -1,0 +1,22 @@
+{
+    "name": "Happy Meter RPs",
+    "short_name": "HappyMeter RPs",
+    "description": "Panel de RPs de Happy Meter",
+    "start_url": "/rps",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#8b5cf6",
+    "icons": [
+        {
+            "src": "/rps_icon.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/rps_icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "orientation": "portrait"
+}

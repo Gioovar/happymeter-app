@@ -1,0 +1,22 @@
+{
+    "name": "Happy Meter OPS",
+    "short_name": "HappyMeter OPS",
+    "description": "Operaciones de Happy Meter",
+    "start_url": "/ops",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#8b5cf6",
+    "icons": [
+        {
+            "src": "/ops_icon.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/ops_icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "orientation": "portrait"
+}
