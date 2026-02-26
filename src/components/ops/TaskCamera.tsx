@@ -186,15 +186,23 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
         if (!stream) return;
 
         try {
-            // Optimize Video Bitrate (2.5 Mbps)
+            // Check for optimal MIME types
+            let mimeType = 'video/webm;codecs=vp8,opus';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                if (MediaRecorder.isTypeSupported('video/webm')) {
+                    mimeType = 'video/webm';
+                } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+                    mimeType = 'video/mp4';
+                } else {
+                    mimeType = ''; // Leave blank for default
+                }
+            }
+
             const options: MediaRecorderOptions = {
-                mimeType: 'video/webm;codecs=vp8,opus',
                 videoBitsPerSecond: 2500000 // 2.5 Mbps
             };
-
-            // Fallback if mimeType not supported
-            if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
-                delete options.mimeType;
+            if (mimeType) {
+                options.mimeType = mimeType;
             }
 
             const recorder = new MediaRecorder(stream, options);
@@ -206,7 +214,8 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
             };
 
             recorder.onstop = () => {
-                const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+                const finalMimeType = recorder.mimeType || mimeType || 'video/mp4';
+                const blob = new Blob(chunksRef.current, { type: finalMimeType });
                 setCapturedVideo(blob);
                 setCapturedVideoUrl(URL.createObjectURL(blob));
                 setCapturedImage(null);
@@ -214,7 +223,7 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
                 if (timerRef.current) clearInterval(timerRef.current);
             };
 
-            recorder.start();
+            recorder.start(1000); // 1-second chunks for better stability
             setIsRecording(true);
             setRecordingTime(0);
             timerRef.current = setInterval(() => {
@@ -229,7 +238,14 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
 
     const stopRecording = () => {
         if (mediaRecorderRef.current && isRecording) {
-            mediaRecorderRef.current.stop();
+            try {
+                if (mediaRecorderRef.current.state !== 'inactive') {
+                    mediaRecorderRef.current.stop();
+                }
+            } catch (err) {
+                console.error("Error stopping recorder", err);
+                toast.error("Error al guardar el video");
+            }
         }
     };
 
@@ -539,8 +555,16 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
                             </div>
                         )}
 
-                        {/* Capture Button */}
+                        {/* Capture Button Container */}
                         <div className="relative mb-6">
+                            {/* Move Timer inside relative container to ensure visibility */}
+                            {isRecording && (
+                                <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 px-3 py-1 rounded-full backdrop-blur whitespace-nowrap">
+                                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                    <span className="text-white font-mono font-bold font-lg">{formatTime(recordingTime)}</span>
+                                </div>
+                            )}
+
                             {mode === 'PHOTO' ? (
                                 <button
                                     onClick={takePhoto}
@@ -578,14 +602,6 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
                                 </div>
                             )}
                         </div>
-
-                        {/* Timer */}
-                        {isRecording && (
-                            <div className="absolute top-[-50px] flex items-center gap-2 bg-black/50 px-3 py-1 rounded-full backdrop-blur">
-                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                <span className="text-white font-mono font-bold font-lg">{formatTime(recordingTime)}</span>
-                            </div>
-                        )}
 
                     </div>
                 </div>
