@@ -42,9 +42,11 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
 
 
     // --- Helpers ---
+    const activeRequestRef = useRef<number>(0);
 
     const stopStream = useCallback(() => {
         if (streamRef.current) {
+            console.log("Stopping active stream tracks");
             streamRef.current.getTracks().forEach(track => track.stop());
             streamRef.current = null;
         }
@@ -52,49 +54,55 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
     }, []);
 
     const startCamera = useCallback(async () => {
-        try {
-            setError(null);
-            stopStream();
+        setError(null);
+        const currentReq = ++activeRequestRef.current;
 
-            console.log("Requesting camera...");
-            let mediaStream: MediaStream;
+        console.log(`[Req ${currentReq}] Requesting camera...`);
+        let mediaStream: MediaStream;
+        try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' },
+                audio: true
+            });
+        } catch (err: any) {
+            console.warn(`[Req ${currentReq}] Environment camera with audio failed, trying fallback`, err);
             try {
-                mediaStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: 'environment'
-                    },
-                    audio: true
-                });
-            } catch (err: any) {
-                console.warn("Environment camera failed with audio, trying fallback", err);
-                // Fallback: try without audio or user facing mode if needed, but sticking to logic:
-                // try environment without audio
                 mediaStream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'environment' }
                 });
+            } catch (fallbackErr: any) {
+                console.error(`[Req ${currentReq}] Camera fallback error:`, fallbackErr);
+                if (activeRequestRef.current === currentReq) {
+                    setError("No se pudo acceder a la cámara. Verifica los permisos de tu dispositivo.");
+                }
+                return;
             }
-
-            console.log("Camera acquired", mediaStream.id);
-            streamRef.current = mediaStream;
-            setStream(mediaStream);
-        } catch (err: any) {
-            console.error("Camera error:", err);
-            setError("No se pudo acceder a la cámara. Verifica los permisos.");
         }
+
+        // Check if another request was initiated or if component unmounted
+        if (activeRequestRef.current !== currentReq) {
+            console.log(`[Req ${currentReq}] Stale camera request resolved. Stopping tracks.`);
+            mediaStream.getTracks().forEach(t => t.stop());
+            return;
+        }
+
+        // Stop any old stream we might still be holding
+        stopStream();
+
+        console.log(`[Req ${currentReq}] Camera acquired`, mediaStream.id);
+        streamRef.current = mediaStream;
+        setStream(mediaStream);
     }, [stopStream]);
 
     // --- Lifecycle Effects ---
 
     // 1. Initialize Camera on mount
     useEffect(() => {
-        let mounted = true;
-        const init = async () => {
-            if (mounted) await startCamera();
-        };
-        init();
+        startCamera();
 
         return () => {
-            mounted = false;
+            // Signal to any pending promises that we are unmounting
+            activeRequestRef.current = -1;
             stopStream();
         };
     }, [startCamera, stopStream]);
@@ -115,26 +123,24 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
 
     // --- Video Reference Management ---
 
-    // Use a standard effect to attach the stream when it becomes available
     useEffect(() => {
         const node = videoRef.current;
         if (node && stream) {
             console.log("Attaching stream to video node");
             node.srcObject = stream;
-            node.setAttribute('playsinline', 'true'); // Important for iOS
+            node.setAttribute('playsinline', 'true');
             node.muted = true;
             node.defaultMuted = true;
 
-            node.onloadedmetadata = () => {
-                node.play().catch(e => {
-                    console.error("Play error after metadata:", e);
-                });
-            };
+            // Adding a small delay helps iOS Safari settle the media pipeline
+            const timeoutId = setTimeout(() => {
+                node.onloadedmetadata = () => {
+                    node.play().catch(e => console.error("Play error after metadata:", e));
+                };
+                node.play().catch(e => console.error("Immediate play error:", e));
+            }, 100);
 
-            // Try to play immediately as a fallback
-            node.play().catch(e => {
-                console.error("Immediate play error:", e);
-            });
+            return () => clearTimeout(timeoutId);
         }
     }, [stream]);
 
