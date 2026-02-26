@@ -22,7 +22,17 @@ export default function Page() {
     const [formValues, setFormValues] = useState<{ phoneNumber?: string; emailAddress?: string }>({})
     const [tempPhone, setTempPhone] = useState('')
     const [tempEmail, setTempEmail] = useState('')
+    const [error, setError] = useState('')
     const { signUp, isLoaded } = useSignUp()
+
+    useEffect(() => {
+        const errCode = searchParams.get('err_code')
+        if (errCode === 'authorization_invalid') {
+            setError('Registro denegado. Es posible que no tengas autorización para usar este método.')
+        } else if (errCode) {
+            setError(`Error de autenticación: ${errCode}`)
+        }
+    }, [searchParams])
 
     useEffect(() => {
         if (programId) {
@@ -53,9 +63,11 @@ export default function Page() {
                 strategy: "oauth_google",
                 redirectUrl: "/sso-callback",
                 redirectUrlComplete: redirectUrl,
-            })
+                fallbackRedirectUrl: `/sign-up${intent ? `?intent=${intent}` : ''}`,
+            } as any)
         } catch (err) {
             console.error("OAuth error", err)
+            setError("Error al iniciar con Google. Intenta nuevamente.")
         }
     }
 
@@ -122,6 +134,15 @@ export default function Page() {
                                 <h2 className="text-3xl font-bold text-gray-900 mb-2">Crear Cuenta</h2>
                                 <p className="text-gray-500">Comienza tu prueba gratuita hoy</p>
                             </div>
+
+                            {error && (
+                                <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm border border-red-100 flex items-start gap-3 text-left">
+                                    <div className="mt-0.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                                    </div>
+                                    <p className="flex-1 font-medium">{error}</p>
+                                </div>
+                            )}
 
                             <div className="space-y-4">
                                 {/* Google Button */}

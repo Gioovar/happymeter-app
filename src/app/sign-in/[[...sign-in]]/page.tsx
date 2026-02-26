@@ -55,6 +55,18 @@ export default function Page() {
         }
     }, [programId])
 
+    // ----------------------------------------------------------------------
+    // Handle specific errors from Clerk OAuth (e.g. invalid authorization)
+    // ----------------------------------------------------------------------
+    useEffect(() => {
+        const errCode = searchParams.get('err_code')
+        if (errCode === 'authorization_invalid') {
+            setError('Acceso denegado. Es posible que tu cuenta no esté autorizada.')
+        } else if (errCode) {
+            setError(`Error de autenticación: ${errCode}`)
+        }
+    }, [searchParams])
+
     let redirectUrl = finalRedirect || '/dashboard' // Default to dashboard if no redirect
 
     // Handle intents specifically
@@ -75,7 +87,8 @@ export default function Page() {
                 strategy: "oauth_google",
                 redirectUrl: "/sso-callback",
                 redirectUrlComplete: redirectUrl,
-            });
+                fallbackRedirectUrl: `/sign-in${intent ? `?intent=${intent}` : ''}`,
+            } as any);
         } catch (err: any) {
             console.error("Error signing in with Google", err);
             setError("Error al iniciar con Google. Intenta nuevamente.")
