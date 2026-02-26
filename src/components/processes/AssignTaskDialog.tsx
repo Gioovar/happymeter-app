@@ -175,13 +175,13 @@ export default function AssignTaskDialog({ open, onOpenChange, task, staffList, 
                                                 <SelectItem key={staff.id} value={staff.id} className="focus:bg-cyan-900/30 focus:text-white cursor-pointer py-3">
                                                     <div className="flex items-center gap-3">
                                                         <Avatar className="w-6 h-6 border border-white/10">
-                                                            <AvatarImage src={staff.user.photoUrl || undefined} />
+                                                            <AvatarImage src={staff.user?.photoUrl || undefined} />
                                                             <AvatarFallback className="bg-cyan-900 text-cyan-200 text-[10px]">
-                                                                {staff.name?.[0] || staff.user.businessName?.[0] || 'S'}
+                                                                {staff.name?.[0] || staff.user?.businessName?.[0] || 'S'}
                                                             </AvatarFallback>
                                                         </Avatar>
                                                         <span className="text-sm font-medium">
-                                                            {staff.name || staff.user.businessName || "Empleado"}
+                                                            {staff.name || staff.user?.businessName || "Empleado"}
                                                         </span>
                                                         {staff.isOffline && <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-gray-400">PIN</span>}
                                                     </div>
