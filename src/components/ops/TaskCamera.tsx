@@ -599,22 +599,6 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
                                 </button>
                             )}
 
-                            {/* Gallery Button (Bottom Right of capture) */}
-                            {!isRecording && mode === 'PHOTO' && (
-                                <div className="absolute left-[120%] top-1/2 -translate-y-1/2">
-                                    <label className="flex flex-col items-center gap-1 cursor-pointer text-white/80 hover:text-white transition-colors">
-                                        <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center">
-                                            <Square className="w-5 h-5" />
-                                        </div>
-                                        <input
-                                            type="file"
-                                            accept="image/*,video/*"
-                                            className="hidden"
-                                            onChange={handleGalleryUpload}
-                                        />
-                                    </label>
-                                </div>
-                            )}
                         </div>
 
                     </div>
