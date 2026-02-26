@@ -115,18 +115,25 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
 
     // --- Video Reference Management ---
 
-    // Callback ref to handle video mounting/unmounting robustly
-    const setVideoNode = useCallback((node: HTMLVideoElement | null) => {
-        videoRef.current = node;
+    // Use a standard effect to attach the stream when it becomes available
+    useEffect(() => {
+        const node = videoRef.current;
         if (node && stream) {
-            console.log("Video node mounted, attaching stream");
+            console.log("Attaching stream to video node");
             node.srcObject = stream;
             node.setAttribute('playsinline', 'true'); // Important for iOS
             node.muted = true;
+            node.defaultMuted = true;
 
-            // Try to play immediately
+            node.onloadedmetadata = () => {
+                node.play().catch(e => {
+                    console.error("Play error after metadata:", e);
+                });
+            };
+
+            // Try to play immediately as a fallback
             node.play().catch(e => {
-                console.error("Play error:", e);
+                console.error("Immediate play error:", e);
             });
         }
     }, [stream]);
@@ -491,7 +498,8 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
             <div className="absolute inset-0 bg-black">
                 {!capturedImage && !capturedVideo ? (
                     <video
-                        ref={setVideoNode}
+                        key={stream ? stream.id : 'no-stream'}
+                        ref={videoRef}
                         autoPlay
                         playsInline
                         muted
