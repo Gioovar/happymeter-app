@@ -39,7 +39,8 @@ export default function TaskCaptureClient({ task }: TaskCaptureClientProps) {
                 publicUrl = result.url;
             } else {
                 // Video: Keep using Supabase for now (handling large files)
-                const ext = file.type.split('/')[1] || 'webm';
+                const mimeTop = file.type.split(';')[0];
+                const ext = mimeTop ? mimeTop.split('/')[1] : 'webm';
                 const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
 
                 const { data, error } = await supabase.storage

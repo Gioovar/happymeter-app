@@ -22,9 +22,9 @@ interface CreateZonePayload {
 
 export async function createProcessZoneWithTasks(data: CreateZonePayload) {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) throw new Error("No autorizado");
 
-    if (!data.name) throw new Error("Zone Name is required");
+    if (!data.name) throw new Error("El nombre de la zona es requerido");
 
     // LIMIT CHECK
     const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
@@ -35,29 +35,6 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
         const existingZones = await prisma.processZone.count({ where: { userId } })
         if (isLimitReached(existingZones, FREE_PLAN_LIMITS.MAX_PROCESS_FLOWS, userSettings.plan)) {
             throw new Error("Límite de flujos alcanzado (Plan Gratuito: 1). Actualiza tu plan.")
-        }
-
-        // 2. Check Tasks Count (in this creation payload)
-        // If they try to create a zone with > 1 task
-        if (isLimitReached(data.tasks.length, FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED + 1, userSettings.plan)) {
-            // Logic: isLimitReached(2, 2, 'FREE') -> true. We want to allow 1. So if length >= 2...
-            // Wait, isLimitReached(val, limit) returns val >= limit.
-            // If MAX is 1. If length is 2. 2 >= 1? True. Blocked?
-            // My helper isLimitReached(current, limit) { return current >= limit }.
-            // If limit is 1. If I have 1, it returns true? No, I should be able to HAVE 1.
-            // Limit usually means "Max allowed". Usage < Limit is ok. Usage == Limit is full. Usage > Limit is bad.
-            // If I have 0, create 1 -> 1. 1 >= 1? True.
-            // The helper `isLimitReached` checks if current count ALREADY met the limit? 
-            // "Limit Reached" usually means "You are at capacity, cannot add more".
-            // So if current == limit, you CANNOT add more.
-            // currentZones = 0. limit = 1. isLimitReached(0, 1) -> false. Proceed.
-            // currentZones = 1. limit = 1. isLimitReached(1, 1) -> true. Block.
-            // That logic holds for "Adding New Item".
-
-            // For Tasks in Payload:
-            // If I send 2 tasks. Limit is 1.
-            // I should check if data.tasks.length > limit.
-            // Actually, strictly: data.tasks.length > 1.
         }
 
         if (userSettings.plan === 'FREE' && data.tasks.length > FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED) {
@@ -91,10 +68,10 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
                 include: { user: true } // We get the UserSettings, but we need the email from Clerk
             });
 
-            if (staffMember) {
+            if (staffMember && staffMember.user) {
                 const client = await clerkClient();
                 const staffUser = await client.users.getUser(staffMember.userId);
-                const staffEmail = staffUser.emailAddresses[0]?.emailAddress;
+                const staffEmail: string | undefined = staffUser.emailAddresses[0]?.emailAddress;
                 // Owner name logic: could fetch from Clerk or UserSettings. For now use "Tu Administrador"
                 const ownerSettings = await prisma.userSettings.findUnique({ where: { userId } });
                 const managerName = ownerSettings?.businessName || "Tu Administrador";
@@ -102,9 +79,9 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
                 if (staffEmail) {
                     await sendStaffAssignmentEmail(
                         staffEmail,
-                        staffMember.user.businessName || "Staff",
+                        staffMember.user.businessName || staffMember.name || "Staff",
                         data.name,
-                        managerName
+                        managerName || "Tu Administrador"
                     );
                 }
             }
@@ -136,7 +113,7 @@ interface UpdateZonePayload {
 
 export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) throw new Error("No autorizado");
 
     const existingZone = await prisma.processZone.findUnique({
         where: { id: data.zoneId },
@@ -144,7 +121,7 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
     });
 
     if (!existingZone || existingZone.userId !== userId) {
-        throw new Error("Zone not found or unauthorized");
+        throw new Error("Zona no encontrada o no autorizada");
     }
 
     // LIMIT CHECK (Tasks)
@@ -226,10 +203,10 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
                 include: { user: true }
             });
 
-            if (staffMember) {
+            if (staffMember && staffMember.user) {
                 const client = await clerkClient();
                 const staffUser = await client.users.getUser(staffMember.userId);
-                const staffEmail = staffUser.emailAddresses[0]?.emailAddress;
+                const staffEmail: string | undefined = staffUser.emailAddresses[0]?.emailAddress;
 
                 const ownerSettings = await prisma.userSettings.findUnique({ where: { userId } });
                 const managerName = ownerSettings?.businessName || "Tu Administrador";
@@ -237,9 +214,9 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
                 if (staffEmail) {
                     await sendStaffAssignmentEmail(
                         staffEmail,
-                        staffMember.user.businessName || "Staff",
+                        staffMember.user.businessName || staffMember.name || "Staff",
                         data.name,
-                        managerName
+                        managerName || "Tu Administrador"
                     );
                 }
             }
@@ -254,7 +231,7 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
 
 export async function deleteProcessZone(zoneId: string) {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) throw new Error("No autorizado");
 
     // Verify ownership
     const existingZone = await prisma.processZone.findUnique({
@@ -263,7 +240,7 @@ export async function deleteProcessZone(zoneId: string) {
     });
 
     if (!existingZone || existingZone.userId !== userId) {
-        throw new Error("Zone not found or unauthorized");
+        throw new Error("Zona no encontrada o no autorizada");
     }
 
     await prisma.processZone.delete({
@@ -276,7 +253,7 @@ export async function deleteProcessZone(zoneId: string) {
 
 export async function assignTask(taskId: string, staffId: string | null) {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) throw new Error("No autorizado");
 
     // 1. Verify Ownership/Access
     const task = await prisma.processTask.findUnique({
@@ -284,7 +261,7 @@ export async function assignTask(taskId: string, staffId: string | null) {
         include: { zone: true }
     });
 
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new Error("Tarea no encontrada");
 
     // Check if user owns the zone directly
     let isAuthorized = task.zone.userId === userId;
@@ -307,7 +284,7 @@ export async function assignTask(taskId: string, staffId: string | null) {
     }
 
     if (!isAuthorized) {
-        throw new Error("Unauthorized");
+        throw new Error("No autorizado");
     }
 
     // 2. Update Task
@@ -338,22 +315,22 @@ interface UpdateTaskPayload {
 
 export async function updateProcessTask(data: UpdateTaskPayload) {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) throw new Error("No autorizado");
 
     const task = await prisma.processTask.findUnique({
         where: { id: data.taskId },
         include: { zone: true }
     });
 
-    if (!task) throw new Error("Task not found");
-    if (task.zone.userId !== userId) throw new Error("Unauthorized");
+    if (!task) throw new Error("Tarea no encontrada");
+    if (task.zone.userId !== userId) throw new Error("No autorizado");
 
     await prisma.processTask.update({
         where: { id: data.taskId },
         data: {
             title: data.title,
             description: data.description,
-            limitTime: data.limitTime === "" ? null : data.limitTime,
+            limitTime: (data.limitTime === "" || data.limitTime === null) ? null : data.limitTime,
             evidenceType: data.evidenceType,
             days: data.days
         }

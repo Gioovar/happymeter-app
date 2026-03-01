@@ -236,7 +236,7 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
                 if (timerRef.current) clearInterval(timerRef.current);
             };
 
-            recorder.start(1000); // 1-second chunks for better stability
+            recorder.start(); // Removed timeslice for iOS stability
             setIsRecording(true);
             setRecordingTime(0);
             timerRef.current = setInterval(() => {
