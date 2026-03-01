@@ -68,7 +68,7 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
                 include: { user: true } // We get the UserSettings, but we need the email from Clerk
             });
 
-            if (staffMember && staffMember.user) {
+            if (staffMember && staffMember.user && staffMember.userId) {
                 const client = await clerkClient();
                 const staffUser = await client.users.getUser(staffMember.userId);
                 const staffEmail: string | undefined = staffUser.emailAddresses[0]?.emailAddress;
@@ -203,7 +203,7 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
                 include: { user: true }
             });
 
-            if (staffMember && staffMember.user) {
+            if (staffMember && staffMember.user && staffMember.userId) {
                 const client = await clerkClient();
                 const staffUser = await client.users.getUser(staffMember.userId);
                 const staffEmail: string | undefined = staffUser.emailAddresses[0]?.emailAddress;
