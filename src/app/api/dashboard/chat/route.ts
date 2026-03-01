@@ -307,7 +307,10 @@ export async function POST(req: Request) {
                     staffReportsMap,
                     processComplianceMap,
                     reservationsMap,
-                    responseCountsMap
+                    responseCountsMap,
+                    staffTasksData,
+                    loyaltyProgramsMap,
+                    loyaltyCustomersMap
                 ] = await Promise.all([
                     // A. Negative Feedback (Last 30 Days) - Fetch full response context
                     prisma.response.findMany({
@@ -346,24 +349,42 @@ export async function POST(req: Request) {
                         select: { task: { select: { zone: { select: { userId: true } } } } }
                     }),
                     // D. Active Reservations (Future)
-                    prisma.reservation.groupBy({
-                        by: ['tableId'], // Group by table isn't helpful for branch summing, need richer query or simple count
+                    prisma.reservation.findMany({
                         where: {
-                            date: { gte: new Date() },
-                            status: { not: 'CANCELED' }
-                            // Linking to branch is harder via floorplan, need separate query per branch or intricate join. 
-                            // Simplified: Just fetch counts if possible or skip for efficiency if complexity is too high.
-                            // Let's do a findMany with include for accuracy.
+                            table: { floorPlan: { userId: { in: branchUserIds } } },
+                            date: { gte: todayStart },
+                            status: { notIn: ['CANCELED', 'REJECTED', 'NO_SHOW'] }
                         },
-                        _count: true
-                        // Complexity: Reservation -> Table -> FloorPlan -> UserId. Prisma groupBy doesn't support deep relation filtering easily in one go.
-                        // Fallback: We will infer activity from Response Count for now or fetch simple count if vital.
-                        // Let's skip complex reservation query for speed and rely on Feedback Volume as proxy for traffic.
+                        select: {
+                            table: { select: { floorPlan: { select: { userId: true } } } }
+                        }
                     }),
                     // E. Total Response Volume
                     prisma.survey.findMany({
                         where: { userId: { in: branchUserIds } },
                         include: { _count: { select: { responses: true } } }
+                    }),
+                    // F. TODAY'S Task Compliance by Staff
+                    prisma.processTask.findMany({
+                        where: { zone: { userId: { in: branchUserIds } } },
+                        include: {
+                            zone: { select: { userId: true } },
+                            assignedStaff: { select: { name: true } },
+                            evidences: {
+                                where: { submittedAt: { gte: todayStart, lte: todayEnd } },
+                                select: { id: true, status: true }
+                            }
+                        }
+                    }),
+                    // G. Loyalty Programs Status
+                    prisma.loyaltyProgram.findMany({
+                        where: { userId: { in: branchUserIds } },
+                        select: { userId: true, isActive: true }
+                    }),
+                    // H. Loyalty Customers Count
+                    prisma.loyaltyCustomer.findMany({
+                        where: { program: { userId: { in: branchUserIds } } },
+                        select: { program: { select: { userId: true } } }
                     })
                 ]);
 
@@ -401,9 +422,45 @@ export async function POST(req: Request) {
                     processMap.set(bid, (processMap.get(bid) || 0) + 1);
                 });
 
+                const resMap = new Map<string, number>();
+                (reservationsMap as any[]).forEach((res: any) => {
+                    const bid = res.table?.floorPlan?.userId;
+                    if (bid) resMap.set(bid, (resMap.get(bid) || 0) + 1);
+                });
+
                 const volumeMap = new Map<string, number>();
                 (responseCountsMap as any[]).forEach((s: any) => {
                     volumeMap.set(s.userId, (volumeMap.get(s.userId) || 0) + (s._count?.responses || 0));
+                });
+
+                // Detailed Employee Compliance Map (Branch ID -> Array of Staff Names who failed tasks)
+                const complianceMap = new Map<string, { total: number, completed: number, failingStaff: Set<string> }>();
+
+                (staffTasksData as any[]).forEach((task: any) => {
+                    const bid = task.zone.userId;
+                    const isCompleted = task.evidences && task.evidences.length > 0;
+
+                    const branchStats = complianceMap.get(bid) || { total: 0, completed: 0, failingStaff: new Set<string>() };
+                    branchStats.total += 1;
+
+                    if (isCompleted) {
+                        branchStats.completed += 1;
+                    } else if (task.assignedStaff && task.assignedStaff.name) {
+                        branchStats.failingStaff.add(task.assignedStaff.name);
+                    }
+
+                    complianceMap.set(bid, branchStats);
+                });
+
+                const loyaltyProgMap = new Map<string, boolean>();
+                (loyaltyProgramsMap as any[]).forEach((prog: any) => {
+                    loyaltyProgMap.set(prog.userId, prog.isActive);
+                });
+
+                const loyaltyCustMap = new Map<string, number>();
+                (loyaltyCustomersMap as any[]).forEach((cust: any) => {
+                    const bid = cust.program?.userId;
+                    if (bid) loyaltyCustMap.set(bid, (loyaltyCustMap.get(bid) || 0) + 1);
                 });
 
 
@@ -420,26 +477,48 @@ export async function POST(req: Request) {
                         const vol = volumeMap.get(bid) || 0;
                         const neg = negMap.get(bid) || 0;
                         const staff = staffMap.get(bid) || 0;
-                        const proc = processMap.get(bid) || 0;
+                        const resCount = resMap.get(bid) || 0;
+                        const compliance = complianceMap.get(bid);
+                        const hasLoyalty = loyaltyProgMap.get(bid);
+                        const loyaltyMembers = loyaltyCustMap.get(bid) || 0;
 
                         const activeComments = commentsMap.get(bid) || [];
 
-                        // Risk Assessment
+                        // Risk Assessment & Positive Highlights
                         const risks = [];
                         if (neg > 2) risks.push(`📉 ${neg} Quejas Graves`);
                         if (staff > 0) risks.push(`🚨 ${staff} Conflictos Staff`);
-                        if (vol === 0) risks.push(`⚠️ Sin Actividad (QRs?)`);
-                        if (proc === 0) risks.push(`⚙️ Sin Procesos`);
+                        if (vol === 0) risks.push(`⚠️ Sin encuestas recientes`);
+                        if (compliance && compliance.total > 0 && compliance.completed === 0) risks.push(`⚙️ 0% Tareas Procesos (Riesgo Crítico)`);
 
-                        const status = risks.length > 0 ? `RIESGOS: ${risks.join(', ')}` : "✅ Operación Saludable";
+                        const status = risks.length > 0 ? `RIESGOS: ${risks.join(', ')}` : "✅ Operación Estable";
                         const commentsSection = activeComments.length > 0 ? `\n   - "Quejas Reales": ${activeComments.map(c => `"${c}"`).join(', ')}` : "";
 
-                        return `### ${name}\n- Volumen Feedback: ${vol}\n- Estado: ${status}${commentsSection}`;
+                        // Formatting text to strictly isolate branch data
+                        let complianceSection = "";
+                        if (compliance && compliance.total > 0) {
+                            const failingNames = Array.from(compliance.failingStaff).slice(0, 3).join(', ');
+                            const fallingText = failingNames ? ` (Atrasados: ${failingNames})` : "";
+                            complianceSection = `\n- Tareas Procesos Hoy: ${compliance.completed}/${compliance.total}${fallingText}`;
+                        } else {
+                            complianceSection = `\n- Tareas Procesos Hoy: 0 creadas`;
+                        }
+
+                        let resSection = `\n- Reservaciones Activas: ${resCount}`;
+
+                        let loyaltySection = "";
+                        if (hasLoyalty) {
+                            loyaltySection = `\n- Tarjeta de Lealtad: Activa (${loyaltyMembers} clientes registrados)`;
+                        } else {
+                            loyaltySection = `\n- Tarjeta de Lealtad: INACTIVA (Recomienda implementarla para retener clientes)`;
+                        }
+
+                        return `### [SUCURSAL] ${name}\n- Feedback Mensual: ${vol}\n- Estado: ${status}${commentsSection}${complianceSection}${resSection}${loyaltySection}`;
                     })
                     .join('\n\n');
             }
 
-            SYSTEM_PROMPT = `Actúa como 'HappyMeter Corporate Director'.
+            SYSTEM_PROMPT = `Actúa como 'HappyMeter Corporate Strategist' (Súper Estratega Corporativo).
 
             ESTADO: VISTA DE CORPORATIVO (Análisis Multi-Sucursal).
             
@@ -447,26 +526,25 @@ export async function POST(req: Request) {
             
             ${branchBreakdown}
             
-            OBJETIVO: 
-            Actuar como un consultor operativo experto. No solo señales el riesgo, ANALIZA LA CAUSA RAÍZ basándote en los textos de las "Quejas Reales" (si los hay).
+            TU OBJETIVO CENTRAL:
+            Ya no eres solo un asistente operativo, eres un ESTRATEGA CORPORATIVO. Tu función principal es leer todas las sucursales simultáneamente, comparar sus métricas y detectar qué está haciendo diferente la mejor sucursal para replicarlo en las demás.
             
-            REGLAS DE ANÁLISIS:
-            1. **DETECTA EL PROBLEMA REAL**: No digas solo "Tiene quejas". Si los comentarios dicen "fría", el problema es TEMPERATURA. Si dicen "lentos", es VELOCIDAD. Si dicen "groseros", es ACTITUD.
-            2. **SOLUCIÓN CORTA**: Para cada sucursal con problemas, da 1 acción táctica inmediata (ej. "Auditar tiempos de cocina" o "Checklist de limpieza baños").
-            3. **INTERACCIÓN OBLIGATORIA**:
-               - AL FINAL DE TU RESPUESTA, pregunta SIEMPRE:
-               "¿Quieres que diseñemos un plan de acción detallado para alguna sucursal en específico?"
+            REGLAS DE ANÁLISIS ESCALADO:
+            1. **DETECTA PATRONES DE ÉXITO**: Si una sucursal tiene un alto volumen de encuestas sin quejas y un 100% de cumplimiento de Tareas, ASUME que tienen una excelente cultura de procesos.
+            2. **IDENTIFICA OPORTUNIDADES INVISIBLES**: Si una sucursal tiene muchas quejas de "lentitud" pero otra no, recomienda cruzar las mejores prácticas (ej. "Replicar el checklist de cocina de Portales en Cuauhtémoc").
+            3. **ANALIZA LA CAUSA RAÍZ**: Lee directamente los textos de "Quejas Reales" y no des resúmenes genéricos. Ve directo al grano operativo (ej. en vez de decir "Mejora el servicio", di "Auditar la actitud del mesero del turno tarde").
+            4. **ESTRATEGIA REPLICABLE (CLONACIÓN)**: Siempre que sea apropiado, formula recomendaciones que puedan convertirse en reglas para toda la cadena.
+            5. **ADVERTENCIAS DE IMPLEMENTACIÓN**: Si notas que una sucursal NO tiene Actividad, NO tiene Tarjeta de Lealtad (inactiva) o NO tiene procesos creados, indícalo de inmediato como un "Punto ciego de gestión".
             
             FORMATO DE RESPUESTA REQUERIDO:
             
-            ### [Nombre Sucursal]
-            🔴 **Problema Principal**: [Causa raíz basada en las quejas]
-            💡 **Acción Inmediata**: [Solución táctica de 1 línea]
+            Inicia con un breve resumen Ejecutivo de la Cadena.
+            Luego, destaca:
+            🟢 **La Estrella del Mes**: (La sucursal con mejor desempeño general y qué están haciendo bien, como Lealtad o Procesos).
+            🔴 **Focos Rojos**: (Sucursales con riesgos crónicos, 0% de procesos, o quejas reales críticas).
+            💡 **Estrategia a Replicar**: (Extrae la estrategia de la sucursal Estrella y explica cómo implementarla en los Focos Rojos).
             
-            (Repetir solo para sucursales con Riesgos)
-            
-            ⚠️ *[Pregunta de Cierre Interactiva]*
-            `;
+            ⚠️ Siempre termina preguntando: "¿Quieres que diseñemos un plan de acción estandarizado basado en estas observaciones para aplicarlo en toda la cadena?"`;
         } else {
             // --- RAMA 3: ANÁLISIS & OPERACIÓN (Full Power Mode) ---
             SYSTEM_PROMPT = `Actúa como 'HappyMeter Analyst', el cerebro central de ${businessName}.
