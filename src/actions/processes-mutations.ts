@@ -7,10 +7,28 @@ import { redirect } from 'next/navigation';
 import { ProcessEvidenceType } from '@prisma/client';
 import { sendStaffAssignmentEmail } from '@/lib/email';
 
+// Helper to check if the current user is authorized to modify a zone
+// This handles both direct ownership and branch ownership
+async function verifyZoneAccess(zoneUserId: string, currentUserId: string): Promise<boolean> {
+    if (zoneUserId === currentUserId) return true;
+
+    // Check if zoneUserId is a branch owned by currentUserId
+    const branchLink = await prisma.chainBranch.findFirst({
+        where: {
+            branchId: zoneUserId,
+            chain: { ownerId: currentUserId }
+        }
+    });
+
+    if (branchLink) return true;
+    return false;
+}
+
 interface CreateZonePayload {
     name: string;
     description?: string;
     assignedStaffId?: string;
+    branchId?: string; // Add branchId to explicitly create for a branch
     tasks: {
         title: string;
         description?: string;
@@ -24,10 +42,17 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
     const { userId } = await auth();
     if (!userId) throw new Error("No autorizado");
 
+    const targetUserId = data.branchId || userId;
+
+    if (targetUserId !== userId) {
+        const hasAccess = await verifyZoneAccess(targetUserId, userId);
+        if (!hasAccess) throw new Error("No tienes acceso a esta sucursal");
+    }
+
     if (!data.name) throw new Error("El nombre de la zona es requerido");
 
     // LIMIT CHECK
-    const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
+    const userSettings = await prisma.userSettings.findUnique({ where: { userId: targetUserId } })
     if (userSettings) {
         const { isLimitReached, FREE_PLAN_LIMITS } = await import('@/lib/limits')
 
@@ -44,7 +69,7 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
 
     const zone = await prisma.processZone.create({
         data: {
-            userId,
+            userId: targetUserId,
             name: data.name,
             description: data.description,
             assignedStaffId: data.assignedStaffId || null,
@@ -73,7 +98,7 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
                 const staffUser = await client.users.getUser(staffMember.userId);
                 const staffEmail: string | undefined = staffUser.emailAddresses[0]?.emailAddress;
                 // Owner name logic: could fetch from Clerk or UserSettings. For now use "Tu Administrador"
-                const ownerSettings = await prisma.userSettings.findUnique({ where: { userId } });
+                const ownerSettings = await prisma.userSettings.findUnique({ where: { userId: targetUserId } });
                 const managerName = ownerSettings?.businessName || "Tu Administrador";
 
                 if (staffEmail) {
@@ -120,9 +145,12 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
         include: { tasks: true }
     });
 
-    if (!existingZone || existingZone.userId !== userId) {
-        throw new Error("Zona no encontrada o no autorizada");
-    }
+    if (!existingZone) throw new Error("Zona no encontrada");
+
+    const hasAccess = await verifyZoneAccess(existingZone.userId, userId);
+    if (!hasAccess) throw new Error("Acceso denegado a esta zona");
+
+    if (!data.name) throw new Error("El nombre de la zona es requerido");
 
     // LIMIT CHECK (Tasks)
     const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
@@ -208,7 +236,7 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
                 const staffUser = await client.users.getUser(staffMember.userId);
                 const staffEmail: string | undefined = staffUser.emailAddresses[0]?.emailAddress;
 
-                const ownerSettings = await prisma.userSettings.findUnique({ where: { userId } });
+                const ownerSettings = await prisma.userSettings.findUnique({ where: { userId: existingZone.userId } });
                 const managerName = ownerSettings?.businessName || "Tu Administrador";
 
                 if (staffEmail) {
@@ -233,15 +261,13 @@ export async function deleteProcessZone(zoneId: string) {
     const { userId } = await auth();
     if (!userId) throw new Error("No autorizado");
 
-    // Verify ownership
-    const existingZone = await prisma.processZone.findUnique({
-        where: { id: zoneId },
-        select: { userId: true }
+    const zone = await prisma.processZone.findUnique({
+        where: { id: zoneId }
     });
 
-    if (!existingZone || existingZone.userId !== userId) {
-        throw new Error("Zona no encontrada o no autorizada");
-    }
+    if (!zone) throw new Error("Zona no encontrada");
+    const hasAccess = await verifyZoneAccess(zone.userId, userId);
+    if (!hasAccess) throw new Error("Acceso denegado a esta zona");
 
     await prisma.processZone.delete({
         where: { id: zoneId }
@@ -263,29 +289,8 @@ export async function assignTask(taskId: string, staffId: string | null) {
 
     if (!task) throw new Error("Tarea no encontrada");
 
-    // Check if user owns the zone directly
-    let isAuthorized = task.zone.userId === userId;
-
-    // If not the direct owner, check if user is the chain owner
-    if (!isAuthorized) {
-        const branchInfo = await prisma.chainBranch.findFirst({
-            where: { branchId: task.zone.userId },
-            select: {
-                chain: {
-                    select: { ownerId: true }
-                }
-            }
-        });
-
-        // User is authorized if they are the chain owner
-        if (branchInfo && branchInfo.chain.ownerId === userId) {
-            isAuthorized = true;
-        }
-    }
-
-    if (!isAuthorized) {
-        throw new Error("No autorizado");
-    }
+    const hasAccess = await verifyZoneAccess(task.zone.userId, userId);
+    if (!hasAccess) throw new Error("No autorizado");
 
     // 2. Update Task
     await prisma.processTask.update({
@@ -323,7 +328,8 @@ export async function updateProcessTask(data: UpdateTaskPayload) {
     });
 
     if (!task) throw new Error("Tarea no encontrada");
-    if (task.zone.userId !== userId) throw new Error("No autorizado");
+    const hasAccess = await verifyZoneAccess(task.zone.userId, userId);
+    if (!hasAccess) throw new Error("No autorizado");
 
     await prisma.processTask.update({
         where: { id: data.taskId },
