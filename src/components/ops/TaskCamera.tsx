@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, ChangeEvent } from 'react';
-import { RefreshCw, Check, MapPin, Square, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Check, MapPin, Square, AlertTriangle, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TaskCameraProps {
@@ -40,6 +40,9 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [comments, setComments] = useState<string>('');
 
+    // Camera settings
+    const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+
 
     // --- Helpers ---
     const activeRequestRef = useRef<number>(0);
@@ -61,14 +64,14 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
         let mediaStream: MediaStream;
         try {
             mediaStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' },
+                video: { facingMode },
                 audio: true
             });
         } catch (err: any) {
-            console.warn(`[Req ${currentReq}] Environment camera with audio failed, trying fallback`, err);
+            console.warn(`[Req ${currentReq}] Camera with audio failed, trying fallback`, err);
             try {
                 mediaStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' }
+                    video: { facingMode }
                 });
             } catch (fallbackErr: any) {
                 console.error(`[Req ${currentReq}] Camera fallback error:`, fallbackErr);
@@ -96,16 +99,19 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
 
     // --- Lifecycle Effects ---
 
-    // 1. Initialize Camera on mount
+    // 1. Initialize Camera on mount & facingMode change
     useEffect(() => {
-        startCamera();
+        // Only start if we are in PHOTO or VIDEO step, not COMMENTS or READY
+        if (currentStep !== 'COMMENTS' && currentStep !== 'READY' && !capturedImage && !capturedVideo) {
+            startCamera();
+        }
 
         return () => {
             // Signal to any pending promises that we are unmounting
             activeRequestRef.current = -1;
             stopStream();
         };
-    }, [startCamera, stopStream]);
+    }, [startCamera, stopStream, facingMode, currentStep, capturedImage, capturedVideo]);
 
     // 2. Initialize GPS independently
     useEffect(() => {
@@ -309,6 +315,9 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
                 setCurrentStep('VIDEO');
                 setMode('VIDEO');
 
+                // Explicitly restart camera to ensure a clean slate and avoid black screen
+                startCamera();
+
                 toast.success('✓ Foto capturada. Ahora graba el video');
                 return;
             } else if (currentStep === 'VIDEO' && capturedVideo) {
@@ -397,6 +406,11 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
         setCapturedVideo(null);
         setCapturedVideoUrl(null);
         setGalleryFile(null);
+        startCamera();
+    };
+
+    const toggleFacingMode = () => {
+        setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
     };
 
     const formatTime = (seconds: number) => {
@@ -596,6 +610,16 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
                                     ) : (
                                         <div className="w-16 h-16 bg-red-500 rounded-full outline outline-2 outline-white/20 outline-offset-2" />
                                     )}
+                                </button>
+                            )}
+
+                            {/* Camera Switcher */}
+                            {!isRecording && (
+                                <button
+                                    onClick={toggleFacingMode}
+                                    className="absolute -right-16 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/40 backdrop-blur border border-white/20 rounded-full flex items-center justify-center hover:bg-white/20 transition-all text-white"
+                                >
+                                    <RefreshCcw className="w-6 h-6" />
                                 </button>
                             )}
 
