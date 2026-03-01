@@ -95,7 +95,7 @@ export default function TaskCamera({ onCapture, evidenceType }: TaskCameraProps)
         console.log(`[Req ${currentReq}] Camera acquired`, mediaStream.id);
         streamRef.current = mediaStream;
         setStream(mediaStream);
-    }, [stopStream]);
+    }, [stopStream, facingMode]);
 
     // --- Lifecycle Effects ---
 
