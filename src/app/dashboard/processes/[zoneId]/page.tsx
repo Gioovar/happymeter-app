@@ -33,7 +33,7 @@ export default async function ProcessDetailPage({ params }: PageProps) {
 
     return (
         <div className="max-w-4xl mx-auto py-8">
-            <EditZoneForm zone={zone} teamMembers={teamMembers} pendingInvitations={pendingInvitations} />
+            <EditZoneForm zone={JSON.parse(JSON.stringify(zone))} teamMembers={teamMembers} pendingInvitations={pendingInvitations} />
         </div>
     );
 }

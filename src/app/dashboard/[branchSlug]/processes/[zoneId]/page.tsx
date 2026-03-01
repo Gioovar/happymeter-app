@@ -33,7 +33,7 @@ export default async function ProcessZonePage({ params }: { params: { branchSlug
     return (
         <div className="w-full">
             <ProcessZoneView
-                zones={[zone]}
+                zones={JSON.parse(JSON.stringify([zone]))}
                 memberId={context.userId}
                 branchId={context.userId} // This is the branch's virtual user ID, not the logged-in user's ID
             />
