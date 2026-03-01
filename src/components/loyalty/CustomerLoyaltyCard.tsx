@@ -82,14 +82,14 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
 
     // Load other cards when menu opens
     useEffect(() => {
-        if (showMenu && customer.clerkUserId) {
-            getMemberLoyaltyPrograms(customer.clerkUserId).then(res => {
+        if (showMenu && (customer.clerkUserId || customer.phone)) {
+            getMemberLoyaltyPrograms(customer.clerkUserId || null, customer.phone).then(res => {
                 if (res.success) {
                     setMyCards(res.memberships || [])
                 }
             })
         }
-    }, [showMenu, customer.clerkUserId])
+    }, [showMenu, customer.clerkUserId, customer.phone])
 
     // Find current unlocked rewards (pending redemption)
     const pendingRedemptions = customer.redemptions ? customer.redemptions.filter((r: any) => r.status === 'PENDING') : []
@@ -496,10 +496,11 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             return (
                                 <div
                                     key={reward.id}
+                                    onClick={() => setSelectedReward(reward)}
                                     className={cn(
-                                        "relative overflow-hidden rounded-2xl border bg-[#12121a] p-4 transition-all duration-300",
-                                        isSystemGift ? "border-purple-500/50 bg-purple-900/10" : "border-white/5",
-                                        pending ? "border-yellow-500/50 bg-yellow-900/10" : ""
+                                        "relative overflow-hidden rounded-2xl border bg-[#12121a] p-4 transition-all duration-300 cursor-pointer hover:bg-white/5 active:scale-[0.98]",
+                                        isSystemGift ? "border-purple-500/50 bg-purple-900/10 hover:bg-purple-900/20" : "border-white/5",
+                                        pending ? "border-yellow-500/50 bg-yellow-900/10 hover:bg-yellow-900/20" : ""
                                     )}
                                 >
                                     {isSystemGift && !isLocked && !pending && (
@@ -652,6 +653,55 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
             )}
 
 
+
+            {/* REWARD DETAILS MODAL (Portal) */}
+            {selectedReward && mounted && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedReward(null)} />
+                    <div className="relative w-full max-w-md bg-[#18181b] border-t border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 m-auto sm:m-0 bottom-0 sm:bottom-auto">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-xl bg-violet-500/20 text-violet-400 flex items-center justify-center shrink-0">
+                                    <Gift className="w-6 h-6" />
+                                </div>
+                                <h2 className="text-xl font-bold text-white pr-4">{selectedReward.name}</h2>
+                            </div>
+                            <button onClick={() => setSelectedReward(null)} className="p-2 hover:bg-white/10 rounded-full text-white shrink-0">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Requisitos</h3>
+                                <p className="text-sm text-gray-300">
+                                    {selectedReward.costInVisits > 0
+                                        ? `${selectedReward.costInVisits} visitas requeridas`
+                                        : `${selectedReward.costInPoints} puntos requeridos`
+                                    }
+                                </p>
+                            </div>
+
+                            {selectedReward.description && selectedReward.description !== "SYSTEM_GIFT" && (
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Descripción del Premio</h3>
+                                    <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                        {selectedReward.description}
+                                    </p>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={() => setSelectedReward(null)}
+                                className="w-full bg-white/10 hover:bg-white/20 text-white rounded-xl p-4 font-bold text-sm uppercase transition-colors mt-2"
+                            >
+                                Entendido
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
 
             {/* DIGITAL MENU PORTAL */}
             {showDigitalMenu && mounted && createPortal(

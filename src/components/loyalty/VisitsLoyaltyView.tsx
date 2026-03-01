@@ -117,6 +117,7 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
                                     </div>
                                     <div className="flex-1 relative">
                                         <input
+                                            key={reward?.id || `empty-${count}`}
                                             defaultValue={reward?.name || ""}
                                             placeholder="Sin premio"
                                             onBlur={(e) => handleSaveReward(count, e.target.value)}
@@ -125,14 +126,28 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
                                                     e.currentTarget.blur()
                                                 }
                                             }}
-                                            className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:bg-white/5 transition-all placeholder:text-gray-700"
+                                            className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-4 pr-16 py-3 text-white focus:outline-none focus:border-blue-500 focus:bg-white/5 transition-all placeholder:text-gray-700"
                                         />
                                         {isSaving && (
-                                            <div className="absolute right-3 top-3.5 animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full" />
+                                            <div className="absolute right-4 top-4 animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full" />
                                         )}
                                         {!isSaving && reward && (
-                                            <div className="absolute right-3 top-3.5 text-green-500">
-                                                <CheckCircle2 className="w-4 h-4" />
+                                            <div className="absolute right-4 top-3.5 flex items-center gap-3">
+                                                <button
+                                                    onClick={async () => {
+                                                        if (confirm("¿Estás seguro de eliminar este premio?")) {
+                                                            setSavingId(count)
+                                                            await deleteLoyaltyReward(program.id, reward.id)
+                                                            setSavingId(null)
+                                                            router.refresh()
+                                                        }
+                                                    }}
+                                                    className="text-gray-500 hover:text-red-500 transition-colors p-0.5 rounded-md hover:bg-white/5"
+                                                    title="Eliminar premio"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                                <CheckCircle2 className="w-4 h-4 text-green-500" />
                                             </div>
                                         )}
                                     </div>

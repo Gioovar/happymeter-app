@@ -385,22 +385,44 @@ export async function getPublicLoyaltyProgramInfo(programIdOrSlug: string) {
 }
 
 
-export async function getMemberLoyaltyPrograms(clerkUserId: string) {
+export async function getMemberLoyaltyPrograms(clerkUserId: string | null, phone?: string | null) {
     try {
-        const memberships = await prisma.loyaltyCustomer.findMany({
-            where: { clerkUserId },
+        const conditions = []
+        if (clerkUserId) conditions.push({ clerkUserId })
+        if (phone) conditions.push({ phone })
+
+        if (conditions.length === 0) {
+            return { success: true, memberships: [] } // No identifiers provided
+        }
+
+        const membershipsRaw = await prisma.loyaltyCustomer.findMany({
+            where: {
+                OR: conditions
+            },
             include: {
                 program: {
                     select: {
                         id: true,
                         businessName: true,
                         logoUrl: true,
-                        themeColor: true
+                        themeColor: true,
+                        pointsPercentage: true
                     }
                 }
             },
             orderBy: { lastVisitDate: 'desc' }
         })
+
+        // Deduplicate programs in case multiple records match different conditions but point to the same program
+        const uniqueProgramsMap = new Map()
+        for (const membership of membershipsRaw) {
+            if (!uniqueProgramsMap.has(membership.programId)) {
+                uniqueProgramsMap.set(membership.programId, membership)
+            }
+        }
+
+        const memberships = Array.from(uniqueProgramsMap.values())
+
         return { success: true, memberships }
     } catch (error) {
         console.error("Error fetching memberships:", error)
