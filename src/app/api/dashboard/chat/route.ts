@@ -143,11 +143,22 @@ export async function POST(req: Request) {
                     status: 'SEATED'
                 }
             }),
-            // 14. Processes (Total vs Completed Today)
+            // 14. Processes (Total vs Completed Today + Employee Metrics)
             Promise.all([
                 prisma.processTask.count({ where: { zone: { userId: targetUserId } } }),
                 prisma.processEvidence.count({
                     where: { task: { zone: { userId: targetUserId } }, submittedAt: { gte: todayStart, lte: todayEnd } }
+                }),
+                // Fetch tasks assigned to staff to calculate individual compliance
+                prisma.processTask.findMany({
+                    where: { zone: { userId: targetUserId } },
+                    include: {
+                        assignedStaff: { select: { name: true } },
+                        evidences: {
+                            where: { submittedAt: { gte: todayStart, lte: todayEnd } },
+                            select: { id: true, status: true }
+                        }
+                    }
                 })
             ]),
             // 15. Global Branch Data (Only formatted and used if !branchId)
@@ -181,9 +192,44 @@ export async function POST(req: Request) {
             : "N/A"
 
         // Process Stats
-        const totalTasks = processData[0]
-        const tasksCompletedToday = processData[1]
+        const totalTasks = processData[0] as number
+        const tasksCompletedToday = processData[1] as number
         const tasksPending = Math.max(0, totalTasks - tasksCompletedToday)
+
+        // Employee Task Compliance
+        const detailedTasks = processData[2] as any[]
+        const staffTaskMap = new Map<string, { total: number, completed: number }>()
+
+        let unassignedTotal = 0
+        let unassignedCompleted = 0
+
+        detailedTasks.forEach((task: any) => {
+            const isCompleted = task.evidences && task.evidences.length > 0;
+
+            if (task.assignedStaff && task.assignedStaff.name) {
+                const staffName = task.assignedStaff.name
+                const stats = staffTaskMap.get(staffName) || { total: 0, completed: 0 }
+                stats.total += 1
+                if (isCompleted) stats.completed += 1
+                staffTaskMap.set(staffName, stats)
+            } else {
+                unassignedTotal += 1
+                if (isCompleted) unassignedCompleted += 1
+            }
+        })
+
+        let employeePerformanceText = "\n=== 👤 RENDIMIENTO DEL EQUIPO (TAREAS HOY) ===\n"
+        if (staffTaskMap.size === 0 && unassignedTotal === 0) {
+            employeePerformanceText += "- Sin tareas asignadas o configuradas.\n"
+        } else {
+            staffTaskMap.forEach((stats, staffName) => {
+                const statusIcon = stats.completed === stats.total ? "✅" : (stats.completed === 0 ? "🚨 (Atención)" : "⚠️")
+                employeePerformanceText += `- ${staffName}: ${stats.completed}/${stats.total} tareas completadas ${statusIcon}\n`
+            })
+            if (unassignedTotal > 0) {
+                employeePerformanceText += `- Sin Asignar (General): ${unassignedCompleted}/${unassignedTotal} tareas completadas\n`
+            }
+        }
 
         console.log(`[AI_CHAT_DEBUG] Full Context Loaded`)
         console.log(`- Loyalty: ${loyaltyMembers} members, ${pointsRedeemedCount} points redeemed today`)
@@ -444,6 +490,7 @@ export async function POST(req: Request) {
                 === ✅ TAREAS & PROCESOS ===
                     - Tareas Pendientes(Hoy): ${tasksPending}
             - Tareas Completadas(Hoy): ${tasksCompletedToday}
+            ${employeePerformanceText}
             
             🧠 MEMORIA ESTRATÉGICA:
             ${insightText || "Sin insights previos."}
