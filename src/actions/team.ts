@@ -255,6 +255,18 @@ export async function removeMember(memberId: string) {
     // Are they the Owner?
     const isOwner = targetMember.ownerId === userId
 
+    // Are they the Chain Owner? (If the ownerId is a branch, check if the acting userId owns the chain of that branch)
+    let isChainOwner = false
+    if (!isOwner) {
+        const branch = await prisma.chainBranch.findFirst({
+            where: {
+                branchId: targetMember.ownerId,
+                chain: { ownerId: userId }
+            }
+        })
+        if (branch) isChainOwner = true
+    }
+
     // Are they an Admin of this team?
     const actingMember = await prisma.teamMember.findUnique({
         where: {
@@ -266,15 +278,14 @@ export async function removeMember(memberId: string) {
     })
 
     // 3. Permission Logic
-    if (isOwner) {
-        // Owner can delete anyone
+    if (isOwner || isChainOwner) {
+        // Owner or Chain Owner can delete anyone
     } else if (actingMember?.role === 'ADMIN') {
         // Admin cannot delete Owner
         if (targetMember.userId === targetMember.ownerId) { // Should not happen as owner isn't a member record usually, but safe check
             throw new Error('No puedes eliminar al dueño.')
         }
-        // Admin cannot delete other Admins (User request implies "no lo podra eliminar a el" (Owner) but allows others. 
-        // Standard practice: Admins can't delete Admins.
+        // Admin cannot delete other Admins
         if (targetMember.role === 'ADMIN') {
             throw new Error('No tienes permisos para eliminar a otro Administrador.')
         }
