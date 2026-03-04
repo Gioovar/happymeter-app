@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { randomUUID } from "crypto"
 import QRCode from 'qrcode'
 import { setLoyaltySession, getLoyaltySessionToken, clearLoyaltySession } from "@/lib/loyalty-auth"
+import { sendNativePush } from '@/lib/push-engine'
 
 // --- Authentication & Session ---
 
@@ -406,7 +407,10 @@ export async function getMemberLoyaltyPrograms(clerkUserId: string | null, phone
                         businessName: true,
                         logoUrl: true,
                         themeColor: true,
-                        pointsPercentage: true
+                        pointsPercentage: true,
+                        user: {
+                            select: { businessName: true }
+                        }
                     }
                 }
             },
@@ -417,6 +421,10 @@ export async function getMemberLoyaltyPrograms(clerkUserId: string | null, phone
         const uniqueProgramsMap = new Map()
         for (const membership of membershipsRaw) {
             if (!uniqueProgramsMap.has(membership.programId)) {
+                // Override the program businessName with the actual User's business name if available
+                if (membership.program.user?.businessName) {
+                    membership.program.businessName = membership.program.user.businessName
+                }
                 uniqueProgramsMap.set(membership.programId, membership)
             }
         }
@@ -598,10 +606,21 @@ export async function logCustomerVisit(
     try {
         const customer = await prisma.loyaltyCustomer.findUnique({
             where: { magicToken: uniqueCustomerToken },
-            include: { program: true }
+            include: {
+                program: {
+                    include: {
+                        user: { select: { subscriptionStatus: true } }
+                    }
+                }
+            }
         })
 
         if (!customer) return { success: false, error: "Customer not found" }
+
+        // SUBSCRIPTION BLOCK
+        if (customer.program.user?.subscriptionStatus === 'EXPIRED' || customer.program.user?.subscriptionStatus === 'SUSPENDED') {
+            return { success: false, error: "Este programa se encuentra inactivo temporalmente. Contacta al negocio." }
+        }
 
         // Idempotency check? Maybe limit 1 visit per day?
         // Note: multiple transactions in one day is normal for Points, but Visits might be rate limited.
@@ -708,6 +727,23 @@ export async function logCustomerVisit(
             })
         }
 
+        // NATIVE PUSH: Notify customer they earned points/visit
+        try {
+            const pushBody = isPointsTransaction
+                ? `¡Ganaste ${pointsEarned} Puntos! Nuevo saldo: ${updatedCustomer.currentPoints} Pts.`
+                : `¡Visita registrada! Llevas ${updatedCustomer.totalVisits} visitas registradas.`;
+
+            await sendNativePush({
+                title: "⭐ Puntos Ganados",
+                body: pushBody,
+                appType: "LOYALTY",
+                customerId: customer.id,
+                route: `/loyalty/${customer.programId}`
+            });
+        } catch (pushErr) {
+            console.error("[logCustomerVisit] Failed to send push:", pushErr);
+        }
+
         revalidatePath(`/loyalty/${customer.programId}`) // Update customer view if open? (Not real-time but good practice)
 
         // Fetch latest tier name to return
@@ -732,13 +768,27 @@ export async function logCustomerVisit(
 export async function unlockReward(customerId: string, rewardId: string) {
     // Customer clicks "Use Points" to generate a redemption code
     try {
-        const reward = await prisma.loyaltyReward.findUnique({ where: { id: rewardId } })
+        const reward = await prisma.loyaltyReward.findUnique({
+            where: { id: rewardId },
+            include: {
+                program: {
+                    include: {
+                        user: { select: { subscriptionStatus: true } }
+                    }
+                }
+            }
+        })
         const customer = await prisma.loyaltyCustomer.findUnique({
             where: { id: customerId },
-            include: { redemptions: true } // Include redemptions to check dupes
+            include: { redemptions: true }
         })
 
         if (!reward || !customer) return { success: false, error: "Data not found" }
+
+        // SUBSCRIPTION BLOCK
+        if (reward.program.user?.subscriptionStatus === 'EXPIRED' || reward.program.user?.subscriptionStatus === 'SUSPENDED') {
+            return { success: false, error: "El programa está inactivo temporalmente. No se pueden procesar canjes." }
+        }
 
         // CHECK 1: Enough visits?
         if (customer.currentVisits < reward.costInVisits) {
@@ -792,6 +842,19 @@ export async function unlockReward(customerId: string, rewardId: string) {
         const results = await prisma.$transaction(ops)
         // Redemption is the last result
         const redemption = results[results.length - 1]
+
+        // NATIVE PUSH: Notify customer about unlocked reward
+        try {
+            await sendNativePush({
+                title: "🎁 Premio Desbloqueado",
+                body: `¡Has desbloqueado: ${reward.name}! Muestra tu código al staff para canjearlo.`,
+                appType: "LOYALTY",
+                customerId: customer.id,
+                route: `/loyalty/${customer.programId}`
+            });
+        } catch (pushErr) {
+            console.error("[unlockReward] Failed to send push:", pushErr);
+        }
 
         revalidatePath(`/loyalty/${customer.programId}`)
         return { success: true, redemption }

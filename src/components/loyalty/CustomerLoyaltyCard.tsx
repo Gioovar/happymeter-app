@@ -20,9 +20,10 @@ interface CustomerLoyaltyCardProps {
     children?: React.ReactNode
     className?: string
     onEditProfile?: () => void
+    businessName?: string
 }
 
-export function CustomerLoyaltyCard({ customer, filterType = "all", children, className, onEditProfile }: CustomerLoyaltyCardProps) {
+export function CustomerLoyaltyCard({ customer, filterType = "all", children, className, onEditProfile, businessName }: CustomerLoyaltyCardProps) {
     const { user } = useUser()
     const { signOut, openUserProfile } = useClerk()
     const { program, visits, currentVisits } = customer
@@ -136,6 +137,8 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
     const tierColor = customer.tier?.color || "#fbbf24" // Default Gold
     const tierName = customer.tier?.name || "Miembro"
 
+    const isBlocked = program?.user?.subscriptionStatus === 'EXPIRED' || program?.user?.subscriptionStatus === 'SUSPENDED'
+
     return (
         <div className={cn("h-full w-full bg-[#0a0a0f] text-white relative overflow-hidden font-sans", className)}>
             {/* Dynamic Background Glows */}
@@ -154,7 +157,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             <img src={program.logoUrl} alt={program.businessName} className="w-10 h-10 object-contain rounded-full bg-white/10 p-1" />
                         ) : null}
                         <div>
-                            <h1 className="text-xl font-bold tracking-tight">{program?.businessName || "Mi Negocio"}</h1>
+                            <h1 className="text-xl font-bold tracking-tight">{businessName || program?.businessName || "Mi Negocio"}</h1>
                             <p className="text-xs text-gray-400 uppercase tracking-widest">Membresía Digital</p>
                         </div>
                     </div>
@@ -182,7 +185,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                 <div className="space-y-6 relative z-10">
                     {/* PRIMARY CARD (Membership Status) */}
                     <div
-                        onClick={() => setShowQr(!showQr)}
+                        onClick={() => { if (!isBlocked) setShowQr(!showQr) }}
                         className="w-full aspect-[1.6] rounded-3xl p-6 relative overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] cursor-pointer group"
                     >
                         {/* Card Background with customized gradient */}
@@ -199,12 +202,23 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                         {/* Card Gloss Effect */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 z-0" />
 
-                        {/* QR Hint Button (New) */}
-                        <div className="absolute top-6 right-6 z-20">
-                            <div className="p-2 bg-white/10 rounded-full backdrop-blur-md border border-white/10 group-hover:bg-white/20 transition-colors shadow-lg">
-                                <QrCode className="w-5 h-5 text-white" />
+                        {/* Block Overlay */}
+                        {isBlocked && (
+                            <div className="absolute inset-0 z-30 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 border border-white/5 rounded-3xl">
+                                <Lock className="w-8 h-8 text-white/50 mb-2" />
+                                <span className="text-sm font-bold text-white tracking-widest uppercase">Programa Inactivo</span>
+                                <span className="text-xs text-white/70 mt-1">Contacta al negocio para más detalles.</span>
                             </div>
-                        </div>
+                        )}
+
+                        {/* QR Hint Button (New) */}
+                        {!isBlocked && (
+                            <div className="absolute top-6 right-6 z-20">
+                                <div className="p-2 bg-white/10 rounded-full backdrop-blur-md border border-white/10 group-hover:bg-white/20 transition-colors shadow-lg">
+                                    <QrCode className="w-5 h-5 text-white" />
+                                </div>
+                            </div>
+                        )}
 
                         {/* Chip & Logo */}
                         <div className="relative z-10 flex justify-between items-start mb-12">
@@ -549,7 +563,14 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
 
                                     {/* ACTIONS */}
                                     <div className="mt-4 relative z-20">
-                                        {pending ? (
+                                        {isBlocked ? (
+                                            <div className="text-center">
+                                                <div className="flex items-center justify-center gap-2 text-red-400/80 text-xs font-bold py-2 uppercase tracking-wide">
+                                                    <Lock className="w-4 h-4" />
+                                                    Servicio Suspendido
+                                                </div>
+                                            </div>
+                                        ) : pending ? (
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
@@ -754,6 +775,18 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                 {/* Profile Actions */}
                                 <div className="space-y-2">
                                     <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-2">Mi Cuenta</div>
+
+                                    {/* Global Wallet Button */}
+                                    <Link
+                                        href="/loyalty"
+                                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group"
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:text-white transition-colors">
+                                            <Wallet className="w-4 h-4" />
+                                        </div>
+                                        <div className="text-sm font-medium text-indigo-300 group-hover:text-white">Volver a mis tarjetas</div>
+                                    </Link>
+
                                     <button
                                         onClick={() => onEditProfile ? onEditProfile() : openUserProfile()}
                                         className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group"

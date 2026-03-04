@@ -3,14 +3,14 @@
 import { InstallPwa } from "@/components/pwa/InstallPwa"
 import { useState, useEffect } from "react"
 import { CustomerLoyaltyCard } from "@/components/loyalty/CustomerLoyaltyCard"
-import { updateLoyaltyProfile, getPublicLoyaltyProgramInfo, getLoyaltySession } from "@/actions/loyalty"
-import { LoyaltyAuthForm } from "@/components/loyalty/LoyaltyAuthForm"
-import { claimWelcomeGift } from "@/actions/loyalty"
+import { getPublicLoyaltyProgramInfo, claimWelcomeGift } from "@/actions/loyalty"
+import { getCustomerForProgram, joinProgram, updateGlobalProfile } from "@/actions/loyalty-global"
 import { PromotionsSlider } from "@/components/loyalty/PromotionsSlider"
 import { toast } from "sonner"
-import { Loader2, Sparkles, User, Calendar } from "lucide-react"
+import { Loader2, Sparkles, User, Calendar, LogIn, Store } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense } from "react"
+import { usePushNotifications } from "@/hooks/usePushNotifications"
 
 function LoyaltyContent({ params }: { params: { programId: string } }) {
     const [isLoading, setIsLoading] = useState(true)
@@ -18,6 +18,11 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
     const [programInfo, setProgramInfo] = useState<any>(null)
     const [showProfileForm, setShowProfileForm] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isJoining, setIsJoining] = useState(false)
+
+    // Auth State
+    const [needsAuth, setNeedsAuth] = useState(false)
+    const [needsJoin, setNeedsJoin] = useState(false)
 
     // Profile Data
     const [name, setName] = useState("")
@@ -33,6 +38,9 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
     const router = useRouter()
     const claimGift = searchParams.get("claim_gift")
 
+    // Initialize Push Notifications once customer ID is known
+    usePushNotifications('LOYALTY', customer?.id || null);
+
     // 1. Initial Load
     useEffect(() => {
         const load = async () => {
@@ -44,14 +52,14 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                 if (info) {
                     setProgramInfo(info)
 
-                    // Now check session with the REAL ID
-                    const sessionCustomer = await getLoyaltySession()
-                    if (sessionCustomer) {
-                        if (sessionCustomer.programId === info.id) {
-                            setCustomer(sessionCustomer)
-                        } else {
-                            console.log("Session mismatch")
-                        }
+                    // Fetch from global wallet context
+                    const res = await getCustomerForProgram(info.id)
+                    if (res.success && res.customer) {
+                        setCustomer(res.customer)
+                    } else if (res.error === "No autenticado") {
+                        setNeedsAuth(true) // Not logged into the Wallet app yet
+                    } else {
+                        setNeedsJoin(true) // Logged in, but hasn't joined this program
                     }
                 } else {
                     toast.error("Programa no encontrado")
@@ -78,7 +86,9 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                     newParams.delete("claim_gift")
                     router.replace(`/loyalty/${params.programId}`)
                     // Refresh data
-                    getLoyaltySession().then(c => c && setCustomer(c))
+                    getCustomerForProgram(params.programId).then(res => {
+                        if (res.success) setCustomer(res.customer)
+                    })
                 } else {
                     if (!res.error?.includes("Ya tienes")) {
                         toast.error(res.error)
@@ -128,18 +138,20 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
         }
 
         setIsSubmitting(true)
-        const res = await updateLoyaltyProfile(params.programId, customer.magicToken, {
+        const res = await updateGlobalProfile({
             name,
             email,
-            phone,
-            username: username || name,
             birthday: birthday ? new Date(birthday) : undefined
         })
         setIsSubmitting(false)
 
         if (res.success) {
             toast.success("¡Perfil actualizado!")
-            setCustomer(res.customer)
+            // Reload global customer context to reflect changes
+            const freshRes = await getCustomerForProgram(params.programId)
+            if (freshRes.success) {
+                setCustomer(freshRes.customer)
+            }
             setShowProfileForm(false)
 
             // Remove 'action=signup' from URL
@@ -166,25 +178,68 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
         )
     }
 
-    if (!customer) {
+    if (needsAuth) {
         return (
-            <LoyaltyAuthForm
-                programId={programInfo?.id || params.programId}
-                businessName={programInfo?.businessName || "Programa Rewards"}
-                logoUrl={programInfo?.logoUrl}
-                initialData={{
-                    name: searchParams.get("name") || undefined,
-                    phone: searchParams.get("phone") || undefined,
-                    email: searchParams.get("email") || undefined
-                }}
-                onSuccess={(newCustomer) => {
-                    setCustomer(newCustomer)
-                    // If just joined, maybe trigger PWA prompt
-                    setTimeout(() => setShowInstallPrompt(true), 2000)
-                }}
-            />
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
+                <Store className="w-16 h-16 text-violet-500 mb-6" />
+                <h1 className="text-2xl font-bold mb-2">Inicia Sesión</h1>
+                <p className="text-gray-400 mb-8 max-w-sm">
+                    Inicia sesión en tu Billetera HappyMeters para unirte o ver tu tarjeta en {programInfo?.businessName || 'este negocio'}.
+                </p>
+                <button
+                    onClick={() => router.push(`/loyalty/login?redirect=/loyalty/${params.programId}`)}
+                    className="bg-white text-black font-bold py-4 px-8 rounded-xl flex items-center gap-2 hover:bg-gray-100 transition-colors"
+                >
+                    <LogIn className="w-5 h-5" /> Ir a Iniciar Sesión
+                </button>
+            </div>
         )
     }
+
+    const handleJoin = async () => {
+        setIsJoining(true)
+        const res = await joinProgram(params.programId)
+        if (res.success) {
+            toast.success("¡Tarjeta añadida a tu Billetera!")
+            const custRes = await getCustomerForProgram(params.programId)
+            if (custRes.success) {
+                setCustomer(custRes.customer)
+                setNeedsJoin(false) // Hide join screen, show card
+            }
+        } else {
+            toast.error(res.error)
+        }
+        setIsJoining(false)
+    }
+
+    if (needsJoin) {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none" />
+
+                {programInfo?.logoUrl ? (
+                    <img src={programInfo.logoUrl} alt="Logo" className="w-24 h-24 rounded-2xl mb-6 shadow-xl object-cover relative z-10" />
+                ) : (
+                    <div className="w-24 h-24 bg-white/5 border border-white/10 rounded-2xl mb-6 flex items-center justify-center relative z-10">
+                        <Store className="w-10 h-10 text-gray-500" />
+                    </div>
+                )}
+
+                <h1 className="text-2xl font-bold mb-2 relative z-10">Unirse a {programInfo?.businessName}</h1>
+                <p className="text-gray-400 mb-8 max-w-sm relative z-10">Añade esta tarjeta a tu billetera y empieza a acumular visitas y recompensas.</p>
+
+                <button
+                    onClick={handleJoin}
+                    disabled={isJoining}
+                    className="bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 px-8 rounded-xl flex items-center gap-2 disabled:opacity-50 transition-all relative z-10"
+                >
+                    {isJoining ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />} Añadir Tarjeta
+                </button>
+            </div>
+        )
+    }
+
+    if (!customer) return null // Safety fallback
 
     return (
         <div className="min-h-screen bg-black text-white font-sans">
@@ -213,15 +268,14 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Tu Celular <span className="text-red-500">*</span></label>
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Tu Celular</label>
                                     <input
                                         type="tel"
                                         value={phone}
-                                        onChange={e => setPhone(e.target.value)}
-                                        placeholder="55 1234 5678"
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:bg-white/10 transition-all font-medium"
-                                        required
+                                        disabled
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-gray-500 transition-all font-medium cursor-not-allowed"
                                     />
+                                    <p className="text-[10px] text-gray-600 ml-1">Registrado con cuenta global.</p>
                                 </div>
 
                                 <div className="space-y-2">
@@ -276,7 +330,7 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={!name || !email || !phone || !birthday || isSubmitting}
+                                        disabled={!name || !email || !birthday || isSubmitting}
                                         className="flex-1 bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {isSubmitting ? <Loader2 className="animate-spin" /> : "Guardar"}
@@ -289,6 +343,7 @@ function LoyaltyContent({ params }: { params: { programId: string } }) {
             ) : (
                 <CustomerLoyaltyCard
                     customer={customer}
+                    businessName={programInfo?.businessName}
                     filterType={(searchParams.get("mode")?.toLowerCase() as "visits" | "points") || "all"}
                     className="min-h-screen"
                     onEditProfile={() => {

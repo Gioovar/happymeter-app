@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "396627838547",
+    "project_id": "happymeter-ea26f",
+    "storage_bucket": "happymeter-ea26f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:396627838547:android:af7720bd8b2d28ddd9a8a6",
+        "android_client_info": {
+          "package_name": "com.happymeters.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJJHIi1ryxB-IG_UegAqYlAKdRL9kvwXo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

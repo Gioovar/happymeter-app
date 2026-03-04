@@ -8,6 +8,7 @@ import { getPublicLoyaltyProgramInfo } from "@/actions/loyalty";
 import { Phone, Mail, ArrowLeft, Loader2, Lock, AlertCircle, Eye, EyeOff, Smartphone, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ParticleBackground from "@/components/landing/ParticleBackground";
+import { isolatedStorage } from "@/lib/isolated-storage";
 
 export default function Page() {
     const { signIn, isLoaded, setActive } = useSignIn();
@@ -42,7 +43,7 @@ export default function Page() {
 
     // Load saved email
     useEffect(() => {
-        const savedEmail = localStorage.getItem('hm_remembered_user')
+        const savedEmail = isolatedStorage.getItem('hm_remembered_user')
         if (savedEmail) {
             setEmail(savedEmail)
             setRememberMe(true)
@@ -128,9 +129,9 @@ export default function Page() {
             }
         } finally {
             if (rememberMe) {
-                localStorage.setItem('hm_remembered_user', email)
+                isolatedStorage.setItem('hm_remembered_user', email)
             } else {
-                localStorage.removeItem('hm_remembered_user')
+                isolatedStorage.removeItem('hm_remembered_user')
             }
             setIsLoading(false)
         }

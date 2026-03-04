@@ -25,8 +25,8 @@ export default function TrialExpiredWall() {
                         Función Premium Bloqueada
                     </h2>
                     <p className="text-gray-400 text-sm max-w-xl mx-auto mb-4">
-                        Tu plan actual no incluye esta herramienta. <br />
-                        <span className="text-white font-medium">Configura tu plan ideal para desbloquearla ahora mismo.</span>
+                        Tu plan actual no incluye esta herramienta o requiere actualización. <br />
+                        <span className="text-white font-medium">Por favor, verifica el estado de tu suscripción.</span>
                     </p>
                 </div>
 

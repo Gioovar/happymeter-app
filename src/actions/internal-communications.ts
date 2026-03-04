@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
 import { getMexicoTodayRange } from '@/actions/processes'
+import { sendNativePush } from '@/lib/push-engine'
 
 /**
  * Envia un mensaje interno entre miembros del equipo o el dueño.
@@ -56,6 +57,31 @@ export async function sendInternalMessage(formData: FormData) {
             isRead: false
         }
     })
+
+    // Resolve push target (Clerk userId binding)
+    let pushTargetUserId = receiverId
+    let senderName = "Mensaje Nuevo" // Will improve dynamically later
+    try {
+        const teamMember = await prisma.teamMember.findUnique({ where: { id: receiverId } })
+        if (teamMember && teamMember.userId) {
+            pushTargetUserId = teamMember.userId
+        }
+
+        const senderProfile = await prisma.userSettings.findUnique({ where: { userId: effectiveSenderId } })
+        const senderStaff = await prisma.teamMember.findUnique({ where: { id: effectiveSenderId } })
+
+        senderName = senderStaff?.name || senderProfile?.businessName || senderProfile?.fullName || "Mensaje Nuevo"
+
+        await sendNativePush({
+            title: `💬 ${senderName}`,
+            body: content.length > 50 ? content.substring(0, 47) + '...' : content,
+            appType: 'OPS',
+            userId: pushTargetUserId,
+            route: `/ops/chat?with=${effectiveSenderId}`
+        });
+    } catch (pushErr) {
+        console.error("[sendInternalMessage] Failed to send push:", pushErr);
+    }
 
     revalidatePath('/ops/chat')
     revalidatePath('/dashboard/team/chat')
@@ -290,7 +316,7 @@ export async function createInternalNotification(
     type: string,
     actionUrl?: string
 ) {
-    return await prisma.internalNotification.create({
+    const notification = await prisma.internalNotification.create({
         data: {
             userId: targetUserId,
             branchId,
@@ -301,4 +327,25 @@ export async function createInternalNotification(
             isRead: false
         }
     })
+
+    // Resolve Push Target UserId
+    try {
+        let pushTargetUserId = targetUserId;
+        const teamMember = await prisma.teamMember.findUnique({ where: { id: targetUserId } });
+        if (teamMember && teamMember.userId) {
+            pushTargetUserId = teamMember.userId;
+        }
+
+        await sendNativePush({
+            title: title || "🔔 Tienes una alerta",
+            body: body,
+            appType: 'OPS', // Defaulting to OPS context for internal notifications
+            userId: pushTargetUserId,
+            route: actionUrl || undefined
+        });
+    } catch (pushErr) {
+        console.error("[createInternalNotification] Failed to send push:", pushErr);
+    }
+
+    return notification;
 }

@@ -94,7 +94,9 @@ export async function getDashboardContext(branchSlug?: string) {
         return {
             userId,
             isBranch: false,
-            name: 'Mi Negocio' // Or fetch real name
+            name: 'Mi Negocio', // Or fetch real name
+            plan: 'FREE', // Default, main layout handles actual fetch
+            subscriptionStatus: 'ACTIVE'
         };
     }
 
@@ -103,13 +105,15 @@ export async function getDashboardContext(branchSlug?: string) {
         // We fetch settings to get the real business name if possible, or fallback
         const settings = await prisma.userSettings.findUnique({
             where: { userId },
-            select: { businessName: true }
+            select: { businessName: true, plan: true, subscriptionStatus: true }
         });
 
         return {
             userId,
             isBranch: true, // Treat as "Branch Mode" for layout compatibility
             name: settings?.businessName || 'Mi Negocio',
+            plan: settings?.plan || 'FREE',
+            subscriptionStatus: settings?.subscriptionStatus || 'ACTIVE',
             params: { branchSlug }
         }
     }
@@ -124,7 +128,7 @@ export async function getDashboardContext(branchSlug?: string) {
         },
         include: {
             branch: {
-                select: { businessName: true }
+                select: { businessName: true, plan: true, subscriptionStatus: true }
             }
         }
     });
@@ -134,6 +138,8 @@ export async function getDashboardContext(branchSlug?: string) {
             userId: branch.branchId,
             isBranch: true,
             name: branch.branch.businessName || branch.name || branchSlug,
+            plan: branch.branch.plan,
+            subscriptionStatus: branch.branch.subscriptionStatus, // Passing the status
             params: { branchSlug }
         };
     }

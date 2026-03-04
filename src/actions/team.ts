@@ -107,12 +107,15 @@ export async function inviteMember(formData: FormData) {
             // Verify Chain Ownership
             const branch = await prisma.chainBranch.findFirst({
                 where: {
-                    branchId: branchId,
+                    OR: [
+                        { slug: branchId },
+                        { branchId: branchId }
+                    ],
                     chain: { ownerId: userId }
                 }
             })
             if (!branch) throw new Error('Unauthorized access to branch')
-            targetOwnerId = branchId
+            targetOwnerId = branch.branchId
         } else if (branchSlug) {
             // Resolve Branch ID from Slug
             const branch = await prisma.chainBranch.findFirst({
@@ -636,7 +639,10 @@ export async function createOfflineOperator(name: string, branchId?: string) {
             // Verify Chain Ownership
             const branch = await prisma.chainBranch.findFirst({
                 where: {
-                    branchId: branchId,
+                    OR: [
+                        { slug: branchId },
+                        { branchId: branchId }
+                    ],
                     chain: { ownerId: userId }
                 }
             })
@@ -651,6 +657,8 @@ export async function createOfflineOperator(name: string, branchId?: string) {
                 } else {
                     throw new Error("Unauthorized access to branch")
                 }
+            } else {
+                targetOwnerId = branch.branchId
             }
         } else if (!branchId) {
             // Check if I am a member behaving as admin (original logic)

@@ -18,7 +18,12 @@ export default async function BranchDashboardLayout({
     // We pass the EFFECTIVE user ID (the branch's ID) as the branchId prop
     // The DashboardProvider will use this to append ?branchId=... to requests
     return (
-        <DashboardProvider branchId={context.userId} branchSlug={params.branchSlug}>
+        <DashboardProvider
+            branchId={context.userId}
+            branchSlug={params.branchSlug}
+            initialPlan={context.plan}
+            dbSubscriptionStatus={context.subscriptionStatus || undefined}
+        >
             {children}
         </DashboardProvider>
     )

@@ -39,6 +39,55 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isExpanded, setIsExpanded] = useState(false)
     const [isBirthdayPickerOpen, setIsBirthdayPickerOpen] = useState(false)
+    const [isSuccess, setIsSuccess] = useState(false)
+    const [countdown, setCountdown] = useState<number | null>(null)
+
+    // Kiosk Mode: Prevent back navigation
+    useEffect(() => {
+        // Push a dummy state so the user can't easily go "back" out of the app
+        window.history.pushState(null, '', window.location.href)
+
+        const handlePopState = () => {
+            // Push it back again immediately
+            window.history.pushState(null, '', window.location.href)
+        }
+
+        window.addEventListener('popstate', handlePopState)
+        return () => window.removeEventListener('popstate', handlePopState)
+    }, [])
+
+    // Kiosk Mode: Auto-restart after success
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        let countdownInterval: NodeJS.Timeout;
+
+        if (isSuccess) {
+            setCountdown(5);
+
+            countdownInterval = setInterval(() => {
+                setCountdown((prev) => (prev !== null && prev > 1 ? prev - 1 : null));
+            }, 1000);
+
+            timer = setTimeout(() => {
+                // Reset everything
+                setIsSuccess(false)
+                setIsSubmitting(false)
+                const initialData: any = { name: '', age: '', email: '', phone: '', source: '', sourceOther: '', birthday: '' }
+                if (survey && survey.questions) {
+                    survey.questions.forEach((q: any) => { initialData[q.id] = q.type === 'EMOJI' ? '3' : '' })
+                }
+                setFormData(initialData)
+                setUploadedPhotoUrl(null)
+                setLocalPhotoPreview(null)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+            }, 5000)
+        }
+
+        return () => {
+            if (timer) clearTimeout(timer)
+            if (countdownInterval) clearInterval(countdownInterval)
+        }
+    }, [isSuccess, survey])
 
     useEffect(() => {
         if (surveyId === 'demo') {
@@ -117,8 +166,6 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
             }
         }
     }
-
-    const [isSuccess, setIsSuccess] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
         e.preventDefault()
@@ -327,10 +374,23 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                             setLocalPhotoPreview(null)
                             window.scrollTo({ top: 0, behavior: 'smooth' })
                         }}
-                        className="px-6 py-3 rounded-xl font-medium transition w-full mt-4"
+                        className="px-6 py-3 rounded-xl font-medium transition w-full mt-4 flex flex-col items-center justify-center relative overflow-hidden group"
                         style={{ backgroundColor: theme.accent, color: '#000000' }}
                     >
-                        Enviar otra respuesta
+                        <span className="relative z-10 w-full">
+                            Enviar otra respuesta
+                        </span>
+                        {countdown !== null && (
+                            <span className="text-xs opacity-70 mt-1 relative z-10 block w-full text-center">
+                                Reiniciando en {countdown}s...
+                            </span>
+                        )}
+                        {countdown !== null && (
+                            <div
+                                className="absolute bottom-0 left-0 h-1 bg-black/20 transition-all duration-1000 ease-linear"
+                                style={{ width: `${(countdown / 5) * 100}%` }}
+                            />
+                        )}
                     </button>
                 </motion.div>
             </div>

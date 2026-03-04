@@ -5,6 +5,7 @@ import { auth } from '@clerk/nextjs/server';
 import { ProcessEvidenceStatus, ProcessEvidenceType, ProcessTask, ProcessTemplateTask } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getOpsSession } from '@/lib/ops-auth';
+import { sendNativePush } from '@/lib/push-engine';
 
 /**
  * Parses a time string "HH:MM" and returns a Date object for today with that time.
@@ -121,6 +122,20 @@ export async function submitTaskEvidence({ taskId, fileUrl, capturedAt, timezone
         }
     });
 
+    // 5. Notify Manager/Owner via Native Push
+    try {
+        const staffName = (member as any)?.user?.businessName || member?.name || "Un miembro del equipo";
+        await sendNativePush({
+            title: "📸 Nueva Evidencia de Tarea",
+            body: `${staffName} ha completado la tarea: ${task.title}. ${comments ? `Nota: ${comments}` : ''}`,
+            appType: 'OPS',
+            userId: task.zone.userId,
+            route: `/dashboard/processes/${task.zoneId}`
+        });
+    } catch (pushErr) {
+        console.error("[submitTaskEvidence] Failed to push:", pushErr);
+    }
+
     revalidatePath('/dashboard/processes');
     return { success: true, evidence, status };
 }
@@ -151,7 +166,10 @@ export async function addEvidenceComment(evidenceId: string, comment: string) {
     // Wait, let's redesign to just taking the string effectively.
     // The user might type "Falta jabon".
 
-    const current = await prisma.processEvidence.findUnique({ where: { id: evidenceId } });
+    const current = await prisma.processEvidence.findUnique({
+        where: { id: evidenceId },
+        include: { task: { include: { zone: true } } }
+    });
     if (!current) throw new Error("Evidence not found");
 
     const newComment = current.comments
@@ -163,8 +181,18 @@ export async function addEvidenceComment(evidenceId: string, comment: string) {
         data: { comments: newComment }
     });
 
-    // TODO: Send Alert if needed. 
-    // Ideally we reuse reportTaskIssue logic but attached to evidence.
+    // Notify Manager/Owner
+    try {
+        await sendNativePush({
+            title: "💬 Comentario en Tarea",
+            body: `Se agregó un nuevo comentario en: ${current.task.title}`,
+            appType: 'OPS',
+            userId: current.task.zone.userId,
+            route: `/dashboard/processes/${current.task.zoneId}`
+        });
+    } catch (pushErr) {
+        console.error("[addEvidenceComment] Failed to push:", pushErr);
+    }
 
     revalidatePath('/dashboard/processes');
     return { success: true };
@@ -213,6 +241,19 @@ export async function reportTaskIssue(taskId: string, reason: string) {
     // Let's check schema for ProcessZone.
 
     // For now, let's just trigger revalidate and return. The alert logic will be added to alerts.ts and imported.
+    try {
+        const staffName = (member as any)?.user?.businessName || member?.name || "Un miembro del equipo";
+        await sendNativePush({
+            title: "⚠️ Incidencia en Tarea",
+            body: `${staffName} reportó un problema en: ${task.title}. Razón: ${reason}`,
+            appType: 'OPS',
+            userId: task.zone.userId,
+            route: `/dashboard/processes/${task.zoneId}`
+        });
+    } catch (pushErr) {
+        console.error("[reportTaskIssue] Failed to push:", pushErr);
+    }
+
     return { success: true, evidenceId: evidence.id };
 }
 
@@ -667,6 +708,7 @@ export async function instantiateTemplate(templateId: string, branchId: string, 
     const zone = await prisma.processZone.create({
         data: {
             userId: branchId,
+            branchId: branchId,
             name: zoneName || template.name,
             description: `Importado de plantilla: ${template.name}`,
         }

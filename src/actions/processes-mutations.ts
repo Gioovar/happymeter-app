@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ProcessEvidenceType } from '@prisma/client';
 import { sendStaffAssignmentEmail } from '@/lib/email';
+import { sendNativePush } from '@/lib/push-engine';
 
 // Helper to check if the current user is authorized to modify a zone
 // This handles both direct ownership and branch ownership
@@ -70,6 +71,7 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
     const zone = await prisma.processZone.create({
         data: {
             userId: targetUserId,
+            branchId: data.branchId || null,
             name: data.name,
             description: data.description,
             assignedStaffId: data.assignedStaffId || null,
@@ -137,124 +139,129 @@ interface UpdateZonePayload {
 }
 
 export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
-    const { userId } = await auth();
-    if (!userId) throw new Error("No autorizado");
+    try {
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "No autorizado" };
 
-    const existingZone = await prisma.processZone.findUnique({
-        where: { id: data.zoneId },
-        include: { tasks: true }
-    });
+        const existingZone = await prisma.processZone.findUnique({
+            where: { id: data.zoneId },
+            include: { tasks: true }
+        });
 
-    if (!existingZone) throw new Error("Zona no encontrada");
+        if (!existingZone) return { success: false, error: "Zona no encontrada" };
 
-    const hasAccess = await verifyZoneAccess(existingZone.userId, userId);
-    if (!hasAccess) throw new Error("Acceso denegado a esta zona");
+        const hasAccess = await verifyZoneAccess(existingZone.userId, userId);
+        if (!hasAccess) return { success: false, error: "Acceso denegado a esta zona" };
 
-    if (!data.name) throw new Error("El nombre de la zona es requerido");
+        if (!data.name) return { success: false, error: "El nombre de la zona es requerido" };
 
-    // LIMIT CHECK (Tasks)
-    const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
-    if (userSettings && userSettings.plan === 'FREE') {
-        const { FREE_PLAN_LIMITS } = await import('@/lib/limits')
+        // LIMIT CHECK (Tasks)
+        const userSettings = await prisma.userSettings.findUnique({ where: { userId: existingZone.userId } })
+        if (userSettings && userSettings.plan === 'FREE') {
+            const { FREE_PLAN_LIMITS } = await import('@/lib/limits')
 
-        // Count current tasks
-        const currentTaskCount = await prisma.processTask.count({ where: { zoneId: data.zoneId } })
+            // Count current tasks
+            const currentTaskCount = await prisma.processTask.count({ where: { zoneId: data.zoneId } })
 
-        // Calculate net change
-        let newTotal = currentTaskCount
+            // Calculate net change
+            let newTotal = currentTaskCount
 
-        for (const task of data.tasks) {
-            if (task.deleted && task.id) {
-                newTotal--
-            } else if (!task.id && !task.deleted) {
-                newTotal++
+            for (const task of data.tasks) {
+                if (task.deleted && task.id) {
+                    newTotal--
+                } else if (!task.id && !task.deleted) {
+                    newTotal++
+                }
+            }
+
+            if (newTotal > FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED) {
+                return { success: false, error: `Límite de tareas excedido (Plan Gratuito: ${FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED}). Elimina tareas antes de agregar nuevas.` };
             }
         }
 
-        if (newTotal > FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED) {
-            throw new Error(`Límite de tareas excedido (Plan Gratuito: ${FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED}). Elimina tareas antes de agregar nuevas.`)
-        }
-    }
+        // Transaction to update zone and sync tasks
+        await prisma.$transaction(async (tx) => {
+            // 1. Update Zone details
+            await tx.processZone.update({
+                where: { id: data.zoneId },
+                data: {
+                    name: data.name,
+                    description: data.description,
+                    assignedStaffId: data.assignedStaffId || null
+                }
+            });
 
-    // Transaction to update zone and sync tasks
-    await prisma.$transaction(async (tx) => {
-        // 1. Update Zone details
-        await tx.processZone.update({
-            where: { id: data.zoneId },
-            data: {
-                name: data.name,
-                description: data.description,
-                assignedStaffId: data.assignedStaffId || null
+            // 2. Handle Tasks
+            for (const task of data.tasks) {
+                if (task.deleted && task.id) {
+                    // Delete existing task
+                    await tx.processTask.delete({
+                        where: { id: task.id }
+                    });
+                } else if (task.id) {
+                    // Update existing task
+                    await tx.processTask.update({
+                        where: { id: task.id },
+                        data: {
+                            title: task.title,
+                            description: task.description,
+                            limitTime: task.limitTime || null,
+                            days: task.days || [],
+                            evidenceType: task.evidenceType
+                        }
+                    });
+                } else if (!task.deleted) {
+                    // Create new task
+                    await tx.processTask.create({
+                        data: {
+                            zoneId: data.zoneId,
+                            title: task.title,
+                            description: task.description,
+                            limitTime: task.limitTime || null,
+                            days: task.days || [],
+                            evidenceType: task.evidenceType
+                        }
+                    });
+                }
             }
         });
 
-        // 2. Handle Tasks
-        for (const task of data.tasks) {
-            if (task.deleted && task.id) {
-                // Delete existing task
-                await tx.processTask.delete({
-                    where: { id: task.id }
+        // Notify Staff if NEWLY assigned or CHANGED
+        if (data.assignedStaffId && data.assignedStaffId !== existingZone.assignedStaffId) {
+            try {
+                const staffMember = await prisma.teamMember.findUnique({
+                    where: { id: data.assignedStaffId },
+                    include: { user: true }
                 });
-            } else if (task.id) {
-                // Update existing task
-                await tx.processTask.update({
-                    where: { id: task.id },
-                    data: {
-                        title: task.title,
-                        description: task.description,
-                        limitTime: task.limitTime || null,
-                        days: task.days || [],
-                        evidenceType: task.evidenceType
+
+                if (staffMember && staffMember.user && staffMember.userId) {
+                    const client = await clerkClient();
+                    const staffUser = await client.users.getUser(staffMember.userId);
+                    const staffEmail: string | undefined = staffUser.emailAddresses[0]?.emailAddress;
+
+                    const ownerSettings = await prisma.userSettings.findUnique({ where: { userId: existingZone.userId } });
+                    const managerName = ownerSettings?.businessName || "Tu Administrador";
+
+                    if (staffEmail) {
+                        await sendStaffAssignmentEmail(
+                            staffEmail,
+                            staffMember.user.businessName || staffMember.name || "Staff",
+                            data.name,
+                            managerName || "Tu Administrador"
+                        );
                     }
-                });
-            } else if (!task.deleted) {
-                // Create new task
-                await tx.processTask.create({
-                    data: {
-                        zoneId: data.zoneId,
-                        title: task.title,
-                        description: task.description,
-                        limitTime: task.limitTime || null,
-                        days: task.days || [],
-                        evidenceType: task.evidenceType
-                    }
-                });
-            }
-        }
-    });
-
-    // Notify Staff if NEWLY assigned or CHANGED
-    if (data.assignedStaffId && data.assignedStaffId !== existingZone.assignedStaffId) {
-        try {
-            const staffMember = await prisma.teamMember.findUnique({
-                where: { id: data.assignedStaffId },
-                include: { user: true }
-            });
-
-            if (staffMember && staffMember.user && staffMember.userId) {
-                const client = await clerkClient();
-                const staffUser = await client.users.getUser(staffMember.userId);
-                const staffEmail: string | undefined = staffUser.emailAddresses[0]?.emailAddress;
-
-                const ownerSettings = await prisma.userSettings.findUnique({ where: { userId: existingZone.userId } });
-                const managerName = ownerSettings?.businessName || "Tu Administrador";
-
-                if (staffEmail) {
-                    await sendStaffAssignmentEmail(
-                        staffEmail,
-                        staffMember.user.businessName || staffMember.name || "Staff",
-                        data.name,
-                        managerName || "Tu Administrador"
-                    );
                 }
+            } catch (error) {
+                console.error("Failed to notify staff:", error);
             }
-        } catch (error) {
-            console.error("Failed to notify staff:", error);
         }
-    }
 
-    revalidatePath('/dashboard/processes');
-    return { success: true };
+        revalidatePath('/dashboard/processes');
+        return { success: true };
+    } catch (e: any) {
+        console.error("updateProcessZoneWithTasks error:", e);
+        return { success: false, error: e.message || "Error interno al actualizar zona" };
+    }
 }
 
 export async function deleteProcessZone(zoneId: string) {
@@ -300,9 +307,25 @@ export async function assignTask(taskId: string, staffId: string | null) {
         }
     });
 
-    // 3. Notify Staff (Optional, can be added later)
+    // 3. Dispatch Native Push Notification to Staff
     if (staffId) {
-        // Send notification logic here
+        try {
+            // Find staff to get their userId (which binds to DeviceToken)
+            const staff = await prisma.teamMember.findUnique({
+                where: { id: staffId }
+            });
+            if (staff && staff.userId) {
+                await sendNativePush({
+                    title: "📝 Nueva Tarea Asignada",
+                    body: `Se te ha asignado la tarea: ${task.title}`,
+                    appType: "OPS",
+                    userId: staff.userId,
+                    route: `/ops/tasks/${task.id}`
+                });
+            }
+        } catch (pushErr) {
+            console.error("[assignTask] Failed to send push:", pushErr);
+        }
     }
 
     revalidatePath(`/dashboard/processes/${task.zoneId}`);

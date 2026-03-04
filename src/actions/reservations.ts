@@ -5,9 +5,9 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import QRCode from 'qrcode'
 import { resend } from "@/lib/resend"
-import { sendSMS } from "@/lib/sms"
 import { sendWhatsAppNotification } from "@/lib/whatsapp"
 import { ReservationConfirmationEmail } from "@/emails/ReservationConfirmation"
+import { sendNativePush } from '@/lib/push-engine'
 import { DEFAULT_SENDER } from "@/lib/email"
 
 // Helper to resolve and verify access
@@ -951,7 +951,6 @@ export async function createReservation(data: {
 
                 const formattedDate = dateFormatter.format(finalDate)
                 const formattedTime = timeFormatter.format(finalDate)
-
                 const tableLabel = reservationTableId ?
                     (await prisma.table.findUnique({ where: { id: reservationTableId }, select: { label: true } }))?.label || "Mesa"
                     : "Área General"
@@ -984,12 +983,40 @@ export async function createReservation(data: {
                     console.log(`[Notification Debug] Email result:`, emailResult);
                 }
 
-                // 2. Send SMS
-                if (data.customer.phone) {
-                    console.log(`[Notification Debug] Attempting to send SMS to: ${data.customer.phone}`);
-                    const smsMessage = `¡Hola ${data.customer.name}! Tu reserva en ${businessName} para el ${formattedDate} a las ${formattedTime} ha sido CONFIRMADA. Presenta tu confirmación al llegar. ¡Te esperamos!`
-                    const smsResult = await sendSMS(data.customer.phone, smsMessage)
-                    console.log(`[Notification Debug] SMS result:`, smsResult);
+                // 2. Native Push to Business Owner (Ops App)
+                if (ownerId) {
+                    const paxValue = data.reservations?.[0]?.partySize || 0;
+                    await sendNativePush({
+                        title: "📅 Nueva Reserva",
+                        body: `${data.customer.name} reservó para el ${formattedDate} a las ${formattedTime} (${paxValue} pax).`,
+                        appType: 'OPS',
+                        userId: ownerId,
+                        route: `/dashboard/reservations/list`
+                    });
+                }
+
+                // 3. Native Push to Customer (Loyalty App) if they are a member
+                if (data.customer.phone && loyaltyProgramId) {
+                    console.log(`[Notification Debug] Checking if customer ${data.customer.phone} has the Loyalty App...`);
+                    const loyaltyCust = await prisma.loyaltyCustomer.findUnique({
+                        where: {
+                            programId_phone: {
+                                programId: loyaltyProgramId,
+                                phone: data.customer.phone
+                            }
+                        }
+                    });
+
+                    if (loyaltyCust) {
+                        const pushMessage = `Tu reserva en ${businessName} para el ${formattedDate} a las ${formattedTime} está confirmada.`;
+                        await sendNativePush({
+                            title: "📅 Reserva Confirmada",
+                            body: pushMessage,
+                            appType: "LOYALTY",
+                            customerId: loyaltyCust.id,
+                            route: `/reservations`
+                        });
+                    }
                 }
 
             } catch (notifyError) {

@@ -5,6 +5,7 @@ import { Sparkles, Check, Info, Store } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { CountdownTimer } from './CountdownTimer'
+import { useEffect } from 'react'
 
 const ADDONS = {
     LOYALTY: {
@@ -44,6 +45,18 @@ export function SalesContent({ defaultPlan = 'GROWTH', showHeader = true }: Sale
     const [quantity, setQuantity] = useState(1)
     const [selectedAddons, setSelectedAddons] = useState<string[]>([])
     const [isLoading, setIsLoading] = useState(false)
+    const [isNativeApp, setIsNativeApp] = useState(false)
+
+    // Detect if running inside a Capacitor Native App
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            // @ts-ignore
+            const capacitor = window.Capacitor
+            if (capacitor && capacitor.isNativePlatform()) {
+                setIsNativeApp(true)
+            }
+        }
+    }, [])
 
     // Prices
     const BASE_GROWTH_PRICE = isAnnual ? 399 : 450
@@ -125,6 +138,26 @@ export function SalesContent({ defaultPlan = 'GROWTH', showHeader = true }: Sale
             toast.error(`Error: ${error.message}`)
             setIsLoading(false)
         }
+    }
+
+    if (isNativeApp) {
+        return (
+            <div className="flex flex-col items-center justify-center p-8 text-center h-full bg-[#0a0a0a]">
+                <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 border border-blue-500/20">
+                    <Store className="w-8 h-8 text-blue-400" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Gestiona tu Suscripción</h2>
+                <p className="text-gray-400 max-w-md mx-auto mb-6">
+                    Para activar planes o hacer upgrades a tu cuenta de HappyMeters, por favor visita nuestro portal web desde un navegador (Safari, Chrome) o en tu computadora.
+                </p>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 w-full max-w-sm">
+                    <p className="text-sm font-medium text-white select-all">app.happymeters.com</p>
+                </div>
+                <p className="text-xs text-gray-500 mt-8 max-w-xs">
+                    *Por medidas de seguridad y políticas de plataforma, la facturación debe realizarse fuera de la aplicación móvil.
+                </p>
+            </div>
+        )
     }
 
     return (

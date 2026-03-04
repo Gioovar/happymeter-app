@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import CampaignManager from '@/components/CampaignManager'
 import WhatsAppManager from '@/components/WhatsAppManager'
+import PushCampaignBuilder from './PushCampaignBuilder'
+import { MessageSquare, BellRing } from 'lucide-react'
 
 interface CampaignsClientProps {
     initialSurveys: { id: string, title: string }[]
@@ -15,6 +17,8 @@ export default function CampaignsClient({ initialSurveys, branchId, branchName }
 
     const selectedSurveyTitle = initialSurveys.find(s => s.id === selectedSurveyId)?.title || 'Todas las Encuestas'
     const displayName = branchName ? `Marketing Hub: ${branchName}` : 'Marketing Hub'
+
+    const [activeTab, setActiveTab] = useState<'EXPORT' | 'PUSH'>('EXPORT')
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 space-y-8 font-sans">
@@ -43,19 +47,43 @@ export default function CampaignsClient({ initialSurveys, branchId, branchName }
                 </div>
             </div>
 
-            {/* Grid Principal */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <CampaignManager
-                    selectedSurveyTitle={selectedSurveyTitle}
-                    selectedSurveyId={selectedSurveyId}
-                    branchId={branchId}
-                />
-                <WhatsAppManager
-                    selectedSurveyTitle={selectedSurveyTitle}
-                    selectedSurveyId={selectedSurveyId}
-                    branchId={branchId}
-                />
+            {/* Tabs */}
+            <div className="flex gap-4 border-b border-white/10 pb-4">
+                <button
+                    onClick={() => setActiveTab('EXPORT')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'EXPORT' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                >
+                    <MessageSquare className="w-4 h-4" />
+                    Exportar VCF y WhatsApp
+                </button>
+                <button
+                    onClick={() => setActiveTab('PUSH')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'PUSH' ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                >
+                    <BellRing className="w-4 h-4" />
+                    Push Nativas (Lealtad)
+                </button>
             </div>
+
+            {/* Grid Principal */}
+            {activeTab === 'EXPORT' ? (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <CampaignManager
+                        selectedSurveyTitle={selectedSurveyTitle}
+                        selectedSurveyId={selectedSurveyId}
+                        branchId={branchId}
+                    />
+                    <WhatsAppManager
+                        selectedSurveyTitle={selectedSurveyTitle}
+                        selectedSurveyId={selectedSurveyId}
+                        branchId={branchId}
+                    />
+                </div>
+            ) : (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <PushCampaignBuilder branchId={branchId} />
+                </div>
+            )}
         </div>
     )
 }

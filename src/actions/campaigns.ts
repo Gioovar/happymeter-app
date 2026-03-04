@@ -2,6 +2,7 @@
 
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { sendNativePush } from '@/lib/push-engine'
 
 interface CampaignCounts {
     vip: number
@@ -96,5 +97,124 @@ export async function getCampaignCounts(surveyId: string, overrideUserId?: strin
     } catch (error) {
         console.error('Error fetching campaign counts:', error)
         return { vip: 0, neutral: 0, angry: 0, promo: 0 }
+    }
+}
+
+export async function launchPushCampaign(data: {
+    title: string;
+    body: string;
+    segment: string;
+    branchId?: string
+}) {
+    try {
+        const { userId } = await auth()
+        if (!userId) throw new Error("No autorizado");
+
+        // Resolve the real owner behind the request
+        let ownerId = userId;
+
+        if (data.branchId) {
+            const branch = await prisma.chainBranch.findFirst({
+                where: { branchId: data.branchId },
+                include: { chain: true }
+            })
+            if (branch) ownerId = branch.chain.ownerId;
+        } else {
+            // In Marketing Hub, if no branch ID, this might be a multi-branch owner.
+            // We use their own userId as the loyalty program owner.
+        }
+
+        const program = await prisma.loyaltyProgram.findUnique({
+            where: { userId: ownerId }
+        })
+
+        if (!program) {
+            return { success: false, error: "No tienes un programa de lealtad activo para enviar campañas." }
+        }
+
+        // 1. Build Segmentation Query
+        let customerWhere: any = { programId: program.id };
+        const now = new Date();
+
+        switch (data.segment) {
+            case 'VIP':
+                customerWhere.tier = { name: { contains: 'VIP', mode: 'insensitive' } };
+                // Alternatively, filter by total points if no specific tier named VIP exists.
+                // Let's filter by high visits just in case.
+                customerWhere.totalVisits = { gte: 10 };
+                break;
+            case 'INACTIVE':
+                // Haven't visited in 30 days
+                const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                customerWhere.lastVisitDate = { lt: thirtyDaysAgo };
+                break;
+            case 'EXPIRING':
+                // High amount of points (>500)
+                customerWhere.currentPoints = { gte: 500 };
+                break;
+            case 'ALL':
+            default:
+                break;
+        }
+
+        const targetCustomers = await prisma.loyaltyCustomer.findMany({
+            where: customerWhere,
+            select: { id: true }
+        });
+
+        if (targetCustomers.length === 0) {
+            return { success: false, error: "No hay clientes que coincidan con este segmento." }
+        }
+
+        // 2. Save Campaign Record
+        const campaign = await prisma.loyaltyCampaign.create({
+            data: {
+                programId: program.id,
+                name: data.title,
+                message: data.body,
+                triggerType: "PROMO",
+                segmentationRules: { segment: data.segment },
+            }
+        });
+
+        // 3. Dispatch Native Push Multi-cast
+        let deliveredCount = 0;
+        let failedCount = 0;
+
+        // Note: In production you would probably want to fan-out this task to a background worker queue if targetCustomers is massive (e.g. > 10,000)
+        // But for < 500 customers, doing it inline is fine for Phase 4 MVP.
+        const BATCH_SIZE = 100;
+        for (let i = 0; i < targetCustomers.length; i += BATCH_SIZE) {
+            const batch = targetCustomers.slice(i, i + BATCH_SIZE);
+            const promises = batch.map(c =>
+                sendNativePush({
+                    title: data.title,
+                    body: data.body,
+                    appType: 'LOYALTY',
+                    customerId: c.id,
+                    programId: program.id,
+                    campaignId: campaign.id,
+                    route: `/loyalty/${program.id}`
+                })
+            );
+
+            const batchResults = await Promise.all(promises);
+            batchResults.forEach(res => {
+                if (res.success) deliveredCount++;
+                else failedCount++;
+            });
+        }
+
+        return {
+            success: true,
+            campaignId: campaign.id,
+            delivered: deliveredCount,
+            failed: failedCount,
+            total: targetCustomers.length
+        }
+
+    } catch (error: any) {
+        console.error("Error launching push campaign:", error);
+        return { success: false, error: error.message || "Failed to launch campaign" }
     }
 }

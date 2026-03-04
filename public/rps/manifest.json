@@ -4,6 +4,8 @@
     "description": "Panel de RPs de Happy Meter",
     "start_url": "/rps",
     "display": "standalone",
+    "id": "/rps/",
+    "scope": "/rps/",
     "background_color": "#0a0a0a",
     "theme_color": "#8b5cf6",
     "icons": [

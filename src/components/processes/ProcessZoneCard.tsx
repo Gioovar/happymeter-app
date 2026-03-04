@@ -123,7 +123,6 @@ export function ProcessZoneCard({ zone, branchSlug, branchId }: ProcessZoneCardP
                         branchSlug={branchSlug}
                         initialData={zone}
                         onSuccess={() => setIsEditOpen(false)}
-                        onlyMetadata={true} // Simplify editing to just Zone info
                     />
                 </DialogContent>
             </Dialog>

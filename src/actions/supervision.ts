@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 import { startOfDay, endOfDay } from 'date-fns';
+import { sendNativePush } from '@/lib/push-engine';
 
 export type SupervisionStats = {
     staffId: string;
@@ -96,7 +97,7 @@ export async function getAllStaffStats(): Promise<SupervisionStats[]> {
 
         stats.push({
             staffId: member.id,
-            staffName: member.user.businessName || member.user.email || "Empleado",
+            staffName: member.user?.businessName || "Empleado",
             role: member.role,
             totalTasks: totalTasksCount,
             completedTasks: completedCount,
@@ -187,7 +188,7 @@ export async function getStaffTasks(staffId: string) {
     return {
         member: {
             id: member.id,
-            name: member.user.businessName || "Empleado",
+            name: member.user?.businessName || "Empleado",
             role: member.role
         },
         tasks: todolist
@@ -255,6 +256,35 @@ export async function validateEvidence(evidenceId: string, status: 'APPROVED' | 
             validatedBy: userId
         }
     });
+
+    // Send Native Push Notification to the Staff who submitted the evidence
+    try {
+        const evidenceData = await prisma.processEvidence.findUnique({
+            where: { id: evidenceId },
+            include: { task: true }
+        });
+        if (evidenceData && evidenceData.staffId) {
+            const staff = await prisma.teamMember.findUnique({
+                where: { id: evidenceData.staffId }
+            });
+            if (staff && staff.userId) {
+                const title = status === 'APPROVED' ? "✅ Tarea Aprobada" : "❌ Tarea Rechazada";
+                const body = status === 'APPROVED'
+                    ? `¡Buen trabajo! Tu tarea "${evidenceData.task.title}" ha sido aprobada.`
+                    : `Tu tarea "${evidenceData.task.title}" requiere revisión. ${note ? `Nota: ${note}` : ''}`;
+
+                await sendNativePush({
+                    title,
+                    body,
+                    appType: 'OPS',
+                    userId: staff.userId,
+                    route: `/ops/tasks/${evidenceData.taskId}`
+                });
+            }
+        }
+    } catch (pushError) {
+        console.error("[validateEvidence] Failed to send push notification:", pushError);
+    }
 
     return { success: true };
 }

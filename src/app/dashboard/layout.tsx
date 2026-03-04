@@ -60,6 +60,7 @@ export default async function DashboardLayout({
                         isActive: true,
                         isOnboarded: true,
                         createdAt: true,
+                        subscriptionStatus: true,
                         // @ts-ignore
                         fullName: true, // Fetch Data
                     }
@@ -162,7 +163,7 @@ export default async function DashboardLayout({
     let userPlan = 'FREE'
     try {
         if (userId) {
-            const settings = await prisma.userSettings.findUnique({ where: { userId }, select: { hasSeenTour: true, role: true, plan: true } })
+            const settings = await prisma.userSettings.findUnique({ where: { userId }, select: { hasSeenTour: true, role: true, plan: true, subscriptionStatus: true } })
             if (settings) {
                 userPlan = settings.plan || 'FREE'
             }
@@ -179,6 +180,7 @@ export default async function DashboardLayout({
         <DashboardProvider
             initialPlan={checkedSettings?.plan || 'FREE'}
             userCreatedAt={checkedSettings?.createdAt?.toISOString()}
+            dbSubscriptionStatus={checkedSettings?.subscriptionStatus || undefined}
         >
             <NotificationProvider>
                 <GiftCelebration userId={userId} />

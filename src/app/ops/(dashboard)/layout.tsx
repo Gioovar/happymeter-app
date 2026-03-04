@@ -3,6 +3,7 @@ import { ShieldCheck, Home, History as HistoryIcon, ShieldX } from "lucide-react
 import Link from "next/link"
 import OpsHeader from "./OpsHeader"
 import { getOpsSession } from "@/lib/ops-auth"
+import OpsPushInitializer from "@/components/ops/OpsPushInitializer"
 
 export default async function OpsLayout({
     children,
@@ -48,6 +49,8 @@ export default async function OpsLayout({
 
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+            <OpsPushInitializer userId={member?.userId || ''} />
+
             {/* Mobile Header (Client Component) */}
             <OpsHeader />
 

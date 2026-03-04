@@ -47,6 +47,7 @@ import { updateProcessZoneWithTasks } from "@/actions/processes-mutations"
 export function ProcessFlowForm({ branchId, branchSlug, initialData, onSuccess, onlyMetadata = false }: ProcessFlowFormProps) {
     const router = useRouter()
     const [submitting, setSubmitting] = useState(false)
+    const [deletedTaskIds, setDeletedTaskIds] = useState<string[]>([])
 
     // Day options constant
     const dayOptions = [
@@ -59,12 +60,13 @@ export function ProcessFlowForm({ branchId, branchSlug, initialData, onSuccess, 
         { id: "Sun", label: "D" },
     ]
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    const form = useForm<any>({
         resolver: zodResolver(onlyMetadata ? metadataSchema : formSchema),
         defaultValues: {
             name: initialData?.name || "",
             description: initialData?.description || "",
             tasks: initialData?.tasks?.map((t: any) => ({
+                originalId: t.id,
                 title: t.title,
                 description: t.description || "",
                 limitTime: t.limitTime || "",
@@ -86,21 +88,35 @@ export function ProcessFlowForm({ branchId, branchSlug, initialData, onSuccess, 
             // The server action 'updateProcessZoneWithTasks' only acts on tasks present in the array.
             // If we send [], it won't delete/update/create any task, effectively leaving them as is.
 
-            const cleanTasks = onlyMetadata ? [] : values.tasks.map((t: any) => ({
-                ...t,
-                limitTime: t.limitTime === "" ? undefined : t.limitTime,
-                description: t.description === "" ? undefined : t.description
-            }))
+            const cleanTasks = onlyMetadata ? [] : [
+                ...values.tasks.map((t: any) => ({
+                    id: t.originalId,
+                    title: t.title,
+                    limitTime: t.limitTime === "" ? undefined : t.limitTime,
+                    description: t.description === "" ? undefined : t.description,
+                    evidenceType: t.evidenceType,
+                    days: t.days
+                })),
+                ...deletedTaskIds.map(id => ({
+                    id,
+                    title: "deleted",
+                    evidenceType: "PHOTO" as const,
+                    deleted: true
+                }))
+            ]
 
             if (initialData) {
                 // UPDATE
-                await updateProcessZoneWithTasks({
+                const res = await updateProcessZoneWithTasks({
                     zoneId: initialData.id,
                     name: values.name,
                     description: values.description,
                     assignedStaffId: initialData.assignedStaffId,
                     tasks: cleanTasks
                 })
+                if (!res.success) {
+                    throw new Error(res.error || "Error al actualizar la zona")
+                }
                 toast.success("Zona actualizada correctamente")
             } else {
                 // CREATE
@@ -108,6 +124,7 @@ export function ProcessFlowForm({ branchId, branchSlug, initialData, onSuccess, 
                     name: values.name,
                     description: values.description,
                     assignedStaffId: undefined,
+                    branchId: branchId,
                     tasks: cleanTasks
                 })
                 toast.success("Flujo creado exitosamente")
@@ -206,7 +223,15 @@ export function ProcessFlowForm({ branchId, branchSlug, initialData, onSuccess, 
                                             type="button"
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => remove(index)}
+                                            onClick={() => {
+                                                const taskValues = form.getValues('tasks');
+                                                const taskToRmv = taskValues[index] as any;
+
+                                                if (taskToRmv && taskToRmv.originalId) {
+                                                    setDeletedTaskIds(prev => [...prev, taskToRmv.originalId])
+                                                }
+                                                remove(index)
+                                            }}
                                             className="text-gray-500 hover:text-red-400 hover:bg-white/5"
                                         >
                                             <Trash2 className="w-4 h-4" />

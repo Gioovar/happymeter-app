@@ -6,7 +6,7 @@ import { ArrowLeft, Clock, CheckCircle2, Camera, Video, AlertTriangle, Upload, X
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { submitTaskEvidence, reportTaskIssue, addEvidenceComment } from '@/actions/processes'
 import { assignTask } from '@/actions/processes-mutations'
@@ -21,6 +21,7 @@ import TaskHistoryDialog from './TaskHistoryDialog'
 import TaskCamera from '@/components/ops/TaskCamera'
 // @ts-ignore
 import { upload } from '@vercel/blob/client'
+import { ProcessFlowForm } from './ProcessFlowForm'
 
 interface Task {
     id: string
@@ -73,6 +74,7 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
     // Edit State
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null)
+    const [isEditZoneOpen, setIsEditZoneOpen] = useState(false)
 
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
     const [taskForHistory, setTaskForHistory] = useState<Task | null>(null)
@@ -321,11 +323,22 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                     <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-gray-400 hover:text-white">
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            {activeZone.name}
-                        </h1>
-                        <p className="text-gray-400 text-sm">{activeZone.description || 'Lista de tareas operativas'}</p>
+                    <div className="flex-1 flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                                {activeZone.name}
+                            </h1>
+                            <p className="text-gray-400 text-sm">{activeZone.description || 'Lista de tareas operativas'}</p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsEditZoneOpen(true)}
+                            className="bg-white/5 border-white/10 hover:bg-white/10 text-white gap-2 h-10 px-4 rounded-xl"
+                        >
+                            <Pencil className="w-4 h-4" />
+                            <span className="hidden sm:inline">Editar Zona y Tareas</span>
+                        </Button>
                     </div>
                 </div>
 
@@ -829,6 +842,30 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                     }
                 }}
             />
+
+            {/* Edit Zone Dialog */}
+            <Dialog open={isEditZoneOpen} onOpenChange={setIsEditZoneOpen}>
+                <DialogContent className="bg-[#111] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Editar Zona</DialogTitle>
+                        <DialogDescription className="text-gray-400">
+                            Modifica los detalles de la zona y sus tareas operativas.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {activeZone && (
+                        <ProcessFlowForm
+                            branchId={branchId}
+                            branchSlug={branchId} // slug is effectively branchId in these components
+                            initialData={activeZone}
+                            onSuccess={() => {
+                                setIsEditZoneOpen(false);
+                                window.location.reload(); // Refresh to catch changes immediately
+                            }}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
+
         </div>
     )
 }

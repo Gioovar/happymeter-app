@@ -117,13 +117,15 @@ model UserSettings {
   menuPromotions          MenuPromotion[]
   branchProcessZones      ProcessZone[]          @relation("ProcessZoneBranch")
   ownedProcessZones       ProcessZone[]          @relation("ProcessZoneOwner")
-  products                Product[]
   productCategories       ProductCategory[]
   pushSubscriptions       PushSubscription[]
+  deviceTokens            DeviceToken[]
+  notificationLogs        NotificationLog[]
   representativeProfile   RepresentativeProfile?
   teamMembers             TeamMember[]           @relation("OwnerOf")
   memberships             TeamMember[]           @relation("MemberOf")
   promoterProfiles        PromoterProfile[]      @relation("BusinessPromoters")
+  Product                 Product[]
 }
 
 model FloorPlan {
@@ -176,11 +178,11 @@ model Reservation {
   updatedAt     DateTime @updatedAt
   duration      Int      @default(120)
 
-  userId        String?
-  promoterId    String?
-  table         Table?   @relation(fields: [tableId], references: [id], onDelete: Cascade)
-  user          UserSettings? @relation("BusinessReservations", fields: [userId], references: [userId], onDelete: Cascade)
-  promoter      PromoterProfile? @relation("PromoterReservations", fields: [promoterId], references: [id])
+  userId     String?
+  promoterId String?
+  table      Table?           @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  user       UserSettings?    @relation("BusinessReservations", fields: [userId], references: [userId], onDelete: Cascade)
+  promoter   PromoterProfile? @relation("PromoterReservations", fields: [promoterId], references: [id])
 
   @@index([tableId])
   @@index([date])
@@ -519,8 +521,26 @@ model PushSubscription {
   updatedAt DateTime     @updatedAt
   user      UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
-  @@unique([userId, endpoint])
   @@index([userId])
+}
+
+model DeviceToken {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  platform   String // "iOS", "Android", "Web"
+  appType    String // "OPS", "LOYALTY", "CLIENT"
+  userId     String?
+  customerId String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     UserSettings?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  customer LoyaltyCustomer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([token])
 }
 
 model RepresentativeProfile {
@@ -674,6 +694,54 @@ model LoyaltyProgram {
   rules                LoyaltyRule[]
   tiers                LoyaltyTier[]
   visits               LoyaltyVisit[]
+
+  // Geofencing Features
+  latitude         Float?
+  geofenceRadius   Int               @default(3000)
+  isGeofenceActive Boolean           @default(false)
+  campaigns        LoyaltyCampaign[]
+  notificationLogs NotificationLog[]
+}
+
+model LoyaltyCampaign {
+  id                String            @id @default(uuid())
+  programId         String
+  name              String
+  triggerType       String            @default("PROMO") // PROMO, EXPIRING, REWARD
+  message           String
+  schedule          Json? // Define active days/hours
+  segmentationRules Json? // Filter logic (VIP, inactive, distance)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  program           LoyaltyProgram    @relation(fields: [programId], references: [id], onDelete: Cascade)
+  notificationLogs  NotificationLog[]
+
+  @@index([programId])
+}
+
+model NotificationLog {
+  id         String   @id @default(uuid())
+  title      String
+  body       String
+  appType    String   @default("LOYALTY") // OPS, LOYALTY, CLIENT
+  programId  String?
+  customerId String?
+  userId     String? // For internal staff/ops pushes
+  campaignId String?
+  status     String   @default("SENT") // SENT, DELIVERED, OPENED, CONVERTED
+  metadata   Json? // Deep links, etc.
+  createdAt  DateTime @default(now())
+
+  program  LoyaltyProgram?  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  customer LoyaltyCustomer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user     UserSettings?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  campaign LoyaltyCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([programId])
+  @@index([customerId])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model LoyaltyPromotion {
@@ -738,6 +806,8 @@ model LoyaltyCustomer {
   redemptions            LoyaltyRedemption[]
   visits                 LoyaltyVisit[]
   productReviews         ProductReview[]
+  deviceTokens           DeviceToken[]
+  notificationLogs       NotificationLog[]
 
   @@unique([programId, phone])
   @@index([programId])
@@ -1110,9 +1180,9 @@ model PromoterProfile {
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
 
-  reservations    Reservation[]          @relation("PromoterReservations")
-  settlements     PromoterSettlement[]
-  business        UserSettings           @relation("BusinessPromoters", fields: [businessId], references: [userId], onDelete: Cascade)
+  reservations Reservation[]        @relation("PromoterReservations")
+  settlements  PromoterSettlement[]
+  business     UserSettings         @relation("BusinessPromoters", fields: [businessId], references: [userId], onDelete: Cascade)
 
   @@index([businessId])
   @@index([branchId])

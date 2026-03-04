@@ -81,7 +81,7 @@ interface DashboardContextType {
     branchId?: string
     // Subscription Logic
     plan: string
-    subscriptionStatus: 'ACTIVE' | 'TRIALING' | 'EXPIRED'
+    subscriptionStatus: 'ACTIVE' | 'TRIALING' | 'GRACE' | 'EXPIRED' | 'SUSPENDED'
     daysRemaining: number
     isLocked: boolean
     userCreatedAt?: string | Date
@@ -105,12 +105,13 @@ const defaultStats: StatsData = {
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)
 
 // Add branchId to Props
-export function DashboardProvider({ children, branchId, branchSlug, initialPlan = 'FREE', userCreatedAt }: {
+export function DashboardProvider({ children, branchId, branchSlug, initialPlan = 'FREE', userCreatedAt, dbSubscriptionStatus }: {
     children: React.ReactNode,
     branchId?: string,
     branchSlug?: string,
     initialPlan?: string,
-    userCreatedAt?: string | Date
+    userCreatedAt?: string | Date,
+    dbSubscriptionStatus?: string
 }) {
     const { userId } = useAuth()
 
@@ -127,25 +128,41 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
     const daysSinceCreation = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const TRIAL_DAYS = 7
 
-    let subscriptionStatus: 'ACTIVE' | 'TRIALING' | 'EXPIRED' = 'ACTIVE'
+    let subscriptionStatus: 'ACTIVE' | 'TRIALING' | 'GRACE' | 'EXPIRED' | 'SUSPENDED' = 'ACTIVE'
     let daysRemaining = 0
     let isLocked = false
 
-    if (plan !== 'FREE') {
+    // If server passed an explicit status (from Stripe webhook ideally)
+    if (dbSubscriptionStatus === 'ACTIVE') {
         subscriptionStatus = 'ACTIVE'
+    } else if (dbSubscriptionStatus === 'TRIALING') {
+        subscriptionStatus = 'TRIALING'
+        daysRemaining = Math.max(0, TRIAL_DAYS - daysSinceCreation)
+    } else if (dbSubscriptionStatus === 'GRACE') {
+        subscriptionStatus = 'GRACE' // Let them use it, warn them. Not locked yet.
         isLocked = false
-        daysRemaining = 30 // Placeholder for paid plans
+    } else if (dbSubscriptionStatus === 'EXPIRED') {
+        subscriptionStatus = 'EXPIRED'
+        isLocked = true
+    } else if (dbSubscriptionStatus === 'SUSPENDED') {
+        subscriptionStatus = 'SUSPENDED'
+        isLocked = true
     } else {
-        // FREE Plan = Trial Logic
-        // Strict check: if created > 7 days ago, it is EXPIRED.
-        if (daysSinceCreation <= TRIAL_DAYS) {
-            subscriptionStatus = 'TRIALING'
-            daysRemaining = TRIAL_DAYS - daysSinceCreation
+        // Fallback to legacy manual date calculation if not defined in DB
+        if (plan !== 'FREE') {
+            subscriptionStatus = 'ACTIVE'
             isLocked = false
+            daysRemaining = 30 // Placeholder
         } else {
-            subscriptionStatus = 'EXPIRED'
-            daysRemaining = 0
-            isLocked = true
+            if (daysSinceCreation <= TRIAL_DAYS) {
+                subscriptionStatus = 'TRIALING'
+                daysRemaining = TRIAL_DAYS - daysSinceCreation
+                isLocked = false
+            } else {
+                subscriptionStatus = 'EXPIRED'
+                daysRemaining = 0
+                isLocked = true
+            }
         }
     }
 
@@ -293,11 +310,11 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
                 // 1. Paid Plans -> Allow All
                 if (plan !== 'FREE') return true
 
-                // 2. Free Plan Logic
-                // If Trialing (Not Locked) -> Allow All (Full Experience)
+                // 2. Free / Trialing Logic
+                // If Trialing or Grace (Not Locked) -> Allow All (Full Experience)
                 if (!isLocked) return true
 
-                // If Expired (Locked) -> Block Premium Modules
+                // If Expired/Suspended (Locked) -> Block Premium Modules
                 const PREMIUM_MODULES = ['loyalty', 'processes', 'reservations']
                 if (PREMIUM_MODULES.includes(module)) return false
 

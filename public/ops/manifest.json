@@ -4,6 +4,8 @@
     "description": "Operaciones de Happy Meter",
     "start_url": "/ops",
     "display": "standalone",
+    "id": "/ops/",
+    "scope": "/ops/",
     "background_color": "#0a0a0a",
     "theme_color": "#8b5cf6",
     "icons": [

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Users, LayoutGrid, Gift, MessageSquare, History, Trophy, Bell, Share2, Plus, Zap, Check } from "lucide-react"
+import { Users, LayoutGrid, Gift, MessageSquare, History, Trophy, Bell, Share2, Plus, Zap, Check, MapPin } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { StaffInviteForm } from "@/components/team/StaffInviteForm"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,7 @@ export function PremiumTabs({ activeTab, setActiveTab, children }: { activeTab: 
         { id: 'tiers', label: 'Niveles', icon: Trophy },
         { id: 'history', label: 'Historial', icon: History },
         { id: 'notifications', label: 'Avisos', icon: Bell },
+        { id: 'geofence', label: 'Push & GPS', icon: MapPin },
         { id: 'staff', label: 'Equipo', icon: Users }, // Reused icon or maybe different one
     ]
 

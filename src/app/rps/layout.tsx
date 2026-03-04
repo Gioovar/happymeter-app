@@ -5,5 +5,24 @@ export const metadata: Metadata = {
 };
 
 export default function RpsRootLayout({ children }: { children: React.ReactNode }) {
-    return <>{children}</>;
+    return (
+        <>
+            <script
+                dangerouslySetInnerHTML={{
+                    __html: `
+                        if ('serviceWorker' in navigator) {
+                            window.addEventListener('load', function() {
+                                navigator.serviceWorker.register('/rps-sw.js', { scope: '/rps/' }).then(function(registration) {
+                                    console.log('RPS ServiceWorker registration successful with scope: ', registration.scope);
+                                }, function(err) {
+                                    console.log('RPS ServiceWorker registration failed: ', err);
+                                });
+                            });
+                        }
+                    `
+                }}
+            />
+            {children}
+        </>
+    );
 }
