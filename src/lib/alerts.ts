@@ -69,10 +69,16 @@ export async function sendCrisisAlert(response: Response, survey: Survey, answer
             }
         })
 
+        // 1. Resolve Slug for deep link
+        const chainBranch = await prisma.chainBranch.findFirst({
+            where: { branchId: survey.userId }
+        })
+        const slug = chainBranch?.slug || survey.userId
+
         await sendPushNotification(survey.userId, {
             title: `🚨 Alerta de Crisis`,
             body: `Nueva calificación baja en ${survey.title}. Revisa los detalles.`,
-            url: `/dashboard/responses?responseId=${response.id}`,
+            url: `/dashboard/${slug}/responses?responseId=${response.id}`,
             icon: '/happymeter_logo.png'
         })
 
@@ -368,10 +374,16 @@ export async function sendStaffAlert(response: Response, survey: Survey, answers
             }
         })
 
+        // 1. Resolve Slug for deep link
+        const chainBranch = await prisma.chainBranch.findFirst({
+            where: { branchId: survey.userId }
+        })
+        const slug = chainBranch?.slug || survey.userId
+
         await sendPushNotification(survey.userId, {
             title: '📩 Nuevo Reporte de Staff',
             body: issueDescription.substring(0, 50),
-            url: `/dashboard/responses?responseId=${response.id}`,
+            url: `/dashboard/${slug}/responses?responseId=${response.id}`,
             icon: '/happymeter_logo.png'
         })
 
@@ -644,10 +656,16 @@ export async function sendTaskIssueAlert(taskTitle: string, reason: string, repo
             }
         })
 
+        // 1. Resolve Slug for deep link
+        const chainBranch = await prisma.chainBranch.findFirst({
+            where: { branchId: ownerId }
+        })
+        const slug = chainBranch?.slug || ownerId
+
         await sendPushNotification(ownerId, {
             title: title,
             body: message,
-            url: `/dashboard/processes`, // Or deep link to task?
+            url: `/dashboard/${slug}/processes`, // Or deep link to task?
             icon: '/happymeter_logo.png'
         })
 
