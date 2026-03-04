@@ -36,13 +36,11 @@ export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT', user
 
         setPermission('granted')
 
-        await PushNotifications.register();
-
         PushNotifications.addListener('registration', async (token: Token) => {
             console.log('Push registration success, token: ' + token.value);
             // Send token to our server
             try {
-                await fetch('/api/push/register', {
+                await fetch('/api/users/device-token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -54,13 +52,19 @@ export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT', user
                     })
                 });
             } catch (err) {
-                console.error("Failed to register native push token", err)
+                console.error("Failed to send native push token to server", err)
             }
         });
 
         PushNotifications.addListener('registrationError', (error: any) => {
             console.error('Error on native push registration: ' + JSON.stringify(error));
         });
+
+        try {
+            await PushNotifications.register();
+        } catch (error) {
+            console.error('Failed to call PushNotifications.register(): ', error);
+        }
 
         PushNotifications.addListener('pushNotificationReceived', (notification) => {
             console.log('Native Push received: ' + JSON.stringify(notification));

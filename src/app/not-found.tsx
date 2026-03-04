@@ -1,7 +1,11 @@
-import Link from 'next/link'
-import { AlertTriangle, Home } from 'lucide-react'
+'use client'
+
+import { AlertTriangle, ArrowLeft } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function NotFound() {
+    const router = useRouter()
+
     return (
         <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4 relative overflow-hidden">
             {/* Background Effects */}
@@ -20,13 +24,13 @@ export default function NotFound() {
                 </p>
 
                 <div className="pt-6">
-                    <Link
-                        href="/dashboard"
+                    <button
+                        onClick={() => router.back()}
                         className="inline-flex items-center gap-2 px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors"
                     >
-                        <Home className="w-4 h-4" />
+                        <ArrowLeft className="w-4 h-4" />
                         <span>Volver al Inicio</span>
-                    </Link>
+                    </button>
                 </div>
             </div>
         </div>

@@ -3,19 +3,20 @@ import * as admin from 'firebase-admin';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 
-dotenv.config({ path: resolve(process.cwd(), '.env.local') });
+// Load environmental variables from .env
+dotenv.config({ path: resolve(process.cwd(), '.env') });
 
 async function main() {
-    console.log("Sending test push to all LOYALTY apps...");
+    console.log("Sending test push to all devices...");
 
     const prisma = new PrismaClient();
 
     const tokens = await prisma.deviceToken.findMany({
-        where: { appType: 'LOYALTY' }
+        where: { isActive: true }
     });
 
     if (tokens.length === 0) {
-        console.log("No LOYALTY tokens found in DB.");
+        console.log("No active tokens found in DB.");
         return;
     }
 
@@ -35,7 +36,15 @@ async function main() {
         tokens: tokens.map(t => t.token),
         notification: {
             title: "¡Prueba de HappyMeters!",
-            body: "🚀 Las notificaciones nativas en Android ya funcionan.",
+            body: "🚀 Las notificaciones nativas en tu iOS/Android ya funcionan.",
+        },
+        apns: {
+            payload: {
+                aps: {
+                    sound: 'default',
+                    badge: 1
+                }
+            }
         },
         android: {
             priority: 'high'
@@ -44,6 +53,14 @@ async function main() {
 
     const response = await admin.messaging().sendEachForMulticast(messagePayload);
     console.log(`Sent: ${response.successCount}, Failed: ${response.failureCount}`);
+
+    if (response.failureCount > 0) {
+        response.responses.forEach((resp, idx) => {
+            if (!resp.success) {
+                console.error(`Failed token ${idx}:`, resp.error);
+            }
+        });
+    }
 }
 
 main().catch(console.error);

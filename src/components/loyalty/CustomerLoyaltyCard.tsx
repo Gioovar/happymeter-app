@@ -778,7 +778,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
 
                                     {/* Global Wallet Button */}
                                     <Link
-                                        href="/loyalty"
+                                        href="/loyalty/wallet"
                                         className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group"
                                     >
                                         <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:text-white transition-colors">

@@ -15,7 +15,9 @@ import {
     Zap,
     Users,
     RefreshCcw,
-    Loader2
+    Loader2,
+    Copy,
+    Check
 } from 'lucide-react'
 import InviteMemberModal from './InviteMemberModal'
 import StaffDetailModal from './StaffDetailModal'
@@ -38,6 +40,20 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
         id: '',
         type: 'member'
     })
+    const [copiedPin, setCopiedPin] = useState<string | null>(null)
+
+    const handleCopyPin = (e: React.MouseEvent, pin: string) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!pin) {
+            toast.error("Este usuario no tiene PIN asignado")
+            return
+        }
+        navigator.clipboard.writeText(pin)
+        setCopiedPin(pin)
+        toast.success("PIN copiado al portapapeles")
+        setTimeout(() => setCopiedPin(null), 2000)
+    }
 
     const handleRemove = async (id: string) => {
         setLoadingIds(prev => [...prev, id])
@@ -105,6 +121,7 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                 <th className="p-6">Colaborador</th>
                                 <th className="p-6">Puesto</th>
                                 <th className="p-6">Desempeño Hoy (6AM - 5AM)</th>
+                                <th className="p-6">Acceso (PIN)</th>
                                 <th className="p-6 text-right">Acciones</th>
                             </tr>
                         </thead>
@@ -170,6 +187,25 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                             </div>
                                         </div>
                                     </td>
+                                    <td className="p-6">
+                                        {staff.accessCode ? (
+                                            <div
+                                                onClick={(e) => handleCopyPin(e, staff.accessCode)}
+                                                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl cursor-copy transition-all group/pin w-fit"
+                                            >
+                                                <span className="font-mono text-sm tracking-widest text-white/80 font-medium select-all">
+                                                    {staff.accessCode}
+                                                </span>
+                                                {copiedPin === staff.accessCode ? (
+                                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                                ) : (
+                                                    <Copy className="w-3.5 h-3.5 text-gray-500 group-hover/pin:text-violet-400 transition-colors" />
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-gray-600 italic">Sin PIN</span>
+                                        )}
+                                    </td>
                                     <td className="p-6 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <Button
@@ -228,6 +264,25 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                                 <div className="w-2 h-2 bg-amber-500/20 rounded-full animate-pulse shrink-0" />
                                                 <span className="truncate">Sin datos de rendimiento</span>
                                             </div>
+                                        </td>
+                                        <td className="p-6">
+                                            {invite.accessCode ? (
+                                                <div
+                                                    onClick={(e) => handleCopyPin(e, invite.accessCode)}
+                                                    className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl cursor-copy transition-all group/pin w-fit"
+                                                >
+                                                    <span className="font-mono text-sm tracking-widest text-white/80 font-medium select-all">
+                                                        {invite.accessCode}
+                                                    </span>
+                                                    {copiedPin === invite.accessCode ? (
+                                                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                                    ) : (
+                                                        <Copy className="w-3.5 h-3.5 text-gray-500 group-hover/pin:text-violet-400 transition-colors" />
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-gray-600 italic">Sin PIN generado</span>
+                                            )}
                                         </td>
                                         <td className="p-6">
                                             <div className="flex items-center justify-end gap-2">

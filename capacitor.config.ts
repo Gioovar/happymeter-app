@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'HappyMeters',
   webDir: 'out',
   server: {
-    url: 'http://10.0.2.2:3000/loyalty/login',
+    url: 'http://10.0.2.2:3000/ops/login',
     cleartext: true
   },
   plugins: {
