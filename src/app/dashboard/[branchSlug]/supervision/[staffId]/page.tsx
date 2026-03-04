@@ -4,8 +4,13 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button'; // Assuming shadcn attached
 import { notFound } from 'next/navigation';
 
-export default async function EmployeeSupervisionPage({ params }: { params: { staffId: string } }) {
-    const data = await getStaffTasks(params.staffId);
+import { getDashboardContext } from '@/lib/auth-context';
+
+export default async function EmployeeSupervisionPage({ params }: { params: { staffId: string, branchSlug: string } }) {
+    const context = await getDashboardContext(params.branchSlug);
+    if (!context || !context.userId) return notFound();
+
+    const data = await getStaffTasks(params.staffId, context.userId);
 
     if (!data) return notFound();
 
@@ -15,7 +20,7 @@ export default async function EmployeeSupervisionPage({ params }: { params: { st
         <div className="p-6 md:p-10 space-y-8 max-w-5xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-4">
-                <Link href="/dashboard/supervision" className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
+                <Link href={`/dashboard/${params.branchSlug}/supervision`} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
                     <ArrowLeft className="w-5 h-5 text-gray-400" />
                 </Link>
                 <div>
@@ -57,9 +62,9 @@ export default async function EmployeeSupervisionPage({ params }: { params: { st
                             {/* Middle: Status */}
                             <div className="flex items-center gap-4">
                                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold ${task.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400' :
-                                        task.status === 'REJECTED' ? 'bg-red-500/10 text-red-400' :
-                                            task.status === 'REVIEW' ? 'bg-yellow-500/10 text-yellow-400' :
-                                                'bg-white/5 text-gray-500'
+                                    task.status === 'REJECTED' ? 'bg-red-500/10 text-red-400' :
+                                        task.status === 'REVIEW' ? 'bg-yellow-500/10 text-yellow-400' :
+                                            'bg-white/5 text-gray-500'
                                     }`}>
                                     {task.status === 'APPROVED' ? <CheckCircle2 className="w-4 h-4" /> :
                                         task.status === 'REJECTED' ? <AlertCircle className="w-4 h-4" /> :
@@ -77,7 +82,7 @@ export default async function EmployeeSupervisionPage({ params }: { params: { st
                             <div className="flex items-center gap-2">
                                 {task.status === 'REVIEW' || task.status === 'APPROVED' || task.status === 'REJECTED' ? (
                                     <Link
-                                        href={`/dashboard/supervision/task/${task.taskId}?evidenceId=${task.evidenceId}`}
+                                        href={`/dashboard/${params.branchSlug}/supervision/task/${task.taskId}?evidenceId=${task.evidenceId}`}
                                         className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-lg shadow-violet-900/20"
                                     >
                                         <Eye className="w-4 h-4" />

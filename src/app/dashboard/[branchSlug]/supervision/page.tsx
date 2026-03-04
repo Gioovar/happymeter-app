@@ -2,8 +2,14 @@ import { getAllStaffStats } from '@/actions/supervision';
 import { Shield, CheckCircle2, AlertCircle, Clock, ChevronRight, User } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function SupervisionPage() {
-    const stats = await getAllStaffStats();
+import { getDashboardContext } from '@/lib/auth-context';
+import { redirect } from 'next/navigation';
+
+export default async function SupervisionPage({ params }: { params: { branchSlug: string } }) {
+    const context = await getDashboardContext(params.branchSlug);
+    if (!context || !context.userId) return redirect('/dashboard');
+
+    const stats = await getAllStaffStats(context.userId);
 
     return (
         <div className="p-6 md:p-10 space-y-10 max-w-7xl mx-auto">
@@ -30,13 +36,13 @@ export default async function SupervisionPage() {
                     stats.map(employee => (
                         <Link
                             key={employee.staffId}
-                            href={`/dashboard/supervision/${employee.staffId}`}
+                            href={`/dashboard/${params.branchSlug}/supervision/${employee.staffId}`}
                             className="group relative bg-[#111] border border-white/10 rounded-2xl p-6 hover:border-violet-500/30 transition-all hover:shadow-2xl hover:shadow-violet-900/10 active:scale-[0.99]"
                         >
                             {/* Status Indicator Stripe */}
                             <div className={`absolute top-0 left-0 bottom-0 w-1.5 rounded-l-2xl transition-colors ${employee.status === 'BEHIND' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' :
-                                    employee.status === 'WARNING' ? 'bg-yellow-500' :
-                                        'bg-emerald-500'
+                                employee.status === 'WARNING' ? 'bg-yellow-500' :
+                                    'bg-emerald-500'
                                 }`} />
 
                             <div className="pl-4">
@@ -57,8 +63,8 @@ export default async function SupervisionPage() {
 
                                     {/* Status Badge */}
                                     <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border ${employee.status === 'BEHIND' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                            employee.status === 'WARNING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                                                'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                        employee.status === 'WARNING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                            'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                                         }`}>
                                         {employee.status === 'BEHIND' ? <AlertCircle className="w-3 h-3" /> :
                                             employee.status === 'WARNING' ? <Clock className="w-3 h-3" /> :

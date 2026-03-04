@@ -19,13 +19,15 @@ export type SupervisionStats = {
     avatarUrl?: string; // Optional if we have it
 };
 
-export async function getAllStaffStats(): Promise<SupervisionStats[]> {
+export async function getAllStaffStats(targetOwnerId?: string): Promise<SupervisionStats[]> {
     const { userId } = await auth();
     if (!userId) return [];
 
+    const queryOwnerId = targetOwnerId || userId;
+
     // 1. Get all team members
     const members = await prisma.teamMember.findMany({
-        where: { ownerId: userId },
+        where: { ownerId: queryOwnerId },
         include: {
             user: {
                 select: {
@@ -118,17 +120,19 @@ export async function getAllStaffStats(): Promise<SupervisionStats[]> {
 
 // --- PHASE 2: Individual Staff View ---
 
-export async function getStaffTasks(staffId: string) {
+export async function getStaffTasks(staffId: string, targetOwnerId?: string) {
     const { userId } = await auth();
     if (!userId) return null;
+
+    const ownerIdToQuery = targetOwnerId || userId;
 
     // Verify ownership/relationship
     const member = await prisma.teamMember.findUnique({
         where: { id: staffId },
         include: { user: true }
     });
-    // Security check: ensure the member belongs to the current user (owner)
-    if (!member || member.ownerId !== userId) return null;
+    // Security check: ensure the member belongs to the current queried owner
+    if (!member || member.ownerId !== ownerIdToQuery) return null;
 
     const todayStart = startOfDay(new Date());
     const todayEnd = endOfDay(new Date());
@@ -197,9 +201,11 @@ export async function getStaffTasks(staffId: string) {
 
 // --- PHASE 3: Task Detail View ---
 
-export async function getTaskDetails(taskId: string, evidenceId?: string) {
+export async function getTaskDetails(taskId: string, evidenceId?: string, targetOwnerId?: string) {
     const { userId } = await auth();
     if (!userId) return null;
+
+    const ownerIdToQuery = targetOwnerId || userId;
 
     const task = await prisma.processTask.findUnique({
         where: { id: taskId },
@@ -215,7 +221,7 @@ export async function getTaskDetails(taskId: string, evidenceId?: string) {
     });
 
     if (!task) return null;
-    if (task.zone.userId !== userId) return null; // Logic check: process owner
+    if (task.zone.userId !== ownerIdToQuery) return null; // Logic check: process owner matches query context
 
     // Determine which evidence to show
     // If evidenceId is passed, use that. Otherwise use latest today.

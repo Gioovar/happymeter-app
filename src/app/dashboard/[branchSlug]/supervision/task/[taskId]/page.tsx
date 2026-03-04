@@ -6,8 +6,13 @@ import { notFound, redirect } from 'next/navigation';
 import Image from 'next/image';
 import { revalidatePath } from 'next/cache';
 
-export default async function TaskDetailPage({ params, searchParams }: { params: { taskId: string }, searchParams: { evidenceId?: string } }) {
-    const data = await getTaskDetails(params.taskId, searchParams.evidenceId);
+import { getDashboardContext } from '@/lib/auth-context';
+
+export default async function TaskDetailPage({ params, searchParams }: { params: { taskId: string, branchSlug: string }, searchParams: { evidenceId?: string } }) {
+    const context = await getDashboardContext(params.branchSlug);
+    if (!context || !context.userId) return redirect('/dashboard');
+
+    const data = await getTaskDetails(params.taskId, searchParams.evidenceId, context.userId);
 
     if (!data) return notFound();
 
@@ -20,8 +25,8 @@ export default async function TaskDetailPage({ params, searchParams }: { params:
         if (!currentEvidence) return;
 
         await validateEvidence(currentEvidence.id, status, note);
-        revalidatePath(`/dashboard/supervision/task/${task.id}`);
-        revalidatePath(`/dashboard/supervision`);
+        revalidatePath(`/dashboard/${params.branchSlug}/supervision/task/${task.id}`);
+        revalidatePath(`/dashboard/${params.branchSlug}/supervision`);
     }
 
     return (
@@ -31,7 +36,7 @@ export default async function TaskDetailPage({ params, searchParams }: { params:
             <div className="lg:col-span-2 space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-4">
-                    <Link href="/dashboard/supervision" className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
+                    <Link href={`/dashboard/${params.branchSlug}/supervision`} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
                         <ArrowLeft className="w-5 h-5 text-gray-400" />
                     </Link>
                     <div>
@@ -109,7 +114,7 @@ export default async function TaskDetailPage({ params, searchParams }: { params:
                                 </form>
                             ) : (
                                 <div className={`p-4 rounded-xl border ${currentEvidence.validationStatus === 'APPROVED' ? 'bg-emerald-500/10 border-emerald-500/20' :
-                                        'bg-red-500/10 border-red-500/20'
+                                    'bg-red-500/10 border-red-500/20'
                                     }`}>
                                     <div className="flex items-center gap-2 mb-2">
                                         {currentEvidence.validationStatus === 'APPROVED' ?
@@ -174,8 +179,8 @@ export default async function TaskDetailPage({ params, searchParams }: { params:
                                 href={`?evidenceId=${ev.id}`}
                                 key={ev.id}
                                 className={`block p-3 rounded-xl border transition-all ${currentEvidence?.id === ev.id
-                                        ? 'bg-violet-600/10 border-violet-500/50'
-                                        : 'bg-white/5 border-transparent hover:bg-white/10'
+                                    ? 'bg-violet-600/10 border-violet-500/50'
+                                    : 'bg-white/5 border-transparent hover:bg-white/10'
                                     }`}
                             >
                                 <div className="flex justify-between items-start mb-1">
@@ -183,8 +188,8 @@ export default async function TaskDetailPage({ params, searchParams }: { params:
                                         {new Date(ev.submittedAt).toLocaleDateString()}
                                     </span>
                                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${ev.validationStatus === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' :
-                                            ev.validationStatus === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
-                                                'bg-gray-500/20 text-gray-400'
+                                        ev.validationStatus === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
+                                            'bg-gray-500/20 text-gray-400'
                                         }`}>
                                         {ev.validationStatus}
                                     </span>
