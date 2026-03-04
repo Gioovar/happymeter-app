@@ -1106,6 +1106,7 @@ export async function getProcessTeamStats(branchId: string) {
             photo: member.user?.photoUrl || null,
             role: member.role,
             jobTitle: member.jobTitle,
+            accessCode: member.accessCode, // Add this line
             stats,
             contact: {
                 phone: member.phone || member.user?.phone || null,
