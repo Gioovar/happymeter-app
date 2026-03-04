@@ -72,6 +72,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                 // Reset everything
                 setIsSuccess(false)
                 setIsSubmitting(false)
+                setIsExpanded(false)
                 const initialData: any = { name: '', age: '', email: '', phone: '', source: '', sourceOther: '', birthday: '' }
                 if (survey && survey.questions) {
                     survey.questions.forEach((q: any) => { initialData[q.id] = q.type === 'EMOJI' ? '3' : '' })
@@ -365,6 +366,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                         onClick={() => {
                             setIsSuccess(false)
                             setIsSubmitting(false) // Fix: Ensure button is not stuck in loading state
+                            setIsExpanded(false)
                             const initialData: any = { name: '', age: '', email: '', phone: '', source: '', sourceOther: '', birthday: '' }
                             if (survey && survey.questions) {
                                 survey.questions.forEach((q: any) => { initialData[q.id] = q.type === 'EMOJI' ? '3' : '' })
