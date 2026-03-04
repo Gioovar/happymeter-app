@@ -1017,7 +1017,7 @@ export async function getProcessTeamStats(branchId: string) {
     const { start: todayStart, end: todayEnd, dayOfWeek } = await getMexicoTodayRange();
 
     // 1. Fetch all active team members for this branch
-    const members = await prisma.teamMember.findMany({
+    let members = await prisma.teamMember.findMany({
         where: { ownerId: branchId, isActive: true },
         include: {
             user: {
@@ -1030,6 +1030,25 @@ export async function getProcessTeamStats(branchId: string) {
             }
         }
     });
+
+    // 1.5 Backfill missing PINs for legacy members
+    const membersToUpdate = members.filter(m => !m.accessCode);
+    if (membersToUpdate.length > 0) {
+        for (const member of membersToUpdate) {
+            let newCode = "";
+            let generated = false;
+            while (!generated) {
+                newCode = Math.floor(100000 + Math.random() * 900000).toString();
+                const existing = await prisma.teamMember.findUnique({ where: { accessCode: newCode } });
+                if (!existing) generated = true;
+            }
+            await prisma.teamMember.update({
+                where: { id: member.id },
+                data: { accessCode: newCode }
+            });
+            member.accessCode = newCode;
+        }
+    }
 
     // 2. Fetch all tasks for this branch that recur today
     const zones = await prisma.processZone.findMany({
