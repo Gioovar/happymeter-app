@@ -262,9 +262,10 @@ export async function saveFloorPlan(floorPlanId: string, tables: any[], branchId
 // Public: Open reservation page data
 export async function getProgramFloorPlan(programId: string) {
     try {
-        const program = await prisma.loyaltyProgram.findUnique({
+        let program = await prisma.loyaltyProgram.findUnique({
             where: { id: programId },
             select: {
+                id: true,
                 userId: true,
                 businessName: true,
                 user: {
@@ -278,6 +279,28 @@ export async function getProgramFloorPlan(programId: string) {
                 }
             }
         })
+
+        // Fallback: Check if the passed ID is actually a branch/user ID
+        if (!program) {
+            const fallbackProgram = await prisma.loyaltyProgram.findFirst({
+                where: { userId: programId },
+                select: {
+                    id: true,
+                    userId: true,
+                    businessName: true,
+                    user: {
+                        select: {
+                            businessName: true,
+                            phone: true,
+                            whatsappContact: true,
+                            reservationSettings: true,
+                            userId: true
+                        }
+                    }
+                }
+            })
+            program = fallbackProgram
+        }
 
         if (!program) return { success: false, error: "Negocio no encontrado" }
 
