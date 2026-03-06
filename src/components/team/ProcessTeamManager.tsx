@@ -14,10 +14,11 @@ import {
     ChevronRight,
     Zap,
     Users,
-    RefreshCcw,
     Loader2,
     Copy,
-    Check
+    Check,
+    MessageCircle,
+    RefreshCcw
 } from 'lucide-react'
 import InviteMemberModal from './InviteMemberModal'
 import StaffDetailModal from './StaffDetailModal'
@@ -91,6 +92,18 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
         } finally {
             setLoadingIds(prev => prev.filter(item => item !== id))
         }
+    }
+
+    const handleWhatsAppInvite = (invite: any) => {
+        if (!invite.accessCode) {
+            toast.error("El usuario aún no tiene un PIN generado")
+            return
+        }
+
+        const message = `👋 ¡Hola!\n\nHas sido invitado(a) a unirte al *Sistema Operativo de ${invite.businessName || 'HappyMeter'}*.\n\n🔑 *Tu PIN de acceso es:* ${invite.accessCode}\n\n📱 *Pasos para ingresar:*\n1. Entra a este enlace desde tu celular: https://happy-meter.vercel.app/ops \n2. Ingresa tu PIN.\n\n💡 *Tip PRO:* Si abres el link en Safari (iPhone) o Chrome (Android), presiona "Compartir" u "Opciones" y selecciona *"Agregar a la pantalla de inicio"*. Así la tendrás como una App instalada en tu teléfono. 🚀\n\n¡Te esperamos adentro!`
+
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
+        window.open(whatsappUrl, '_blank')
     }
 
     return (
@@ -289,6 +302,19 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleWhatsAppInvite(invite);
+                                                    }}
+                                                    className="h-10 w-10 text-gray-500 hover:text-green-500 hover:bg-green-500/10 rounded-xl transition-all"
+                                                    title="Enviar invitación por WhatsApp"
+                                                >
+                                                    <MessageCircle className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     disabled={isLoading}
                                                     onClick={(e) => {
                                                         e.preventDefault();
@@ -296,7 +322,7 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                                         handleResend(invite.id);
                                                     }}
                                                     className="h-10 w-10 text-gray-500 hover:text-violet-400 hover:bg-violet-500/10 rounded-xl transition-all"
-                                                    title="Reenviar invitación"
+                                                    title="Reenviar invitación por correo"
                                                 >
                                                     {isLoading ? (
                                                         <Loader2 className="w-4 h-4 animate-spin" />
