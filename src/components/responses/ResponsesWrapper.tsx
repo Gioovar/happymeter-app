@@ -29,5 +29,14 @@ export default async function ResponsesWrapper({ effectiveUserId }: ResponsesWra
         }
     })
 
-    return <ResponsesClientPage initialResponses={responses} />
+    const tickets = await prisma.issueTicket.findMany({
+        where: {
+            businessId: effectiveUserId
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    })
+
+    return <ResponsesClientPage initialResponses={responses} initialTickets={tickets} />
 }

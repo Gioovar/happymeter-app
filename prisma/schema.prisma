@@ -1229,16 +1229,19 @@ enum ProcessEvidenceStatus {
 }
 
 model IssueTicket {
-  id          String   @id @default(cuid())
-  businessId  String   @map("user_id") // Links to User (Business Owner)
-  title       String
-  description String
-  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  severity    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  businessId      String   @map("user_id") // Links to User (Business Owner)
+  title           String
+  description     String
+  status          String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  severity        String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  resolutionNotes String?  @db.Text
+  aiSummary       String?  @db.Text
+  isRecurring     Boolean  @default(false)
 
-  user        UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+  user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
 
   @@index([businessId, status])
 }

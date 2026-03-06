@@ -10,6 +10,7 @@ interface Issue {
     percentage: number
     summary: string
     recommendation: string
+    ticketId?: string | null
 }
 
 interface MarketingRecommendation {
@@ -118,26 +119,85 @@ export default function AITopIssues() {
             {/* Issues List */}
             <div className="space-y-3">
                 {issues?.map((issue, idx) => (
-                    <div key={idx} className="bg-[#1a1a1a] rounded-xl p-4 border-l-[6px] border-[#1a1a1a] hover:bg-[#202020] transition group"
+                    <div key={idx} className="bg-[#1a1a1a] rounded-xl p-4 border-l-[6px] border-[#1a1a1a] hover:bg-[#202020] transition group flex flex-col gap-3"
                         style={{
                             borderLeftColor: issue.severity === 'HIGH' ? '#ef4444' : issue.severity === 'MEDIUM' ? '#f59e0b' : '#22c55e'
                         }}
                     >
-                        <div className="flex justify-between items-center mb-2">
-                            <h4 className="font-bold text-white text-base">{issue.title}</h4>
-                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${issue.severity === 'HIGH' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
-                                issue.severity === 'MEDIUM' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
-                                    'bg-green-500/10 border-green-500/20 text-green-500'
-                                }`}>
-                                {issue.severity === 'HIGH' ? 'ALTA' : issue.severity === 'MEDIUM' ? 'MEDIA' : 'BAJA'}
-                            </span>
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <h4 className="font-bold text-white text-base flex items-center gap-2">
+                                    {issue.title}
+                                    {issue.ticketId ? (
+                                        <span className="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-red-500/30">
+                                            Recurrente
+                                        </span>
+                                    ) : (
+                                        <span className="bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-blue-500/30">
+                                            Nuevo
+                                        </span>
+                                    )}
+                                </h4>
+                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${issue.severity === 'HIGH' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                                    issue.severity === 'MEDIUM' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
+                                        'bg-green-500/10 border-green-500/20 text-green-500'
+                                    }`}>
+                                    {issue.severity === 'HIGH' ? 'ALTA' : issue.severity === 'MEDIUM' ? 'MEDIA' : 'BAJA'}
+                                </span>
+                            </div>
+
+                            <p className="text-gray-400 text-sm mb-4 leading-snug">{issue.summary}</p>
+
+                            <div className="flex items-start gap-3 p-3 bg-black/40 rounded-lg border border-white/5">
+                                <Zap className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+                                <p className="text-gray-300 text-xs italic font-medium">"{issue.recommendation}"</p>
+                            </div>
                         </div>
 
-                        <p className="text-gray-400 text-sm mb-4 leading-snug">{issue.summary}</p>
-
-                        <div className="flex items-start gap-3 p-3 bg-black/40 rounded-lg border border-white/5">
-                            <Zap className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
-                            <p className="text-gray-300 text-xs italic font-medium">"{issue.recommendation}"</p>
+                        {/* Smart Smart Ticket Actions */}
+                        <div className="flex items-center gap-2 pt-3 border-t border-white/5 mt-1">
+                            {issue.ticketId ? (
+                                <>
+                                    <button
+                                        onClick={async (e) => {
+                                            const btn = e.currentTarget;
+                                            btn.disabled = true;
+                                            btn.innerHTML = "Marcando...";
+                                            await fetch(`/api/issues/${issue.ticketId}`, {
+                                                method: 'PATCH',
+                                                body: JSON.stringify({ status: 'RESOLVED', resolutionNotes: 'Resuelto por el gerente desde Análisis UI.' })
+                                            });
+                                            btn.innerHTML = "¡Resuelto!";
+                                            btn.className = "flex-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 px-3 py-1.5 rounded-md text-xs font-bold transition";
+                                        }}
+                                        className="flex-1 bg-white/5 hover:bg-white/10 text-white px-3 py-1.5 rounded-md text-xs font-bold transition">
+                                        Marcar como Resuelto
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={async (e) => {
+                                            const btn = e.currentTarget;
+                                            btn.disabled = true;
+                                            btn.innerHTML = "Creando...";
+                                            await fetch('/api/issues', {
+                                                method: 'POST',
+                                                body: JSON.stringify({
+                                                    title: issue.title,
+                                                    description: issue.summary,
+                                                    severity: issue.severity,
+                                                    aiSummary: issue.recommendation
+                                                })
+                                            });
+                                            btn.innerHTML = "Ticket Creado";
+                                            btn.className = "flex-1 bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 px-3 py-1.5 rounded-md text-xs font-bold transition";
+                                        }}
+                                        className="flex-1 bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-md text-xs font-bold transition">
+                                        Crear Ticket de Seguimiento
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -173,3 +233,4 @@ export default function AITopIssues() {
         </div>
     )
 }
+

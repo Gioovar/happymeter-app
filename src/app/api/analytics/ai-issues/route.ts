@@ -91,13 +91,11 @@ export async function POST(req: Request) {
         Estás analizando el feedback de clientes de "${businessName}".
 
         TU OBJETIVO:
-        1. Analiza las siguientes quejas/feedback e identifica los Top 3 Problemas Actuales.
-        2. Identifica las 2 Mayores Fortalezas (Lo que los clientes aman).
-        3. Para cada problema, genera un "Caso de Éxito" REAL de una empresa famosa de la MISMA INDUSTRIA (${industry}).
-           - Si es Restaurante: Usa McDonald's, Starbucks, Chipotle, El Bulli.
-           - Si es Hotel: Usa Ritz-Carlton, Hilton, Airbnb.
-           - Si es Bar/Nightclub: Usa Hakkasan, Coco Bongo, Speakeasy famosos.
-           - Si es Retail: Usa Apple, Zara, Amazon.
+        1. Analiza las siguientes quejas/feedback e identifica problemas.
+        2. Revisa el historial de tickets de la empresa. Si el problema ya existe como TICKET ACTIVO (OPEN/IN_PROGRESS), clasifícalo como recurrente e indica el ticketId.
+        3. Si el problema de feedback coincide con un TICKET RESUELTO/HISTÓRICO, asume que ha regresado (regresión) y clasifícalo como un TICKET NUEVO (sin ticketId) pero menciónalo en el summary ("Volvieron quejas de...").
+        4. Si el problema NO está en el historial, es un TICKET NUEVO (ticketId: null).
+        5. Identifica las 2 Mayores Fortalezas (Lo que los clientes aman).
         
         Responde ESTRICTAMENTE en formato JSON:
         {
@@ -107,8 +105,8 @@ export async function POST(req: Request) {
               "severity": "HIGH" | "MEDIUM" | "LOW",
               "percentage": numero (estimado 0-100),
               "summary": "Explicación de 1 oración del problema",
-              "recommendation": "Consejo accionable corto (max 10 palabras) basado en el Caso de Éxito.",
-              "ticketId": "Si este problema ya coincide con un TICKET ACTIVO, devuelve su ID exacto aquí. Si es un problema NUEVO, devuelve null."
+              "recommendation": "Consejo accionable corto basado en un Caso de Éxito de la industria.",
+              "ticketId": "IDE Exacto del ticket ACTIVO si este problema coincide (ej: clrz5...). null si es nuevo."
             }
           ],
           "strengths": [
@@ -142,6 +140,7 @@ export async function POST(req: Request) {
         LISTA DE FEEDBACK (Quejas/Opiniones Recientes):
         ${feedbackText}
         `
+
 
         // Dry run if no key
         if (!process.env.GEMINI_API_KEY) {
