@@ -127,6 +127,7 @@ model UserSettings {
   promoterProfiles        PromoterProfile[]      @relation("BusinessPromoters")
   Product                 Product[]
   issueTickets            IssueTicket[]
+  restaurantHealthScores  RestaurantHealthScore[]
 }
 
 model FloorPlan {
@@ -1244,4 +1245,23 @@ model IssueTicket {
   user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
 
   @@index([businessId, status])
+}
+
+model RestaurantHealthScore {
+  id                      String   @id @default(cuid())
+  businessId              String   @map("user_id") // Links to UserSettings
+  score                   Int
+  status                  String   // Excellent, Good, Warning, Critical
+  customerExperienceScore Int
+  serviceQualityScore     Int
+  internalOpsScore        Int
+  businessActivityScore   Int
+  loyaltyScore            Int
+  aiExplanation           String?  @db.Text
+  aiRecommendations       Json?
+  createdAt               DateTime @default(now())
+
+  user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
 }

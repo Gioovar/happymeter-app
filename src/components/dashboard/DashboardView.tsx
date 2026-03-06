@@ -29,6 +29,7 @@ import LaserBorder from '@/components/ui/LaserBorder'
 import HelpModal from '@/components/HelpModal'
 import AIReportModal from '@/components/AIReportModal'
 import AnalyticsChart from '@/components/AnalyticsChart'
+import RestaurantHealthWidget from '@/components/dashboard/RestaurantHealthWidget'
 import ResponsesModal from '@/components/ResponsesModal'
 import HappyLoader from '@/components/HappyLoader'
 import QRCodeModal from '@/components/QRCodeModal'
@@ -390,32 +391,40 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                         ))}
                     </div>
 
-                    <div className="rounded-3xl bg-[#0F0F0F] border border-white/5 p-1 relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-                        <div className="relative z-10 bg-[#0a0a0a] rounded-[20px] p-6 min-h-[350px] h-auto">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-bold flex items-center gap-2">
-                                    <BarChart3 className="w-5 h-5 text-violet-500" />
-                                    Análisis de Tendencias
-                                </h3>
-                                <div className="flex gap-2">
-                                    <button className="px-3 py-1 rounded-lg bg-white/5 text-xs text-gray-400 hover:text-white transition">7D</button>
-                                    <button className="px-3 py-1 rounded-lg bg-white/10 text-xs text-white font-bold transition">30D</button>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 rounded-3xl bg-[#0F0F0F] border border-white/5 p-1 relative overflow-hidden group flex flex-col">
+                            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                            <div className="relative z-10 bg-[#0a0a0a] rounded-[20px] p-6 flex flex-col flex-1 min-h-[350px]">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-lg font-bold flex items-center gap-2">
+                                        <BarChart3 className="w-5 h-5 text-violet-500" />
+                                        Análisis de Tendencias
+                                    </h3>
+                                    <div className="flex gap-2">
+                                        <button className="px-3 py-1 rounded-lg bg-white/5 text-xs text-gray-400 hover:text-white transition">7D</button>
+                                        <button className="px-3 py-1 rounded-lg bg-white/10 text-xs text-white font-bold transition">30D</button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            {loadingAnalytics && statsData.chartData.length === 0 ? (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
-                                    <HappyLoader size="md" text="Procesando métricas..." />
-                                </div>
-                            ) : (
-                                <FeatureGuard
-                                    feature="ai_analytics"
-                                    fallback={<LockedAnalyticsPlaceholder />}
-                                >
-                                    <AnalyticsChart data={statsData.chartData} />
-                                </FeatureGuard>
-                            )}
+                                {loadingAnalytics && statsData.chartData.length === 0 ? (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
+                                        <HappyLoader size="md" text="Procesando métricas..." />
+                                    </div>
+                                ) : (
+                                    <FeatureGuard
+                                        feature="ai_analytics"
+                                        fallback={<LockedAnalyticsPlaceholder />}
+                                    >
+                                        <div className="flex-1 w-full relative">
+                                            <AnalyticsChart data={statsData.chartData} />
+                                        </div>
+                                    </FeatureGuard>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-1">
+                            <RestaurantHealthWidget />
                         </div>
                     </div>
 
