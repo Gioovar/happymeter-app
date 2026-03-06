@@ -46,7 +46,7 @@ type FilterType = 'ALL' | 'GOOD' | 'NORMAL' | 'BAD' | 'STAFF'
 
 import { useSearchParams, useRouter } from 'next/navigation'
 
-export default function ResponsesClientPage({ initialResponses, initialTickets = [] }: { initialResponses: any[], initialTickets?: any[] }) {
+export default function ResponsesClientPage({ initialResponses, initialTickets = [], branchName = '' }: { initialResponses: any[], initialTickets?: any[], branchName?: string }) {
     const searchParams = useSearchParams()
     const router = useRouter()
 
@@ -166,17 +166,26 @@ export default function ResponsesClientPage({ initialResponses, initialTickets =
         <div className="min-h-screen bg-[#0a0a0a] text-white -mx-4 md:-mx-8">
             <div className="w-full max-w-[1600px] mx-auto space-y-8 px-4 py-8 md:px-8">
                 {/* Header & Controls */}
-                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-                    <div>
-                        <h1 className="text-3xl font-bold flex items-center gap-3">
-                            <span className="p-3 bg-violet-500/10 rounded-xl text-violet-400">
-                                <MessageSquare className="w-8 h-8" />
-                            </span>
-                            Respuestas Recibidas
-                        </h1>
-                        <div className="flex items-center gap-4 mt-2 ml-1">
-                            <p className="text-gray-400">
-                                {filteredResponses.length} resultados encontrados
+                <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold flex items-center gap-3">
+                                <span className="p-3 bg-violet-500/10 rounded-xl text-violet-400">
+                                    <MessageSquare className="w-8 h-8" />
+                                </span>
+                                <span className="flex flex-col">
+                                    <span>Respuestas Recibidas</span>
+                                    {branchName && (
+                                        <span className="text-sm font-medium text-violet-400 mt-1">
+                                            Sucursal: {branchName}
+                                        </span>
+                                    )}
+                                </span>
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <p className="text-sm text-gray-400">
+                                {filteredResponses.length} resultados
                             </p>
                             <button
                                 onClick={() => setShowTickets(!showTickets)}
@@ -195,7 +204,7 @@ export default function ResponsesClientPage({ initialResponses, initialTickets =
                     </div>
 
                     {/* Filters Toolbar */}
-                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-[#111] p-2 rounded-2xl border border-white/5">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 bg-[#111] p-2 rounded-2xl border border-white/5 overflow-x-auto w-full">
                         {/* Sentiment Tabs */}
                         <div className="w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                             <div className="flex bg-black/40 p-1 rounded-xl min-w-max">

@@ -13,7 +13,7 @@ export async function POST(
     try {
         const { surveyId } = await params
         const body = await req.json()
-        const { answers, customer } = body
+        const { answers, customer, branchId } = body
 
         if (!surveyId) {
             return new NextResponse("Survey ID required", { status: 400 })
@@ -54,6 +54,7 @@ export async function POST(
         const response = await prisma.response.create({
             data: {
                 surveyId: surveyId,
+                branchId: branchId || null,
                 customerName: customer?.name || null,
                 customerEmail: customer?.email || null,
                 customerPhone: customer?.phone || null, // Capture phone
@@ -74,7 +75,7 @@ export async function POST(
 
         // Async Alert Trigger (Don't await to keep response fast)
         const ip = req.headers.get('x-forwarded-for') || 'unknown'
-        const branchId = survey.userId // Assuming survey Owner is the Branch
+        const resolvedBranchId = branchId || survey.userId // Scope logic to the explicit branch or fallback to owner
 
         // Check if it's a Staff Report (Anonymous Box)
         if (response.survey.title.includes('Buzón')) {
@@ -86,11 +87,11 @@ export async function POST(
             await sendCustomerReward(response, response.survey, response.answers)
 
             // New Advanced Security Checks
-            checkCrisis(surveyId, branchId)
-            checkFraud(surveyId, ip, branchId)
+            checkCrisis(surveyId, resolvedBranchId)
+            checkFraud(surveyId, ip, resolvedBranchId)
 
             // Step 2: Trigger AI Secret Inspector
-            invokeSecretInspector(response.id, branchId)
+            invokeSecretInspector(response.id, resolvedBranchId)
         }
 
         // Force cache invalidation for real-time dashboard updates

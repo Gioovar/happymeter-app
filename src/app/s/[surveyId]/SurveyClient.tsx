@@ -23,6 +23,7 @@ const parseLocalDate = (dateString: string | undefined | null) => {
 export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, isOwner: boolean }) {
     const searchParams = useSearchParams()
     const urlSource = searchParams.get('source')
+    const branchId = searchParams.get('branchId')
     const formRef = useRef<HTMLFormElement>(null)
     const [loading, setLoading] = useState(true)
     const [survey, setSurvey] = useState<any>(null)
@@ -214,7 +215,7 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
 
             const res = await fetch(`/api/surveys/${surveyId}/submit`, {
                 method: 'POST',
-                body: JSON.stringify({ answers, customer, photo: uploadedPhotoUrl })
+                body: JSON.stringify({ answers, customer, photo: uploadedPhotoUrl, branchId })
             })
 
             if (res.ok) {

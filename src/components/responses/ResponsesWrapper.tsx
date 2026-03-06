@@ -6,11 +6,18 @@ interface ResponsesWrapperProps {
 }
 
 export default async function ResponsesWrapper({ effectiveUserId }: ResponsesWrapperProps) {
+    const branchInfo = await prisma.userSettings.findUnique({
+        where: { userId: effectiveUserId },
+        select: { businessName: true }
+    })
+    const branchName = branchInfo?.businessName || ''
+
     const responses = await prisma.response.findMany({
         where: {
-            survey: {
-                userId: effectiveUserId
-            }
+            OR: [
+                { branchId: effectiveUserId },
+                { survey: { userId: effectiveUserId } }
+            ]
         },
         include: {
             survey: {
@@ -31,12 +38,15 @@ export default async function ResponsesWrapper({ effectiveUserId }: ResponsesWra
 
     const tickets = await prisma.issueTicket.findMany({
         where: {
-            businessId: effectiveUserId
+            OR: [
+                { branchId: effectiveUserId },
+                { businessId: effectiveUserId }
+            ]
         },
         orderBy: {
             createdAt: 'desc'
         }
     })
 
-    return <ResponsesClientPage initialResponses={responses} initialTickets={tickets} />
+    return <ResponsesClientPage initialResponses={responses} initialTickets={tickets} branchName={branchName} />
 }

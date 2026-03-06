@@ -57,9 +57,12 @@ model Response {
   answers          Answer[]
   survey           Survey        @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   issueTickets     IssueTicket[]
+  branchId         String?       // NEW: To track which branch generated this global franchise response
+  branch           UserSettings? @relation("BranchResponses", fields: [branchId], references: [userId], onDelete: SetNull)
 
   @@index([surveyId, createdAt])
   @@index([customerPhone])
+  @@index([branchId])
 }
 
 model Answer {
@@ -73,6 +76,8 @@ model Answer {
   @@index([responseId])
   @@index([questionId])
 }
+
+
 
 model UserSettings {
   id                      String                 @id @default(uuid())
@@ -133,6 +138,8 @@ model UserSettings {
   growthOpportunities     AIGrowthOpportunity[]
   marketingCampaigns      AIMarketingCampaign[]
   resolvedIssues          ResolvedIssue[]
+  branchResponses         Response[]             @relation("BranchResponses")
+  branchTickets           IssueTicket[]          @relation("BranchTickets")
 }
 
 model FloorPlan {
@@ -1253,10 +1260,14 @@ model IssueTicket {
   aiContext       String?  @db.Text // AI extracted raw context
   isRecurring     Boolean  @default(false)
 
+  branchId        String?  // NEW: Branch scope for tickets
+  branch          UserSettings? @relation("BranchTickets", fields: [branchId], references: [userId], onDelete: SetNull)
+
   user     UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
   response Response?    @relation(fields: [responseId], references: [id], onDelete: SetNull)
 
   @@index([businessId, status])
+  @@index([branchId])
 }
 
 model RestaurantHealthScore {
