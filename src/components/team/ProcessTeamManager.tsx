@@ -95,12 +95,13 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
     }
 
     const handleWhatsAppInvite = (invite: any) => {
-        if (!invite.accessCode) {
+        const pin = invite.accessCode || invite.token
+        if (!pin) {
             toast.error("El usuario aún no tiene un PIN generado")
             return
         }
 
-        const message = `👋 ¡Hola!\n\nHas sido invitado(a) a unirte al *Sistema Operativo de ${invite.businessName || 'HappyMeter'}*.\n\n🔑 *Tu PIN de acceso es:* ${invite.accessCode}\n\n📱 *Pasos para ingresar:*\n1. Entra a este enlace desde tu celular: https://happy-meter.vercel.app/ops \n2. Ingresa tu PIN.\n\n💡 *Tip PRO:* Si abres el link en Safari (iPhone) o Chrome (Android), presiona "Compartir" u "Opciones" y selecciona *"Agregar a la pantalla de inicio"*. Así la tendrás como una App instalada en tu teléfono. 🚀\n\n¡Te esperamos adentro!`
+        const message = `👋 ¡Hola!\n\nHas sido invitado(a) a unirte al *Sistema Operativo de ${invite.businessName || 'HappyMeter'}*.\n\n🔑 *Tu PIN de acceso es:* ${pin}\n\n📱 *Pasos para ingresar:*\n1. Entra a este enlace desde tu celular: https://happy-meter.vercel.app/ops \n2. Ingresa tu PIN.\n\n💡 *Tip PRO:* Si abres el link en Safari (iPhone) o Chrome (Android), presiona "Compartir" u "Opciones" y selecciona *"Agregar a la pantalla de inicio"*. Así la tendrás como una App instalada en tu teléfono. 🚀\n\n¡Te esperamos adentro!`
 
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
         window.open(whatsappUrl, '_blank')
@@ -279,15 +280,15 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                             </div>
                                         </td>
                                         <td className="p-6">
-                                            {invite.accessCode ? (
+                                            {invite.token || invite.accessCode ? (
                                                 <div
-                                                    onClick={(e) => handleCopyPin(e, invite.accessCode)}
+                                                    onClick={(e) => handleCopyPin(e, invite.token || invite.accessCode)}
                                                     className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl cursor-copy transition-all group/pin w-fit"
                                                 >
                                                     <span className="font-mono text-sm tracking-widest text-white/80 font-medium select-all">
-                                                        {invite.accessCode}
+                                                        {invite.token || invite.accessCode}
                                                     </span>
-                                                    {copiedPin === invite.accessCode ? (
+                                                    {copiedPin === (invite.token || invite.accessCode) ? (
                                                         <Check className="w-3.5 h-3.5 text-emerald-400" />
                                                     ) : (
                                                         <Copy className="w-3.5 h-3.5 text-gray-500 group-hover/pin:text-violet-400 transition-colors" />
