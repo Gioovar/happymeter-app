@@ -149,10 +149,10 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
                                     <td className="p-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg overflow-hidden shrink-0 transition-transform group-hover:scale-105">
-                                                {staff.photo ? (
-                                                    <img src={staff.photo} alt={staff.name} className="w-full h-full object-cover" />
+                                                {staff.photoUrl || staff.user?.photoUrl || staff.photo ? (
+                                                    <img src={staff.photoUrl || staff.user?.photoUrl || staff.photo} alt={staff.name} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <span className="text-lg">{staff.name[0]}</span>
+                                                    <span className="text-lg">{staff.name?.[0] || 'U'}</span>
                                                 )}
                                             </div>
                                             <div className="min-w-0">

@@ -3,12 +3,13 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, ArrowRight, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react'
+import { Loader2, ArrowRight, CheckCircle2, AlertTriangle, ShieldCheck, UploadCloud, User, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { acceptInvitation } from '@/actions/team'
+import Image from 'next/image'
+import { acceptInvitation, checkOfflineInvitation, acceptOfflineInvitation } from '@/actions/team'
 import { useAuth, useClerk } from '@clerk/nextjs'
 
 function OpsJoinContent() {
@@ -21,10 +22,16 @@ function OpsJoinContent() {
     const urlToken = searchParams.get('token')
 
     // Form State
-    const [step, setStep] = useState<'VERIFY' | 'AUTH' | 'SUCCESS'>('VERIFY')
+    const [step, setStep] = useState<'VERIFY' | 'PROFILE_SETUP' | 'AUTH' | 'SUCCESS'>('VERIFY')
     const [accessCode, setAccessCode] = useState('')
     const [isVerifying, setIsVerifying] = useState(false)
     const [error, setError] = useState('')
+
+    // Profile Setup State (for Offline Operators)
+    const [profileData, setProfileData] = useState({ name: '', jobTitle: '', phone: '' })
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+    const [photoBase64, setPhotoBase64] = useState<string | null>(null)
+    const [isSubmittingProfile, setIsSubmittingProfile] = useState(false)
 
     // Auto-fill from URL
     useEffect(() => {
@@ -47,13 +54,30 @@ function OpsJoinContent() {
         setError('')
 
         try {
-            // Test the code by trying to accept it? 
-            // The `acceptInvitation` action checks auth first. 
-            // So we need to be authenticated to accept.
-            // Flow:
-            // 1. Enter Code -> 2. Sign In / Sign Up -> 3. Accept Logic
+            // Check if it looks like a 6-digit offline operator code (only digits)
+            if (accessCode.length === 6 && /^\d+$/.test(accessCode)) {
+                if (!isSignedIn) {
+                    const checkRes = await checkOfflineInvitation(accessCode)
+                    if (checkRes.success) {
+                        setProfileData(prev => ({ ...prev, name: checkRes.businessName || '' }))
+                        setStep('PROFILE_SETUP')
+                    } else {
+                        setError(checkRes.error || 'Código de operación inválido.')
+                    }
+                    return
+                } else {
+                    // Try to log out first or warn them? Offline operator flow doesn't need Clerk auth.
+                    // We'll proceed with checking it anyway.
+                    const checkRes = await checkOfflineInvitation(accessCode)
+                    if (checkRes.success) {
+                        setProfileData(prev => ({ ...prev, name: checkRes.businessName || '' }))
+                        setStep('PROFILE_SETUP')
+                        return
+                    }
+                }
+            }
 
-            // If we are NOT signed in, we go to AUTH step
+            // Standard Flow for non-operator invitations (requires Clerk auth)
             if (!isSignedIn) {
                 setStep('AUTH')
             } else {
@@ -119,6 +143,54 @@ function OpsJoinContent() {
         const nextUrl = `/ops/login?mode=${mode}&redirect_url=${encodeURIComponent(returnUrl)}`
 
         router.push(nextUrl)
+    }
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("La imagen no debe pesar más de 5MB")
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            const result = reader.result as string
+            setPhotoPreview(result)
+            setPhotoBase64(result)
+        }
+        reader.readAsDataURL(file)
+    }
+
+    const handleProfileSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!profileData.name || !profileData.jobTitle || !profileData.phone) {
+            toast.error("Por favor completa los campos obligatorios.")
+            return
+        }
+
+        setIsSubmittingProfile(true)
+        try {
+            const res = await acceptOfflineInvitation(accessCode, {
+                ...profileData,
+                photoUrl: photoBase64
+            })
+
+            if (res.success) {
+                setStep('SUCCESS')
+                setTimeout(() => {
+                    router.push('/ops/tasks')
+                }, 2000)
+            } else {
+                toast.error(res.error || "Ocurrió un error al configurar el perfil.")
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error("Error de conexión.")
+        } finally {
+            setIsSubmittingProfile(false)
+        }
     }
 
     if (!isLoaded) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-cyan-500" /></div>
@@ -207,6 +279,104 @@ function OpsJoinContent() {
                                     </button>
                                 </div>
                             )}
+                        </motion.div>
+                    )}
+
+                    {step === 'PROFILE_SETUP' && (
+                        <motion.div
+                            key="profile"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl"
+                        >
+                            <div className="text-center mb-6">
+                                <h3 className="text-xl font-bold text-white">Configura tu Perfil</h3>
+                                <p className="text-gray-400 text-sm mt-1">Completa tus datos para formar parte del equipo operativo de este restaurante.</p>
+                            </div>
+
+                            <form onSubmit={handleProfileSubmit} className="space-y-5">
+                                {/* Photo Upload */}
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="relative group cursor-pointer w-24 h-24 rounded-full overflow-hidden bg-white/5 border border-dashed border-white/20 hover:border-cyan-500 transition-colors">
+                                        {photoPreview ? (
+                                            <Image src={photoPreview} alt="Preview" fill className="object-cover" />
+                                        ) : (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+                                                <UploadCloud className="w-6 h-6 mb-1" />
+                                            </div>
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">Subir Foto (Opcional)</p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {/* Name Input */}
+                                    <div className="space-y-1">
+                                        <label className="text-xs uppercase font-bold text-gray-400 flex items-center gap-2 ml-1">
+                                            <User className="w-3.5 h-3.5" /> Nombre Completo <span className="text-red-400">*</span>
+                                        </label>
+                                        <Input
+                                            className="bg-black/50 border-white/10 text-white focus:border-cyan-500/50"
+                                            placeholder="Ej. Juan Pérez"
+                                            value={profileData.name}
+                                            onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Job Title Input */}
+                                    <div className="space-y-1">
+                                        <label className="text-xs uppercase font-bold text-gray-400 flex items-center gap-2 ml-1">
+                                            <ShieldCheck className="w-3.5 h-3.5" /> Puesto / Cargo <span className="text-red-400">*</span>
+                                        </label>
+                                        <Input
+                                            className="bg-black/50 border-white/10 text-white focus:border-cyan-500/50"
+                                            placeholder="Ej. Mesero, Hostess"
+                                            value={profileData.jobTitle}
+                                            onChange={(e) => setProfileData(prev => ({ ...prev, jobTitle: e.target.value }))}
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Phone Input */}
+                                    <div className="space-y-1">
+                                        <label className="text-xs uppercase font-bold text-gray-400 flex items-center gap-2 ml-1">
+                                            <Phone className="w-3.5 h-3.5" /> Teléfono Celular <span className="text-red-400">*</span>
+                                        </label>
+                                        <Input
+                                            type="tel"
+                                            className="bg-black/50 border-white/10 text-white focus:border-cyan-500/50"
+                                            placeholder="10 dígitos"
+                                            value={profileData.phone}
+                                            onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold h-12 mt-2"
+                                    disabled={isSubmittingProfile || !profileData.name || !profileData.jobTitle || !profileData.phone}
+                                >
+                                    {isSubmittingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Entrar al Sistema'}
+                                </Button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setStep('VERIFY')}
+                                    className="w-full text-xs text-gray-500 hover:text-gray-300 mt-2"
+                                >
+                                    Cancelar y volver atrás
+                                </button>
+                            </form>
                         </motion.div>
                     )}
 

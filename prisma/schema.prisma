@@ -215,6 +215,7 @@ model TeamMember {
   isOffline     Boolean       @default(false)
   jobTitle      String?
   phone         String?
+  photoUrl      String?
   assignedTasks ProcessTask[]
   assignedZones ProcessZone[]
   owner         UserSettings  @relation("OwnerOf", fields: [ownerId], references: [userId], onDelete: Cascade)

@@ -540,6 +540,81 @@ export async function acceptInvitation(token: string) {
     return { success: true, role: invite.role }
 }
 
+export async function acceptOfflineInvitation(token: string, profileData: { name: string, jobTitle: string, phone: string, photoUrl?: string | null }) {
+    // 1. Find Invite
+    const invite = await prisma.teamInvitation.findUnique({
+        where: { token }
+    })
+    if (!invite) return { success: false, error: "Invitación inválida o expirada" }
+
+    if (invite.role !== 'OPERATOR') {
+        return { success: false, error: "Este código no es válido para operadores fuera de línea." }
+    }
+
+    try {
+        // 2. Create the offline team member using the profile data
+        const newMember = await prisma.teamMember.create({
+            data: {
+                ownerId: invite.inviterId,
+                role: 'OPERATOR',
+                name: profileData.name,
+                jobTitle: profileData.jobTitle,
+                phone: profileData.phone,
+                photoUrl: profileData.photoUrl || null,
+                accessCode: token, // Transfer the token as their permanent PIN
+                isOffline: true
+            }
+        })
+
+        // 3. Delete the invitation
+        await prisma.teamInvitation.delete({ where: { token } })
+
+        // 4. Handle Post-Acceptance Actions (e.g. Task Assignment)
+        if (invite.meta && typeof invite.meta === 'object' && !Array.isArray(invite.meta)) {
+            const meta = invite.meta as any;
+            if (meta.assignedTaskId) {
+                try {
+                    await prisma.processTask.update({
+                        where: { id: meta.assignedTaskId },
+                        data: { assignedStaffId: newMember.id }
+                    })
+                } catch (error) {
+                    console.error("[acceptOfflineInvitation] Error assigning task from meta:", error)
+                }
+            }
+        }
+
+        // 5. Log them in directly using the cookie method
+        const cookieStore = await cookies()
+        cookieStore.set('operator_session', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30 // 30 days
+        })
+
+        return { success: true }
+    } catch (error: any) {
+        console.error("[acceptOfflineInvitation] Error creating offline member:", error)
+        if (error.code === 'P2002') {
+            return { success: false, error: "Este PIN ya está en uso por otro miembro." }
+        }
+        return { success: false, error: `Error al crear perfil: ${error.message}` }
+    }
+}
+
+export async function checkOfflineInvitation(token: string) {
+    const invite = await prisma.teamInvitation.findUnique({
+        where: { token }
+    })
+
+    if (!invite) return { success: false, error: "Código inválido o expirado." }
+    if (invite.role !== 'OPERATOR') return { success: false, error: "Este código requiere una cuenta de administrador para ser aceptado." }
+
+    return { success: true, email: invite.email, role: invite.role, businessName: invite.name } // invite.name technically holds the person's typed name from the invite modal, we can return it to pre-fill.
+}
+
 // --- OPERATOR MANAGEMENT ---
 
 export async function getOperators(branchId?: string) {
