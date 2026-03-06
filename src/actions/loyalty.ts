@@ -1610,12 +1610,8 @@ export async function getCustomerReservations(programId: string, phone: string, 
 
         const reservations = await prisma.reservation.findMany({
             where: {
-                // Link through tables -> floorPlan -> user
-                table: {
-                    floorPlan: {
-                        userId: program.userId
-                    }
-                },
+                // Link directly to the business user
+                userId: program.userId,
                 // Active status
                 status: 'CONFIRMED',
                 date: {

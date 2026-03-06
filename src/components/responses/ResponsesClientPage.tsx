@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import ResponsesTable from './ResponsesTable'
 import ResponseDetailModal from '@/components/ResponseDetailModal'
-import { MessageSquare, Filter, ChevronLeft, ChevronRight, Calendar as CalendarIcon, X } from 'lucide-react'
+import { MessageSquare, Filter, ChevronLeft, ChevronRight, Calendar as CalendarIcon, X, Search } from 'lucide-react'
 import { DateRangePicker } from '@/components/DateRangePicker'
 import { DateRange } from 'react-day-picker'
 import { isWithinInterval, startOfDay, endOfDay, subDays } from 'date-fns'
@@ -43,6 +43,7 @@ export default function ResponsesClientPage({ initialResponses }: { initialRespo
 
     const [selectedResponse, setSelectedResponse] = useState<ResponseData | null>(null)
     const [filterType, setFilterType] = useState<FilterType>('ALL')
+    const [searchQuery, setSearchQuery] = useState('')
 
     // Check URL on mount/update
     useMemo(() => {
@@ -120,9 +121,18 @@ export default function ResponsesClientPage({ initialResponses }: { initialRespo
                 matchesDate = isWithinInterval(responseDate, { start, end })
             }
 
-            return matchesType && matchesDate
+            // 3. Filter by Search Query
+            let matchesSearch = true
+            if (searchQuery.trim() !== '') {
+                const query = searchQuery.toLowerCase()
+                matchesSearch = response.answers.some((a: any) =>
+                    a.value && a.value.toLowerCase().includes(query)
+                )
+            }
+
+            return matchesType && matchesDate && matchesSearch
         }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    }, [initialResponses, filterType, dateRange])
+    }, [initialResponses, filterType, dateRange, searchQuery])
 
     // --- PAGINATION LOGIC ---
     const totalPages = Math.ceil(filteredResponses.length / ITEMS_PER_PAGE)
@@ -134,7 +144,7 @@ export default function ResponsesClientPage({ initialResponses }: { initialRespo
     // Reset page on filter change
     useMemo(() => {
         setCurrentPage(1)
-    }, [filterType, dateRange]) // Use effect-like memo or effect
+    }, [filterType, dateRange, searchQuery]) // Use effect-like memo or effect
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white -mx-4 md:-mx-8">
@@ -192,13 +202,32 @@ export default function ResponsesClientPage({ initialResponses }: { initialRespo
                             </div>
                         </div>
 
-                        {/* Date Picker */}
-                        <div className="relative">
+                        {/* Date Picker & Search */}
+                        <div className="flex items-center gap-3 w-full md:w-auto mt-3 md:mt-0">
+                            {/* Search Input */}
+                            <div className="relative flex-1 md:w-64">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar palabras (ej. sonido)..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full bg-black/40 border border-white/5 rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-violet-500/50 transition-all"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-white/10 rounded-md transition-colors"
+                                    >
+                                        <X className="w-3 h-3 text-gray-400" />
+                                    </button>
+                                )}
+                            </div>
+
                             <DateRangePicker
                                 date={dateRange}
                                 setDate={setDateRange}
                             />
-                            {/* Clear Date Button (Optional, can just click 'x' in most pickers or handle inside) */}
                         </div>
                     </div>
                 </div>
@@ -214,7 +243,7 @@ export default function ResponsesClientPage({ initialResponses }: { initialRespo
                         <div className="h-64 flex flex-col items-center justify-center text-gray-500">
                             <Filter className="w-10 h-10 mb-4 opacity-50" />
                             <p>No se encontraron respuestas con estos filtros.</p>
-                            <button onClick={() => { setFilterType('ALL'); setDateRange(undefined); }} className="mt-4 text-violet-400 hover:text-violet-300 text-sm">
+                            <button onClick={() => { setFilterType('ALL'); setDateRange(undefined); setSearchQuery(''); }} className="mt-4 text-violet-400 hover:text-violet-300 text-sm">
                                 Limpiar filtros
                             </button>
                         </div>

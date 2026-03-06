@@ -273,6 +273,9 @@ export async function sendPromoterNotification(promoterId: string, type: 'sms' |
 
 export async function getPublicPromoterPortal(slug: string) {
     try {
+        const startOfDay = new Date()
+        startOfDay.setHours(0, 0, 0, 0)
+
         const promoter = await prisma.promoterProfile.findUnique({
             where: { slug },
             include: {
@@ -283,11 +286,17 @@ export async function getPublicPromoterPortal(slug: string) {
                     }
                 },
                 reservations: {
+                    where: { date: { gte: startOfDay }, status: { notIn: ['CANCELED', 'REJECTED'] } },
+                    orderBy: { date: 'asc' },
                     select: {
                         id: true,
                         status: true,
                         partySize: true,
-                        createdAt: true
+                        createdAt: true,
+                        date: true,
+                        customerName: true,
+                        customerPhone: true,
+                        table: { select: { label: true } }
                     }
                 }
             }
@@ -324,6 +333,7 @@ export async function getPublicPromoterPortal(slug: string) {
                 name: promoter.name,
                 businessName: promoter.business?.businessName,
                 logoUrl: promoter.business?.logoUrl,
+                upcomingReservations: promoter.reservations,
                 stats
             }
         }

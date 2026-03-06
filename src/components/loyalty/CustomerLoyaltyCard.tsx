@@ -14,6 +14,26 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { ModernMenuView } from "./ModernMenuView"
 
+const PREMIUM_GRADIENTS = [
+    "linear-gradient(135deg, #FF6B6B 0%, #C4124B 100%)", // Ruby Red
+    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)", // Ocean Blue
+    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)", // Emerald
+    "linear-gradient(135deg, #fa709a 0%, #fee140 100%)", // Sunset Pink/Yellow
+    "linear-gradient(135deg, #30cfd0 0%, #330867 100%)", // Deep Space Purple/Cyan
+    "linear-gradient(135deg, #f6d365 0%, #fda085 100%)", // Warm Peach
+    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", // Royal Plum
+    "linear-gradient(135deg, #13547a 0%, #80d0c7 100%)", // Lagoon
+];
+
+function getGradientForString(str: string) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % PREMIUM_GRADIENTS.length;
+    return PREMIUM_GRADIENTS[index];
+}
+
 interface CustomerLoyaltyCardProps {
     customer: any // Prisma type with relations
     filterType?: "all" | "visits" | "points"
@@ -814,24 +834,30 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                             // Actually, if it's hybrid, render BOTH. If only points? render points. If only visits? visits.
                                             // The backend says 'pointsPercentage > 0' means points. Everyone has visits.
 
+                                            const isDefaultColor = !membership.program.themeColor || membership.program.themeColor.toLowerCase() === '#8b5cf6'
+                                            const cardBackground = isDefaultColor ? getGradientForString(membership.program.businessName) : membership.program.themeColor
+
                                             // Visits Card
                                             cards.push(
                                                 <Link
                                                     key={`${membership.program.id}-visits`}
                                                     href={`/loyalty/${membership.program.id}?mode=VISITS`}
+                                                    style={{ background: cardBackground }}
                                                     className={cn(
-                                                        "flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5",
-                                                        (membership.program.id === program.id && (!filterType || filterType === 'visits')) ? "bg-white/5 border-white/10" : ""
+                                                        "relative flex items-center gap-3 p-3 rounded-2xl hover:scale-[1.02] transition-all shadow-md overflow-hidden group border border-white/10",
+                                                        (membership.program.id === program.id && (!filterType || filterType === 'visits')) ? "ring-2 ring-white" : ""
                                                     )}
                                                 >
-                                                    <div className="w-10 h-10 rounded-full bg-orange-500/10 p-2 flex items-center justify-center border border-orange-500/20 shrink-0">
-                                                        <CreditCard className="w-full h-full text-orange-500" />
+                                                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors z-10" />
+                                                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/3 z-0 pointer-events-none" />
+
+                                                    <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md p-2 flex items-center justify-center border border-white/20 shrink-0 z-20">
+                                                        <CreditCard className="w-full h-full text-white" />
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-sm font-bold text-gray-200 truncate">{membership.program.businessName}</div>
-                                                        <div className="text-[10px] text-gray-500 truncate flex items-center gap-1">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                                                            Tarjeta de Visitas
+                                                    <div className="flex-1 min-w-0 z-20">
+                                                        <div className="text-sm font-bold text-white truncate drop-shadow-sm">{membership.program.businessName}</div>
+                                                        <div className="text-[10px] text-white/80 truncate flex items-center gap-1 drop-shadow-sm">
+                                                            Puntos por Visitas
                                                         </div>
                                                     </div>
                                                 </Link>
@@ -843,19 +869,22 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                                     <Link
                                                         key={`${membership.program.id}-points`}
                                                         href={`/loyalty/${membership.program.id}?mode=POINTS`}
+                                                        style={{ background: cardBackground }}
                                                         className={cn(
-                                                            "flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5",
-                                                            (membership.program.id === program.id && filterType === 'points') ? "bg-white/5 border-white/10" : ""
+                                                            "relative flex items-center gap-3 p-3 rounded-2xl hover:scale-[1.02] transition-all shadow-md overflow-hidden group border border-white/10",
+                                                            (membership.program.id === program.id && filterType === 'points') ? "ring-2 ring-white" : ""
                                                         )}
                                                     >
-                                                        <div className="w-10 h-10 rounded-full bg-blue-500/10 p-2 flex items-center justify-center border border-blue-500/20 shrink-0">
-                                                            <Trophy className="w-full h-full text-blue-500" />
+                                                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors z-10" />
+                                                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/3 z-0 pointer-events-none" />
+
+                                                        <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md p-2 flex items-center justify-center border border-white/20 shrink-0 z-20">
+                                                            <Trophy className="w-full h-full text-white" />
                                                         </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="text-sm font-bold text-gray-200 truncate">{membership.program.businessName}</div>
-                                                            <div className="text-[10px] text-gray-500 truncate flex items-center gap-1">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                                                Tarjeta de Puntos
+                                                        <div className="flex-1 min-w-0 z-20">
+                                                            <div className="text-sm font-bold text-white truncate drop-shadow-sm">{membership.program.businessName}</div>
+                                                            <div className="text-[10px] text-white/80 truncate flex items-center gap-1 drop-shadow-sm">
+                                                                Cashback Digital
                                                             </div>
                                                         </div>
                                                     </Link>
@@ -874,13 +903,33 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                             </div>
 
                             {/* Footer */}
-                            <div className="p-4 border-t border-white/5 bg-[#16161e]">
+                            <div className="p-4 border-t border-white/5 bg-[#16161e] flex items-center justify-between">
+                                <button
+                                    onClick={() => {
+                                        setShowMenu(false)
+                                        if (onEditProfile) onEditProfile()
+                                    }}
+                                    className="flex flex-1 items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors text-sm font-bold text-white text-left"
+                                >
+                                    {user?.imageUrl ? (
+                                        <img src={user.imageUrl} alt="Profile" className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/5">
+                                            <User className="w-4 h-4 text-gray-400" />
+                                        </div>
+                                    )}
+                                    <div className="flex flex-col">
+                                        <span className="truncate max-w-[150px]">{customer.name || "Mi Perfil"}</span>
+                                        <span className="text-[10px] text-gray-400 font-normal">Editar mis datos</span>
+                                    </div>
+                                </button>
+
                                 <button
                                     onClick={() => signOut({ redirectUrl: `/loyalty/${program.id}` })}
-                                    className="w-full flex items-center gap-2 justify-center p-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm font-bold"
+                                    className="p-3 rounded-full text-zinc-500 hover:text-red-500 hover:bg-red-500/10 transition-colors ml-2"
+                                    title="Cerrar Sesión"
                                 >
-                                    <LogOut className="w-4 h-4" />
-                                    Cerrar Sesión
+                                    <LogOut className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>

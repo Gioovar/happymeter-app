@@ -48,6 +48,7 @@ export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
         { title: 'Buzón Staff', href: '/dashboard/create', query: { mode: 'anonymous' }, icon: Shield, feature: 'growth_locked' },
         { title: 'Respuestas', href: '/dashboard/responses', icon: MessageSquare, feature: 'growth_locked' },
         { title: 'Gestión de Acceso', href: '/dashboard/team', icon: Users, feature: 'growth_locked' },
+        { title: 'Incidencias (AI)', href: '/dashboard/tickets', icon: AlertCircle },
         { title: 'Estadísticas', href: '/dashboard/analytics', icon: PieChart, feature: 'ai_analytics' },
         { title: 'Reportes', href: '/dashboard/reports', icon: FileText, feature: 'ai_analytics' },
         { title: 'Campañas', href: '/dashboard/campaigns', icon: Megaphone, feature: 'growth_locked' },

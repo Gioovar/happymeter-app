@@ -11,9 +11,16 @@ export type ChainWithBranches = {
     // @ts-ignore
     logoUrl?: string | null
     ownerId: string
+    slug: string | null
+    masterQrUrl: string | null
+    franchiseReservationMode: boolean
     branches: {
         id: string
         name: string | null
+        reservationType: string | null
+        externalReservationUrl: string | null
+        address: string | null
+        branchId: string
         branch: {
             userId: string
             businessName: string | null

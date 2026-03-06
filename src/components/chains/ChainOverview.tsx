@@ -89,36 +89,46 @@ export default function ChainOverview({ metrics }: { metrics: GlobalChainMetrics
 
                 {/* RANKING SECTION */}
                 <div className="space-y-6">
-                    <Card className="bg-[#111] border-white/5 border-l-4 border-l-amber-500/50">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="flex items-center gap-2 text-base">
-                                <Trophy className="w-4 h-4 text-amber-500" />
-                                Top Sucursales (Encuestas)
+                    <Card className="bg-[#111] border-white/5 border-l-4 border-l-amber-500/50 overflow-hidden relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+                        <CardHeader className="pb-3 border-b border-white/5 bg-white/5 relative z-10">
+                            <CardTitle className="flex items-center gap-2 text-base text-amber-500">
+                                <Trophy className="w-4 h-4" />
+                                Ranking Global (Encuestas)
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3">
-                            {sortedBySurveys.slice(0, 5).map((branch, idx) => (
-                                <div key={branch.branchId} className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className={cn(
-                                            "w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs",
-                                            idx === 0 ? "bg-amber-500 text-black" :
-                                                idx === 1 ? "bg-gray-400 text-black" :
-                                                    idx === 2 ? "bg-orange-700 text-white" : "bg-gray-800 text-gray-400"
-                                        )}>
-                                            {idx + 1}
+                        <CardContent className="p-0 max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent relative z-10">
+                            <div className="p-4 space-y-3">
+                                {sortedBySurveys.map((branch, idx) => (
+                                    <div key={branch.branchId} className="flex items-center justify-between p-3 rounded-xl bg-[#1a1a24] border border-white/5 hover:border-white/10 hover:bg-[#20202b] transition-all group">
+                                        <div className="flex items-center gap-4">
+                                            <div className={cn(
+                                                "w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-lg shrink-0",
+                                                idx === 0 ? "bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-amber-500/20" :
+                                                    idx === 1 ? "bg-gradient-to-br from-gray-300 to-gray-500 text-black shadow-white/10" :
+                                                        idx === 2 ? "bg-gradient-to-br from-orange-600 to-orange-800 text-white shadow-orange-500/20" :
+                                                            "bg-white/5 text-gray-500 border border-white/5"
+                                            )}>
+                                                {idx + 1}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-bold text-white text-sm group-hover:text-amber-400 transition-colors truncate">
+                                                    {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.businessName || branch.name)}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-white text-xs truncate max-w-[120px]">
-                                                {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.businessName || branch.name)}
-                                            </p>
+                                        <div className="text-right flex items-center gap-2 pl-2">
+                                            <span className="font-bold text-white text-lg">{branch.surveys}</span>
+                                            <span className="text-[10px] text-gray-500 uppercase tracking-widest hidden sm:inline-block">Enc.</span>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="font-bold text-white text-sm">{branch.surveys}</span>
+                                ))}
+                                {sortedBySurveys.length === 0 && (
+                                    <div className="text-center py-6 text-gray-500 text-sm">
+                                        No hay datos de sucursales.
                                     </div>
-                                </div>
-                            ))}
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
 

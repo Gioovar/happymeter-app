@@ -77,12 +77,21 @@ export async function POST(req: Request) {
         const industry = userSettings?.industry || "Comercio General"
         const businessName = userSettings?.businessName || "El Negocio"
 
+        // Fetch Issue Tickets for AI Context
+        const userTickets = await prisma.issueTicket.findMany({
+            where: { businessId: userId },
+            select: { title: true, status: true, severity: true, id: true }
+        })
+
+        const openTickets = userTickets.filter(t => t.status === "OPEN" || t.status === "IN_PROGRESS").map(t => `- [${t.id}] ${t.title} (${t.severity})`).join('\n') || "No hay tickets activos."
+        const resolvedTickets = userTickets.filter(t => t.status === "RESOLVED" || t.status === "CLOSED").map(t => `- [${t.id}] ${t.title}`).join('\n') || "No hay tickets históricos resueltos."
+
         const SYSTEM_PROMPT = `
         Actúa como un experto Consultor de Negocios para la industria: ${industry.toUpperCase()}.
         Estás analizando el feedback de clientes de "${businessName}".
 
         TU OBJETIVO:
-        1. Analiza las siguientes quejas/feedback e identifica los Top 3 Problemas.
+        1. Analiza las siguientes quejas/feedback e identifica los Top 3 Problemas Actuales.
         2. Identifica las 2 Mayores Fortalezas (Lo que los clientes aman).
         3. Para cada problema, genera un "Caso de Éxito" REAL de una empresa famosa de la MISMA INDUSTRIA (${industry}).
            - Si es Restaurante: Usa McDonald's, Starbucks, Chipotle, El Bulli.
@@ -98,7 +107,8 @@ export async function POST(req: Request) {
               "severity": "HIGH" | "MEDIUM" | "LOW",
               "percentage": numero (estimado 0-100),
               "summary": "Explicación de 1 oración del problema",
-              "recommendation": "Consejo accionable corto (max 10 palabras) basado en el Caso de Éxito."
+              "recommendation": "Consejo accionable corto (max 10 palabras) basado en el Caso de Éxito.",
+              "ticketId": "Si este problema ya coincide con un TICKET ACTIVO, devuelve su ID exacto aquí. Si es un problema NUEVO, devuelve null."
             }
           ],
           "strengths": [
@@ -116,10 +126,20 @@ export async function POST(req: Request) {
 
         IMPORTANTE: Todo el texto debe estar en ESPAÑOL.
         
+        REGLAS DE TICKET INTELIGENTE (MEMORIA):
+        Tienes acceso al registro de tickets de la empresa.
+        - TICKETS ACTIVOS: 
+        ${openTickets}
+        - TICKETS RESUELTOS (HISTÓRICOS):
+        ${resolvedTickets}
+        
+        REGLA CRÍTICA: NO reportes problemas que ya están en "TICKETS RESUELTOS" a menos que haya una queja excesiva y masiva RECIENTE que indique que el problema regresó. Si es una queja aislada antigua, ignórala por completo, asumiendo que el ticket lo resolvió.
+        Prioriza alertar sobre TICKETS ACTIVOS si siguen apareciendo, o problemas COMPLETAMENTE NUEVOS.
+
         TOP FUENTES DE TRÁFICO (Donde nos conocen):
         ${topSources}
         
-        LISTA DE FEEDBACK (Quejas/Opiniones):
+        LISTA DE FEEDBACK (Quejas/Opiniones Recientes):
         ${feedbackText}
         `
 

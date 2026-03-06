@@ -1,7 +1,8 @@
 import { PrismaClient } from '@prisma/client';
-import * as admin from 'firebase-admin';
+import * as adminNamespace from 'firebase-admin';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
+import { readFileSync } from 'fs';
 
 // Load environmental variables from .env
 dotenv.config({ path: resolve(process.cwd(), '.env') });
@@ -22,18 +23,23 @@ async function main() {
 
     console.log(`Found ${tokens.length} tokens. Init Firebase...`);
 
-    if (!admin.apps.length) {
+    let admin = adminNamespace;
+    if (!admin.apps) {
+        // Fallback for ESM resolution
+        admin = (adminNamespace as any).default || adminNamespace;
+    }
+
+    if (!admin.apps || !admin.apps.length) {
+        const rawdata = readFileSync(resolve(process.cwd(), 'firebase-service-account.json'), 'utf8');
+        const serviceAccount = JSON.parse(rawdata);
+
         admin.initializeApp({
-            credential: admin.credential.cert({
-                projectId: process.env.FIREBASE_PROJECT_ID,
-                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-            }),
+            credential: admin.credential.cert(serviceAccount)
         });
     }
 
-    const messagePayload: admin.messaging.MulticastMessage = {
-        tokens: tokens.map(t => t.token),
+    const messagePayload = {
+        tokens: tokens.map((t: any) => t.token),
         notification: {
             title: "¡Prueba de HappyMeters!",
             body: "🚀 Las notificaciones nativas en tu iOS/Android ya funcionan.",
@@ -47,7 +53,7 @@ async function main() {
             }
         },
         android: {
-            priority: 'high'
+            priority: 'high' as const
         }
     };
 

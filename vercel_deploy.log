@@ -1,0 +1,871 @@
+Retrieving project…
+Deploying happy-meter/happymeter
+Uploading [--------------------] (0.0B/4.3MB)
+Uploading [=====---------------] (1.1MB/4.3MB)
+Uploading [==========----------] (2.2MB/4.3MB)
+Uploading [===============-----] (3.3MB/4.3MB)
+Uploading [====================] (4.3MB/4.3MB)
+Inspect: https://vercel.com/happy-meter/happymeter/Bq6X1n4iR7m3fJ12ZUqH4YMEF43b [8s]
+Production: https://happymeter-41yks5506-happy-meter.vercel.app [8s]
+https://happymeter-41yks5506-happy-meter.vercel.appBuilding...
+Building...
+Building: Running build in Washington, D.C., USA (East) – iad1
+Building: Build machine configuration: 4 cores, 8 GB
+Building: Retrieving list of deployment files...
+Building: Downloading 1703 deployment files...
+Building: Restored build cache from previous deployment (SMbD9Je87QewTUZFp737ejxrTbqK)
+Building: Running "vercel build"
+Building: Installing dependencies...
+Building: > swift-radiation@0.1.0 postinstall
+Building: > prisma generate
+Building: Prisma schema loaded from prisma/schema.prisma
+Building: ✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 692ms
+Building: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Building: Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+Building: added 2 packages, and changed 1 package in 4s
+Building: 292 packages are looking for funding
+Building: run `npm fund` for details
+Building: Detected Next.js version: 14.2.15
+Building: Running "npm run build"
+Building: > swift-radiation@0.1.0 build
+Building: > prisma generate && prisma db push --accept-data-loss && next build
+Building: Prisma schema loaded from prisma/schema.prisma
+Building: ✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 576ms
+Building: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Building: Tip: Want to react to database changes in your app as they happen? Discover how with Pulse: https://pris.ly/tip-1-pulse
+Building: ┌─────────────────────────────────────────────────────────┐
+Building: │  Update available 5.22.0 -> 7.4.2                       │
+Building: │                                                         │
+Building: │  This is a major update - please follow the guide at    │
+Building: │  https://pris.ly/d/major-version-upgrade                │
+Building: │                                                         │
+Building: │  Run the following to update                            │
+Building: │    npm i --save-dev prisma@latest                       │
+Building: │    npm i @prisma/client@latest                          │
+Building: └─────────────────────────────────────────────────────────┘
+Building: Prisma schema loaded from prisma/schema.prisma
+Building: Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-0-us-west-2.pooler.supabase.com:5432"
+Building: The database is already in sync with the Prisma schema.
+Building: Running generate... (Use --skip-generate to skip the generators)
+Building: Running generate... - Prisma Client
+Building: ✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 585ms
+Building: ▲ Next.js 14.2.15
+Building: Creating an optimized production build ...
+Building: > [PWA] Compile server
+Building: > [PWA] Compile server
+Building: > [PWA] Compile client (static)
+Building: > [PWA] Auto register service worker with: /vercel/path0/node_modules/next-pwa/register.js
+Building: > [PWA] Service worker: /vercel/path0/public/sw.js
+Building: > [PWA]   url: /sw.js
+Building: > [PWA]   scope: /
+Building: <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (181kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+Building: ⚠ Compiled with warnings
+Building: ./src/hooks/usePushNotifications.ts
+Building: Attempted import error: 'urlBase64ToUint8Array' is not exported from '@/lib/utils' (imported as 'urlBase64ToUint8Array').
+Building: Import trace for requested module:
+Building: ./src/hooks/usePushNotifications.ts
+Building: ./src/context/NotificationContext.tsx
+Building: ./src/hooks/usePushNotifications.ts
+Building: Attempted import error: 'urlBase64ToUint8Array' is not exported from '@/lib/utils' (imported as 'urlBase64ToUint8Array').
+Building: Import trace for requested module:
+Building: ./src/hooks/usePushNotifications.ts
+Building: ./src/app/loyalty/wallet/page.tsx
+Building: ./src/app/admin/creators/[userId]/page.tsx
+Building: Attempted import error: 'getCreator' is not exported from '@/actions/admin' (imported as 'getCreator').
+Building: Import trace for requested module:
+Building: ./src/app/admin/creators/[userId]/page.tsx
+Building: Skipping validation of types
+Building: Skipping linting
+Building: Collecting page data ...
+Building: Firebase Admin Initialization Error: FirebaseAppError: Service account object must contain a string "project_id" property.
+Building: at new ServiceAccount (/vercel/path0/node_modules/firebase-admin/lib/app/credential-internal.js:174:19)
+Building: at new ServiceAccountCredential (/vercel/path0/node_modules/firebase-admin/lib/app/credential-internal.js:118:15)
+Building: at Object.cert (/vercel/path0/node_modules/firebase-admin/lib/app/credential-factory.js:105:54)
+Building: at 843767 (/vercel/path0/.next/server/chunks/8175.js:1:28674)
+Building: at t (/vercel/path0/.next/server/webpack-runtime.js:1:143)
+Building: at 558175 (/vercel/path0/.next/server/chunks/8175.js:1:1525)
+Building: at t (/vercel/path0/.next/server/webpack-runtime.js:1:143)
+Building: at 266611 (/vercel/path0/.next/server/app/api/loyalty/[programId]/manifest/route.js:1:1338)
+Building: at t (/vercel/path0/.next/server/webpack-runtime.js:1:143)
+Building: at r (/vercel/path0/.next/server/app/api/loyalty/[programId]/manifest/route.js:1:15551) {
+Building: errorInfo: {
+Building: code: 'app/invalid-credential',
+Building: message: 'Service account object must contain a string "project_id" property.'
+Building: },
+Building: codePrefix: 'app'
+Building: }
+Building: [FIREBASE] Missing Firebase Auth Credentials in .env
+Building: [FIREBASE] Missing Firebase Auth Credentials in .env
+Building: Firebase Admin Initialization Error: FirebaseAppError: Service account object must contain a string "project_id" property.
+Building: at new ServiceAccount (/vercel/path0/node_modules/firebase-admin/lib/app/credential-internal.js:174:19)
+Building: at new ServiceAccountCredential (/vercel/path0/node_modules/firebase-admin/lib/app/credential-internal.js:118:15)
+Building: at Object.cert (/vercel/path0/node_modules/firebase-admin/lib/app/credential-factory.js:105:54)
+Building: at 843767 (/vercel/path0/.next/server/chunks/8175.js:1:28674)
+Building: at t (/vercel/path0/.next/server/webpack-runtime.js:1:143)
+Building: at 558175 (/vercel/path0/.next/server/chunks/8175.js:1:1525)
+Building: at t (/vercel/path0/.next/server/webpack-runtime.js:1:143)
+Building: at 683935 (/vercel/path0/.next/server/app/app/page.js:1:20427)
+Building: at t (/vercel/path0/.next/server/webpack-runtime.js:1:143)
+Building: at 982124 (/vercel/path0/.next/server/app/app/page.js:1:1454) {
+Building: errorInfo: {
+Building: code: 'app/invalid-credential',
+Building: message: 'Service account object must contain a string "project_id" property.'
+Building: },
+Building: codePrefix: 'app'
+Building: }
+Building: Firebase Admin Initialization Error: FirebaseAppError: Service account object must contain a string "project_id" property.
+Building: at new ServiceAccount (/vercel/path0/node_modules/firebase-admin/lib/app/credential-internal.js:174:19)
+Building: at new ServiceAccountCredential (/vercel/path0/node_modules/firebase-admin/lib/app/credential-internal.js:118:15)
+Building: at Object.cert (/vercel/path0/node_modules/firebase-admin/lib/app/credential-factory.js:105:54)
+Building: at 843767 (/vercel/path0/.next/server/chunks/8175.js:1:28674)
+Building: at t (/vercel/path0/.next/server/webpack-runtime.js:1:143)
+Building: at 558175 (/vercel/path0/.next/server/chunks/8175.js:1:1525)
+Building: at t (/vercel/path0/.next/server/webpack-runtime.js:1:143)
+Building: at 521236 (/vercel/path0/.next/server/app/dashboard/[branchSlug]/loyalty/page.js:1:4048)
+Building: at t (/vercel/path0/.next/server/webpack-runtime.js:1:143)
+Building: at 887525 (/vercel/path0/.next/server/app/dashboard/[branchSlug]/loyalty/page.js:1:1697) {
+Building: errorInfo: {
+Building: code: 'app/invalid-credential',
+Building: message: 'Service account object must contain a string "project_id" property.'
+Building: },
+Building: codePrefix: 'app'
+Building: }
+Building: Generating static pages (0/165) ...
+Building: --- ADMIN DEBUG START (DYNAMIC) ---
+Building: DB URL Env: FOUND
+Building: CRITICAL ERROR: B [Error]: Dynamic server usage: Route /api/admin/expire-trial couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+Building: at V (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21777)
+Building: at Object.get (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29137)
+Building: at d (/vercel/path0/.next/server/app/api/admin/expire-trial/route.js:1:1123)
+Building: at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:36963
+Building: at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+Building: at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+Building: at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+Building: at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+Building: at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+Building: at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+Building: description: "Route /api/admin/expire-trial couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+Building: digest: 'DYNAMIC_SERVER_USAGE'
+Building: }
+Building: [CRON] Starting Daily Alerts Check...
+Building: [CRON] Error: TypeError: Cannot read properties of undefined (reading 'findMany')
+Building: at u (/vercel/path0/.next/server/app/api/cron/alerts/daily/route.js:1:678)
+Building: at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:36963
+Building: at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+Building: at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+Building: at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+Building: at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+Building: at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+Building: at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+Building: at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+Building: at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+Building: Error fetching notifications: n [Error]: Dynamic server usage: Route /api/notifications couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+Building: at l (/vercel/path0/.next/server/chunks/9379.js:1:56280)
+Building: at u (/vercel/path0/.next/server/app/api/loyalty/[programId]/manifest/route.js:1:5017)
+Building: at n (/vercel/path0/.next/server/chunks/1128.js:1:516)
+Building: at async j (/vercel/path0/.next/server/chunks/4576.js:1:3428)
+Building: at async n (/vercel/path0/.next/server/app/api/admin/manual-upgrade/route.js:1:2807)
+Building: at async c (/vercel/path0/.next/server/app/api/notifications/route.js:1:1078)
+Building: at async /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:36957
+Building: at async eC.execute (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27552)
+Building: at async eC.handle (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38291)
+Building: at async exportAppRoute (/vercel/path0/node_modules/next/dist/export/routes/app-route.js:77:26) {
+Building: description: "Route /api/notifications couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+Building: digest: 'DYNAMIC_SERVER_USAGE'
+Building: }
+Building: Error fetching ops session: n [Error]: Dynamic server usage: Route /api/ops/session couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+Building: at l (/vercel/path0/.next/server/chunks/9379.js:1:56280)
+Building: at u (/vercel/path0/.next/server/app/api/loyalty/[programId]/manifest/route.js:1:5017)
+Building: at n (/vercel/path0/.next/server/chunks/1128.js:1:516)
+Building: at async j (/vercel/path0/.next/server/chunks/4576.js:1:3428)
+Building: at async a (/vercel/path0/.next/server/app/api/ops/session/route.js:1:9166)
+Building: at async d (/vercel/path0/.next/server/app/api/ops/session/route.js:1:1129)
+Building: at async /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:36957
+Building: at async eC.execute (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27552)
+Building: at async eC.handle (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38291)
+Building: at async exportAppRoute (/vercel/path0/node_modules/next/dist/export/routes/app-route.js:77:26) {
+Building: description: "Route /api/ops/session couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+Building: digest: 'DYNAMIC_SERVER_USAGE'
+Building: }
+Building: Generating static pages (41/165)
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/assets. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/assets. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /_not-found. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /_not-found. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/academy. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/academy. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/clients. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/clients. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/coupons. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/coupons. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/notifications. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/notifications. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/places. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/places. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/places/create. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/places/create. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/representatives. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/representatives. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/team. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/team. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /app. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /app. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/encuestas-papel-vs-qr. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/encuestas-papel-vs-qr. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/gamificacion-laboral. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/gamificacion-laboral. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/estrategias-rotacion-personal. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/estrategias-rotacion-personal. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/guia-digitalizar-feedback. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/guia-digitalizar-feedback. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/inteligencia-artificial-servicio-cliente. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/inteligencia-artificial-servicio-cliente. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/que-es-nps. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /blog/que-es-nps. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/assets. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/assets. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /chains. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /chains. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/chat. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/chat. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/commissions. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/commissions. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/dashboard. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/dashboard. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/leads. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/leads. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/places. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/places. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/profile. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/profile. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/onboarding. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/onboarding. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/payments. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/payments. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/achievements. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /creators/achievements. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: Generating static pages (82/165)
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/achievements. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/achievements. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/academy. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/academy. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/analytics. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/analytics. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/chat. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/chat. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/campaigns. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/campaigns. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/create. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/create. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/chains. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/chains. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/games/bars. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/games/bars. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/games/cafes. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/games/cafes. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/games. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/games. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/games/hotels. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/games/hotels. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/help. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/help. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/games/restaurants. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/games/restaurants. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/help/qr. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/help/qr. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/help/whatsapp. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/help/whatsapp. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/loyalty/history. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/loyalty/history. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes/flows. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes/flows. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/loyalty. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/loyalty. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes/new. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes/new. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes/issues. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes/issues. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes/times. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes/times. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/reports. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/reports. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes/team. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/processes/team. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/responses. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/responses. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: Error fetching all reservations: n [Error]: Dynamic server usage: Route /dashboard/reservations/list couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+Building: at l (/vercel/path0/.next/server/chunks/9379.js:1:56280)
+Building: at u (/vercel/path0/.next/server/app/api/auth-callback/route.js:1:4099)
+Building: at n (/vercel/path0/.next/server/chunks/1128.js:1:516)
+Building: at runNextTicks (node:internal/process/task_queues:64:5)
+Building: at listOnTimeout (node:internal/timers:567:9)
+Building: at process.processTimers (node:internal/timers:541:7)
+Building: at async j (/vercel/path0/.next/server/chunks/4576.js:1:3428)
+Building: at async O (/vercel/path0/.next/server/chunks/7337.js:36:11769)
+Building: at async l (/vercel/path0/.next/server/app/dashboard/reservations/list/page.js:1:3363) {
+Building: description: "Route /dashboard/reservations/list couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+Building: digest: 'DYNAMIC_SERVER_USAGE'
+Building: }
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/reservations/list. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: Error fetching all reservations: n [Error]: Dynamic server usage: Route /dashboard/reservations/list couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+Building: at l (/vercel/path0/.next/server/chunks/9379.js:1:56280)
+Building: at u (/vercel/path0/.next/server/app/api/auth-callback/route.js:1:4099)
+Building: at n (/vercel/path0/.next/server/chunks/1128.js:1:516)
+Building: at async j (/vercel/path0/.next/server/chunks/4576.js:1:3428)
+Building: at async O (/vercel/path0/.next/server/chunks/7337.js:36:11769)
+Building: at async l (/vercel/path0/.next/server/app/dashboard/reservations/list/page.js:1:3363) {
+Building: description: "Route /dashboard/reservations/list couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+Building: digest: 'DYNAMIC_SERVER_USAGE'
+Building: }
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/reservations/list. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/settings. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/settings. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/team/chat. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/team/chat. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/tickets. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/tickets. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/team. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/team. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /install. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /install. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /join-team. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /join-team. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /loyalty/wallet. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /loyalty/wallet. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /loyalty/login. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /loyalty/login. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /onboarding/create. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /onboarding/create. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /onboarding/welcome. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /onboarding/welcome. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /onboarding. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /onboarding. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/history. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/history. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/chat. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/chat. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: Generating static pages (123/165)
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/tasks. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/tasks. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/profile-setup. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/profile-setup. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/scanner. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/scanner. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/login. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/login. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/select-context. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/select-context. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/join. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /ops/join. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /pricing. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /pricing. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /privacy. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /privacy. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers/coach. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers/coach. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers/earnings. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers/earnings. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers/crm. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers/crm. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers/territory. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers/territory. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers/join. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers/join. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sellers. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/reservations/rps. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/reservations/rps. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sso-callback. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /sso-callback. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/login. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/login. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/achievements. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/achievements. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/creators. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/creators. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/chat. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/chat. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/loyalty. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/loyalty. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/places. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/places. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/visits. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /staff/visits. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /terms. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /terms. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /test-notifications. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ⚠ Unsupported metadata themeColor is configured in metadata export in /test-notifications. Please move it to viewport export instead.
+Building: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Building: ✓ Generating static pages (165/165)
+Building: Finalizing page optimization ...
+Building: Collecting build traces ...
+Building: Route (app)                                               Size     First Load JS
+Building: ┌ ƒ /                                                     18.9 kB         205 kB
+Building: ├ ○ /_not-found                                           190 B          88.4 kB
+Building: ├ ƒ /admin                                                8.28 kB         244 kB
+Building: ├ ƒ /admin/academy                                        4.13 kB         102 kB
+Building: ├ ƒ /admin/admins                                         3.17 kB         101 kB
+Building: ├ ƒ /admin/analytics                                      3.99 kB         206 kB
+Building: ├ ƒ /admin/assets                                         2.52 kB         100 kB
+Building: ├ ƒ /admin/audit                                          3.37 kB          96 kB
+Building: ├ ƒ /admin/clients                                        5.5 kB          111 kB
+Building: ├ ƒ /admin/coupons                                        2.77 kB        98.3 kB
+Building: ├ ƒ /admin/creators                                       3.78 kB         100 kB
+Building: ├ ƒ /admin/creators/[userId]                              4.08 kB         140 kB
+Building: ├ ƒ /admin/finance                                        210 B          95.2 kB
+Building: ├ ƒ /admin/notifications                                  3.23 kB         154 kB
+Building: ├ ƒ /admin/places                                         2.48 kB         107 kB
+Building: ├ ƒ /admin/places/[placeId]                               3.43 kB         108 kB
+Building: ├ ƒ /admin/places/create                                  2.62 kB         107 kB
+Building: ├ ƒ /admin/plans                                          2 kB           98.5 kB
+Building: ├ ƒ /admin/representatives                                5.23 kB         124 kB
+Building: ├ ƒ /admin/settings                                       2.75 kB          91 kB
+Building: ├ ƒ /admin/team                                           3.87 kB         101 kB
+Building: ├ ƒ /admin/tenants                                        1.94 kB         143 kB
+Building: ├ ƒ /admin/tenants/[userId]                               539 B           141 kB
+Building: ├ ƒ /admin/users                                          6.97 kB         138 kB
+Building: ├ ƒ /api/admin/assets                                     0 B                0 B
+Building: ├ ƒ /api/admin/broadcast                                  0 B                0 B
+Building: ├ ƒ /api/admin/coupons                                    0 B                0 B
+Building: ├ ƒ /api/admin/expire-trial                               0 B                0 B
+Building: ├ ƒ /api/admin/manual-upgrade                             0 B                0 B
+Building: ├ ƒ /api/admin/payouts                                    0 B                0 B
+Building: ├ ƒ /api/admin/places                                     0 B                0 B
+Building: ├ ƒ /api/admin/places/[placeId]                           0 B                0 B
+Building: ├ ○ /api/admin/populate-bar                               0 B                0 B
+Building: ├ ƒ /api/admin/push/send                                  0 B                0 B
+Building: ├ ƒ /api/admin/stats                                      0 B                0 B
+Building: ├ ƒ /api/admin/users                                      0 B                0 B
+Building: ├ ƒ /api/admin/users/[userId]/export                      0 B                0 B
+Building: ├ ƒ /api/admin/users/[userId]/impersonate                 0 B                0 B
+Building: ├ ƒ /api/ai/landing-chat                                  0 B                0 B
+Building: ├ ƒ /api/analytics                                        0 B                0 B
+Building: ├ ƒ /api/analytics/ai-issues                              0 B                0 B
+Building: ├ ƒ /api/analytics/export                                 0 B                0 B
+Building: ├ ƒ /api/analytics/financial                              0 B                0 B
+Building: ├ ƒ /api/analytics/growth                                 0 B                0 B
+Building: ├ ƒ /api/analytics/menu-insights                          0 B                0 B
+Building: ├ ƒ /api/auth-callback                                    0 B                0 B
+Building: ├ ƒ /api/campaigns/export/vcf                             0 B                0 B
+Building: ├ ƒ /api/chains                                           0 B                0 B
+Building: ├ ƒ /api/checkout                                         0 B                0 B
+Building: ├ ƒ /api/creators/chat                                    0 B                0 B
+Building: ├ ƒ /api/creators/stats                                   0 B                0 B
+Building: ├ ƒ /api/cron/alerts/daily                                0 B                0 B
+Building: ├ ƒ /api/cron/alerts/tasks                                0 B                0 B
+Building: ├ ƒ /api/cron/biweekly-report                             0 B                0 B
+Building: ├ ƒ /api/cron/cleanup-reservations                        0 B                0 B
+Building: ├ ƒ /api/cron/monthly-diplomas                            0 B                0 B
+Building: ├ ƒ /api/cron/ops/notifications                           0 B                0 B
+Building: ├ ƒ /api/cron/subscription-alerts                         0 B                0 B
+Building: ├ ƒ /api/dashboard/chat                                   0 B                0 B
+Building: ├ ƒ /api/dashboard/chat/threads                           0 B                0 B
+Building: ├ ƒ /api/dashboard/chat/threads/[threadId]                0 B                0 B
+Building: ├ ƒ /api/dashboard/support                                0 B                0 B
+Building: ├ ƒ /api/debug                                            0 B                0 B
+Building: ├ ƒ /api/games/config                                     0 B                0 B
+Building: ├ ƒ /api/games/hand-reader                                0 B                0 B
+Building: ├ ƒ /api/games/oracle                                     0 B                0 B
+Building: ├ ƒ /api/games/spin                                       0 B                0 B
+Building: ├ ƒ /api/geofence/ping                                    0 B                0 B
+Building: ├ ƒ /api/loyalty/[programId]/manifest                     0 B                0 B
+Building: ├ ƒ /api/loyalty/pass/[customerId]                        0 B                0 B
+Building: ├ ƒ /api/notifications                                    0 B                0 B
+Building: ├ ƒ /api/notifications/[id]/read                          0 B                0 B
+Building: ├ ƒ /api/notifications/subscription                       0 B                0 B
+Building: ├ ƒ /api/ops/session                                      0 B                0 B
+Building: ├ ƒ /api/ops/switch-context                               0 B                0 B
+Building: ├ ƒ /api/push/register                                    0 B                0 B
+Building: ├ ƒ /api/push/subscribe                                   0 B                0 B
+Building: ├ ƒ /api/sellers/ai-coach                                 0 B                0 B
+Building: ├ ƒ /api/setup-admin                                      0 B                0 B
+Building: ├ ƒ /api/stripe/add-extra-survey                          0 B                0 B
+Building: ├ ƒ /api/stripe/portal                                    0 B                0 B
+Building: ├ ƒ /api/stripe/sync                                      0 B                0 B
+Building: ├ ƒ /api/surveys                                          0 B                0 B
+Building: ├ ƒ /api/surveys/[surveyId]                               0 B                0 B
+Building: ├ ƒ /api/surveys/[surveyId]/alerts                        0 B                0 B
+Building: ├ ƒ /api/surveys/[surveyId]/alerts/test                   0 B                0 B
+Building: ├ ƒ /api/surveys/[surveyId]/manifest                      0 B                0 B
+Building: ├ ƒ /api/surveys/[surveyId]/responses                     0 B                0 B
+Building: ├ ƒ /api/surveys/[surveyId]/submit                        0 B                0 B
+Building: ├ ƒ /api/track-click                                      0 B                0 B
+Building: ├ ƒ /api/upload                                           0 B                0 B
+Building: ├ ƒ /api/users/device-token                               0 B                0 B
+Building: ├ ƒ /api/verify/check                                     0 B                0 B
+Building: ├ ƒ /api/verify/start                                     0 B                0 B
+Building: ├ ƒ /api/webhooks/clerk                                   0 B                0 B
+Building: ├ ƒ /api/webhooks/stripe                                  0 B                0 B
+Building: ├ ƒ /app                                                  190 B          88.4 kB
+Building: ├ ○ /blog                                                 193 B           100 kB
+Building: ├ ● /blog/[slug]                                          1.48 kB         102 kB
+Building: ├   ├ /blog/encuestas-papel-vs-qr
+Building: ├   ├ /blog/estrategias-rotacion-personal
+Building: ├   ├ /blog/gamificacion-laboral
+Building: ├   └ [+3 more paths]
+Building: ├ ƒ /book/[programId]                                     19.8 kB         217 kB
+Building: ├ ƒ /chains                                               329 B           191 kB
+Building: ├ ○ /creators                                             193 B           100 kB
+Building: ├ ƒ /creators/achievements                                6.28 kB         125 kB
+Building: ├ ƒ /creators/assets                                      2.11 kB        90.3 kB
+Building: ├ ƒ /creators/chat                                        3.88 kB         108 kB
+Building: ├ ƒ /creators/commissions                                 2.29 kB        90.5 kB
+Building: ├ ƒ /creators/dashboard                                   8.48 kB         214 kB
+Building: ├ ƒ /creators/leads                                       190 B          88.4 kB
+Building: ├ ƒ /creators/onboarding                                  4.21 kB         102 kB
+Building: ├ ƒ /creators/payments                                    4.62 kB         239 kB
+Building: ├ ƒ /creators/places                                      6.87 kB         148 kB
+Building: ├ ƒ /creators/profile                                     2.12 kB        99.7 kB
+Building: ├ ƒ /dashboard                                            1.08 kB         357 kB
+Building: ├ ƒ /dashboard/[branchSlug]                               232 B           357 kB
+Building: ├ ƒ /dashboard/[branchSlug]/achievements                  189 B          88.4 kB
+Building: ├ ƒ /dashboard/[branchSlug]/analytics                     207 B           304 kB
+Building: ├ ƒ /dashboard/[branchSlug]/campaigns                     149 B           104 kB
+Building: ├ ƒ /dashboard/[branchSlug]/chat                          287 B           331 kB
+Building: ├ ƒ /dashboard/[branchSlug]/create                        888 B           197 kB
+Building: ├ ƒ /dashboard/[branchSlug]/edit/[surveyId]               162 B           192 kB
+Building: ├ ƒ /dashboard/[branchSlug]/games                         3.03 kB        91.2 kB
+Building: ├ ƒ /dashboard/[branchSlug]/games/bars                    204 B           167 kB
+Building: ├ ƒ /dashboard/[branchSlug]/games/cafes                   2.91 kB         158 kB
+Building: ├ ƒ /dashboard/[branchSlug]/games/hotels                  204 B           160 kB
+Building: ├ ƒ /dashboard/[branchSlug]/games/restaurants             2.83 kB         161 kB
+Building: ├ ƒ /dashboard/[branchSlug]/loyalty                       200 B           313 kB
+Building: ├ ƒ /dashboard/[branchSlug]/loyalty/history               1.38 kB        92.5 kB
+Building: ├ ƒ /dashboard/[branchSlug]/processes                     10.5 kB         203 kB
+Building: ├ ƒ /dashboard/[branchSlug]/processes/[zoneId]            21.4 kB         285 kB
+Building: ├ ƒ /dashboard/[branchSlug]/processes/flows               144 B          99.3 kB
+Building: ├ ƒ /dashboard/[branchSlug]/processes/issues              151 B           108 kB
+Building: ├ ƒ /dashboard/[branchSlug]/processes/new                 902 B           189 kB
+Building: ├ ƒ /dashboard/[branchSlug]/processes/team                169 B           155 kB
+Building: ├ ƒ /dashboard/[branchSlug]/processes/times               151 B           108 kB
+Building: ├ ƒ /dashboard/[branchSlug]/reports                       360 B           473 kB
+Building: ├ ƒ /dashboard/[branchSlug]/reports/[surveyId]            249 B           479 kB
+Building: ├ ƒ /dashboard/[branchSlug]/reservations                  1.33 kB         329 kB
+Building: ├ ƒ /dashboard/[branchSlug]/reservations/analytics        164 B           219 kB
+Building: ├ ƒ /dashboard/[branchSlug]/reservations/clients          2.08 kB         109 kB
+Building: ├ ƒ /dashboard/[branchSlug]/reservations/list             172 B           154 kB
+Building: ├ ƒ /dashboard/[branchSlug]/reservations/setup            2.37 kB         228 kB
+Building: ├ ƒ /dashboard/[branchSlug]/responses                     159 B           125 kB
+Building: ├ ƒ /dashboard/[branchSlug]/settings                      175 B           169 kB
+Building: ├ ƒ /dashboard/[branchSlug]/supervision                   211 B          95.2 kB
+Building: ├ ƒ /dashboard/[branchSlug]/supervision/[staffId]         211 B          95.2 kB
+Building: ├ ƒ /dashboard/[branchSlug]/supervision/task/[taskId]     4.32 kB         113 kB
+Building: ├ ƒ /dashboard/[branchSlug]/surveys/[surveyId]/responses  159 B           130 kB
+Building: ├ ƒ /dashboard/[branchSlug]/team                          169 B           148 kB
+Building: ├ ƒ /dashboard/academy                                    211 B          95.2 kB
+Building: ├ ƒ /dashboard/academy/[slug]                             38 kB           134 kB
+Building: ├ ƒ /dashboard/achievements                               190 B          88.4 kB
+Building: ├ ƒ /dashboard/analytics                                  279 B           304 kB
+Building: ├ ƒ /dashboard/campaigns                                  148 B           104 kB
+Building: ├ ƒ /dashboard/chains                                     8.19 kB         353 kB
+Building: ├ ƒ /dashboard/chat                                       286 B           331 kB
+Building: ├ ƒ /dashboard/create                                     274 B           196 kB
+Building: ├ ƒ /dashboard/edit/[surveyId]                            163 B           192 kB
+Building: ├ ƒ /dashboard/games                                      3.03 kB        91.2 kB
+Building: ├ ƒ /dashboard/games/bars                                 203 B           167 kB
+Building: ├ ƒ /dashboard/games/cafes                                2.91 kB         158 kB
+Building: ├ ƒ /dashboard/games/hotels                               203 B           160 kB
+Building: ├ ƒ /dashboard/games/restaurants                          2.83 kB         161 kB
+Building: ├ ƒ /dashboard/help                                       5.56 kB         110 kB
+Building: ├ ƒ /dashboard/help/qr                                    210 B          95.2 kB
+Building: ├ ƒ /dashboard/help/whatsapp                              210 B          95.2 kB
+Building: ├ ƒ /dashboard/loyalty                                    201 B           313 kB
+Building: ├ ƒ /dashboard/loyalty/history                            1.38 kB        92.5 kB
+Building: ├ ƒ /dashboard/processes                                  10.4 kB         169 kB
+Building: ├ ƒ /dashboard/processes/[zoneId]                         28.8 kB         173 kB
+Building: ├ ƒ /dashboard/processes/flows                            143 B          99.3 kB
+Building: ├ ƒ /dashboard/processes/issues                           151 B           108 kB
+Building: ├ ƒ /dashboard/processes/new                              6.15 kB         147 kB
+Building: ├ ƒ /dashboard/processes/team                             169 B           155 kB
+Building: ├ ƒ /dashboard/processes/times                            150 B           108 kB
+Building: ├ ƒ /dashboard/reports                                    360 B           473 kB
+Building: ├ ƒ /dashboard/reports/[surveyId]                         249 B           479 kB
+Building: ├ ƒ /dashboard/reservations                               250 B           328 kB
+Building: ├ ƒ /dashboard/reservations/analytics                     163 B           219 kB
+Building: ├ ƒ /dashboard/reservations/clients                       2.08 kB         109 kB
+Building: ├ ƒ /dashboard/reservations/list                          171 B           154 kB
+Building: ├ ƒ /dashboard/reservations/rps                           7.15 kB         160 kB
+Building: ├ ƒ /dashboard/reservations/rps/[promoterId]              7.13 kB         127 kB
+Building: ├ ƒ /dashboard/reservations/setup                         7.65 kB         233 kB
+Building: ├ ƒ /dashboard/responses                                  160 B           125 kB
+Building: ├ ƒ /dashboard/responses/[responseId]                     2.04 kB        97.1 kB
+Building: ├ ƒ /dashboard/settings                                   175 B           169 kB
+Building: ├ ƒ /dashboard/surveys/[surveyId]/responses               159 B           130 kB
+Building: ├ ƒ /dashboard/team                                       170 B           148 kB
+Building: ├ ƒ /dashboard/team/chat                                  4.95 kB         101 kB
+Building: ├ ƒ /dashboard/tickets                                    6.49 kB         150 kB
+Building: ├ ○ /install                                              1.47 kB         102 kB
+Building: ├ ○ /join-team                                            2.93 kB         121 kB
+Building: ├ ƒ /loyalty/[programId]                                  11.1 kB         273 kB
+Building: ├ ○ /loyalty/login                                        4.78 kB         141 kB
+Building: ├ ○ /loyalty/wallet                                       9.51 kB         200 kB
+Building: ├ ○ /onboarding                                           190 B          88.4 kB
+Building: ├ ○ /onboarding/create                                    5.56 kB         123 kB
+Building: ├ ○ /onboarding/welcome                                   5.34 kB         107 kB
+Building: ├ ƒ /ops                                                  11.7 kB         195 kB
+Building: ├ ƒ /ops/chat                                             4.3 kB          101 kB
+Building: ├ ƒ /ops/history                                          4.74 kB         121 kB
+Building: ├ ○ /ops/join                                             8.66 kB         183 kB
+Building: ├ ○ /ops/login                                            8.64 kB         149 kB
+Building: ├ ƒ /ops/profile-setup                                    3.5 kB          136 kB
+Building: ├ ƒ /ops/scanner                                          205 B           229 kB
+Building: ├ ƒ /ops/select-context                                   2.49 kB         173 kB
+Building: ├ ƒ /ops/tasks                                            211 B          95.2 kB
+Building: ├ ƒ /ops/tasks/[taskId]                                   3.08 kB         163 kB
+Building: ├ ƒ /play/[gameId]                                        14.9 kB         166 kB
+Building: ├ ○ /pricing                                              8.63 kB         143 kB
+Building: ├ ○ /privacy                                              211 B          95.2 kB
+Building: ├ ƒ /rate-creator/[visitId]                               3.49 kB         109 kB
+Building: ├ ƒ /report/[surveyId]                                    360 B           473 kB
+Building: ├ ƒ /reservas/[slug]                                      304 B          93.6 kB
+Building: ├ ○ /robots.txt                                           0 B                0 B
+Building: ├ ƒ /rps/[slug]                                           304 B          93.6 kB
+Building: ├ ƒ /s/[surveyId]                                         13.7 kB         174 kB
+Building: ├ ƒ /sellers                                              1.98 kB         108 kB
+Building: ├ ƒ /sellers/coach                                        5.02 kB         149 kB
+Building: ├ ƒ /sellers/crm                                          8.99 kB         135 kB
+Building: ├ ƒ /sellers/earnings                                     189 B          88.4 kB
+Building: ├ ƒ /sellers/join                                         4.72 kB         116 kB
+Building: ├ ƒ /sellers/territory                                    190 B          88.4 kB
+Building: ├ ƒ /sign-in/[[...sign-in]]                               9.54 kB         141 kB
+Building: ├ ƒ /sign-up/[[...sign-up]]                               8.49 kB         131 kB
+Building: ├ ○ /sitemap.xml                                          0 B                0 B
+Building: ├ ○ /sso-callback                                         661 B           126 kB
+Building: ├ ƒ /staff                                                6.62 kB         225 kB
+Building: ├ ƒ /staff/achievements                                   7.09 kB         133 kB
+Building: ├ ƒ /staff/chat                                           5.19 kB         231 kB
+Building: ├ ƒ /staff/creators                                       8.57 kB         258 kB
+Building: ├ ƒ /staff/creators/[creatorId]                           210 B          95.2 kB
+Building: ├ ○ /staff/login                                          2.94 kB         121 kB
+Building: ├ ƒ /staff/loyalty                                        311 B           223 kB
+Building: ├ ƒ /staff/places                                         7.85 kB         126 kB
+Building: ├ ƒ /staff/visits                                         5.95 kB         111 kB
+Building: ├ ○ /terms                                                211 B          95.2 kB
+Building: └ ○ /test-notifications                                   501 B           150 kB
+Building: + First Load JS shared by all                             88.2 kB
+Building: ├ chunks/2117-703559a8431b2fe6.js                       31.9 kB
+Building: ├ chunks/fd9d1056-ff210ec9872904c3.js                   53.6 kB
+Building: └ other shared chunks (total)                           2.64 kB
+Building: ƒ Middleware                                              72.7 kB
+Building: ○  (Static)   prerendered as static content
+Building: ●  (SSG)      prerendered as static HTML (uses getStaticProps)
+Building: ƒ  (Dynamic)  server-rendered on demand
+Building: Traced Next.js server files in: 68.417ms
+Building: Created all serverless functions in: 2.414s
+Building: Collected static files (public/, static/, .next/static): 38.063ms
+Building: Build Completed in /vercel/output [2m]
+Building: Deploying outputs...
+Building: Deployment completed
+Building: Creating build cache...
+[2K[1A[2K[GProduction: https://happymeter-41yks5506-happy-meter.vercel.app [3m]
+Completing...
+Aliased: https://www.happymeters.com [3m]

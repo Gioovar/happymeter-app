@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'HappyMeters',
   webDir: 'out',
   server: {
-    url: 'http://10.0.2.2:3000/ops/login',
+    url: 'http://192.168.0.180:3000/rps/zoe20',
     cleartext: true
   },
   plugins: {

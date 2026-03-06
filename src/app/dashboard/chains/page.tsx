@@ -8,6 +8,7 @@ import CreateBranchModal from '@/components/chains/CreateBranchModal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GitBranch, Store } from 'lucide-react'
 import EditChainModal from '@/components/chains/EditChainModal'
+import FranchiseReservationCard from '@/components/chains/FranchiseReservationCard'
 import Image from 'next/image'
 
 export default async function DashboardChainsPage() {
@@ -111,6 +112,19 @@ export default async function DashboardChainsPage() {
 
 
             {analytics && <ChainOverview metrics={analytics} />}
+
+            {isOwner && (
+                <div className="pt-2 pb-6">
+                    <FranchiseReservationCard
+                        chain={{
+                            id: ownedChain.id,
+                            name: ownedChain.name,
+                            slug: ownedChain.slug,
+                            franchiseReservationMode: ownedChain.franchiseReservationMode,
+                        }}
+                    />
+                </div>
+            )}
 
             <div className="space-y-4">
                 <h2 className="text-xl font-bold text-white px-1">Gestionar Sucursales</h2>

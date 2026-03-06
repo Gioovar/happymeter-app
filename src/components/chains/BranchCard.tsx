@@ -10,12 +10,16 @@ import { useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { DeleteBranchDialog } from './DeleteBranchDialog'
 import { EditBranchDialog } from './EditBranchDialog'
+import { BranchReservationSettings } from './BranchReservationSettings'
 
 interface BranchCardProps {
     branch: {
         id: string
         name: string | null
         slug?: string | null
+        reservationType?: string | null
+        externalReservationUrl?: string | null
+        address?: string | null
         branch: {
             userId: string
             businessName: string | null
@@ -198,6 +202,12 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId,
 
                 {isOwner && (
                     <div className="absolute top-4 right-4 z-50 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <BranchReservationSettings
+                            chainBranchId={branch.id}
+                            currentType={branch.reservationType || "INTERNAL"}
+                            currentExternalUrl={branch.externalReservationUrl || null}
+                            currentAddress={branch.address || null}
+                        />
                         <EditBranchDialog
                             branchId={branch.branch.userId}
                             currentName={branch.name || branch.branch.businessName || ""}

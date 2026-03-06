@@ -1,7 +1,9 @@
 import { getPublicPromoterPortal } from "@/actions/promoters"
 import { notFound } from "next/navigation"
 import { QRCodeSVG } from "qrcode.react"
-import { Target, Users, DollarSign, Share2, Copy, BarChart3, ArrowUpRight } from "lucide-react"
+import { Target, Users, DollarSign, Share2, Copy, BarChart3, ArrowUpRight, Calendar, User, Phone, MapPin, ChevronDown } from "lucide-react"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -15,7 +17,7 @@ export default async function PromoterPortal({ params }: { params: { slug: strin
         return notFound()
     }
 
-    const { name, businessName, logoUrl, stats } = result.data
+    const { name, businessName, logoUrl, stats, upcomingReservations } = result.data
 
     return (
         <main className="min-h-screen bg-[#0a0a0f] text-white selection:bg-indigo-500/30">
@@ -141,11 +143,108 @@ export default async function PromoterPortal({ params }: { params: { slug: strin
                         </div>
                     </div>
                 </div>
+
+                {/* Upcoming Reservations List */}
+                <div className="space-y-6 pt-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                            <Calendar className="w-5 h-5 text-indigo-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold tracking-tight">Mis Próximas Reservaciones</h2>
+                            <p className="text-sm text-zinc-500">Tus clientes registrados con tu código</p>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-4">
+                        {upcomingReservations && upcomingReservations.length > 0 ? (
+                            upcomingReservations.map((res: any) => (
+                                <details key={res.id} className="group bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm [&_summary::-webkit-details-marker]:hidden">
+                                    <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-white/[0.02] transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex flex-col items-center justify-center border border-indigo-500/20 shrink-0">
+                                                <span className="text-[10px] font-bold text-indigo-400 uppercase leading-none">{format(new Date(res.date), 'MMM', { locale: es })}</span>
+                                                <span className="text-lg font-bold text-indigo-100 leading-none mt-1">{format(new Date(res.date), 'dd')}</span>
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-zinc-100">{res.customerName || "Cliente"}</h3>
+                                                <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1">
+                                                    <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {res.partySize} pax</span>
+                                                    <span>•</span>
+                                                    <span className="text-indigo-400 tabular-nums">{format(new Date(res.date), 'hh:mm a')}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-open:rotate-180 transition-transform duration-300">
+                                            <ChevronDown className="w-4 h-4 text-zinc-400" />
+                                        </div>
+                                    </summary>
+                                    <div className="px-5 pb-5 pt-0 text-sm text-zinc-400 border-t border-white/5 bg-black/20">
+                                        <div className="pt-4 grid sm:grid-cols-2 gap-4">
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                                        <MapPin className="w-4 h-4 text-zinc-300" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Mesa Asignada</p>
+                                                        <p className="font-medium text-zinc-200">{res.table?.label || "Sin asignar"}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                                        <Target className="w-4 h-4 text-zinc-300" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Estado</p>
+                                                        <Badge variant="outline" className="mt-0.5 bg-emerald-500/10 text-emerald-400 border-emerald-500/20">{res.status}</Badge>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                {(res.customerPhone || res.customerName) && (
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                                                            <User className="w-4 h-4 text-zinc-300" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Contacto Principal</p>
+                                                            <p className="font-medium text-zinc-200">{res.customerName}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {res.customerPhone && (
+                                                    <a href={`tel:${res.customerPhone}`} className="flex items-center gap-3 group/phone p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors">
+                                                        <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 group-hover/phone:bg-indigo-500 group-hover/phone:text-white flex items-center justify-center shrink-0 transition-colors shadow-[0_0_15px_-3px_rgba(99,102,241,0.4)]">
+                                                            <Phone className="w-4 h-4" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Teléfono (Toca para llamar)</p>
+                                                            <p className="font-medium text-white">{res.customerPhone}</p>
+                                                        </div>
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+                            ))
+                        ) : (
+                            <div className="text-center py-12 px-4 rounded-3xl border border-dashed border-white/10 bg-zinc-900/20">
+                                <Calendar className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
+                                <h3 className="text-zinc-300 font-medium">No hay reservaciones próximas</h3>
+                                <p className="text-zinc-500 text-sm mt-1">Comparte tu link para empezar a ganar comisiones.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
             </div>
 
             {/* Bottom branding */}
-            <div className="fixed bottom-0 left-0 w-full py-4 bg-[#0a0a0f]/80 backdrop-blur-md border-t border-white/5 text-center">
-                <p className="text-[10px] text-zinc-700 uppercase tracking-[0.2em] font-bold">Powered by HappyMeter Professional</p>
+            <div className="fixed bottom-0 left-0 w-full py-4 bg-[#0a0a0f]/80 backdrop-blur-md border-t border-white/5 text-center pointer-events-none">
+                <p className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">Powered by HappyMeter Professional</p>
             </div>
         </main>
     )
