@@ -58,12 +58,34 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
         markAsRead(notif.id)
         setIsOpen(false)
 
+        // Resolve Base URL dynamically depending on whether we are in a branch context
+        let baseUrl = '/dashboard'
+        if (currentBranchId) {
+            // we need to find the branch slug from the chains context
+            for (const chain of chains) {
+                const branch = chain.branches.find(b => b.branchId === currentBranchId)
+                if (branch && branch.slug) {
+                    baseUrl = `/dashboard/${branch.slug}`
+                    break
+                }
+            }
+        } else if (notif.meta?.branchId) {
+            // If clicked from global dashboard but the notif belongs to a branch
+            for (const chain of chains) {
+                const branch = chain.branches.find(b => b.branchId === notif.meta.branchId)
+                if (branch && branch.slug) {
+                    baseUrl = `/dashboard/${branch.slug}`
+                    break
+                }
+            }
+        }
+
         if (notif.meta?.responseId) {
-            router.push(`/dashboard/responses?responseId=${notif.meta.responseId}`)
+            router.push(`${baseUrl}/responses?responseId=${notif.meta.responseId}`)
         } else if (notif.meta?.url) { // Support custom URLs from Admin Push
             router.push(notif.meta.url)
         } else if (notif.type === 'ACHIEVEMENT') {
-            router.push('/dashboard/achievements')
+            router.push(`${baseUrl}/achievements`)
         } else if (notif.type === 'REPORT') {
             const endDate = new Date(notif.createdAt)
             const startDate = subDays(endDate, 15)
@@ -77,13 +99,12 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
                 description: "Preparando análisis actualizado. Por favor espera."
             })
 
-            // Dismiss toast after 3 seconds to prevent stacking
             setTimeout(() => toast.dismiss(toastId), 3000)
 
             if (notif.meta?.surveyId) {
-                router.push(`/dashboard/reports/${notif.meta.surveyId}?${query}`)
+                router.push(`${baseUrl}/reports/${notif.meta.surveyId}?${query}`)
             } else {
-                router.push(`/dashboard/reports?${query}`)
+                router.push(`${baseUrl}/reports?${query}`)
             }
         }
 
