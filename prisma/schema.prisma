@@ -55,7 +55,8 @@ model Response {
   photo            String?
   customerSource   String?
   answers          Answer[]
-  survey           Survey    @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  survey           Survey        @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  issueTickets     IssueTicket[]
 
   @@index([surveyId, createdAt])
   @@index([customerPhone])
@@ -128,6 +129,10 @@ model UserSettings {
   Product                 Product[]
   issueTickets            IssueTicket[]
   restaurantHealthScores  RestaurantHealthScore[]
+  reputationScores        RestaurantReputationScore[]
+  growthOpportunities     AIGrowthOpportunity[]
+  marketingCampaigns      AIMarketingCampaign[]
+  resolvedIssues          ResolvedIssue[]
 }
 
 model FloorPlan {
@@ -1232,17 +1237,24 @@ enum ProcessEvidenceStatus {
 model IssueTicket {
   id              String   @id @default(cuid())
   businessId      String   @map("user_id") // Links to User (Business Owner)
-  title           String
-  description     String
+  responseId      String?  @map("response_id") // Optional link to the survey Response
+  title           String?  // Made optional since AI might just output a summary
+  description     String?  // Made optional
   status          String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
   severity        String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  urgency         String   @default("MEDIUM") // For AI inspector grading
+  category        String   @default("General") // AI categorization (Cleanliness, Food, Service)
+  customerName    String?
+  customerPhone   String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   resolutionNotes String?  @db.Text
   aiSummary       String?  @db.Text
+  aiContext       String?  @db.Text // AI extracted raw context
   isRecurring     Boolean  @default(false)
 
-  user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+  user     UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+  response Response?    @relation(fields: [responseId], references: [id], onDelete: SetNull)
 
   @@index([businessId, status])
 }
@@ -1260,6 +1272,72 @@ model RestaurantHealthScore {
   aiExplanation           String?  @db.Text
   aiRecommendations       Json?
   createdAt               DateTime @default(now())
+
+  user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
+}
+
+model RestaurantReputationScore {
+  id              String   @id @default(cuid())
+  businessId      String   @map("user_id") // Links to UserSettings
+  generalScore    Float
+  serviceScore    Float
+  foodScore       Float
+  ambianceScore   Float
+  cleanlinessScore Float
+  speedScore      Float
+  trend           String   // Up, Down, Stable
+  createdAt       DateTime @default(now())
+
+  user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
+}
+
+model AIGrowthOpportunity {
+  id              String   @id @default(cuid())
+  businessId      String   @map("user_id") // Links to UserSettings
+  title           String
+  description     String   @db.Text
+  type            String   // Retention, Acquisition, Operations, Feedback
+  status          String   @default("NEW") // NEW, REVIEWED, ACTIONED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user               UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+  marketingCampaigns AIMarketingCampaign[]
+
+  @@index([businessId, status])
+}
+
+model AIMarketingCampaign {
+  id                 String   @id @default(cuid())
+  businessId         String   @map("user_id") // Links to UserSettings
+  opportunityId      String?  // Optional link to the growth opportunity that spawned it
+  name               String
+  objective          String
+  targetAudience     String
+  promotionalMessage String   @db.Text
+  recommendedChannel String   // Push, Email, In-App
+  status             String   @default("DRAFT") // DRAFT, APPROVED, ACTIVE, COMPLETED
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user        UserSettings         @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+  opportunity AIGrowthOpportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, status])
+}
+
+model ResolvedIssue {
+  id              String   @id @default(cuid())
+  businessId      String   @map("user_id") // Links to UserSettings
+  issueSummary    String   @db.Text // AI-generated summary of the problem
+  originalContext String?  @db.Text // E.g: "Found in Survey ID xyz from last week"
+  status          String   @default("RESOLVED") // RESOLVED, IGNORED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
 

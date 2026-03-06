@@ -131,15 +131,26 @@ export default function FranchiseReservationCard({
                             <div className="space-y-2">
                                 <Label className="text-gray-300">Enlace Único de Franquicia</Label>
                                 <div className="flex gap-2">
-                                    <div className="relative flex-1 group">
-                                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+                                    <div className="flex flex-1 items-center rounded-md border border-white/10 bg-white/5 focus-within:ring-2 focus-within:ring-violet-500 overflow-hidden">
+                                        <span className="pl-3 pr-2 py-2 text-sm text-gray-500 select-none bg-black/20 border-r border-white/10 whitespace-nowrap hidden sm:inline-block">
                                             {baseUrl}/reservas/
-                                        </div>
-                                        <Input
+                                        </span>
+                                        <span className="pl-3 pr-2 py-2 text-sm text-gray-500 select-none bg-black/20 border-r border-white/10 whitespace-nowrap sm:hidden">
+                                            /reservas/
+                                        </span>
+                                        <input
                                             value={slug}
-                                            onChange={(e) => setSlug(e.target.value)}
+                                            onChange={(e) => {
+                                                let val = e.target.value;
+                                                if (val.includes('/reservas/')) {
+                                                    val = val.split('/reservas/').pop() || '';
+                                                }
+                                                val = val.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+                                                if (val.startsWith('-')) val = val.substring(1);
+                                                setSlug(val);
+                                            }}
                                             placeholder="mi-marca"
-                                            className="pl-[calc(11.5rem)] bg-white/5 border-white/10 text-white focus-visible:ring-violet-500"
+                                            className="flex-1 bg-transparent border-none text-white px-3 py-2 text-sm outline-none placeholder:text-gray-600 min-w-0 h-10"
                                         />
                                     </div>
                                     <Button onClick={handleSaveSlug} disabled={isSaving || !slug || slug === chain.slug} className="bg-white/10 hover:bg-white/20 text-white border border-white/10">

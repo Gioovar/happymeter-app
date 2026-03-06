@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { sendCrisisAlert, sendStaffAlert, sendCustomerReward } from '@/lib/alerts'
 import { sendPushNotification } from '@/lib/push-service'
 import { checkCrisis, checkFraud } from '@/lib/security'
+import { invokeSecretInspector } from '@/lib/secret-inspector'
 
 export async function POST(
     req: Request,
@@ -87,6 +88,9 @@ export async function POST(
             // New Advanced Security Checks
             checkCrisis(surveyId, branchId)
             checkFraud(surveyId, ip, branchId)
+
+            // Step 2: Trigger AI Secret Inspector
+            invokeSecretInspector(response.id, branchId)
         }
 
         // Force cache invalidation for real-time dashboard updates

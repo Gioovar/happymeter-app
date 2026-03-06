@@ -29,7 +29,17 @@ import LaserBorder from '@/components/ui/LaserBorder'
 import HelpModal from '@/components/HelpModal'
 import AIReportModal from '@/components/AIReportModal'
 import AnalyticsChart from '@/components/AnalyticsChart'
-import RestaurantHealthWidget from '@/components/dashboard/RestaurantHealthWidget'
+import RestaurantHealthWidget from './RestaurantHealthWidget'
+import ReputationWidget from './ReputationWidget'
+import GrowthEngineWidget from './GrowthEngineWidget'
+import CampaignManagerWidget from './CampaignManagerWidget'
+import HeatmapWidget from './HeatmapWidget'
+import RetentionRadarWidget from './RetentionRadarWidget'
+import StaffImpactWidget from './StaffImpactWidget'
+import VipAmbassadorsWidget from './VipAmbassadorsWidget'
+import OccupancyRadarWidget from './OccupancyRadarWidget'
+import ActiveTablesWidget from './ActiveTablesWidget'
+import ResolvedIssuesWidget from './ResolvedIssuesWidget'
 import ResponsesModal from '@/components/ResponsesModal'
 import HappyLoader from '@/components/HappyLoader'
 import QRCodeModal from '@/components/QRCodeModal'
@@ -428,7 +438,37 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                         </div>
                     </div>
 
-                    <div className="space-y-6">
+                    {/* Advanced Operations AI Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <div className="lg:col-span-1 h-[450px]">
+                            <ReputationWidget />
+                        </div>
+                        <div className="lg:col-span-1 h-[450px]">
+                            <ResolvedIssuesWidget />
+                        </div>
+                        <div className="lg:col-span-1 h-[450px]">
+                            <GrowthEngineWidget />
+                        </div>
+                        <div className="lg:col-span-1 h-[450px]">
+                            <CampaignManagerWidget />
+                        </div>
+                    </div>
+
+                    {/* Advanced Customer Intelligence (Phase 2) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
+                        <HeatmapWidget />
+                        <RetentionRadarWidget />
+                        <StaffImpactWidget />
+                        <VipAmbassadorsWidget />
+                    </div>
+
+                    {/* Predictive AI & Real-Time Ops (Phase 3) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                        <OccupancyRadarWidget />
+                        <ActiveTablesWidget />
+                    </div>
+
+                    <div className="space-y-6 mt-6">
                         <div className="flex items-center justify-between">
                             <h2 className="text-2xl font-bold flex items-center gap-2">
                                 Mis Encuestas

@@ -173,11 +173,14 @@ export default function RestaurantHealthWidget() {
                                     </div>
 
                                     {/* Breakdown Bars */}
-                                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2">
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-2">
                                         <ScoreBar label="Experiencia Cte." score={latestScore.customerExperienceScore} />
                                         <ScoreBar label="Calidad Servicio" score={latestScore.serviceQualityScore} />
                                         <ScoreBar label="Ops Internas" score={latestScore.internalOpsScore} />
-                                        <ScoreBar label="Actividad Negocio" score={latestScore.businessActivityScore} />
+                                        <ScoreBar label="Flujo Negocio" score={latestScore.businessActivityScore} />
+                                        <div className="col-span-2">
+                                            <ScoreBar label="Retención & Lealtad" score={latestScore.loyaltyScore} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>

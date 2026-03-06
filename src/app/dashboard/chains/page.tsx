@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { GitBranch, Store } from 'lucide-react'
 import EditChainModal from '@/components/chains/EditChainModal'
 import FranchiseReservationCard from '@/components/chains/FranchiseReservationCard'
+import BranchLeaderboard from '@/components/chains/BranchLeaderboard'
 import Image from 'next/image'
 
 export default async function DashboardChainsPage() {
@@ -123,6 +124,12 @@ export default async function DashboardChainsPage() {
                             franchiseReservationMode: ownedChain.franchiseReservationMode,
                         }}
                     />
+                </div>
+            )}
+
+            {analytics && (
+                <div className="pt-4 pb-6">
+                    <BranchLeaderboard metrics={analytics} />
                 </div>
             )}
 
