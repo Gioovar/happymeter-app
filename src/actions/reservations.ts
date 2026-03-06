@@ -303,12 +303,17 @@ export async function getProgramFloorPlan(programId: string) {
         const displayName = program.user?.businessName || program.businessName || "Reservación"
         const businessPhone = program.user?.whatsappContact || program.user?.phone || null
 
+        // Safely extract and merge settings to guarantee fallbacks
+        const userSettings = program.user?.reservationSettings as any || {}
+        const defaultSettings = { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 };
+        const mergedSettings = { ...defaultSettings, ...userSettings };
+
         return {
             success: true,
             floorPlans: JSON.parse(JSON.stringify(finalFloorPlans)),
             businessName: displayName,
             businessPhone,
-            settings: program.user?.reservationSettings || { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50 },
+            settings: mergedSettings,
             userId: program.user?.userId || program.userId
         }
     } catch (error) {
