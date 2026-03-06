@@ -49,8 +49,11 @@ export default async function ReservationPage({
         phone: user ? user.phoneNumbers[0]?.phoneNumber : getParam('phone')
     }
 
-    // Handle Empty Config: "Coming Soon" View
-    if (!result?.success || !result?.floorPlans || result.floorPlans.length === 0) {
+    const settings = (result as any).settings
+    const ownerId = (result as any).ownerId || (result as any).userId
+
+    // Handle Empty Config: "Coming Soon" View (unless simple mode is on, which doesn't need floor plans)
+    if (!settings?.simpleMode && (!result?.success || !result?.floorPlans || result.floorPlans.length === 0)) {
         // Render Coming Soon instead of NotFound
         return (
             <main className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-6 text-center">
@@ -92,8 +95,6 @@ export default async function ReservationPage({
     }
 
     // Default to first floor for compatibility if needed, but passing all is better
-    const settings = (result as any).settings
-    const ownerId = (result as any).ownerId || (result as any).userId // getProgramFloorPlan returns userId as ownerId
 
     if (settings && settings.simpleMode) {
         return (

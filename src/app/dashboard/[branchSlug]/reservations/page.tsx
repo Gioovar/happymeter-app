@@ -17,6 +17,7 @@ import { ReservationLinkButton } from "@/components/dashboard/reservations/Reser
 import { getDashboardContext } from "@/lib/auth-context"
 import { redirect } from "next/navigation"
 import ReservationSetupModal from "@/components/dashboard/reservations/ReservationSetupModal"
+import { ReservationModeToggle } from "@/components/dashboard/reservations/ReservationModeToggle"
 
 export const dynamic = 'force-dynamic'
 
@@ -111,7 +112,9 @@ export default async function BranchReservationsPage({ params }: { params: { bra
                     <h1 className="text-3xl font-bold text-white tracking-tight">Reservaciones <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 align-middle">{context.name}</span></h1>
                     <p className="text-gray-400 mt-2">Gestiona agenda y capacidad local.</p>
                 </div>
-                <div className="flex flex-wrap gap-3 w-full md:w-auto">
+                <div className="flex flex-wrap gap-3 w-full md:w-auto items-center">
+                    <ReservationModeToggle currentMode={userSettings?.reservationSettings?.simpleMode ? 'SIMPLE' : 'ADVANCED'} />
+
                     {program && <ReservationLinkButton programId={program.id} />}
 
                     <Link
