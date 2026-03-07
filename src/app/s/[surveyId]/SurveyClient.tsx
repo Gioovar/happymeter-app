@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
-import { Check, ChevronLeft, Upload, X, Instagram, Facebook, Sparkles, Calendar as CalendarIcon } from 'lucide-react'
+import { Check, ChevronLeft, Upload, X, Instagram, Facebook, Sparkles, Calendar as CalendarIcon, Download } from 'lucide-react'
 import Image from 'next/image'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -42,6 +42,45 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
     const [isBirthdayPickerOpen, setIsBirthdayPickerOpen] = useState(false)
     const [isSuccess, setIsSuccess] = useState(false)
     const [countdown, setCountdown] = useState<number | null>(null)
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+    const [isInstallable, setIsInstallable] = useState(false)
+
+    useEffect(() => {
+        const handleBeforeInstallPrompt = (e: Event) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault()
+            // Stash the event so it can be triggered later.
+            setDeferredPrompt(e)
+            // Update UI to notify the user they can add to home screen
+            setIsInstallable(true)
+        }
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+        }
+    }, [])
+
+    const handleInstallClick = async () => {
+        if (!deferredPrompt) return
+
+        // Show the install prompt
+        deferredPrompt.prompt()
+
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredPrompt.userChoice
+
+        if (outcome === 'accepted') {
+            console.log('User accepted the install prompt')
+            setIsInstallable(false) // Hide the button
+        } else {
+            console.log('User dismissed the install prompt')
+        }
+
+        // We've used the prompt, and can't use it again, throw it away
+        setDeferredPrompt(null)
+    }
 
     // Kiosk Mode: Prevent back navigation
     useEffect(() => {
@@ -401,7 +440,18 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
     }
 
     return (
-        <div className="min-h-screen flex justify-center p-4 pb-20 font-sans" style={{ backgroundColor: theme.background, color: theme.text }}>
+        <div className="min-h-screen flex justify-center p-4 pb-20 font-sans relative" style={{ backgroundColor: theme.background, color: theme.text }}>
+
+            {/* PWA INSTALL FLOATING BUTTON */}
+            {isInstallable && (
+                <button
+                    onClick={handleInstallClick}
+                    className="fixed top-4 right-4 z-50 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4 py-2 rounded-full font-bold shadow-2xl flex items-center gap-2 hover:scale-105 transition-transform"
+                >
+                    <Download className="w-4 h-4" />
+                    <span>Instalar App</span>
+                </button>
+            )}
             <div className="w-full max-w-md space-y-6">
                 <div className="w-full h-48 rounded-2xl relative overflow-hidden shadow-lg">
                     {survey.bannerUrl ? (
