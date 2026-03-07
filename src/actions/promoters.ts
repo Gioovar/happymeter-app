@@ -661,10 +661,7 @@ export async function verifyGlobalPromoterPin(phone: string, pin: string) {
 export async function getGlobalPromoterWallet(phone: string) {
     try {
         const globalProfile = await (prisma as any).globalPromoter.findUnique({
-            where: { phone },
-            include: {
-                responses: true
-            }
+            where: { phone }
         });
 
         if (!globalProfile) return { success: false, error: "Perfil no encontrado" };
