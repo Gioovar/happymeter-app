@@ -455,11 +455,19 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                     </div>
 
                     {/* Advanced Customer Intelligence (Phase 2) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
-                        <HeatmapWidget />
-                        <RetentionRadarWidget />
-                        <StaffImpactWidget />
-                        <VipAmbassadorsWidget />
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+                        <div className="lg:col-span-2">
+                            <HeatmapWidget />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <RetentionRadarWidget />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <StaffImpactWidget />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <VipAmbassadorsWidget />
+                        </div>
                     </div>
 
                     {/* Predictive AI & Real-Time Ops (Phase 3) */}
