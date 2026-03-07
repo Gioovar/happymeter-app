@@ -39,6 +39,7 @@ import StaffImpactWidget from './StaffImpactWidget'
 import VipAmbassadorsWidget from './VipAmbassadorsWidget'
 import OccupancyRadarWidget from './OccupancyRadarWidget'
 import ActiveTablesWidget from './ActiveTablesWidget'
+import RoiCalculatorWidget from './RoiCalculatorWidget'
 import ResolvedIssuesWidget from './ResolvedIssuesWidget'
 import ResponsesModal from '@/components/ResponsesModal'
 import HappyLoader from '@/components/HappyLoader'
@@ -474,6 +475,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                         <OccupancyRadarWidget />
                         <ActiveTablesWidget />
+                        <RoiCalculatorWidget />
                     </div>
 
                     <div className="space-y-6 mt-6">
