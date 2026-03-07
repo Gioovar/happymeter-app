@@ -420,48 +420,50 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                                 onChange={async (e) => {
                                     const file = e.target.files?.[0];
                                     if (!file) return;
+                                    toast.loading("Buscando código...");
                                     try {
-                                    // We use jsQR to bypass Html5Qrcode.scanFile() scaling/rotation bugs on iPad
-                                    const reader = new FileReader();
-                                    reader.onload = (event) => {
-                                        const img = new window.Image();
-                                        img.onload = () => {
-                                            const canvas = document.createElement("canvas");
-                                            const ctx = canvas.getContext("2d");
+                                        // We use jsQR to bypass Html5Qrcode.scanFile() scaling/rotation bugs on iPad
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => {
+                                            const img = new window.Image();
+                                            img.onload = () => {
+                                                const canvas = document.createElement("canvas");
+                                                const ctx = canvas.getContext("2d");
 
-                                            // Downscale large iOS photos locally to avoid memory crash & speed up
-                                            const MAX_WIDTH = 1000;
-                                            let width = img.width;
-                                            let height = img.height;
+                                                // Downscale large iOS photos locally to avoid memory crash & speed up
+                                                // Increased to 2500 for better QR detection
+                                                const MAX_WIDTH = 2500;
+                                                let width = img.width;
+                                                let height = img.height;
 
-                                            if (width > MAX_WIDTH) {
-                                                height = Math.round((height * MAX_WIDTH) / width);
-                                                width = MAX_WIDTH;
-                                            }
-
-                                            canvas.width = width;
-                                            canvas.height = height;
-                                            if (ctx) {
-                                                ctx.drawImage(img, 0, 0, width, height);
-                                                const imageData = ctx.getImageData(0, 0, width, height);
-                                                const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                                                    inversionAttempts: "dontInvert",
-                                                });
-
-                                                toast.dismiss();
-                                                if (code && code.data) {
-                                                    handleScan(code.data);
-                                                } else {
-                                                    toast.error("No se detectó ningún código QR en la foto");
+                                                if (width > MAX_WIDTH) {
+                                                    height = Math.round((height * MAX_WIDTH) / width);
+                                                    width = MAX_WIDTH;
                                                 }
-                                            }
+
+                                                canvas.width = width;
+                                                canvas.height = height;
+                                                if (ctx) {
+                                                    ctx.drawImage(img, 0, 0, width, height);
+                                                    const imageData = ctx.getImageData(0, 0, width, height);
+                                                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                                                        inversionAttempts: "attemptBoth",
+                                                    });
+
+                                                    toast.dismiss();
+                                                    if (code && code.data) {
+                                                        handleScan(code.data);
+                                                    } else {
+                                                        toast.error("No se detectó ningún código QR en la foto");
+                                                    }
+                                                }
+                                            };
+                                            img.src = event.target?.result as string;
                                         };
-                                        img.src = event.target?.result as string;
-                                    };
-                                    reader.readAsDataURL(file);
-                                } catch (err) {
-                                toast.dismiss();
-                            toast.error("Error al procesar la imagen: " + String(err));
+                                        reader.readAsDataURL(file);
+                                    } catch (err) {
+                                        toast.dismiss();
+                                        toast.error("Error al procesar la imagen: " + String(err));
                                     }
                                 }}
                             />
