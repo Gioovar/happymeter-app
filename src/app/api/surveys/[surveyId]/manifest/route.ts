@@ -56,31 +56,21 @@ export async function GET(
             background_color: "#0f1516",
             theme_color: survey.hexColor || "#8b5cf6",
             icons: [
-                ...(userSettings?.logoUrl ? [
-                    {
-                        src: userSettings.logoUrl,
-                        sizes: "192x192",
-                        type: "image/png",
-                        purpose: "any maskable"
-                    },
-                    {
-                        src: userSettings.logoUrl,
-                        sizes: "512x512",
-                        type: "image/png",
-                        purpose: "any maskable"
-                    }
-                ] : []),
                 {
                     src: "/happymeter_logo.png",
                     sizes: "192x192",
-                    type: "image/png",
-                    purpose: "any maskable"
+                    type: "image/png"
+                },
+                {
+                    src: "/happymeter_logo.png",
+                    sizes: "512x512",
+                    type: "image/png"
                 },
                 {
                     src: "/happymeter_logo.png",
                     sizes: "512x512",
                     type: "image/png",
-                    purpose: "any maskable"
+                    purpose: "maskable"
                 }
             ]
         }
