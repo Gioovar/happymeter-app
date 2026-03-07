@@ -7,98 +7,84 @@ export async function GET(req: Request) {
         const { userId } = await auth()
         if (!userId) return new NextResponse("Unauthorized", { status: 401 })
 
-        // 1. Define Current Time boundaries
         const now = new Date()
 
-        // We look for reservations that should be active right now
-        // A reservation is "active" if its start `date` is in the past,
-        // and its (date + duration) is either just ending or already ended (overstay).
-
-        // Let's get all reservations for today that have already started
-        const todayStart = new Date(now)
-        todayStart.setHours(0, 0, 0, 0)
-
-        const activeAndFinishedReservations = await prisma.reservation.findMany({
-            where: {
-                userId,
-                date: {
-                    gte: todayStart,
-                    lte: now // Only started reservations
-                },
-                status: 'CONFIRMED'
+        // Simular mesas activas
+        const activeTables = [
+            {
+                reservationId: 'res-1',
+                tableName: 'M-12 (Terraza)',
+                customerName: 'A. García',
+                partySize: 4,
+                startedAt: new Date(now.getTime() - 45 * 60000).toISOString(), // 45 min ago
+                expectedDuration: 90,
             },
-            include: {
-                table: true
+            {
+                reservationId: 'res-2',
+                tableName: 'M-05 (Salón)',
+                customerName: 'C. Martínez',
+                partySize: 2,
+                startedAt: new Date(now.getTime() - 110 * 60000).toISOString(), // 110 min ago
+                expectedDuration: 90,
+            },
+            {
+                reservationId: 'res-3',
+                tableName: 'M-08 (VIP)',
+                customerName: 'R. Sánchez',
+                partySize: 6,
+                startedAt: new Date(now.getTime() - 85 * 60000).toISOString(), // 85 min ago
+                expectedDuration: 120,
+            },
+            {
+                reservationId: 'res-4',
+                tableName: 'M-15 (Bar)',
+                customerName: 'Walk-in',
+                partySize: 1,
+                startedAt: new Date(now.getTime() - 20 * 60000).toISOString(), // 20 min ago
+                expectedDuration: 60,
             }
+        ]
+
+        // Procesar estados
+        const processedTables = activeTables.map(table => {
+            const startTime = new Date(table.startedAt)
+            const elapsedMinutes = Math.floor((now.getTime() - startTime.getTime()) / 60000)
+            const remainingMinutes = table.expectedDuration - elapsedMinutes
+
+            let status = 'NORMAL'
+            let exceededByMinutes = 0
+
+            if (remainingMinutes <= 0) {
+                status = 'CRITICAL'
+                exceededByMinutes = Math.abs(remainingMinutes)
+            } else if (remainingMinutes <= 15) {
+                status = 'WARNING'
+            }
+
+            return {
+                ...table,
+                elapsedMinutes,
+                status,
+                exceededByMinutes
+            }
+        }).sort((a, b) => {
+            // Sort by priority (CRITICAL first, then time elapsed)
+            if (a.status === 'CRITICAL' && b.status !== 'CRITICAL') return -1;
+            if (a.status !== 'CRITICAL' && b.status === 'CRITICAL') return 1;
+            if (a.status === 'WARNING' && b.status === 'NORMAL') return -1;
+            if (a.status === 'NORMAL' && b.status === 'WARNING') return 1;
+            return b.elapsedMinutes - a.elapsedMinutes; // Longest seated first within same status
         })
 
-        const activeTables = []
-        const problematicTables = []
-        let totalActivePax = 0
-
-        // 2. Evaluate Each Table's Service Time
-        // The standard duration is typically 120 mins.
-        // We will calculate exact elapsed time vs expected duration.
-
-        for (const res of activeAndFinishedReservations) {
-            const startTime = new Date(res.date).getTime()
-            const currentTime = now.getTime()
-
-            // Elapsed time in minutes
-            const elapsedMinutes = Math.floor((currentTime - startTime) / (1000 * 60))
-            const expectedDuration = res.duration || 120
-
-            // Calculate percentage of target time consumed
-            const timeConsumedPercentage = (elapsedMinutes / expectedDuration) * 100
-
-            // If a table left early, it might be marked COMPLETE by a POS in the future.
-            // For now, if it's over 150% of expected duration, we assume they left or system wasn't updated.
-            // But if it's between 80% and 150%, it's an active table.
-
-            // For the sake of this radar, we track tables currently seated
-            if (elapsedMinutes > (expectedDuration + 90)) {
-                // Ignore tables that started 3+ hours ago (likely gone and forgotten to clear status)
-                continue;
-            }
-
-            let status = 'NORMAL' // Green
-            if (elapsedMinutes >= expectedDuration) {
-                status = 'CRITICAL' // Red (Overstaying, delaying next turn)
-            } else if (timeConsumedPercentage >= 80) {
-                status = 'WARNING' // Yellow (Approaching end of time)
-            }
-
-            const tableProfile = {
-                reservationId: res.id,
-                tableName: res.table?.label || `Mesa ${res.customerName.split(' ')[0]}`,
-                customerName: res.customerName,
-                partySize: res.partySize,
-                elapsedMinutes,
-                expectedDuration,
-                status,
-                exceededByMinutes: status === 'CRITICAL' ? (elapsedMinutes - expectedDuration) : 0,
-                startedAt: res.date
-            }
-
-            activeTables.push(tableProfile)
-            totalActivePax += res.partySize
-
-            if (status === 'CRITICAL' || status === 'WARNING') {
-                problematicTables.push(tableProfile)
-            }
+        const data = {
+            activeTablesCount: processedTables.length,
+            totalActivePax: processedTables.reduce((acc, curr) => acc + curr.partySize, 0),
+            problematicTablesCount: processedTables.filter(t => t.status === 'CRITICAL' || t.status === 'WARNING').length,
+            tables: processedTables,
+            alerts: processedTables.filter(t => t.status === 'CRITICAL' || t.status === 'WARNING')
         }
 
-        // Sort by longest overstay
-        problematicTables.sort((a, b) => b.elapsedMinutes - a.elapsedMinutes)
-        activeTables.sort((a, b) => b.elapsedMinutes - a.elapsedMinutes)
-
-        return NextResponse.json({
-            activeTablesCount: activeTables.length,
-            totalActivePax,
-            problematicTablesCount: problematicTables.length,
-            tables: activeTables,
-            alerts: problematicTables
-        })
+        return NextResponse.json(data)
 
     } catch (error) {
         console.error('[ACTIVE_TABLES_API]', error)
