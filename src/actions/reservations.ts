@@ -618,7 +618,7 @@ export async function updateReservationSettings(settings: { standardTimeEnabled:
     }
 }
 
-export async function setReservationMode(simpleMode: boolean, branchId?: string) {
+export async function setReservationMode(simpleMode: boolean, branchId?: string, availability?: any[]) {
     try {
         const { userId } = await auth()
         if (!userId) throw new Error("Unauthorized")
@@ -632,12 +632,16 @@ export async function setReservationMode(simpleMode: boolean, branchId?: string)
 
         const currentSettings = userSettings?.reservationSettings as any || {}
 
+        // If availability is passed, use it, otherwise keep current or fallback
+        const finalAvailability = availability || currentSettings.availability || DEFAULT_AVAILABILITY
+
         await prisma.userSettings.upsert({
             where: { userId: effectiveUserId },
             update: {
                 reservationSettings: {
                     ...currentSettings,
-                    simpleMode
+                    simpleMode,
+                    availability: finalAvailability
                 }
             },
             create: {
@@ -647,7 +651,8 @@ export async function setReservationMode(simpleMode: boolean, branchId?: string)
                     standardTimeEnabled: false,
                     standardDurationMinutes: 120,
                     simpleMode,
-                    dailyPaxLimit: 50
+                    dailyPaxLimit: 50,
+                    availability: finalAvailability
                 }
             }
         })

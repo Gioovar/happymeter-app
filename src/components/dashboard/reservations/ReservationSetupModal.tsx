@@ -3,7 +3,10 @@
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Settings, PlayCircle, Store, LayoutGrid, CalendarRange, Loader2, Info } from 'lucide-react'
+import { Settings, PlayCircle, Store, LayoutGrid, CalendarRange, Loader2, Info, Clock, Check } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { setReservationMode } from '@/actions/reservations'
@@ -21,17 +24,44 @@ export default function ReservationSetupModal({ isOpen, setupLink, branchId }: R
     // Let's make it persistent (cannot close easily) or re-opens? 
     // For good UX, we allow closing but it shows every time the page loads if empty.
     const [open, setOpen] = useState(isOpen)
-    const [step, setStep] = useState<'intro' | 'select-mode'>('intro')
+    const [step, setStep] = useState<'intro' | 'select-mode' | 'hours'>('intro')
     const [isUpdating, setIsUpdating] = useState(false)
+
+    // Schedule state
+    const [schedule, setSchedule] = useState([
+        { id: 'mon', label: 'Lunes', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+        { id: 'tue', label: 'Martes', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+        { id: 'wed', label: 'Miércoles', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+        { id: 'thu', label: 'Jueves', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+        { id: 'fri', label: 'Viernes', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+        { id: 'sat', label: 'Sábado', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+        { id: 'sun', label: 'Domingo', isOpen: true, openTime: "09:00", closeTime: "22:00" },
+    ])
+
+    const toggleDay = (index: number) => {
+        const newSched = [...schedule]
+        newSched[index].isOpen = !newSched[index].isOpen
+        setSchedule(newSched)
+    }
+
+    const updateTime = (index: number, field: 'openTime' | 'closeTime', val: string) => {
+        const newSched = [...schedule]
+        newSched[index][field] = val
+        setSchedule(newSched)
+    }
 
     const handleVideoClick = () => {
         toast.info('Tutorial próximamente disponible')
     }
 
-    const handleSimpleModeSelect = async () => {
+    const handleSimpleModeSelect = () => {
+        setStep('hours')
+    }
+
+    const handleSaveSimpleMode = async () => {
         setIsUpdating(true)
         try {
-            const res = await setReservationMode(true, branchId)
+            const res = await setReservationMode(true, branchId, schedule)
 
             if (res.success) {
                 toast.success('Modo Sencillo activado')
@@ -80,7 +110,7 @@ export default function ReservationSetupModal({ isOpen, setupLink, branchId }: R
                             </Button>
                         </div>
                     </>
-                ) : (
+                ) : step === 'select-mode' ? (
                     <>
                         <DialogHeader>
                             <div className="mx-auto bg-violet-500/10 p-4 rounded-full mb-4">
@@ -121,6 +151,74 @@ export default function ReservationSetupModal({ isOpen, setupLink, branchId }: R
                                     </span>
                                 </Button>
                             </Link>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <DialogHeader>
+                            <div className="mx-auto bg-amber-500/10 p-4 rounded-full mb-4">
+                                <Clock className="w-8 h-8 text-amber-500" />
+                            </div>
+                            <DialogTitle className="text-center text-2xl font-bold">Horarios de Reserva</DialogTitle>
+                            <DialogDescription className="text-center text-gray-400">
+                                Define tus días y horas de atención para comenzar a recibir reservaciones.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="flex flex-col gap-3 py-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2 -mr-2">
+                            {schedule.map((day, idx) => (
+                                <div key={day.id} className="p-3 bg-[#1A1A1A] border border-white/10 rounded-xl flex items-center justify-between">
+                                    <div className="flex items-center gap-3 w-1/3">
+                                        <Switch
+                                            checked={day.isOpen}
+                                            onCheckedChange={() => toggleDay(idx)}
+                                            className="data-[state=checked]:bg-amber-500"
+                                        />
+                                        <Label className={`font-bold ${day.isOpen ? 'text-white' : 'text-gray-500'}`}>
+                                            {day.label}
+                                        </Label>
+                                    </div>
+
+                                    {day.isOpen ? (
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="time"
+                                                value={day.openTime}
+                                                onChange={(e) => updateTime(idx, 'openTime', e.target.value)}
+                                                className="w-24 bg-black/50 border-white/10 text-white focus-visible:ring-amber-500"
+                                            />
+                                            <span className="text-gray-500 text-sm">a</span>
+                                            <Input
+                                                type="time"
+                                                value={day.closeTime}
+                                                onChange={(e) => updateTime(idx, 'closeTime', e.target.value)}
+                                                className="w-24 bg-black/50 border-white/10 text-white focus-visible:ring-amber-500"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <span className="text-gray-500 text-sm font-medium mr-8">Cerrado</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex gap-3 pt-4 border-t border-white/5">
+                            <Button
+                                variant="outline"
+                                onClick={() => setStep('select-mode')}
+                                className="border-white/10 hover:bg-white/5 text-gray-400"
+                                disabled={isUpdating}
+                            >
+                                Atrás
+                            </Button>
+                            <Button
+                                onClick={handleSaveSimpleMode}
+                                disabled={isUpdating}
+                                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold h-10"
+                            >
+                                {isUpdating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+                                Finalizar y Guardar
+                            </Button>
                         </div>
                     </>
                 )}
