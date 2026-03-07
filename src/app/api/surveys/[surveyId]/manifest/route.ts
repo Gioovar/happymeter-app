@@ -9,7 +9,7 @@ export async function GET(
         const { surveyId } = await params
 
         if (surveyId === 'demo') {
-            return NextResponse.json({
+            return new NextResponse(JSON.stringify({
                 name: "Encuesta - Demo",
                 short_name: "Encuesta",
                 display: "standalone",
@@ -29,6 +29,12 @@ export async function GET(
                         type: "image/png"
                     }
                 ]
+            }), {
+                headers: {
+                    'Content-Type': 'application/manifest+json',
+                    'Access-Control-Allow-Origin': req.headers.get('origin') || '*',
+                    'Access-Control-Allow-Credentials': 'true',
+                }
             })
         }
 
@@ -69,7 +75,13 @@ export async function GET(
             ]
         }
 
-        return NextResponse.json(manifest)
+        return new NextResponse(JSON.stringify(manifest), {
+            headers: {
+                'Content-Type': 'application/manifest+json',
+                'Access-Control-Allow-Origin': req.headers.get('origin') || '*',
+                'Access-Control-Allow-Credentials': 'true',
+            }
+        })
     } catch (error) {
         console.error('[SURVEY_MANIFEST_GET]', error)
         return new NextResponse("Internal Error", { status: 500 })
