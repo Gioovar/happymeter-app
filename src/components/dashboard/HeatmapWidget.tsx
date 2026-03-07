@@ -83,51 +83,52 @@ export default function HeatmapWidget() {
                     </p>
                 </div>
 
-                <div className="flex-1 flex flex-col md:flex-row justify-between items-start relative py-8 px-2 md:gap-4 lg:gap-8">
+                <div className="flex-1 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-4 md:pb-0">
+                    <div className="flex flex-row md:justify-between items-start relative py-8 px-2 gap-4 md:gap-4 lg:gap-8 min-w-max md:min-w-0 w-full">
+                        {/* Connecting Line Backdrop */}
+                        <div className="absolute top-1/2 left-10 right-10 h-1 bg-white/5 -translate-y-1/2 hidden md:block rounded-full z-0"></div>
 
-                    {/* Connecting Line Backdrop */}
-                    <div className="absolute top-1/2 left-10 right-10 h-1 bg-white/5 -translate-y-1/2 hidden md:block rounded-full z-0"></div>
+                        {isLoading ? (
+                            <div className="w-full flex justify-center"><div className="animate-pulse h-8 w-32 bg-white/10 rounded-full"></div></div>
+                        ) : (
+                            journey.map((phase, index) => {
+                                const status = getStatusDetails(phase.score)
+                                const Icon = phase.icon
+                                return (
+                                    <div key={phase.id} className="relative z-10 flex flex-col items-center group w-[160px] md:flex-1 shrink-0 snap-center md:snap-none px-2">
 
-                    {isLoading ? (
-                        <div className="w-full flex justify-center"><div className="animate-pulse h-8 w-32 bg-white/10 rounded-full"></div></div>
-                    ) : (
-                        journey.map((phase, index) => {
-                            const status = getStatusDetails(phase.score)
-                            const Icon = phase.icon
-                            return (
-                                <div key={phase.id} className="relative z-10 flex flex-col items-center group w-full md:flex-1 mb-8 md:mb-0 px-2">
+                                        {/* Score Bubble */}
+                                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border-2 shadow-xl mb-4 transition-transform group-hover:scale-110 ${phase.score > 0 ? getStatusDetails(phase.score).color : 'bg-gray-800/80 border-gray-700/50 text-gray-500'} bg-[#151515] shrink-0`}>
+                                            {phase.score > 0 ? (
+                                                <span className="text-xl font-black">{phase.score.toFixed(1)}</span>
+                                            ) : (
+                                                <Icon className="w-6 h-6 opacity-30" />
+                                            )}
+                                        </div>
 
-                                    {/* Score Bubble */}
-                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border-2 shadow-xl mb-4 transition-transform group-hover:scale-110 ${phase.score > 0 ? getStatusDetails(phase.score).color : 'bg-gray-800/80 border-gray-700/50 text-gray-500'} bg-[#151515] shrink-0`}>
-                                        {phase.score > 0 ? (
-                                            <span className="text-xl font-black">{phase.score.toFixed(1)}</span>
-                                        ) : (
-                                            <Icon className="w-6 h-6 opacity-30" />
+                                        {/* Text Info */}
+                                        <div className="text-center w-full">
+                                            <h4 className="font-bold text-white text-sm mb-1.5 leading-tight text-balance">{phase.title}</h4>
+                                            <p className="text-xs text-gray-500 leading-snug min-h-[40px] text-balance">{phase.description}</p>
+                                        </div>
+
+                                        {/* Status Indicator */}
+                                        {phase.score > 0 && (
+                                            <div className={`mt-3 flex items-center gap-1 text-[10px] md:text-xs font-bold ${getStatusDetails(phase.score).text} bg-[#1A1A1A] px-3 py-1 rounded-full border border-white/5`}>
+                                                {getStatusDetails(phase.score).icon}
+                                                {phase.score >= 4.5 ? 'Óptimo' : phase.score >= 3.5 ? 'Atención' : 'Crítico'}
+                                            </div>
+                                        )}
+
+                                        {/* Arrow to Next (Mobile) */}
+                                        {index < journey.length - 1 && (
+                                            <ArrowRight className="w-5 h-5 text-white/10 md:hidden mt-6" />
                                         )}
                                     </div>
-
-                                    {/* Text Info */}
-                                    <div className="text-center w-full">
-                                        <h4 className="font-bold text-white text-sm mb-1.5 leading-tight text-balance">{phase.title}</h4>
-                                        <p className="text-xs text-gray-500 leading-snug min-h-[40px] text-balance">{phase.description}</p>
-                                    </div>
-
-                                    {/* Status Indicator */}
-                                    {phase.score > 0 && (
-                                        <div className={`mt-3 flex items-center gap-1 text-[10px] md:text-xs font-bold ${getStatusDetails(phase.score).text} bg-[#1A1A1A] px-3 py-1 rounded-full border border-white/5`}>
-                                            {getStatusDetails(phase.score).icon}
-                                            {phase.score >= 4.5 ? 'Óptimo' : phase.score >= 3.5 ? 'Atención' : 'Crítico'}
-                                        </div>
-                                    )}
-
-                                    {/* Arrow to Next (Mobile) */}
-                                    {index < journey.length - 1 && (
-                                        <ArrowRight className="w-5 h-5 text-white/10 md:hidden mt-6" />
-                                    )}
-                                </div>
-                            )
-                        })
-                    )}
+                                )
+                            })
+                        )}
+                    </div>
                 </div>
             </div>
         </FeatureGuard>
