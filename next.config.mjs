@@ -40,6 +40,8 @@ const nextConfig = {
         return [
             { source: '/ops/manifest.json', destination: '/ops/manifest.json' },
             { source: '/rps/manifest.json', destination: '/rps/manifest.json' },
+            // Ensure survey manifests resolve correctly
+            { source: '/api/surveys/:surveyId/manifest', destination: '/api/surveys/:surveyId/manifest' },
             // fallback to default manifest for other routes
             { source: '/manifest.json', destination: '/manifest.json' },
         ];
