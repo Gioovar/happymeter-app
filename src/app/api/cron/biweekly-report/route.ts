@@ -110,12 +110,28 @@ export async function GET(request: Request) {
                 // 6. Send SMS (To Owner)
                 if (twilioClient && ownerSettings.phone) {
                     try {
+                        // Auto-format phone for Mexico if it's a 10-digit number without country code
+                        let targetPhone = ownerSettings.phone.replace(/[\s\-\(\)]/g, ''); // Remove spaces, dashes, parens
+
+                        if (!targetPhone.startsWith('+')) {
+                            // If it's a 10 digit number, assume +52
+                            if (targetPhone.length === 10) {
+                                targetPhone = `+52${targetPhone}`;
+                            } else if (targetPhone.startsWith('52') && targetPhone.length === 12) {
+                                // Sometimes people put 52 but no plus
+                                targetPhone = `+${targetPhone}`;
+                            } else {
+                                // Fallback, just try prepending +52 if it looks like a local number
+                                targetPhone = `+52${targetPhone}`;
+                            }
+                        }
+
                         const message = `📊 Hola ${ownerSettings.businessName}. Reporte de ${branchName}: "${criticalIssue}". \n\nVer aquí: ${reportUrl}`;
 
                         await twilioClient.messages.create({
                             body: message,
                             from: process.env.TWILIO_PHONE_NUMBER,
-                            to: ownerSettings.phone
+                            to: targetPhone // Use the formatted phone
                         });
                         results.sent_sms++;
                     } catch (smsErr: any) {
