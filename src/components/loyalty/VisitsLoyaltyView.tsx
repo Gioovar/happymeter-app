@@ -2,8 +2,9 @@ import { useState, useEffect } from "react"
 import { CustomerLoyaltyCard } from "./CustomerLoyaltyCard"
 import { addLoyaltyReward, updateLoyaltyReward, deleteLoyaltyReward, getAvailableProgramsForCloning, cloneLoyaltyRewards } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { ArrowRight, Save, Trash2, CheckCircle2, Copy, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { AlertCircle, ArrowRight, CheckCircle2, ChevronDown, Copy, Edit2, Loader2, Save, Trash2, X, AlertTriangle } from "lucide-react"
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { useRouter, useSearchParams } from "next/navigation"
 import { PromotionsSlider } from "./PromotionsSlider"
 import { getPromotions } from "@/actions/loyalty"
 
@@ -15,6 +16,8 @@ interface VisitsLoyaltyViewProps {
 
 export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyViewProps) {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const [cloneTargetId, setCloneTargetId] = useState<string | null>(null)
     const [savingId, setSavingId] = useState<number | null>(null)
     const [previewVisits, setPreviewVisits] = useState(5)
     const [promotions, setPromotions] = useState<any[]>([])
@@ -86,12 +89,16 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
     // Generate slots 1 to 10
     const slots = Array.from({ length: 10 }, (_, i) => i + 1)
 
-    const handleClone = async (sourceProgramId: string) => {
-        if (!confirm("Esto reemplazará todos los premios actuales configurados para esta sucursal con los de la otra sucursal. ¿Estás seguro?")) return;
+    const handleCloneRequest = (sourceProgramId: string) => {
+        setCloneTargetId(sourceProgramId)
+    }
+
+    const handleConfirmClone = async () => {
+        if (!cloneTargetId) return;
         setIsCloning(true)
         setShowCloneDropdown(false)
         try {
-            const res = await cloneLoyaltyRewards(sourceProgramId, program.id)
+            const res = await cloneLoyaltyRewards(cloneTargetId, program.id)
             if (res.success) {
                 toast.success("Premios clonados exitosamente")
                 router.refresh()
@@ -102,6 +109,7 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
             toast.error("Error de conexión al clonar")
         } finally {
             setIsCloning(false)
+            setCloneTargetId(null)
         }
     }
 
@@ -151,7 +159,10 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
                                                 {cloneablePrograms.map(p => (
                                                     <button
                                                         key={p.id}
-                                                        onClick={() => handleClone(p.id)}
+                                                        onClick={() => {
+                                                            setShowCloneDropdown(false)
+                                                            handleCloneRequest(p.id)
+                                                        }}
                                                         className="w-full text-left px-4 py-3 hover:bg-white/5 transition-colors flex flex-col gap-1"
                                                     >
                                                         <span className="text-sm font-medium text-white">{p.businessName}</span>
@@ -178,7 +189,7 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
                                     </div>
                                     <div className="flex-1 relative">
                                         <input
-                                            key={reward?.id || `empty-${count}`}
+                                            key={reward?.id || `empty - ${count} `}
                                             defaultValue={reward?.name || ""}
                                             placeholder="Sin premio"
                                             onBlur={(e) => handleSaveReward(count, e.target.value)}
@@ -271,6 +282,40 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
                 </div>
 
             </div>
+
+            {/* CLONE CONFIRMATION MODAL */}
+            <Dialog open={!!cloneTargetId} onOpenChange={(open) => !open && setCloneTargetId(null)}>
+                <DialogContent className="bg-[#111] border border-white/10 text-white sm:max-w-md rounded-3xl p-6">
+                    <div className="flex flex-col items-center text-center gap-4">
+                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center border border-red-500/20">
+                            <AlertTriangle className="w-8 h-8 text-red-500" />
+                        </div>
+                        <DialogTitle className="text-2xl font-bold">Sobrescribir Premios</DialogTitle>
+                        <DialogDescription className="text-gray-400">
+                            Esto reemplazará <strong className="text-white">TODOS</strong> los premios actuales configurados para esta sucursal con los de la sucursal origen. Esta acción no se puede deshacer.
+                            <br /><br />
+                            ¿Estás completamente seguro?
+                        </DialogDescription>
+                    </div>
+
+                    <div className="flex gap-3 w-full mt-6">
+                        <button
+                            onClick={() => setCloneTargetId(null)}
+                            disabled={isCloning}
+                            className="flex-1 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors disabled:opacity-50"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleConfirmClone}
+                            disabled={isCloning}
+                            className="flex-1 px-4 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-500/20"
+                        >
+                            {isCloning ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sí, Sobrescribir"}
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

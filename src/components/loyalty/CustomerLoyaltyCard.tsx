@@ -176,9 +176,9 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                         {program?.logoUrl ? (
                             <img src={program.logoUrl} alt={program.businessName} className="w-10 h-10 object-contain rounded-full bg-white/10 p-1" />
                         ) : null}
-                        <div>
-                            <h1 className="text-xl font-bold tracking-tight">{businessName || program?.businessName || "Mi Negocio"}</h1>
-                            <p className="text-xs text-gray-400 uppercase tracking-widest">Membresía Digital</p>
+                        <div className="flex-1 min-w-0 pr-4">
+                            <h1 className="text-xl font-bold tracking-tight">{businessName || program?.businessName || "Programa de Lealtad"}</h1>
+                            <p className="text-[10px] text-gray-400 font-medium tracking-widest mt-0.5">MEMBRESÍA DIGITAL</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
