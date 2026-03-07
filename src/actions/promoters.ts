@@ -35,7 +35,7 @@ export async function createPromoter(data: {
             }
         })
 
-        revalidatePath('/dashboard/reservations/rps')
+        revalidatePath('/dashboard/[branchSlug]/reservations/rps', 'page')
         return { success: true, promoter }
     } catch (error) {
         console.error("Error creating promoter:", error)
@@ -84,7 +84,7 @@ export async function deletePromoter(id: string) {
             where: { id, businessId: ownerId }
         })
 
-        revalidatePath('/dashboard/reservations/rps')
+        revalidatePath('/dashboard/[branchSlug]/reservations/rps', 'page')
         return { success: true }
     } catch (error) {
         console.error("Error deleting promoter:", error)
@@ -102,7 +102,7 @@ export async function updatePromoter(id: string, data: any) {
             data
         })
 
-        revalidatePath('/dashboard/reservations/rps')
+        revalidatePath('/dashboard/[branchSlug]/reservations/rps', 'page')
         return { success: true }
     } catch (error) {
         console.error("Error updating promoter:", error)
@@ -172,7 +172,7 @@ export async function createSettlement(data: {
             }
         })
 
-        revalidatePath(`/dashboard/reservations/rps/${data.promoterId}`)
+        revalidatePath(`/dashboard/[branchSlug]/reservations/rps/[promoterId]`, 'page')
         return { success: true, settlement }
     } catch (error) {
         console.error("Error creating settlement:", error)
@@ -193,7 +193,7 @@ export async function markSettlementAsPaid(id: string) {
             }
         })
 
-        revalidatePath(`/dashboard/reservations/rps`)
+        revalidatePath(`/dashboard/[branchSlug]/reservations/rps`, 'page')
         return { success: true }
     } catch (error) {
         console.error("Error marking settlement as paid:", error)
@@ -343,5 +343,15 @@ export async function getPublicPromoterPortal(slug: string) {
     }
 }
 
-
-
+export async function verifyPromoterSlug(slug: string) {
+    try {
+        const promoter = await prisma.promoterProfile.findUnique({
+            where: { slug },
+            select: { id: true }
+        })
+        return { success: !!promoter }
+    } catch (error) {
+        console.error("Error verifying promoter slug:", error)
+        return { success: false }
+    }
+}

@@ -7,7 +7,7 @@ import { ChevronLeft, Target } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-export default async function PromoterDashboardPage({ params }: { params: { promoterId: string } }) {
+export default async function PromoterDashboardPage({ params }: { params: { promoterId: string, branchSlug: string } }) {
     const context = await getDashboardContext()
     if (!context) return null
 
@@ -23,7 +23,7 @@ export default async function PromoterDashboardPage({ params }: { params: { prom
     return (
         <div className="p-6 space-y-6">
             <div className="flex items-center gap-4">
-                <Link href="/dashboard/reservations/rps" className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                <Link href={`/dashboard/${params.branchSlug}/reservations/rps`} className="p-2 hover:bg-white/5 rounded-full transition-colors">
                     <ChevronLeft className="w-6 h-6 text-zinc-400" />
                 </Link>
                 <div>

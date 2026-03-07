@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import Image from 'next/image'
+import { verifyPromoterSlug } from '@/actions/promoters'
 
 export default function RpsLoginPortal() {
     const router = useRouter()
@@ -28,12 +29,14 @@ export default function RpsLoginPortal() {
         setIsLoading(true)
 
         try {
-            // Test if the portal exists
-            const res = await fetch(`/api/promoters/${cleanSlug}/verify`)
+            const result = await verifyPromoterSlug(cleanSlug)
 
-            // Note: Since we don't have a direct "verify" API built specifically for this front-end yet,
-            // we will simply redirect them and let the page itself handle the 404 naturally for now.
-            router.push(`/rps/${cleanSlug}`)
+            if (result.success) {
+                router.push(`/rps/${cleanSlug}`)
+            } else {
+                setIsLoading(false)
+                setError("El código de promotor es incorrecto o no existe.")
+            }
 
         } catch (err: any) {
             console.error("Redirection error", err)

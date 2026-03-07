@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import {
     Table,
     TableBody,
@@ -29,6 +30,8 @@ interface PromotersListProps {
 
 export function PromotersList({ initialPromoters, programId }: PromotersListProps) {
     const [promoters, setPromoters] = useState(initialPromoters)
+    const params = useParams()
+    const branchSlug = params?.branchSlug as string
 
     const handleDelete = async (id: string) => {
         if (!confirm('¿Estás seguro de eliminar este RP? Se perderán sus métricas vinculadas.')) return
@@ -129,7 +132,7 @@ export function PromotersList({ initialPromoters, programId }: PromotersListProp
                                                 <Mail className="w-4 h-4" /> Enviar App (Correo)
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href={`/dashboard/reservations/rps/${promoter.id}`} className="w-full flex gap-2 items-center px-2 py-1.5 hover:bg-white/5 cursor-pointer rounded-sm">
+                                                <Link href={branchSlug ? `/dashboard/${branchSlug}/reservations/rps/${promoter.id}` : `/dashboard/reservations/rps/${promoter.id}`} className="w-full flex gap-2 items-center px-2 py-1.5 hover:bg-white/5 cursor-pointer rounded-sm">
                                                     <ExternalLink className="w-4 h-4" /> Ver Dashboard
                                                 </Link>
                                             </DropdownMenuItem>
