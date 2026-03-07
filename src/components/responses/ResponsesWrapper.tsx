@@ -14,10 +14,7 @@ export default async function ResponsesWrapper({ effectiveUserId }: ResponsesWra
 
     const responses = await prisma.response.findMany({
         where: {
-            OR: [
-                { branchId: effectiveUserId },
-                { survey: { userId: effectiveUserId } }
-            ]
+            survey: { userId: effectiveUserId }
         },
         include: {
             survey: {
@@ -38,10 +35,7 @@ export default async function ResponsesWrapper({ effectiveUserId }: ResponsesWra
 
     const tickets = await prisma.issueTicket.findMany({
         where: {
-            OR: [
-                { branchId: effectiveUserId },
-                { businessId: effectiveUserId }
-            ]
+            businessId: effectiveUserId
         },
         orderBy: {
             createdAt: 'desc'
