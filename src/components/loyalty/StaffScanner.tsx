@@ -47,12 +47,19 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
     useEffect(() => {
         const initNativeScanner = async () => {
             try {
+                // Wait briefly so UI can settle before requesting camera
+                await new Promise(res => setTimeout(res, 200))
+
                 const status = await BarcodeScanner.checkPermission({ force: true })
                 if (status.granted) {
                     setIsNativeScanner(true)
-                    BarcodeScanner.hideBackground()
-                    // Add global class to make body transparent
+
+                    document.documentElement.classList.add("qr-scanner-active")
                     document.body.classList.add("qr-scanner-active")
+
+                    await BarcodeScanner.hideBackground()
+                    // Prepare before starting to prevent black screen on first launch
+                    await BarcodeScanner.prepare()
 
                     const result = await BarcodeScanner.startScan()
 
@@ -60,6 +67,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                         handleScan(result.content)
                         // Stop after scan to process
                         BarcodeScanner.stopScan()
+                        document.documentElement.classList.remove("qr-scanner-active")
                         document.body.classList.remove("qr-scanner-active")
                     }
                 } else {
@@ -75,6 +83,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
             initNativeScanner()
             return () => {
                 BarcodeScanner.stopScan()
+                document.documentElement.classList.remove("qr-scanner-active")
                 document.body.classList.remove("qr-scanner-active")
             }
         } else {
@@ -419,16 +428,13 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                     background: white !important;
                     border: 1px solid #e2e8f0 !important;
                 }
-                body.qr-scanner-active {
-                    background: transparent !important;
-                }
-                body.qr-scanner-active > * {
-                    display: none !important;
-                }
+                /* NATIVE SCANNER GLOBAL TRANSPARENCY */
+                html.qr-scanner-active,
+                body.qr-scanner-active,
                 body.qr-scanner-active #__next, 
                 body.qr-scanner-active main,
+                body.qr-scanner-active [data-reactroot],
                 body.qr-scanner-active .scanner-overlay-container {
-                    display: block !important;
                     background: transparent !important;
                 }
                 body.qr-scanner-active .hide-on-scan {
@@ -451,6 +457,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                     <button
                         onClick={() => {
                             BarcodeScanner.stopScan();
+                            document.documentElement.classList.remove("qr-scanner-active");
                             document.body.classList.remove("qr-scanner-active");
                             setIsNativeScanner(false);
                             window.location.reload(); // Force refresh to bring web UI back completely
