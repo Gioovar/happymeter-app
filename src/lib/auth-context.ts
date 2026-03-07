@@ -79,6 +79,7 @@ export async function getEffectiveUserId(branchSlug?: string): Promise<string> {
         return userId; // Fallback to self? Or throw? Fallback safest for now.
     }
 
+    if (!userId) throw new Error('Unauthorized');
     return userId;
 }
 

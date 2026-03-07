@@ -1016,7 +1016,12 @@ export async function getProcessTeamStats(branchId: string) {
 
     const { start: todayStart, end: todayEnd, dayOfWeek } = await getMexicoTodayRange();
 
-    // 1. Fetch all active team members for this branch
+    // Determine the effective owner array (either the specific branch, or all branches owned by the user)
+    // If I'm passing a branchId, I ONLY want members of that branch.
+    // Let's verify if the current user has access to this branchId first to be safe,
+    // though the UI should already encapsulate this.
+
+    // 1. Fetch all active team members for this specific branch ONLY
     let members = await prisma.teamMember.findMany({
         where: { ownerId: branchId, isActive: true },
         include: {

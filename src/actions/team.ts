@@ -14,32 +14,36 @@ export async function getTeamData(branchId?: string) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
-    let effectiveOwnerId = userId
-
-    // If branchId is provided, we need to verify if the current user has access to it.
-    // Access is allowed if:
-    // 1. Current user is the owner of the Chain that owns the Branch.
-    // 2. Current user IS the branch (already handled by default if userId matches, but passed branchId might differ).
+    let effectiveOwnerId = userId;
 
     if (branchId && branchId !== userId) {
-        // Verify Chain Ownership
-        // Find the branch and check if its chain's owner is the current user
+        // Verify Chain Ownership or direct matching
         const branch = await prisma.chainBranch.findFirst({
             where: {
-                branchId: branchId,
+                OR: [
+                    { slug: branchId },
+                    { branchId: branchId }
+                ],
                 chain: {
                     ownerId: userId
                 }
             }
-        })
+        });
 
         if (!branch) {
-            // Check if it's just the user trying to view themselves (redundant but safe)
             if (branchId !== userId) {
-                throw new Error('Unauthorized access to branch team')
+                throw new Error('Unauthorized access to branch team');
             }
         } else {
-            effectiveOwnerId = branchId
+            effectiveOwnerId = branch.branchId;
+        }
+    } else {
+        // Check if I am a branch being queried directly
+        const myBranch = await prisma.chainBranch.findFirst({
+            where: { branchId: userId }
+        });
+        if (myBranch) {
+            effectiveOwnerId = myBranch.branchId;
         }
     }
 
@@ -47,12 +51,12 @@ export async function getTeamData(branchId?: string) {
     const members = await prisma.teamMember.findMany({
         where: { ownerId: effectiveOwnerId },
         include: { user: true }
-    })
+    });
 
     // Get pending invitations
     const invitations = await prisma.teamInvitation.findMany({
         where: { inviterId: effectiveOwnerId }
-    })
+    });
 
     // Determine role
     // If I am the effective owner (userId === effectiveOwnerId), I am OWNER.
