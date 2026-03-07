@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
-import { Check, ChevronLeft, Upload, X, Instagram, Facebook, Sparkles, Calendar as CalendarIcon, Download } from 'lucide-react'
+import { Check, ChevronLeft, Upload, X, Instagram, Facebook, Sparkles, Calendar as CalendarIcon, Download, Share, MoreVertical } from 'lucide-react'
 import Image from 'next/image'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -44,6 +44,15 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
     const [countdown, setCountdown] = useState<number | null>(null)
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
     const [isInstallable, setIsInstallable] = useState(false)
+    const [isInstallModalOpen, setIsInstallModalOpen] = useState(false)
+    const [isIOS, setIsIOS] = useState(false)
+
+    useEffect(() => {
+        // Detect iOS for specific install instructions
+        const ua = window.navigator.userAgent
+        const _isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+        setIsIOS(_isIOS)
+    }, [])
 
     useEffect(() => {
         const handleBeforeInstallPrompt = (e: Event) => {
@@ -91,7 +100,8 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
             }
             setDeferredPrompt(null)
         } else {
-            alert("Para instalar la App, asegúrate de estar usando Google Chrome o Safari.\\nAbre el menú del navegador (los 3 puntitos arriba a la derecha) o el botón de compartir, y selecciona 'Agregar a la pantalla principal' o 'Instalar aplicación'.")
+            // Open explicit instruction modal if native fails
+            setIsInstallModalOpen(true)
         }
     }
 
@@ -783,17 +793,71 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                 </AnimatePresence>
 
                 {/* Fallback Install Button always visible at the bottom */}
-                <div className="pt-8 pb-4 flex justify-center opacity-40 hover:opacity-100 transition-opacity">
+                <div className="pt-8 pb-4 flex justify-center opacity-70 hover:opacity-100 transition-opacity">
                     <button
                         type="button"
                         onClick={handleInstallClickFallback}
-                        className="text-xs flex items-center gap-1 cursor-pointer"
+                        className="text-sm font-medium flex items-center gap-2 cursor-pointer bg-black/40 px-4 py-2 rounded-full border border-white/10"
                         style={{ color: theme.textSecondary }}
                     >
-                        <Download className="w-3 h-3" /> Instalar App
+                        <Download className="w-4 h-4" /> Instalar App en dispositivo
                     </button>
                 </div>
             </div>
+
+            {/* Custom Install Instruction Modal */}
+            <Dialog open={isInstallModalOpen} onOpenChange={setIsInstallModalOpen}>
+                <DialogContent className="w-[90vw] max-w-md p-6 bg-[#1a1a1a] border border-white/10 text-white rounded-2xl shadow-2xl">
+                    <DialogTitle className="text-xl font-bold mb-2 flex items-center gap-2">
+                        <Download className="w-6 h-6 text-violet-400" />
+                        Instalar HappyMeter
+                    </DialogTitle>
+                    <DialogDescription className="text-gray-300 mb-6">
+                        Instala esta encuesta como App para que funcione rápido y sin internet en tu restaurante.
+                    </DialogDescription>
+
+                    <div className="space-y-6">
+                        {isIOS ? (
+                            <div className="space-y-4">
+                                <p className="font-medium text-white/90">Sigue estos pasos en Safari:</p>
+                                <ol className="list-decimal pl-5 space-y-3 text-gray-300 text-sm">
+                                    <li className="pl-2">
+                                        Toca el botón <Share className="inline w-4 h-4 mx-1.5" /> <strong>Compartir</strong> en la barra inferior (o superior del iPad).
+                                    </li>
+                                    <li className="pl-2">
+                                        Desliza hacia abajo y selecciona <strong>"Agregar a Inicio"</strong> <span className="inline-block bg-white/10 px-2 py-0.5 rounded ml-1 text-xs px-2 py-1 font-mono">+</span>
+                                    </li>
+                                    <li className="pl-2">
+                                        Toca <strong>Agregar</strong> arriba a la derecha.
+                                    </li>
+                                </ol>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <p className="font-medium text-white/90">Sigue estos pasos en Google Chrome:</p>
+                                <ol className="list-decimal pl-5 space-y-3 text-gray-300 text-sm">
+                                    <li className="pl-2">
+                                        Asegúrate de haber abierto este enlace directamente en <strong>Google Chrome</strong> (no dentro de WhatsApp).
+                                    </li>
+                                    <li className="pl-2">
+                                        Toca el menú <MoreVertical className="inline w-4 h-4 mx-1" /> de 3 puntos (arriba a la derecha).
+                                    </li>
+                                    <li className="pl-2">
+                                        Selecciona <strong>"Agregar a la pantalla principal"</strong> o <strong>"Instalar aplicación"</strong>.
+                                    </li>
+                                </ol>
+                            </div>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => setIsInstallModalOpen(false)}
+                            className="w-full mt-4 bg-white/10 hover:bg-white/20 text-white font-medium py-3 rounded-xl transition"
+                        >
+                            Entendido
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
