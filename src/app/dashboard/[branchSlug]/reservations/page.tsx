@@ -18,6 +18,7 @@ import { getDashboardContext } from "@/lib/auth-context"
 import { redirect } from "next/navigation"
 import ReservationSetupModal from "@/components/dashboard/reservations/ReservationSetupModal"
 import { ReservationModeToggle } from "@/components/dashboard/reservations/ReservationModeToggle"
+import { ReservationScheduleDialog } from "@/components/dashboard/reservations/ReservationScheduleDialog"
 
 export const dynamic = 'force-dynamic'
 
@@ -119,12 +120,18 @@ export default async function BranchReservationsPage({ params }: { params: { bra
 
                     {program && <ReservationLinkButton programId={program.id} />}
 
+                    <ReservationScheduleDialog
+                        isSimpleMode={userSettings?.reservationSettings?.simpleMode === true}
+                        branchId={branchSlug}
+                        currentSchedule={(userSettings?.reservationSettings as any)?.availability}
+                    />
+
                     <Link
                         href={setupLink}
                         className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2.5 rounded-xl font-medium text-sm text-white transition-all flex items-center gap-2"
                     >
-                        <Settings className="w-4 h-4" />
-                        Configuración
+                        <Settings className="w-4 h-4 text-amber-500 font-bold" />
+                        Mesas (Avanzado)
                     </Link>
 
                     <NewReservationButton
