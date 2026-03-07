@@ -35,6 +35,12 @@ export async function createPromoter(data: {
             }
         })
 
+        if (data.email) {
+            await sendPromoterNotification(promoter.id, 'email')
+        } else if (data.phone) {
+            await sendPromoterNotification(promoter.id, 'sms')
+        }
+
         revalidatePath('/dashboard/[branchSlug]/reservations/rps', 'page')
         return { success: true, promoter }
     } catch (error) {
