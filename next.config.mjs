@@ -50,9 +50,33 @@ const nextConfig = {
 
 const pwaConfig = withPWA({
     dest: "public",
-    // disable: process.env.NODE_ENV === "development",
     register: true,
     skipWaiting: true,
+    runtimeCaching: [
+        {
+            urlPattern: /^\/s\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+                cacheName: 'survey-pages',
+                expiration: {
+                    maxEntries: 32,
+                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                },
+                networkTimeoutSeconds: 10,
+            },
+        },
+        {
+            urlPattern: /^\/api\/surveys\/.*\/manifest/i,
+            handler: 'NetworkFirst',
+            options: {
+                cacheName: 'survey-manifests',
+                expiration: {
+                    maxEntries: 32,
+                    maxAgeSeconds: 24 * 60 * 60,
+                },
+            },
+        }
+    ]
 });
 
 export default pwaConfig(nextConfig);
