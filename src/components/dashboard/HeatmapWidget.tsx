@@ -83,7 +83,7 @@ export default function HeatmapWidget() {
                     </p>
                 </div>
 
-                <div className="flex-1 flex flex-col md:flex-row justify-between items-center relative py-8 px-4">
+                <div className="flex-1 flex flex-col md:flex-row justify-between items-start relative py-8 px-2 md:gap-4 lg:gap-8">
 
                     {/* Connecting Line Backdrop */}
                     <div className="absolute top-1/2 left-10 right-10 h-1 bg-white/5 -translate-y-1/2 hidden md:block rounded-full z-0"></div>
@@ -95,10 +95,10 @@ export default function HeatmapWidget() {
                             const status = getStatusDetails(phase.score)
                             const Icon = phase.icon
                             return (
-                                <div key={phase.id} className="relative z-10 flex flex-col items-center group w-full md:w-1/4 mb-8 md:mb-0">
+                                <div key={phase.id} className="relative z-10 flex flex-col items-center group w-full md:flex-1 mb-8 md:mb-0 px-2">
 
                                     {/* Score Bubble */}
-                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border-2 shadow-xl mb-4 transition-transform group-hover:scale-110 ${status.color} bg-[#151515]`}>
+                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border-2 shadow-xl mb-4 transition-transform group-hover:scale-110 ${phase.score > 0 ? getStatusDetails(phase.score).color : 'bg-gray-800/80 border-gray-700/50 text-gray-500'} bg-[#151515] shrink-0`}>
                                         {phase.score > 0 ? (
                                             <span className="text-xl font-black">{phase.score.toFixed(1)}</span>
                                         ) : (
@@ -107,15 +107,15 @@ export default function HeatmapWidget() {
                                     </div>
 
                                     {/* Text Info */}
-                                    <div className="text-center">
-                                        <h4 className="font-bold text-white text-sm mb-1">{phase.title}</h4>
-                                        <p className="text-xs text-gray-500 px-4 h-8">{phase.description}</p>
+                                    <div className="text-center w-full">
+                                        <h4 className="font-bold text-white text-sm mb-1.5 leading-tight text-balance">{phase.title}</h4>
+                                        <p className="text-xs text-gray-500 leading-snug min-h-[40px] text-balance">{phase.description}</p>
                                     </div>
 
                                     {/* Status Indicator */}
                                     {phase.score > 0 && (
-                                        <div className={`mt-3 flex items-center gap-1 text-xs font-bold ${status.text} bg-[#1A1A1A] px-3 py-1 rounded-full border border-white/5`}>
-                                            {status.icon}
+                                        <div className={`mt-3 flex items-center gap-1 text-[10px] md:text-xs font-bold ${getStatusDetails(phase.score).text} bg-[#1A1A1A] px-3 py-1 rounded-full border border-white/5`}>
+                                            {getStatusDetails(phase.score).icon}
                                             {phase.score >= 4.5 ? 'Óptimo' : phase.score >= 3.5 ? 'Atención' : 'Crítico'}
                                         </div>
                                     )}

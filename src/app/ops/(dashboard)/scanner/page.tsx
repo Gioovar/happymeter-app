@@ -1,12 +1,18 @@
-import { auth } from "@clerk/nextjs/server"
+import { getOpsSession } from "@/lib/ops-auth"
 import { StaffScanner } from "@/components/loyalty/StaffScanner"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
 export default async function OpsScannerPage() {
-    const { userId } = await auth()
-    if (!userId) redirect("/sign-in")
+    const session = await getOpsSession()
+
+    if (!session.isAuthenticated) redirect("/ops/login")
+    if (session.requiresContextSelection) redirect("/ops/select-context")
+    if (!session.userId && !session.member) redirect("/ops/login")
+
+    // The context owner ID is the branch/business the staff is currently operating under
+    const activeBranchId = session.member?.ownerId || session.userId
 
     return (
         <div className="max-w-md mx-auto">
@@ -17,7 +23,7 @@ export default async function OpsScannerPage() {
                 <h1 className="text-xl font-bold text-white">Escaner</h1>
             </div>
 
-            <StaffScanner staffId={userId} />
+            <StaffScanner staffId={session.userId || session.member?.id || ''} branchId={activeBranchId} />
         </div>
     )
 }

@@ -1176,11 +1176,12 @@ export async function updateReservationStatus(id: string, status: string) {
     }
 }
 
-export async function validateReservationScan(reservationId: string) {
+export async function validateReservationScan(reservationId: string, scannerBranchId?: string | null) {
     try {
         const reservation = await prisma.reservation.findUnique({
             where: { id: reservationId },
             include: {
+                user: { select: { businessName: true } },
                 table: {
                     include: {
                         floorPlan: {
@@ -1195,6 +1196,16 @@ export async function validateReservationScan(reservationId: string) {
 
         if (!reservation) {
             return { success: false, error: "Reservación no encontrada" }
+        }
+
+        // --- BRANCH SECURITY VALIDATION ---
+        // Verify the scanner's active branch matches the reservation's branch
+        if (scannerBranchId && reservation.userId && scannerBranchId !== reservation.userId) {
+            const correctBranchName = reservation.user?.businessName || reservation.table?.floorPlan?.user?.businessName || "Otra Sucursal"
+            return {
+                success: false,
+                error: `Este código QR pertenece a otra sucursal y no puede ser escaneado aquí. (Sucursal correcta: ${correctBranchName})`
+            }
         }
 
         return {

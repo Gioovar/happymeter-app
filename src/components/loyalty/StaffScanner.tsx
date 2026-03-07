@@ -13,9 +13,10 @@ import { BarcodeScanner } from "@capacitor-community/barcode-scanner"
 
 interface StaffScannerProps {
     staffId: string
+    branchId?: string | null
 }
 
-export function StaffScanner({ staffId }: StaffScannerProps) {
+export function StaffScanner({ staffId, branchId }: StaffScannerProps) {
     const [scanResult, setScanResult] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
     const [scannerError, setScannerError] = useState<string | null>(null)
@@ -265,7 +266,7 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
             setIsProcessing(false) // Wait for user interaction
         } else if (type === 'RESERVATION') {
             toast.loading("Buscando reservación...")
-            const res = await validateReservationScan(payload)
+            const res = await validateReservationScan(payload, branchId || staffId)
             toast.dismiss()
 
             if (res.success) {
