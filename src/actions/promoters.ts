@@ -2,16 +2,18 @@
 
 import { auth } from "@clerk/nextjs/server"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { PromoterCommissionType } from "@prisma/client"
 import { sendSMS } from "@/lib/sms"
 import { DEFAULT_SENDER } from "@/lib/email"
 import { resend } from "@/lib/resend"
+import { sendPushNotificationToRP } from "@/lib/push-service"
 
-export async function createPromoterSession(slug: string) {
+export async function createGlobalPromoterSession(phone: string) {
     const cookieStore = await cookies();
-    cookieStore.set('rps_session_slug', slug, {
+    cookieStore.set('rps_global_session', phone, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -19,6 +21,12 @@ export async function createPromoterSession(slug: string) {
         path: '/rps'
     });
     return { success: true };
+}
+
+export async function logoutGlobalPromoter() {
+    const cookieStore = await cookies();
+    cookieStore.delete('rps_global_session');
+    redirect('/rps');
 }
 
 export async function createPromoter(data: {
@@ -163,7 +171,12 @@ export async function getPromoterAnalytics(promoterId?: string, dateRange?: { fr
             revenue: 0, // Assume 0 if no price linked yet, or calculate if available
             conversionRate: reservations.length > 0
                 ? (reservations.filter(r => r.status === 'CHECKED_IN').length / reservations.length) * 100
-                : 0
+                : 0,
+            guestTypes: {
+                new: reservations.filter(r => (r as any).guestType === 'NEW').length,
+                returning: reservations.filter(r => (r as any).guestType === 'RETURNING').length,
+                vip: reservations.filter(r => (r as any).guestType === 'VIP').length,
+            }
         }
 
         return { success: true, stats }
@@ -378,22 +391,134 @@ export async function getPublicPromoterPortal(slug: string) {
             where: { userId: promoter.businessId }
         })
 
-        const confirmed = promoter.reservations
-            .filter(r => r.status === 'CONFIRMED' || r.status === 'CHECKED_IN')
-            .reduce((sum, r) => sum + r.partySize, 0)
-
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
         const referralLink = loyaltyProgram
             ? `${appUrl}/book/${loyaltyProgram.id}?rp=${promoter.slug}`
             : null
 
+        const now = new Date();
+        // Today bounds
+        const todayStart = new Date(now.setHours(0, 0, 0, 0));
+        const todayEnd = new Date(now.setHours(23, 59, 59, 999));
+
+        const isToday = (date: Date) => date >= todayStart && date <= todayEnd;
+
+        // ALL TIME
+        const allTimeConfirmed = promoter.reservations
+            .filter((r: any) => r.status === 'CONFIRMED' || r.status === 'CHECKED_IN')
+            .reduce((sum: number, r: any) => sum + r.partySize, 0)
+
+        const allTimeCommission = promoter.reservations
+            .filter((r: any) => r.status === 'CHECKED_IN' && r.commissionEarned)
+            .reduce((sum: number, r: any) => sum + (r.commissionEarned || 0), 0)
+
+        // TODAY
+        const todayReservations = promoter.reservations.filter((r: any) => isToday(new Date(r.date)));
+
+        const todayConfirmed = todayReservations
+            .filter((r: any) => r.status === 'CONFIRMED' || r.status === 'CHECKED_IN')
+            .reduce((sum: number, r: any) => sum + r.partySize, 0)
+
+        const todayCommission = promoter.commissionType === 'PER_PERSON'
+            ? todayConfirmed * promoter.commissionValue
+            : 0;
+
+        // GAMIFICATION & TIME BOUNDS
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        const thisWeekConfirmed = promoter.reservations
+            .filter((r: any) => (r.status === 'CONFIRMED' || r.status === 'CHECKED_IN') && new Date(r.date) >= startOfWeek)
+            .reduce((sum: number, r: any) => sum + r.partySize, 0);
+
+        const thisMonthConfirmed = promoter.reservations
+            .filter((r: any) => (r.status === 'CONFIRMED' || r.status === 'CHECKED_IN') && new Date(r.date) >= startOfMonth)
+            .reduce((sum: number, r: any) => sum + r.partySize, 0);
+
+        const businessSettings = await (prisma.userSettings as any).findUnique({
+            where: { userId: promoter.businessId },
+            select: { weeklyGoalAttendees: true, monthlyGoalAttendees: true }
+        });
+        const weeklyGoal = businessSettings?.weeklyGoalAttendees || 50;
+        const monthlyGoal = businessSettings?.monthlyGoalAttendees || 200;
+
+        const allPromoters = await prisma.promoterProfile.findMany({
+            where: { businessId: promoter.businessId, isActive: true },
+            include: {
+                reservations: {
+                    where: { status: { in: ['CONFIRMED', 'CHECKED_IN'] }, date: { gte: startOfMonth } },
+                    select: { partySize: true }
+                }
+            }
+        });
+
+        const leaderboard = allPromoters.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            monthlyConfirmed: p.reservations.reduce((sum: number, r: any) => sum + r.partySize, 0)
+        })).sort((a: any, b: any) => b.monthlyConfirmed - a.monthlyConfirmed);
+
+        const currentRank = leaderboard.findIndex((r: any) => r.id === promoter.id) + 1;
+
+        // Gamification Level (0-99 Bronze, 100-299 Silver, 300+ Gold based on ALL TIME)
+        let gamificationLevel = 'BRONZE';
+        if (allTimeConfirmed >= 300) gamificationLevel = 'GOLD';
+        else if (allTimeConfirmed >= 100) gamificationLevel = 'SILVER';
+
         const stats = {
-            totalReservations: promoter.reservations.length,
-            confirmedAttendees: confirmed,
-            commission: promoter.commissionType === 'PER_PERSON'
-                ? confirmed * promoter.commissionValue
-                : 0, // Simplified for now
+            allTime: {
+                totalReservations: promoter.reservations.length,
+                confirmedAttendees: allTimeConfirmed,
+                commission: allTimeCommission
+            },
+            today: {
+                totalReservations: todayReservations.length,
+                confirmedAttendees: todayConfirmed,
+                commission: todayCommission
+            },
+            gamification: {
+                level: gamificationLevel,
+                rank: currentRank,
+                totalRps: leaderboard.length,
+                weeklyConfirmed: thisWeekConfirmed,
+                monthlyConfirmed: thisMonthConfirmed,
+                weeklyGoal,
+                monthlyGoal,
+                leaderboard: leaderboard.slice(0, 10) // Top 10
+            },
             referralLink
+        }
+
+        const upcomingEvents = await (prisma as any).promoterEvent.findMany({
+            where: { businessId: promoter.businessId, date: { gte: now }, isActive: true },
+            orderBy: { date: 'asc' },
+            take: 10
+        });
+
+        // AI Recommendation Engine
+        let aiCoachTip = null;
+        if (upcomingEvents && upcomingEvents.length > 0) {
+            const nextBoostEvent = upcomingEvents.find((e: any) => e.isBoostActive && e.boostCommission);
+            if (nextBoostEvent) {
+                const boostDate = new Date(nextBoostEvent.date).toLocaleDateString('es-ES', { weekday: 'long' });
+                const capitalDate = boostDate.charAt(0).toUpperCase() + boostDate.slice(1);
+                aiCoachTip = `💡 Tip IA: Promueve ${promoter.business?.businessName} este ${capitalDate} para el evento "${nextBoostEvent.name}". ¡Aprovecha el Surge Pricing (+ $${nextBoostEvent.boostCommission} extra por persona)!`;
+            } else {
+                // Check score if it exists, default to 5.0
+                const score = (promoter as any).rpScore || 5.0;
+                aiCoachTip = `💡 Tip IA: Mantén tu RP Score alto (${score.toFixed(1)}⭐) asegurando que tus invitados no fallen. Esto te dará más prioridad.`;
+            }
+        } else {
+            const score = (promoter as any).rpScore || 5.0;
+            if (score < 4.0) {
+                aiCoachTip = `💡 Tip IA: Tu calificación bajó a ${score.toFixed(1)}⭐. Confirma la asistencia a tus mesas para evitar los "No-Show" y recuperar tu nivel.`;
+            } else {
+                aiCoachTip = `💡 Tip IA: El algoritmo nota tu excelencia (${score.toFixed(1)}⭐). ¡Sigue así para desbloquear el nivel Oro o invitaciones VIP!`;
+            }
         }
 
         return {
@@ -403,7 +528,10 @@ export async function getPublicPromoterPortal(slug: string) {
                 businessName: promoter.business?.businessName,
                 logoUrl: promoter.business?.logoUrl,
                 upcomingReservations: promoter.reservations,
-                stats
+                upcomingEvents,
+                stats,
+                phone: promoter.phone,
+                aiCoachTip
             }
         }
     } catch (error) {
@@ -412,87 +540,317 @@ export async function getPublicPromoterPortal(slug: string) {
     }
 }
 
-export async function verifyPromoterSlug(slug: string) {
+export async function updateCommissionSettings(amount: number) {
     try {
-        const promoter = await prisma.promoterProfile.findUnique({
-            where: { slug },
-            select: {
-                id: true,
-                name: true,
-                pin: true,
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "No autorizado" };
+
+        await (prisma.userSettings as any).update({
+            where: { userId },
+            data: { defaultCommissionPerPerson: amount }
+        });
+
+        revalidatePath('/dashboard/reservations/rps', 'page');
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating commission settings:", error);
+        return { success: false, error: "Error de servidor al guardar configuración." };
+    }
+}
+
+export async function verifyPromoterPhone(phone: string) {
+    try {
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+
+        // Check if phone matches any local promoter entry first. If not, they shouldn't register globally.
+        const localProfiles = await prisma.promoterProfile.findMany({
+            where: { phone: cleanPhone },
+            select: { id: true, businessId: true }
+        });
+
+        if (localProfiles.length === 0) {
+            return { success: false, error: "Tu número de teléfono aún no ha sido dado de alta por ningún lugar." };
+        }
+
+        // Find or init the global profile
+        const globalProfile = await (prisma as any).globalPromoter.findUnique({
+            where: { phone: cleanPhone }
+        });
+
+        if (!globalProfile) {
+            // Can start setup but shouldn't ask for PIN yet
+            const firstProfile = await prisma.promoterProfile.findFirst({ where: { phone: cleanPhone } });
+            return {
+                success: true,
+                hasPin: false,
+                data: {
+                    name: firstProfile?.name || "",
+                    email: firstProfile?.email || "",
+                    avatarUrl: null
+                }
+            };
+        }
+
+        return {
+            success: true,
+            hasPin: !!globalProfile.pin,
+            data: {
+                name: globalProfile.name,
+                email: globalProfile.email,
+                avatarUrl: globalProfile.avatarUrl
+            }
+        };
+    } catch (error) {
+        console.error("Error verifying promoter phone:", error);
+        return { success: false, error: "Error de servidor al validar el teléfono" };
+    }
+}
+
+export async function setupGlobalPromoter(phone: string, pin: string, name: string, email: string, avatarBase64: string) {
+    try {
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+
+        // This acts as upsert: If somehow there was a PIN missing but it existed, we update it.
+        await (prisma as any).globalPromoter.upsert({
+            where: { phone: cleanPhone },
+            update: {
+                pin,
+                name,
+                email,
+                avatarUrl: avatarBase64 || null
+            },
+            create: {
+                phone: cleanPhone,
+                pin,
+                name,
+                email,
+                avatarUrl: avatarBase64 || null
+            }
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error setting up global promoter:", error);
+        return { success: false, error: "Error de servidor al crear la identidad global" };
+    }
+}
+
+export async function verifyGlobalPromoterPin(phone: string, pin: string) {
+    try {
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+        const globalProfile = await (prisma as any).globalPromoter.findUnique({
+            where: { phone: cleanPhone },
+            select: { pin: true }
+        });
+
+        if (!globalProfile || !globalProfile.pin) {
+            return { success: false, error: "Debes configurar tu cuenta primero." };
+        }
+
+        if (globalProfile.pin !== pin) {
+            return { success: false, error: "PIN de acceso incorrecto." };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error verifying global pin:", error);
+        return { success: false, error: "Error del servidor." };
+    }
+}
+
+export async function getGlobalPromoterWallet(phone: string) {
+    try {
+        const globalProfile = await (prisma as any).globalPromoter.findUnique({
+            where: { phone },
+            include: {
+                responses: true
+            }
+        });
+
+        if (!globalProfile) return { success: false, error: "Perfil no encontrado" };
+
+        const localProfiles = await (prisma.promoterProfile as any).findMany({
+            where: { phone },
+            include: {
                 business: {
                     select: {
                         businessName: true,
                         logoUrl: true
                     }
+                },
+                reservations: {
+                    select: { status: true, partySize: true, settlementId: true }
                 }
             }
-        })
+        });
 
-        if (!promoter) return { success: false }
+        // Calculate unified stats
+        const placesCount = localProfiles.length;
+        let totalEarnings = 0; // Keeping this for backward compatibility
+        let totalPending = 0;
+        let totalPaid = 0;
+        let totalReservations = 0;
+        let totalConfirmedAttendees = 0;
+
+        const places = localProfiles.map((profile: any) => {
+            const p = profile as any;
+            const confirmedRes = p.reservations.filter((r: any) => r.status === 'CONFIRMED' || r.status === 'CHECKED_IN');
+
+            const placePending = confirmedRes
+                .filter((r: any) => !r.settlementId)
+                .reduce((sum: number, r: any) => sum + (p.commissionType === 'PER_PERSON' ? r.partySize * p.commissionValue : p.commissionValue), 0);
+
+            const placePaid = confirmedRes
+                .filter((r: any) => r.settlementId)
+                .reduce((sum: number, r: any) => sum + (p.commissionType === 'PER_PERSON' ? r.partySize * p.commissionValue : p.commissionValue), 0);
+
+            const placeAttendees = confirmedRes.reduce((sum: number, r: any) => sum + r.partySize, 0);
+
+            totalPending += placePending;
+            totalPaid += placePaid;
+            totalEarnings += (placePending + placePaid);
+            totalReservations += p.reservations.length;
+            totalConfirmedAttendees += placeAttendees;
+
+            return {
+                businessId: p.businessId,
+                name: p.business?.businessName || 'Business',
+                logoUrl: p.business?.logoUrl,
+                slug: p.slug,
+                totalReservations: p.reservations.length,
+                pending: placePending,
+                paid: placePaid,
+                attendees: placeAttendees
+            }
+
+        });
 
         return {
             success: true,
-            hasPin: !!promoter.pin,
             data: {
-                name: promoter.name,
-                businessName: promoter.business?.businessName,
-                logoUrl: promoter.business?.logoUrl
+                globalProfile,
+                places,
+                stats: {
+                    placesCount,
+                    totalEarnings,
+                    totalPending,
+                    totalPaid,
+                    totalReservations,
+                    totalConfirmedAttendees,
+                    rpScore: globalProfile.rpScore
+                }
             }
         }
+
     } catch (error) {
-        console.error("Error verifying promoter slug:", error)
-        return { success: false }
+        console.error("Error getting promoter wallet:", error);
+        return { success: false, error: "Server error" }
     }
 }
 
-export async function setupPromoterPin(slug: string, pin: string) {
+export async function processPromoterPayout(promoterId: string, amount: number, reservationIds: string[], notes?: string) {
     try {
-        // Find promoter by slug to ensure they exist and don't have a PIN yet
-        const promoter = await prisma.promoterProfile.findUnique({
-            where: { slug },
-            select: { id: true, pin: true }
-        })
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "No autorizado" };
 
-        if (!promoter) return { success: false, error: "Promotor no encontrado" }
-        if (promoter.pin) return { success: false, error: "El PIN ya fue configurado anteriormente" }
+        const res = await prisma.$transaction(async (tx: any) => {
+            const settlement = await tx.promoterSettlement.create({
+                data: {
+                    promoterId,
+                    amount,
+                    status: "PAID",
+                    paidAt: new Date(),
+                    startDate: new Date(),
+                    endDate: new Date(),
+                    notes: notes || "Pago de comisiones"
+                }
+            });
 
-        // Here we could hash the PIN, but since it's a simple 4 digit access code for UI gating,
-        // storing it directly is an option. For better security, let's just store it as is for MVP
-        // or we can add a simple hash if required later.
+            await tx.reservation.updateMany({
+                where: { id: { in: reservationIds } },
+                data: { settlementId: settlement.id }
+            });
 
-        await prisma.promoterProfile.update({
-            where: { slug },
-            data: {
-                pin,
-                pinSetAt: new Date()
+            return settlement;
+        });
+
+        // Try to notify the RP
+        try {
+            const promoterData = await prisma.promoterProfile.findUnique({
+                where: { id: promoterId },
+                select: { userId: true, name: true, slug: true, business: { select: { businessName: true } } }
+            });
+            if (promoterData?.userId) {
+                const globalP = await (prisma as any).globalPromoter.findUnique({ where: { phone: promoterData.userId } });
+                if (globalP) {
+                    await sendPushNotificationToRP(globalP.id, {
+                        title: "💸 ¡Comisión Pagada!",
+                        body: `Has recibido un pago de $${amount} de ${promoterData.business?.businessName || 'el negocio'}. Revisa tu billetera para el recibo.`,
+                        url: `/rps/wallet`
+                    });
+                }
             }
-        })
+        } catch (pushErr) {
+            console.error("Error triggering RP payout notification:", pushErr);
+        }
 
-        return { success: true }
+        revalidatePath(`/dashboard/reservations/rps/${promoterId}`, 'page');
+        revalidatePath(`/dashboard/reservations/rps`, 'page');
+        return { success: true, data: res };
     } catch (error) {
-        console.error("Error setting up promoter pin:", error)
-        return { success: false, error: "Error al configurar el PIN" }
+        console.error("Error processing payout:", error);
+        return { success: false, error: "Error de servidor al procesar el pago" };
     }
 }
 
-export async function verifyPromoterPin(slug: string, pin: string) {
+export async function createPromoterEvent(data: { name: string, description?: string, date: Date, imageUrl?: string, boostCommission?: number, isBoostActive?: boolean }) {
     try {
-        const promoter = await prisma.promoterProfile.findUnique({
-            where: { slug },
-            select: { id: true, pin: true }
-        })
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "No autorizado" };
 
-        if (!promoter) return { success: false, error: "Promotor no encontrado" }
-        if (!promoter.pin) return { success: false, error: "Aún no has configurado un PIN" }
+        const event = await (prisma as any).promoterEvent.create({
+            data: {
+                businessId: userId,
+                name: data.name,
+                description: data.description,
+                date: data.date,
+                imageUrl: data.imageUrl,
+                boostCommission: data.boostCommission || null,
+                isBoostActive: data.isBoostActive || false,
+            }
+        });
 
-        if (promoter.pin !== pin) {
-            return { success: false, error: "PIN incorrecto" }
+        if (data.isBoostActive && data.boostCommission) {
+            try {
+                const business = await prisma.userSettings.findUnique({
+                    where: { userId },
+                    select: { businessName: true }
+                });
+
+                const profiles = await (prisma as any).promoterProfile.findMany({
+                    where: { businessId: userId, isActive: true },
+                    include: { globalPromoter: true }
+                });
+
+                for (const profile of profiles) {
+                    const globalId = (profile as any).globalPromoter?.id;
+                    if (globalId) {
+                        await sendPushNotificationToRP(globalId, {
+                            title: "🔥 Surge Pricing Activado",
+                            body: `¡Gana +$${data.boostCommission} extra por persona en el evento "${data.name}" en ${business?.businessName || 'el local'}!`,
+                            url: `/rps/${profile.slug}`
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Error triggering Surge Pricing push notifications:", err);
+            }
         }
 
-        return { success: true }
+        revalidatePath('/dashboard/reservations/rps');
+        return { success: true, data: event };
     } catch (error) {
-        console.error("Error verifying promoter pin:", error)
-        return { success: false, error: "Error de verificación" }
+        console.error("Error creating event:", error);
+        return { success: false, error: "Error de servidor" };
     }
 }

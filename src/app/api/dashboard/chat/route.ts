@@ -71,7 +71,9 @@ export async function POST(req: Request) {
             reservationsSeated,
             processData,
             globalBranches,
-            _unusedStats
+            _unusedStats,
+            activePromotersCount,
+            rpReservationsMonth
         ] = await Promise.all([
             // 1. Settings
             prisma.userSettings.findUnique({ where: { userId: targetUserId } }),
@@ -175,7 +177,19 @@ export async function POST(req: Request) {
             }) : Promise.resolve([]),
             // 16. Aggregate Stats per Branch (Only if !branchId)
             // 16. Aggregate Stats (Moved to on-demand logic)
-            Promise.resolve([])
+            Promise.resolve([]),
+            // 17. Active Promoters Count
+            prisma.promoterProfile.count({ where: { businessId: targetUserId, isActive: true } }),
+            // 18. RP Reservations (This Month)
+            (prisma as any).reservation.findMany({
+                where: {
+                    userId: targetUserId,
+                    promoterId: { not: null },
+                    date: { gte: startOfMonth },
+                    status: { in: ['CONFIRMED', 'CHECKED_IN'] }
+                },
+                select: { promoterId: true, commissionEarned: true, guestType: true, status: true, partySize: true, promoter: { select: { name: true } } }
+            })
         ])
 
         // --- CALCULATIONS ---
@@ -230,6 +244,36 @@ export async function POST(req: Request) {
                 employeePerformanceText += `- Sin Asignar (General): ${unassignedCompleted}/${unassignedTotal} tareas completadas\n`
             }
         }
+
+        // --- RPS CALCULATIONS ---
+        const totalCommissionsEarned = (rpReservationsMonth as any[]).reduce((sum, r) => sum + (r.commissionEarned || 0), 0)
+
+        let topPromoterName = "N/A"
+        let topPromoterGuests = 0
+        const rpPerformanceMap = new Map<string, { name: string, guests: number }>()
+
+        let newGuestCount = 0
+        let returningGuestCount = 0
+        let vipGuestCount = 0
+
+            ; (rpReservationsMonth as any[]).forEach(r => {
+                if (r.status === 'CHECKED_IN' || r.status === 'CONFIRMED') {
+                    const guests = r.partySize || 0
+                    const current = rpPerformanceMap.get(r.promoterId) || { name: r.promoter?.name || 'Desconocido', guests: 0 }
+                    current.guests += guests
+                    rpPerformanceMap.set(r.promoterId, current)
+
+                    if (current.guests > topPromoterGuests) {
+                        topPromoterGuests = current.guests
+                        topPromoterName = current.name
+                    }
+                }
+                if (r.guestType === 'VIP') vipGuestCount++
+                else if (r.guestType === 'RETURNING') returningGuestCount++
+                else if (r.guestType === 'NEW') newGuestCount++
+            })
+
+        const rpsRoiText = `Nuevos: ${newGuestCount} | Recurrentes: ${returningGuestCount} | VIPs: ${vipGuestCount}`
 
         console.log(`[AI_CHAT_DEBUG] Full Context Loaded`)
         console.log(`- Loyalty: ${loyaltyMembers} members, ${pointsRedeemedCount} points redeemed today`)
@@ -569,6 +613,12 @@ export async function POST(req: Request) {
                     - Tareas Pendientes(Hoy): ${tasksPending}
             - Tareas Completadas(Hoy): ${tasksCompletedToday}
             ${employeePerformanceText}
+            
+            === 🌟 PROMOTORES (RPS) & ROI ===
+                - Promotores Activos: ${activePromotersCount}
+            - Comisiones Generadas (Mes): $${totalCommissionsEarned.toFixed(2)} mxn
+            - Mejor RP (Mes): ${topPromoterName} (${topPromoterGuests} invitados)
+            - ROI de Tráfico (Mes): ${rpsRoiText}
             
             🧠 MEMORIA ESTRATÉGICA:
             ${insightText || "Sin insights previos."}

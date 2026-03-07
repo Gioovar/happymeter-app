@@ -3,30 +3,35 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(req: NextRequest) {
-    const { userId } = await auth()
-    if (!userId) return new NextResponse("Unauthorized", { status: 401 })
-
     try {
+        const { userId } = await auth()
         const subscription = await req.json()
 
-        // Upsert subscription
+        const globalPromoterId = subscription.globalPromoterId || null;
+
+        if (!userId && !globalPromoterId) {
+            return new NextResponse("Unauthorized", { status: 401 })
+        }
+
         // Upsert subscription manually
-        const existingSub = await prisma.pushSubscription.findFirst({
+        const existingSub = await (prisma as any).pushSubscription.findFirst({
             where: {
-                userId,
+                userId: userId || undefined,
+                globalPromoterId: globalPromoterId || undefined,
                 endpoint: subscription.endpoint
             }
         })
 
         if (existingSub) {
-            await prisma.pushSubscription.update({
+            await (prisma as any).pushSubscription.update({
                 where: { id: existingSub.id },
                 data: { keys: subscription.keys }
             })
         } else {
-            await prisma.pushSubscription.create({
+            await (prisma as any).pushSubscription.create({
                 data: {
-                    userId,
+                    userId: userId || null,
+                    globalPromoterId: globalPromoterId,
                     endpoint: subscription.endpoint,
                     keys: subscription.keys
                 }

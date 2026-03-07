@@ -4,7 +4,7 @@ import { PushNotifications, Token, ActionPerformed } from '@capacitor/push-notif
 import { Capacitor } from '@capacitor/core'
 import { useRouter } from 'next/navigation'
 
-export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT', userIdOrCustomerId: string | null) {
+export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT' | 'RPS', userIdOrCustomerId: string | null) {
     const [permission, setPermission] = useState<NotificationPermission>('default')
     const [subscription, setSubscription] = useState<PushSubscription | null>(null)
     const router = useRouter()
@@ -48,7 +48,8 @@ export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT', user
                         platform: Capacitor.getPlatform(),
                         appType: appType,
                         userId: appType === 'OPS' ? userIdOrCustomerId : undefined,
-                        customerId: appType === 'LOYALTY' ? userIdOrCustomerId : undefined
+                        customerId: appType === 'LOYALTY' ? userIdOrCustomerId : undefined,
+                        globalPromoterId: appType === 'RPS' ? userIdOrCustomerId : undefined
                     })
                 });
             } catch (err) {
@@ -130,7 +131,10 @@ export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT', user
         await fetch('/api/notifications/subscription', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(sub)
+            body: JSON.stringify({
+                ...sub.toJSON(),
+                globalPromoterId: appType === 'RPS' ? userIdOrCustomerId : undefined
+            })
         })
     }
 

@@ -5,6 +5,7 @@ import { sendCrisisAlert, sendStaffAlert, sendCustomerReward } from '@/lib/alert
 import { sendPushNotification } from '@/lib/push-service'
 import { checkCrisis, checkFraud } from '@/lib/security'
 import { invokeSecretInspector } from '@/lib/secret-inspector'
+import { processPromoterScore } from '@/lib/rp-scoring'
 
 export async function POST(
     req: Request,
@@ -50,11 +51,35 @@ export async function POST(
             }
         }
 
+        const resolvedBranchId = branchId || survey.userId
+
+        // Optional RP Tracking: Link to an existing reservation from today if the phone matches
+        let resolvedReservationId = body.reservationId || null;
+        if (!resolvedReservationId && customer?.phone) {
+            const cleanPhone = customer.phone.replace(/[^0-9]/g, '');
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+
+            const recentRes = await prisma.reservation.findFirst({
+                where: {
+                    user: { userId: resolvedBranchId },
+                    customerPhone: { contains: cleanPhone },
+                    date: { gte: todayStart },
+                    promoterId: { not: null }
+                },
+                orderBy: { date: 'desc' }
+            });
+            if (recentRes) {
+                resolvedReservationId = recentRes.id;
+            }
+        }
+
         // Create the response
         const response = await prisma.response.create({
             data: {
                 surveyId: surveyId,
                 branchId: branchId || null,
+                reservationId: resolvedReservationId,
                 customerName: customer?.name || null,
                 customerEmail: customer?.email || null,
                 customerPhone: customer?.phone || null, // Capture phone
@@ -75,7 +100,6 @@ export async function POST(
 
         // Async Alert Trigger (Don't await to keep response fast)
         const ip = req.headers.get('x-forwarded-for') || 'unknown'
-        const resolvedBranchId = branchId || survey.userId // Scope logic to the explicit branch or fallback to owner
 
         // Check if it's a Staff Report (Anonymous Box)
         if (response.survey.title.includes('Buzón')) {
@@ -92,6 +116,11 @@ export async function POST(
 
             // Step 2: Trigger AI Secret Inspector
             invokeSecretInspector(response.id, resolvedBranchId)
+
+            // Step 3: Recalculate Promoter Score if linked
+            if (resolvedReservationId) {
+                processPromoterScore(response.id)
+            }
         }
 
         // Force cache invalidation for real-time dashboard updates

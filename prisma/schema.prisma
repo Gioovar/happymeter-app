@@ -45,9 +45,9 @@ model Question {
 }
 
 model Response {
-  id               String    @id @default(uuid())
+  id               String        @id @default(uuid())
   surveyId         String
-  createdAt        DateTime  @default(now())
+  createdAt        DateTime      @default(now())
   customerName     String?
   customerEmail    String?
   customerPhone    String?
@@ -57,8 +57,11 @@ model Response {
   answers          Answer[]
   survey           Survey        @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   issueTickets     IssueTicket[]
-  branchId         String?       // NEW: To track which branch generated this global franchise response
+  branchId         String? // NEW: To track which branch generated this global franchise response
   branch           UserSettings? @relation("BranchResponses", fields: [branchId], references: [userId], onDelete: SetNull)
+
+  reservationId String?      @unique // Link exactly which reservation provoked this response
+  reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
 
   @@index([surveyId, createdAt])
   @@index([customerPhone])
@@ -77,69 +80,71 @@ model Answer {
   @@index([questionId])
 }
 
-
-
 model UserSettings {
-  id                      String                 @id @default(uuid())
-  userId                  String                 @unique
-  plan                    String                 @default("FREE")
-  maxSurveys              Int                    @default(3)
-  createdAt               DateTime               @default(now())
-  updatedAt               DateTime               @updatedAt
-  businessName            String?
-  isOnboarded             Boolean                @default(false)
-  phone                   String?
-  socialLinks             Json?
-  isPhoneVerified         Boolean                @default(false)
-  phoneVerifiedAt         DateTime?
-  hasSeenTour             Boolean                @default(false)
-  industry                String?                @default("restaurant")
-  stripeCustomerId        String?                @unique
-  stripeSubscriptionId    String?                @unique
-  subscriptionPeriodEnd   DateTime?
-  subscriptionStatus      String?
-  gameConfig              Json?
-  role                    UserRole               @default(USER)
-  notificationPreferences Json?
-  city                    String?
-  state                   String?
-  photoUrl                String?
-  jobTitle                String?
-  maxBranches             Int                    @default(1)
-  isActive                Boolean                @default(true)
-  bannerUrl               String?
-  googleReviewUrl         String?
-  logoUrl                 String?
-  whatsappContact         String?
-  extraSurveys            Int                    @default(0)
-  reservationSettings     Json?
-  reservations            Reservation[]          @relation("BusinessReservations")
-  fullName                String?
-  affiliateProfile        AffiliateProfile?
-  ownedChains             Chain[]
-  branchOf                ChainBranch[]
-  floorPlans              FloorPlan[]
-  loyaltyProgram          LoyaltyProgram?
-  menuPromotions          MenuPromotion[]
-  branchProcessZones      ProcessZone[]          @relation("ProcessZoneBranch")
-  ownedProcessZones       ProcessZone[]          @relation("ProcessZoneOwner")
-  productCategories       ProductCategory[]
-  pushSubscriptions       PushSubscription[]
-  deviceTokens            DeviceToken[]
-  notificationLogs        NotificationLog[]
-  representativeProfile   RepresentativeProfile?
-  teamMembers             TeamMember[]           @relation("OwnerOf")
-  memberships             TeamMember[]           @relation("MemberOf")
-  promoterProfiles        PromoterProfile[]      @relation("BusinessPromoters")
-  Product                 Product[]
-  issueTickets            IssueTicket[]
-  restaurantHealthScores  RestaurantHealthScore[]
-  reputationScores        RestaurantReputationScore[]
-  growthOpportunities     AIGrowthOpportunity[]
-  marketingCampaigns      AIMarketingCampaign[]
-  resolvedIssues          ResolvedIssue[]
-  branchResponses         Response[]             @relation("BranchResponses")
-  branchTickets           IssueTicket[]          @relation("BranchTickets")
+  id                         String                      @id @default(uuid())
+  userId                     String                      @unique
+  plan                       String                      @default("FREE")
+  maxSurveys                 Int                         @default(3)
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  businessName               String?
+  isOnboarded                Boolean                     @default(false)
+  phone                      String?
+  socialLinks                Json?
+  isPhoneVerified            Boolean                     @default(false)
+  phoneVerifiedAt            DateTime?
+  hasSeenTour                Boolean                     @default(false)
+  industry                   String?                     @default("restaurant")
+  stripeCustomerId           String?                     @unique
+  stripeSubscriptionId       String?                     @unique
+  subscriptionPeriodEnd      DateTime?
+  subscriptionStatus         String?
+  gameConfig                 Json?
+  role                       UserRole                    @default(USER)
+  notificationPreferences    Json?
+  city                       String?
+  state                      String?
+  photoUrl                   String?
+  jobTitle                   String?
+  maxBranches                Int                         @default(1)
+  isActive                   Boolean                     @default(true)
+  bannerUrl                  String?
+  googleReviewUrl            String?
+  logoUrl                    String?
+  whatsappContact            String?
+  extraSurveys               Int                         @default(0)
+  reservationSettings        Json?
+  defaultCommissionPerPerson Float                       @default(0)
+  weeklyGoalAttendees        Int?                        @default(50)
+  monthlyGoalAttendees       Int?                        @default(200)
+  reservations               Reservation[]               @relation("BusinessReservations")
+  fullName                   String?
+  affiliateProfile           AffiliateProfile?
+  ownedChains                Chain[]
+  branchOf                   ChainBranch[]
+  floorPlans                 FloorPlan[]
+  loyaltyProgram             LoyaltyProgram?
+  menuPromotions             MenuPromotion[]
+  branchProcessZones         ProcessZone[]               @relation("ProcessZoneBranch")
+  ownedProcessZones          ProcessZone[]               @relation("ProcessZoneOwner")
+  productCategories          ProductCategory[]
+  pushSubscriptions          PushSubscription[]
+  deviceTokens               DeviceToken[]
+  notificationLogs           NotificationLog[]
+  representativeProfile      RepresentativeProfile?
+  teamMembers                TeamMember[]                @relation("OwnerOf")
+  memberships                TeamMember[]                @relation("MemberOf")
+  promoterProfiles           PromoterProfile[]           @relation("BusinessPromoters")
+  Product                    Product[]
+  issueTickets               IssueTicket[]
+  restaurantHealthScores     RestaurantHealthScore[]
+  reputationScores           RestaurantReputationScore[]
+  growthOpportunities        AIGrowthOpportunity[]
+  marketingCampaigns         AIMarketingCampaign[]
+  resolvedIssues             ResolvedIssue[]
+  branchResponses            Response[]                  @relation("BranchResponses")
+  branchTickets              IssueTicket[]               @relation("BranchTickets")
+  PromoterEvent              PromoterEvent[]
 }
 
 model FloorPlan {
@@ -191,16 +196,23 @@ model Reservation {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   duration      Int      @default(120)
+  commissionEarned Float? // The calculated payout for this res (Base + Surge)
+  guestType     String?  @default("NEW") // "NEW", "RETURNING", "VIP"
 
-  userId     String?
-  promoterId String?
-  table      Table?           @relation(fields: [tableId], references: [id], onDelete: Cascade)
-  user       UserSettings?    @relation("BusinessReservations", fields: [userId], references: [userId], onDelete: Cascade)
-  promoter   PromoterProfile? @relation("PromoterReservations", fields: [promoterId], references: [id])
+  userId       String?
+  promoterId   String?
+  settlementId String?
+
+  table      Table?              @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  user       UserSettings?       @relation("BusinessReservations", fields: [userId], references: [userId], onDelete: Cascade)
+  promoter   PromoterProfile?    @relation("PromoterReservations", fields: [promoterId], references: [id])
+  settlement PromoterSettlement? @relation(fields: [settlementId], references: [id], onDelete: SetNull)
+  response   Response?
 
   @@index([tableId])
   @@index([date])
   @@index([promoterId])
+  @@index([settlementId])
 }
 
 model TeamMember {
@@ -528,33 +540,39 @@ model TeamInvitation {
 }
 
 model PushSubscription {
-  id        String       @id @default(uuid())
-  userId    String
-  endpoint  String
-  keys      Json
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  user      UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  id               String          @id @default(uuid())
+  userId           String?
+  globalPromoterId String?
+  endpoint         String
+  keys             Json
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  user             UserSettings?   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  globalPromoter   GlobalPromoter? @relation(fields: [globalPromoterId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([globalPromoterId])
 }
 
 model DeviceToken {
-  id         String   @id @default(uuid())
-  token      String   @unique
-  platform   String // "iOS", "Android", "Web"
-  appType    String // "OPS", "LOYALTY", "CLIENT"
-  userId     String?
-  customerId String?
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String   @id @default(uuid())
+  token            String   @unique
+  platform         String // "iOS", "Android", "Web"
+  appType          String // "OPS", "LOYALTY", "CLIENT", "RPS"
+  userId           String?
+  customerId       String?
+  globalPromoterId String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  user     UserSettings?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  customer LoyaltyCustomer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user           UserSettings?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  customer       LoyaltyCustomer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  globalPromoter GlobalPromoter?  @relation(fields: [globalPromoterId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([customerId])
+  @@index([globalPromoterId])
   @@index([token])
 }
 
@@ -1194,36 +1212,75 @@ model PromoterProfile {
   phone           String?
   email           String?
   slug            String                 @unique
-  pin             String?                // 4-digit PIN for access
-  pinSetAt        DateTime?              // Tracks when the PIN was configured
+  pin             String? // 4-digit PIN for access
+  pinSetAt        DateTime? // Tracks when the PIN was configured
   commissionType  PromoterCommissionType @default(PER_PERSON)
   commissionValue Float                  @default(0)
   branchId        String?
   isActive        Boolean                @default(true)
+  rpScore         Float                  @default(5.0) // Average rating 1 to 5
+  totalReviews    Int                    @default(0) // Total distinct reviews received in this branch
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
 
-  reservations Reservation[]        @relation("PromoterReservations")
-  settlements  PromoterSettlement[]
-  business     UserSettings         @relation("BusinessPromoters", fields: [businessId], references: [userId], onDelete: Cascade)
+  reservations   Reservation[]        @relation("PromoterReservations")
+  settlements    PromoterSettlement[]
+  business       UserSettings         @relation("BusinessPromoters", fields: [businessId], references: [userId], onDelete: Cascade)
+  globalPromoter GlobalPromoter?      @relation(fields: [userId], references: [phone])
 
   @@index([businessId])
   @@index([branchId])
 }
 
+model GlobalPromoter {
+  id            String   @id @default(uuid())
+  phone         String   @unique
+  pin           String?
+  name          String?
+  email         String?
+  avatarUrl     String?
+  globalRpScore Float    @default(5.0) // Aggregated Global score
+  totalReviews  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  profiles          PromoterProfile[]
+  deviceTokens      DeviceToken[]
+  pushSubscriptions PushSubscription[]
+}
+
 model PromoterSettlement {
-  id         String          @id @default(uuid())
+  id         String    @id @default(uuid())
   promoterId String
   amount     Float
   startDate  DateTime
   endDate    DateTime
-  status     String          @default("PENDING")
+  status     String    @default("PENDING")
   paidAt     DateTime?
   notes      String?
-  createdAt  DateTime        @default(now())
-  promoter   PromoterProfile @relation(fields: [promoterId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+
+  promoter     PromoterProfile @relation(fields: [promoterId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
 
   @@index([promoterId])
+}
+
+model PromoterEvent {
+  id              String   @id @default(uuid())
+  businessId      String
+  name            String
+  description     String?  @db.Text
+  date            DateTime
+  imageUrl        String?
+  isActive        Boolean  @default(true)
+  boostCommission Float? // Surge Pricing: Extra commission
+  isBoostActive   Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  business UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+
+  @@index([businessId])
 }
 
 enum CommissionStatus {
@@ -1248,8 +1305,8 @@ model IssueTicket {
   id              String   @id @default(cuid())
   businessId      String   @map("user_id") // Links to User (Business Owner)
   responseId      String?  @map("response_id") // Optional link to the survey Response
-  title           String?  // Made optional since AI might just output a summary
-  description     String?  // Made optional
+  title           String? // Made optional since AI might just output a summary
+  description     String? // Made optional
   status          String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
   severity        String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
   urgency         String   @default("MEDIUM") // For AI inspector grading
@@ -1263,8 +1320,8 @@ model IssueTicket {
   aiContext       String?  @db.Text // AI extracted raw context
   isRecurring     Boolean  @default(false)
 
-  branchId        String?  // NEW: Branch scope for tickets
-  branch          UserSettings? @relation("BranchTickets", fields: [branchId], references: [userId], onDelete: SetNull)
+  branchId String? // NEW: Branch scope for tickets
+  branch   UserSettings? @relation("BranchTickets", fields: [branchId], references: [userId], onDelete: SetNull)
 
   user     UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
   response Response?    @relation(fields: [responseId], references: [id], onDelete: SetNull)
@@ -1277,7 +1334,7 @@ model RestaurantHealthScore {
   id                      String   @id @default(cuid())
   businessId              String   @map("user_id") // Links to UserSettings
   score                   Int
-  status                  String   // Excellent, Good, Warning, Critical
+  status                  String // Excellent, Good, Warning, Critical
   customerExperienceScore Int
   serviceQualityScore     Int
   internalOpsScore        Int
@@ -1293,16 +1350,16 @@ model RestaurantHealthScore {
 }
 
 model RestaurantReputationScore {
-  id              String   @id @default(cuid())
-  businessId      String   @map("user_id") // Links to UserSettings
-  generalScore    Float
-  serviceScore    Float
-  foodScore       Float
-  ambianceScore   Float
+  id               String   @id @default(cuid())
+  businessId       String   @map("user_id") // Links to UserSettings
+  generalScore     Float
+  serviceScore     Float
+  foodScore        Float
+  ambianceScore    Float
   cleanlinessScore Float
-  speedScore      Float
-  trend           String   // Up, Down, Stable
-  createdAt       DateTime @default(now())
+  speedScore       Float
+  trend            String // Up, Down, Stable
+  createdAt        DateTime @default(now())
 
   user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
 
@@ -1310,16 +1367,16 @@ model RestaurantReputationScore {
 }
 
 model AIGrowthOpportunity {
-  id              String   @id @default(cuid())
-  businessId      String   @map("user_id") // Links to UserSettings
-  title           String
-  description     String   @db.Text
-  type            String   // Retention, Acquisition, Operations, Feedback
-  status          String   @default("NEW") // NEW, REVIEWED, ACTIONED
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id          String   @id @default(cuid())
+  businessId  String   @map("user_id") // Links to UserSettings
+  title       String
+  description String   @db.Text
+  type        String // Retention, Acquisition, Operations, Feedback
+  status      String   @default("NEW") // NEW, REVIEWED, ACTIONED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  user               UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+  user               UserSettings          @relation(fields: [businessId], references: [userId], onDelete: Cascade)
   marketingCampaigns AIMarketingCampaign[]
 
   @@index([businessId, status])
@@ -1328,12 +1385,12 @@ model AIGrowthOpportunity {
 model AIMarketingCampaign {
   id                 String   @id @default(cuid())
   businessId         String   @map("user_id") // Links to UserSettings
-  opportunityId      String?  // Optional link to the growth opportunity that spawned it
+  opportunityId      String? // Optional link to the growth opportunity that spawned it
   name               String
   objective          String
   targetAudience     String
   promotionalMessage String   @db.Text
-  recommendedChannel String   // Push, Email, In-App
+  recommendedChannel String // Push, Email, In-App
   status             String   @default("DRAFT") // DRAFT, APPROVED, ACTIVE, COMPLETED
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt

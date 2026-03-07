@@ -12,6 +12,11 @@ interface PromoterStats {
     noShows: number
     revenue: number
     conversionRate: number
+    guestTypes?: {
+        new: number
+        returning: number
+        vip: number
+    }
 }
 
 export function PromoterAnalytics({ stats, promoter }: { stats: PromoterStats, promoter: any }) {
@@ -63,19 +68,33 @@ export function PromoterAnalytics({ stats, promoter }: { stats: PromoterStats, p
                 </Card>
             </div>
 
-            {/* Performance Trend Placeholder */}
-            <Card className="bg-zinc-900 border-zinc-800">
-                <CardHeader>
-                    <CardTitle className="text-base font-bold text-white flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-indigo-400" />
-                        Rendimiento de Conversión
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 text-center h-[200px] flex flex-col items-center justify-center border-t border-white/5">
-                    <p className="text-4xl font-black text-indigo-500">{stats.conversionRate.toFixed(1)}%</p>
-                    <p className="text-zinc-500 text-sm">Tasa de Efectividad (Checked-in / Reservas)</p>
-                </CardContent>
-            </Card>
+            {/* Customer Loyalty Breakdown */}
+            {stats.guestTypes && (
+                <Card className="bg-zinc-900 border-zinc-800">
+                    <CardHeader>
+                        <CardTitle className="text-base font-bold text-white flex items-center gap-2">
+                            <Users className="w-4 h-4 text-emerald-400" />
+                            Loyalty ROI Tracking (Generado por RP)
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 pt-0">
+                        <div className="grid grid-cols-3 gap-4 text-center border-t border-white/5 pt-6">
+                            <div>
+                                <p className="text-3xl font-black text-indigo-400">{stats.guestTypes.new}</p>
+                                <p className="text-zinc-500 text-xs uppercase tracking-wider mt-1">Nuevos</p>
+                            </div>
+                            <div className="border-x border-white/5">
+                                <p className="text-3xl font-black text-emerald-400">{stats.guestTypes.returning}</p>
+                                <p className="text-zinc-500 text-xs uppercase tracking-wider mt-1">Recurrentes</p>
+                            </div>
+                            <div>
+                                <p className="text-3xl font-black text-amber-500">{stats.guestTypes.vip}</p>
+                                <p className="text-zinc-500 text-xs uppercase tracking-wider mt-1">VIP (5+)</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     )
 }

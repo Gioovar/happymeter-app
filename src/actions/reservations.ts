@@ -8,6 +8,7 @@ import { resend } from "@/lib/resend"
 import { sendWhatsAppNotification } from "@/lib/whatsapp"
 import { ReservationConfirmationEmail } from "@/emails/ReservationConfirmation"
 import { sendNativePush } from '@/lib/push-engine'
+import { sendPushNotificationToRP } from '@/lib/push-service'
 import { DEFAULT_SENDER } from "@/lib/email"
 
 // Helper to resolve and verify access
@@ -1028,8 +1029,29 @@ export async function createReservation(data: {
                     throw new Error("Se requiere mesa")
                 }
 
+                // Determine guestType
+                let currentGuestType = 'NEW';
+                if (data.customer.phone || data.customer.email) {
+                    const pastReservations = await (tx as any).reservation.count({
+                        where: {
+                            userId: ownerId,
+                            status: { in: ['CONFIRMED', 'CHECKED_IN'] },
+                            OR: [
+                                data.customer.phone ? { customerPhone: data.customer.phone } : {},
+                                data.customer.email ? { customerEmail: data.customer.email } : {}
+                            ].filter((x: any) => Object.keys(x).length > 0)
+                        }
+                    });
+
+                    if (pastReservations >= 5) {
+                        currentGuestType = 'VIP';
+                    } else if (pastReservations > 0) {
+                        currentGuestType = 'RETURNING';
+                    }
+                }
+
                 // Create
-                const newRes = await tx.reservation.create({
+                const newRes = await (tx as any).reservation.create({
                     data: {
                         tableId: res.tableId || null,
                         userId: ownerId,
@@ -1040,7 +1062,8 @@ export async function createReservation(data: {
                         customerPhone: data.customer.phone,
                         customerEmail: data.customer.email,
                         status: 'CONFIRMED',
-                        duration: durationToStore
+                        duration: durationToStore,
+                        guestType: currentGuestType
                     }
                 })
 
@@ -1250,12 +1273,72 @@ export async function validateReservationScan(reservationId: string, scannerBran
 
 export async function confirmReservationCheckin(reservationId: string) {
     try {
-        // Here we can set status to 'CONFIRMED' or a new 'CHECKED_IN' status if we add it to schema.
-        // For now, let's use 'CONFIRMED' as it marks the successful arrival.
-        await prisma.reservation.update({
+        const existing = await prisma.reservation.findUnique({
             where: { id: reservationId },
-            data: { status: 'CONFIRMED' }
+            include: { promoter: true, user: { select: { businessName: true, userId: true } } }
+        });
+
+        let commissionEarned = null;
+
+        if (existing?.promoter) {
+            const resDate = new Date(existing.date);
+            resDate.setHours(0, 0, 0, 0);
+
+            // Note: In older prisma, user.userId might just be existing.userId. So we use that directly.
+            const businessId = existing.userId;
+
+            if (businessId) {
+                const activeBoosts = await (prisma as any).promoterEvent.findMany({
+                    where: {
+                        businessId: businessId,
+                        isBoostActive: true
+                    }
+                });
+
+                const activeEvent = activeBoosts.find((e: any) => {
+                    const eDate = new Date(e.date);
+                    eDate.setHours(0, 0, 0, 0);
+                    return eDate.getTime() === resDate.getTime();
+                });
+
+                let boostAmount = 0;
+                if (activeEvent?.boostCommission) {
+                    boostAmount = activeEvent.boostCommission;
+                }
+
+                if (existing.promoter.commissionType === 'PER_PERSON') {
+                    commissionEarned = existing.partySize * (existing.promoter.commissionValue + boostAmount);
+                } else {
+                    commissionEarned = existing.promoter.commissionValue + (boostAmount * existing.partySize); // If percentage is implemented later, it requires total check size. For now we assume flat fee. We multiply boost by party as surge is per head usually.
+                }
+            }
+        }
+
+        await (prisma as any).reservation.update({
+            where: { id: reservationId },
+            data: {
+                status: 'CONFIRMED',
+                commissionEarned: commissionEarned
+            }
         })
+
+        if (existing?.promoter?.userId) {
+            try {
+                const globalP = await (prisma as any).globalPromoter.findUnique({
+                    where: { phone: existing.promoter.userId }
+                });
+
+                if (globalP) {
+                    await sendPushNotificationToRP(globalP.id, {
+                        title: "🎉 ¡Tu invitado ha llegado!",
+                        body: `La reserva de ${existing.customerName} (${existing.partySize} pax) ha hecho check-in en ${existing.user?.businessName || 'el negocio'}. ¡Has asegurado comisión!`,
+                        url: `/rps/${existing.promoter.slug}`
+                    });
+                }
+            } catch (err) {
+                console.error("Error triggering RP checkin push:", err);
+            }
+        }
 
         revalidatePath('/dashboard/reservations')
         return { success: true }
@@ -1302,7 +1385,7 @@ export async function getAllReservationsList(userIdOverride?: string) {
 
 export async function updateReservationState(reservationId: string, status: string) {
     try {
-        await prisma.reservation.update({
+        await (prisma as any).reservation.update({
             where: { id: reservationId },
             data: { status }
         })
@@ -1317,7 +1400,7 @@ export async function updateReservationState(reservationId: string, status: stri
 
 export async function updateReservationNotes(reservationId: string, notes: string) {
     try {
-        await prisma.reservation.update({
+        await (prisma as any).reservation.update({
             where: { id: reservationId },
             data: { notes }
         })
