@@ -683,6 +683,50 @@ async function getEffectiveReservationSettings(userId: string) {
 }
 
 // --- SHARED AVAILABILITY HELPER (PRIVATE) ---
+
+export async function getOtherBranchSchedules(currentBranchSlug: string) {
+    try {
+        const { userId } = await auth()
+        if (!userId) return []
+
+        // Find all branches in chains owned by this user, excluding the current one
+        const branches = await prisma.chainBranch.findMany({
+            where: {
+                chain: { ownerId: userId },
+                NOT: {
+                    OR: [
+                        { slug: currentBranchSlug },
+                        { branchId: currentBranchSlug }
+                    ]
+                }
+            },
+            include: {
+                branch: {
+                    select: {
+                        businessName: true,
+                        reservationSettings: true
+                    }
+                }
+            }
+        })
+
+        if (!branches.length) return []
+
+        return branches.map(b => {
+            const settings = b.branch?.reservationSettings as any
+            const availability = settings?.availability || DEFAULT_AVAILABILITY
+            return {
+                id: b.branchId,
+                name: b.name || b.branch?.businessName || 'Sucursal',
+                schedule: availability
+            }
+        })
+    } catch (e) {
+        console.error("Error fetching other branch schedules", e)
+        return []
+    }
+}
+
 async function checkTableAvailability(
     ownerId: string,
     tableId: string,

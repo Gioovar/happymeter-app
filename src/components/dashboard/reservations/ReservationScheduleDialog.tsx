@@ -3,20 +3,22 @@
 import { useState, useTransition } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Clock, Loader2, Check } from "lucide-react"
+import { Clock, Loader2, Check, Copy } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { setReservationMode } from "@/actions/reservations" // Will reuse to update mode + schedule
 import { toast } from "sonner"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface ReservationScheduleDialogProps {
     currentSchedule: any[]
     branchId?: string
     isSimpleMode: boolean
+    otherBranches?: { id: string, name: string, schedule: any[] }[]
 }
 
-export function ReservationScheduleDialog({ currentSchedule, branchId, isSimpleMode }: ReservationScheduleDialogProps) {
+export function ReservationScheduleDialog({ currentSchedule, branchId, isSimpleMode, otherBranches = [] }: ReservationScheduleDialogProps) {
     const [open, setOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
     const [schedule, setSchedule] = useState(() => {
@@ -43,6 +45,15 @@ export function ReservationScheduleDialog({ currentSchedule, branchId, isSimpleM
         const newSched = [...schedule]
         newSched[index][field] = val
         setSchedule(newSched)
+    }
+
+    const handleClone = (branch: any) => {
+        if (branch.schedule && branch.schedule.length === 7) {
+            setSchedule(branch.schedule)
+            toast.success(`Horario copiado de ${branch.name}. No olvides guardar cambios.`)
+        } else {
+            toast.error("El horario de la sucursal no es válido.")
+        }
     }
 
     const handleSave = () => {
@@ -77,6 +88,32 @@ export function ReservationScheduleDialog({ currentSchedule, branchId, isSimpleM
                     <DialogDescription className="text-center text-gray-400 mt-2">
                         Edita tus días y horas de atención para recibir reservaciones.
                     </DialogDescription>
+                    {otherBranches.length > 0 && (
+                        <div className="flex justify-center mt-4">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="bg-zinc-800 border-white/10 text-white hover:bg-zinc-700">
+                                        <Copy className="w-4 h-4 mr-2" />
+                                        Clonar de otra sucursal
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="bg-[#1A1A1A] border-white/10 text-white">
+                                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-400">
+                                        Selecciona una sucursal
+                                    </div>
+                                    {otherBranches.map(b => (
+                                        <DropdownMenuItem
+                                            key={b.id}
+                                            onClick={() => handleClone(b)}
+                                            className="hover:bg-white/10 focus:bg-white/10 cursor-pointer"
+                                        >
+                                            {b.name}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    )}
                 </DialogHeader>
 
                 <div className="flex flex-col gap-3 py-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2 -mr-2">

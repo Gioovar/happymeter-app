@@ -8,7 +8,7 @@ import {
     Settings
 } from 'lucide-react';
 import Link from 'next/link';
-import { getFloorPlans, getDashboardReservations } from "@/actions/reservations"
+import { getFloorPlans, getDashboardReservations, getOtherBranchSchedules } from "@/actions/reservations"
 import { ReservationCalendar } from "@/components/dashboard/reservations/ReservationCalendar"
 import { NewReservationButton } from "@/components/dashboard/reservations/NewReservationButton"
 import { ReservationsList } from "@/components/dashboard/reservations/ReservationsList"
@@ -48,13 +48,16 @@ export default async function BranchReservationsPage({ params }: { params: { bra
     // Fetch program & UserSettings for Limit Check
     let program = null
     let userSettings = null
+    let otherBranches: any[] = []
     try {
-        const [prog, settings] = await Promise.all([
+        const [prog, settings, branches] = await Promise.all([
             prisma.loyaltyProgram.findUnique({ where: { userId } }),
-            prisma.userSettings.findUnique({ where: { userId }, select: { createdAt: true, plan: true, reservationSettings: true } })
+            prisma.userSettings.findUnique({ where: { userId }, select: { createdAt: true, plan: true, reservationSettings: true } }),
+            getOtherBranchSchedules(branchSlug)
         ])
         program = prog
         userSettings = settings
+        otherBranches = branches
 
         // No auto-create for branch? Maybe yes.
         if (!program) {
@@ -124,6 +127,7 @@ export default async function BranchReservationsPage({ params }: { params: { bra
                         isSimpleMode={userSettings?.reservationSettings?.simpleMode === true}
                         branchId={branchSlug}
                         currentSchedule={(userSettings?.reservationSettings as any)?.availability}
+                        otherBranches={otherBranches}
                     />
 
                     <Link
