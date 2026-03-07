@@ -61,19 +61,34 @@ export default async function BranchTicketsPage({ params }: { params: { branchSl
     const { success, tickets } = await getTickets(businessId);
 
     return (
-        <div className="flex flex-col h-full bg-[#f8fafc]">
-            <div className="p-8 pb-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 border-b-2 border-slate-900 inline-block pb-1">
-                        Incidencias - {businessName}
-                    </h1>
-                    <p className="text-slate-500 mt-2 text-sm max-w-2xl">
-                        Gestiona los problemas y áreas de oportunidad detectadas automáticamente por la IA desde el feedback de la sucursal.
-                    </p>
+        <div className="flex flex-col h-full bg-[#f8fafc] relative overflow-hidden">
+            {/* Background Glows */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none translate-y-1/2 -translate-x-1/2"></div>
+
+            <div className="p-8 pb-4 relative z-10">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="bg-violet-100 text-violet-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /></svg>
+                                AI Intelligence
+                            </span>
+                            <span className="bg-white border border-slate-200 text-slate-600 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                                {businessName}
+                            </span>
+                        </div>
+                        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 pb-1">
+                            Incidencias <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">Smart</span>
+                        </h1>
+                        <p className="text-slate-500 mt-2 text-sm max-w-2xl font-medium">
+                            Gestiona y resuelve áreas de oportunidad detectadas automáticamente por nuestra Inteligencia Artificial desde el feedback de la sucursal.
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex-1 p-8 pt-4 overflow-hidden">
+            <div className="flex-1 p-8 pt-4 overflow-hidden relative z-10">
                 <TicketsClientPage initialTickets={success && tickets ? tickets : []} businessId={businessId} />
             </div>
         </div>
