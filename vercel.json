@@ -6,7 +6,7 @@
         },
         {
             "path": "/api/cron/biweekly-report",
-            "schedule": "11 15 * * *"
+            "schedule": "11 15 3,18 * *"
         },
         {
             "path": "/api/cron/health-index",
