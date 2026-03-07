@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@clerk/nextjs'
 import { toast } from 'sonner'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 
@@ -35,9 +36,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const lastNotificationIdRef = useRef<string | null>(null)
     const audioRef = useRef<HTMLAudioElement | null>(null)
     const router = useRouter()
+    const { userId } = useAuth()
 
     // Push Notifications Hook
-    const { askPermission } = usePushNotifications()
+    const { askPermission } = usePushNotifications('OPS', userId || null)
 
     // Initialize Web Audio API
     const playSound = async () => {

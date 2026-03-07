@@ -27,7 +27,7 @@ export async function getTeamMembers() {
 
     return members.map(m => ({
         id: m.id,
-        name: m.user.businessName || "Sin Nombre",
+        name: m.user?.businessName || "Sin Nombre",
         role: m.role
     }));
 }

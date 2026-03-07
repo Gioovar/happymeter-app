@@ -7,7 +7,7 @@ async function main() {
     const zones = await prisma.processZone.findMany({
         orderBy: { createdAt: 'desc' },
         take: 5,
-        include: { user: { select: { businessName: true, email: true } }, branch: { select: { businessName: true } } }
+        include: { user: { select: { businessName: true } }, branch: { select: { businessName: true } } }
     });
 
     console.log(JSON.stringify(zones, null, 2));

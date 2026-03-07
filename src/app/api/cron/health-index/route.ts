@@ -18,19 +18,23 @@ export async function GET(req: Request) {
         const recentDate = new Date();
         recentDate.setDate(recentDate.getDate() - 2); // Activity in last 48 hours
 
+        // First get User IDs that have had recent survey responses
+        const recentResponses = await prisma.response.findMany({
+            where: { createdAt: { gte: recentDate } },
+            select: { survey: { select: { userId: true } } },
+            take: 100 // Prevent fetching too many just to find distinct users
+        })
+
+        const activeUserIds = Array.from(new Set(recentResponses.map(r => r.survey?.userId).filter(Boolean)))
+
+        if (activeUserIds.length === 0) {
+            return NextResponse.json({ message: "No active businesses to process today." })
+        }
+
         const activeUsers = await prisma.userSettings.findMany({
             where: {
-                isActive: true,
-                // Simple heuristic: Only users who had a response recently
-                surveys: {
-                    some: {
-                        responses: {
-                            some: {
-                                createdAt: { gte: recentDate }
-                            }
-                        }
-                    }
-                }
+                userId: { in: activeUserIds as string[] },
+                isActive: true
             },
             take: 20,
             select: { userId: true, industry: true, businessName: true }
@@ -100,12 +104,12 @@ export async function GET(req: Request) {
                 where: { businessId: userId },
                 orderBy: { createdAt: 'desc' },
                 take: 50,
-                select: { title: true, status: true, isRecurring: true }
+                select: { title: true, status: true }
             })
 
             const activeTicketsCount = recentTickets.filter(t => t.status === "OPEN" || t.status === "IN_PROGRESS").length
             const resolvedTicketsCount = recentTickets.filter(t => t.status === "RESOLVED" || t.status === "CLOSED").length
-            const ticketsDesc = recentTickets.map(t => `- [${t.status}] ${t.title} (Reincidente: ${t.isRecurring ? 'Sí' : 'No'})`).join('\n')
+            const ticketsDesc = recentTickets.map(t => `- [${t.status}] ${t.title}`).join('\n')
 
             // 3. Business Activity
             const activityDate = new Date();

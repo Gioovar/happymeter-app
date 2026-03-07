@@ -283,10 +283,10 @@ export default function NewProcessPage() {
                     </Link>
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={isSubmitting}
                         className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                        {loading ? 'Guardando...' : 'Crear Zona y Tareas'}
+                        {isSubmitting ? 'Guardando...' : 'Crear Zona y Tareas'}
                     </button>
                 </div>
             </form>

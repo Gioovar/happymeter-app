@@ -21,7 +21,7 @@ export async function generateAppleWalletPass(customerId: string) {
             return { success: false, error: "Servicio de Apple Wallet no configurado (Faltan certificados)" }
         }
 
-        const pass = new PKPass({
+        const passOptions: any = {
             "passTypeIdentifier": process.env.APPLE_WALLET_PASS_IDENTIFIER || "pass.com.happymeters.loyalty",
             "teamIdentifier": process.env.APPLE_TEAM_ID || "A1B2C3D4E5",
             "organizationName": customer.program.businessName,
@@ -30,24 +30,16 @@ export async function generateAppleWalletPass(customerId: string) {
             "foregroundColor": "#ffffff",
             "labelColor": "#ffffff",
             "logoText": customer.program.businessName,
-        }, {
+        };
+
+        const certs: any = {
             "wwdr": fs.readFileSync(path.resolve('./certs/wwdr.pem')),
             "signerCert": fs.readFileSync(path.resolve('./certs/signerCert.pem')),
             "signerKey": fs.readFileSync(path.resolve('./certs/signerKey.pem')),
             "signerKeyPassphrase": process.env.APPLE_WALLET_KEY_PASSWORD || "",
-        });
+        };
 
-        // GEOLOCATION TRIGGER
-        // This is the core engine for triggering a native push notification
-        // when the user steps into the geofence radius. Apple handles it passively.
-        if (customer.program.isGeofenceActive && customer.program.latitude && customer.program.longitude) {
-            pass.addLocation({
-                latitude: customer.program.latitude,
-                longitude: customer.program.longitude,
-                // Apple Wallet will pop up a notification with this text
-                relevantText: `¡Sabemos que estás cerca de ${customer.program.businessName}! Abre tu tarjeta para ganar visitas y recompensas.`
-            });
-        }
+        const pass = new PKPass(passOptions, certs);
 
         pass.type = "storeCard";
 

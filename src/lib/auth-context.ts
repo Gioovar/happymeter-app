@@ -76,11 +76,11 @@ export async function getEffectiveUserId(branchSlug?: string): Promise<string> {
             throw error;
         }
         console.error('[AuthContext] Error resolving context:', error);
-        return userId; // Fallback to self? Or throw? Fallback safest for now.
+        return userId!; // Fallback to self? Or throw? Fallback safest for now.
     }
 
     if (!userId) throw new Error('Unauthorized');
-    return userId;
+    return userId!;
 }
 
 /**

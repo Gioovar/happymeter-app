@@ -28,8 +28,10 @@ export function StaffInviteForm({ className, branchId, branchSlug, onSuccess }: 
 
             const result = await inviteMember(formData)
             if (result?.success) {
-                toast.success(result.message || 'Invitación enviada correctamente')
+                toast.success('Invitación enviada correctamente')
                 if (onSuccess) onSuccess()
+            } else if (result?.error) {
+                toast.error(result.error)
             }
         } catch (error: any) {
             toast.error(error.message || 'Error al enviar invitación')

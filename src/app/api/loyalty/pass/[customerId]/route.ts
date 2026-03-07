@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: { customerId: 
         return new NextResponse(result.error || "Error", { status: 400 });
     }
 
-    return new NextResponse(result.buffer, {
+    return new NextResponse(result.buffer as any, {
         status: 200,
         headers: {
             'Content-Type': 'application/vnd.apple.pkpass',

@@ -12,17 +12,23 @@ export async function generateCampaignCopy(
     try {
         // 1. Fetch Context via Analytics
         // We use skipAI=true to get fast metrics/weaknesses without re-triggering a full AI analysis
-        const analytics = await getSurveyAnalytics(surveyId, undefined, 'restaurant', true)
+        const analytics = await getSurveyAnalytics(surveyId, undefined as any, 'restaurant', true)
 
         // 2. Extract Key Context
-        const { metrics, staffRanking, generatedStrategies } = analytics
-
         let weaknesses = "General"
-        if (generatedStrategies && generatedStrategies.length > 0) {
-            weaknesses = generatedStrategies.map(s => s.problemDetected).join(". ")
-        }
+        let topStaff = ''
+        let avgRating = "4.0"
 
-        const topStaff = staffRanking.length > 0 ? staffRanking[0].name : ''
+        if (analytics) {
+            const { metrics, staffRanking, generatedStrategies } = analytics
+
+            if (generatedStrategies && generatedStrategies.length > 0) {
+                weaknesses = generatedStrategies.map((s: any) => s.problemDetected).join(". ")
+            }
+
+            topStaff = staffRanking && staffRanking.length > 0 ? staffRanking[0].name : ''
+            avgRating = metrics ? metrics.avgRating.toString() : "4.0"
+        }
 
         const model = getGeminiModel()
 
@@ -32,7 +38,7 @@ export async function generateCampaignCopy(
 
             CONTEXTO DEL NEGOCIO:
             - Nombre: "${surveyTitle}" (Restaurante)
-            - Calificación Actual: ${metrics.avgRating}/5
+            - Calificación Actual: ${avgRating}/5
             - Debilidades Detectadas (Quejas): "${weaknesses}"
             - Staff Estrella: ${topStaff}
 

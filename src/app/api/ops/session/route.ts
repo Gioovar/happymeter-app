@@ -50,7 +50,7 @@ export async function GET() {
                 console.log(`[OPS SESSION] Membership ${membership.id} - ownerId: ${membership.ownerId}, branch name: ${branch?.name}, slug: ${branch?.slug}`)
 
                 // Use branch name, or formatted slug, or businessName as fallback
-                const displayName = branch?.name || formatSlugToName(branch?.slug) || membership.owner.businessName
+                const displayName = branch?.name || formatSlugToName(branch?.slug || null) || membership.owner.businessName
 
                 allMemberships.push({
                     id: membership.id,
@@ -72,7 +72,7 @@ export async function GET() {
         console.log('[OPS SESSION] Fallback businessName:', session.member.owner.businessName)
 
         // Use branch name, or formatted slug, or businessName as fallback
-        const displayName = currentBranch?.name || formatSlugToName(currentBranch?.slug) || session.member.owner.businessName
+        const displayName = currentBranch?.name || formatSlugToName(currentBranch?.slug || null) || session.member.owner.businessName
 
         console.log('[OPS SESSION] Final displayName:', displayName)
 

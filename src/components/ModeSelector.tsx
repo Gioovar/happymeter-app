@@ -41,7 +41,7 @@ export default function ModeSelector() {
                 const Icon = mode.icon;
                 const isLocked = !checkModuleAccess(mode.id);
 
-                let finalHref = mode.href;
+                let finalHref: string = mode.href;
                 if (branchSlug) {
                     if (finalHref === '/dashboard') {
                         finalHref = `/dashboard/${branchSlug}`;

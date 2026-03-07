@@ -10,22 +10,28 @@ export async function POST(req: NextRequest) {
         const subscription = await req.json()
 
         // Upsert subscription
-        await prisma.pushSubscription.upsert({
+        // Upsert subscription manually
+        const existingSub = await prisma.pushSubscription.findFirst({
             where: {
-                userId_endpoint: {
-                    userId,
-                    endpoint: subscription.endpoint
-                }
-            },
-            update: {
-                keys: subscription.keys
-            },
-            create: {
                 userId,
-                endpoint: subscription.endpoint,
-                keys: subscription.keys
+                endpoint: subscription.endpoint
             }
         })
+
+        if (existingSub) {
+            await prisma.pushSubscription.update({
+                where: { id: existingSub.id },
+                data: { keys: subscription.keys }
+            })
+        } else {
+            await prisma.pushSubscription.create({
+                data: {
+                    userId,
+                    endpoint: subscription.endpoint,
+                    keys: subscription.keys
+                }
+            })
+        }
 
         return NextResponse.json({ success: true })
     } catch (error) {

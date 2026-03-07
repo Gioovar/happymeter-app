@@ -28,8 +28,10 @@ export default function InviteMemberModal({ isOpen, onOpenChange, branchId, bran
 
             const result = await inviteMember(formData)
             if (result?.success) {
-                toast.success(result.message || 'Invitación enviada correctamente')
+                toast.success('Invitación enviada correctamente')
                 onOpenChange(false)
+            } else if (result?.error) {
+                toast.error(result.error)
             }
         } catch (error: any) {
             toast.error(error.message || 'Error al enviar invitación')

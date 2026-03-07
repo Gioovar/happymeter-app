@@ -38,7 +38,7 @@ export async function POST(req: Request) {
         const startOfWeek = new Date(startOfDay);
         startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
 
-        const recentPushes = await prisma.loyaltyPushEvent.findMany({
+        const recentPushes = await prisma.loyaltyEvent.findMany({
             where: {
                 customerId,
                 programId,
@@ -92,13 +92,12 @@ export async function POST(req: Request) {
         console.log(`[PUSH ENGINE] Sending Push to ${customerId}: ${title} - ${message}`);
 
         // 7. Log to DB
-        await prisma.loyaltyPushEvent.create({
+        await prisma.loyaltyEvent.create({
             data: {
                 programId,
                 customerId,
-                campaignId,
-                status: "SENT",
-                metadata: { title, message }
+                type: "PUSH_SENT",
+                metadata: { title, message, campaignId }
             }
         });
 

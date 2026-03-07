@@ -377,23 +377,32 @@ export async function getCreatorsExtended() {
             const estimatedSales = rate > 0 ? (totalCommissions / (rate / 100)) : 0
 
             return {
-                userId: p.userId,
                 id: p.id,
-                businessName: p.user?.businessName || 'Sin Nombre',
-                email: 'email@hidden.com',
+                userId: p.userId,
                 code: p.code,
-                joinedAt: p.createdAt,
-                status: p.status,
+                affiliateCode: p.code,
                 commissionRate: p.commissionRate,
+                totalEarnings: totalCommissions,
+                pendingPayout: p.balance,
                 balance: p.balance,
+                status: p.status,
+                isActive: p.status === 'ACTIVE',
+                createdAt: p.createdAt,
+                user: {
+                    businessName: p.user?.businessName || 'Sin Nombre',
+                    phone: null
+                },
+                _count: {
+                    referrals: p._count.referrals
+                },
                 stats: {
                     totalSalesAmount: estimatedSales,
-                    activeReferrals: activeReferrals,
                     totalReferrals: p._count.referrals,
-                    commissionPending: p.balance,
-                    clickCount: p._count.clicks
+                    activeReferrals: activeReferrals,
+                    commissionPaid: totalCommissions,
+                    commissionPending: p.balance
                 }
-            }
+            } as any
         })
 
     } catch (error: any) {

@@ -196,3 +196,90 @@ export async function updateTenantSubscription(userId: string, data: { plan: str
         throw new Error(error.message)
     }
 }
+
+export interface CreatorExtended {
+    id: string;
+    userId: string;
+    code: string;
+    affiliateCode: string;
+    commissionRate: number;
+    totalEarnings: number;
+    pendingPayout: number;
+    balance: number;
+    status: string;
+    isActive: boolean;
+    createdAt: Date;
+    user: {
+        businessName: string | null;
+        phone: string | null;
+    } | null;
+    _count: {
+        referrals: number;
+    };
+    stats: {
+        totalSalesAmount: number;
+        totalReferrals: number;
+        activeReferrals: number;
+        commissionPaid: number;
+        commissionPending: number;
+    };
+}
+
+export async function updateCreatorCommission(creatorId: string, newRate: number) {
+    try {
+        await verifyAdmin()
+
+        await prisma.affiliateProfile.update({
+            where: { id: creatorId },
+            data: { commissionRate: newRate }
+        })
+
+        revalidatePath('/admin/creators')
+        return { success: true }
+    } catch (error: any) {
+        console.error('Error updating commission:', error)
+        throw new Error(error.message)
+    }
+}
+
+export async function getCreator(userId: string) {
+    try {
+        await verifyAdmin()
+
+        const profile = await prisma.affiliateProfile.findUnique({
+            where: { userId },
+            include: {
+                user: { select: { businessName: true, phone: true } },
+                referrals: {
+                    orderBy: { createdAt: 'desc' }
+                }
+            }
+        })
+
+        if (!profile) return null
+
+        // Calculate stats
+        const activeReferrals = profile.referrals.filter(r => r.status === 'CONVERTED').length
+
+        // Return structured data for the page
+        return {
+            ...profile,
+            balance: profile.balance || 0,
+            pendingPayout: profile.balance || 0,
+            totalEarnings: 0,
+            stats: {
+                totalSalesAmount: 0, // Mock 0 for now unless you fetch sum from AffiliatePayout or related sales
+                totalReferrals: profile.referrals.length,
+                activeReferrals,
+                commissionPaid: 0,
+                commissionPending: profile.balance || 0
+            },
+            salesHistory: [] as any[],
+            whatsapp: profile.whatsapp || profile.user?.phone || null,
+        }
+    } catch (error) {
+        console.error('Error fetching creator:', error)
+        return null
+    }
+}
+

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
     try {
         const phone = "+525574131657";
-        const customers = await prisma.customer.findMany({
+        const customers = await prisma.loyaltyCustomer.findMany({
             where: {
                 OR: [
                     { phone: phone },
@@ -13,9 +13,7 @@ export async function GET() {
                 ]
             },
             include: {
-                loyaltyCards: {
-                    include: { business: { select: { name: true } } }
-                }
+                program: { select: { businessName: true } }
             }
         });
         return NextResponse.json(customers);

@@ -1199,8 +1199,31 @@ export async function validateReservationScan(reservationId: string, scannerBran
         }
 
         // --- BRANCH SECURITY VALIDATION ---
-        // Verify the scanner's active branch matches the reservation's branch
-        if (scannerBranchId && reservation.userId && scannerBranchId !== reservation.userId) {
+        // 1. Resolve exactly who the scanner is
+        let finalScannerBranchId = scannerBranchId
+
+        if (scannerBranchId) {
+            // Check if the scanner string is actually a TeamMember ID instead of a direct User/Branch ID
+            const member = await prisma.teamMember.findUnique({
+                where: { id: scannerBranchId },
+                select: { ownerId: true }
+            })
+            if (member) {
+                finalScannerBranchId = member.ownerId
+            }
+        }
+
+        // 2. Resolve exactly where the reservation belongs
+        // First try the reservation's userId (Direct Branch or Chain Owner config)
+        let exactReservationBranchId = reservation.userId
+
+        // If it's empty (old data or created from Table Maps), resolve from Table -> FloorPlan -> UserId
+        if (!exactReservationBranchId && reservation.table?.floorPlan?.userId) {
+            exactReservationBranchId = reservation.table.floorPlan.userId
+        }
+
+        // Verify the scanner's active branch matches the exact reservation's branch
+        if (finalScannerBranchId && exactReservationBranchId && finalScannerBranchId !== exactReservationBranchId) {
             const correctBranchName = reservation.user?.businessName || reservation.table?.floorPlan?.user?.businessName || "Otra Sucursal"
             return {
                 success: false,

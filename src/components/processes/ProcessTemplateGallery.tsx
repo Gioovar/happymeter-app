@@ -17,7 +17,7 @@ interface Template {
     name: string;
     description: string | null;
     category: string;
-    tasks: { id: string, title: string, defaultLimitTime: string | null }[];
+    tasks: { id: string, title: string, description?: string | null, defaultLimitTime: string | null }[];
 }
 
 interface ProcessTemplateGalleryProps {

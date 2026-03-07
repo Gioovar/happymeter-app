@@ -51,8 +51,10 @@ async function main() {
             })
             members.forEach(m => {
                 console.log(`  Mapped ${m.id} -> ${m.userId}`)
-                teamMemberMap.set(m.id, m.userId)
-                clerkIds.add(m.userId)
+                if (m.userId) {
+                    teamMemberMap.set(m.id, m.userId)
+                    clerkIds.add(m.userId)
+                }
             })
         }
 
