@@ -26,7 +26,6 @@ export async function generateMetadata({ params }: { params: Promise<{ surveyId:
     return {
         title,
         description,
-        manifest: `/api/surveys/${surveyId}/manifest`,
         appleWebApp: {
             capable: true,
             title: title,
@@ -50,5 +49,12 @@ export default async function SurveyPage({ params }: { params: Promise<{ surveyI
             isOwner = true
         }
     }
-    return <SurveyClient surveyId={surveyId} isOwner={isOwner} />
+    return (
+        <>
+            <head>
+                <link rel="manifest" href={`/api/surveys/${surveyId}/manifest`} crossOrigin="use-credentials" />
+            </head>
+            <SurveyClient surveyId={surveyId} isOwner={isOwner} />
+        </>
+    )
 }
