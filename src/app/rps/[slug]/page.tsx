@@ -1,5 +1,6 @@
 import { getPublicPromoterPortal } from "@/actions/promoters"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import { QRCodeSVG } from "qrcode.react"
 import { Target, Users, DollarSign, Share2, Copy, BarChart3, ArrowUpRight, Calendar, User, Phone, MapPin, ChevronDown } from "lucide-react"
 import { format } from "date-fns"
@@ -11,6 +12,14 @@ import Image from "next/image"
 
 export default async function PromoterPortal({ params }: { params: { slug: string } }) {
     const { slug } = params
+
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get('rps_session_slug')?.value
+
+    if (!sessionCookie || sessionCookie !== slug) {
+        redirect('/rps')
+    }
+
     const result = await getPublicPromoterPortal(slug)
 
     if (!result.success || !result.data) {

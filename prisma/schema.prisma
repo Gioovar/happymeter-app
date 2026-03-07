@@ -1194,6 +1194,8 @@ model PromoterProfile {
   phone           String?
   email           String?
   slug            String                 @unique
+  pin             String?                // 4-digit PIN for access
+  pinSetAt        DateTime?              // Tracks when the PIN was configured
   commissionType  PromoterCommissionType @default(PER_PERSON)
   commissionValue Float                  @default(0)
   branchId        String?

@@ -1,12 +1,25 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
+import { cookies } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { PromoterCommissionType } from "@prisma/client"
 import { sendSMS } from "@/lib/sms"
 import { DEFAULT_SENDER } from "@/lib/email"
 import { resend } from "@/lib/resend"
+
+export async function createPromoterSession(slug: string) {
+    const cookieStore = await cookies();
+    cookieStore.set('rps_session_slug', slug, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: '/rps'
+    });
+    return { success: true };
+}
 
 export async function createPromoter(data: {
     name: string
@@ -353,11 +366,83 @@ export async function verifyPromoterSlug(slug: string) {
     try {
         const promoter = await prisma.promoterProfile.findUnique({
             where: { slug },
-            select: { id: true }
+            select: {
+                id: true,
+                name: true,
+                pin: true,
+                business: {
+                    select: {
+                        businessName: true,
+                        logoUrl: true
+                    }
+                }
+            }
         })
-        return { success: !!promoter }
+
+        if (!promoter) return { success: false }
+
+        return {
+            success: true,
+            hasPin: !!promoter.pin,
+            data: {
+                name: promoter.name,
+                businessName: promoter.business?.businessName,
+                logoUrl: promoter.business?.logoUrl
+            }
+        }
     } catch (error) {
         console.error("Error verifying promoter slug:", error)
         return { success: false }
+    }
+}
+
+export async function setupPromoterPin(slug: string, pin: string) {
+    try {
+        // Find promoter by slug to ensure they exist and don't have a PIN yet
+        const promoter = await prisma.promoterProfile.findUnique({
+            where: { slug },
+            select: { id: true, pin: true }
+        })
+
+        if (!promoter) return { success: false, error: "Promotor no encontrado" }
+        if (promoter.pin) return { success: false, error: "El PIN ya fue configurado anteriormente" }
+
+        // Here we could hash the PIN, but since it's a simple 4 digit access code for UI gating,
+        // storing it directly is an option. For better security, let's just store it as is for MVP
+        // or we can add a simple hash if required later.
+
+        await prisma.promoterProfile.update({
+            where: { slug },
+            data: {
+                pin,
+                pinSetAt: new Date()
+            }
+        })
+
+        return { success: true }
+    } catch (error) {
+        console.error("Error setting up promoter pin:", error)
+        return { success: false, error: "Error al configurar el PIN" }
+    }
+}
+
+export async function verifyPromoterPin(slug: string, pin: string) {
+    try {
+        const promoter = await prisma.promoterProfile.findUnique({
+            where: { slug },
+            select: { id: true, pin: true }
+        })
+
+        if (!promoter) return { success: false, error: "Promotor no encontrado" }
+        if (!promoter.pin) return { success: false, error: "Aún no has configurado un PIN" }
+
+        if (promoter.pin !== pin) {
+            return { success: false, error: "PIN incorrecto" }
+        }
+
+        return { success: true }
+    } catch (error) {
+        console.error("Error verifying promoter pin:", error)
+        return { success: false, error: "Error de verificación" }
     }
 }
