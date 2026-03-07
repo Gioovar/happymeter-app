@@ -73,12 +73,14 @@ export async function GET(
                 {
                     src: "/happymeter_logo.png",
                     sizes: "192x192",
-                    type: "image/png"
+                    type: "image/png",
+                    purpose: "any maskable"
                 },
                 {
                     src: "/happymeter_logo.png",
                     sizes: "512x512",
-                    type: "image/png"
+                    type: "image/png",
+                    purpose: "any maskable"
                 }
             ]
         }
