@@ -255,11 +255,12 @@ export async function sendPromoterNotification(promoterId: string, type: 'sms' |
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'
         const portalLink = `${appUrl}/rps/${promoter.slug}`
+        const generalPortalLink = `${appUrl}/rps`
         const businessName = promoter.business?.businessName || 'nuestro negocio'
 
         if (type === 'sms') {
             if (!promoter.phone) return { success: false, error: "El promotor no tiene teléfono registrado" }
-            const message = `Hola ${promoter.name}, este es el acceso a tu App de RP para ${businessName}: ${portalLink}. ¡Aquí podrás ver tus reservas y comisiones!`
+            const message = `Hola ${promoter.name}, este es el acceso a tu App de RP para ${businessName}. Entra a ${generalPortalLink} y usa tu código secreto: ${promoter.slug}`
             return await sendSMS(promoter.phone, message)
         } else {
             if (!promoter.email) return { success: false, error: "El promotor no tiene correo registrado" }
@@ -267,19 +268,68 @@ export async function sendPromoterNotification(promoterId: string, type: 'sms' |
             await resend.emails.send({
                 from: DEFAULT_SENDER,
                 to: [promoter.email],
-                subject: `🚀 Tu App de RPs para ${businessName}`,
+                subject: `🚀 Tu Código de Acceso de RP para ${businessName}`,
                 html: `
-                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; padding: 24px;">
-                        <h1 style="color: #4f46e5;">¡Hola ${promoter.name}!</h1>
-                        <p>Ya tienes acceso a tu panel personal de RP para <strong>${businessName}</strong>.</p>
-                        <p>Desde este link podrás ver cuánta gente has traído, tus comisiones y descargar tu QR personalizado:</p>
-                        <div style="background: f9fafb; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
-                            <a href="${portalLink}" style="color: #4f46e5; font-weight: bold; text-decoration: none; font-size: 18px;">${portalLink}</a>
-                        </div>
-                        <p>¡Mucho éxito con tus reservaciones!</p>
-                        <hr style="border: 0; border-top: 1px solid #eee; margin: 24px 0;">
-                        <p style="font-size: 12px; color: #666;">Enviado vía HappyMeter Dashboard</p>
-                    </div>
+                    <!DOCTYPE html>
+                    <html lang="es">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Bienvenido a tu Panel de RP</title>
+                    </head>
+                    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 40px 20px;">
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+                            <tr>
+                                <td align="center" style="padding: 40px 30px; background: linear-gradient(135deg, #18181b 0%, #09090b 100%);">
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Acceso a tu Panel RP</h1>
+                                    <p style="color: #a1a1aa; margin: 10px 0 0 0; font-size: 16px;">${businessName}</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 40px 30px;">
+                                    <p style="margin: 0 0 20px 0; color: #3f3f46; font-size: 16px; line-height: 24px;">
+                                        ¡Hola <strong>${promoter.name}</strong>! Ya tienes acceso exclusivo a tu panel personal.
+                                    </p>
+                                    <p style="margin: 0 0 30px 0; color: #3f3f46; font-size: 16px; line-height: 24px;">
+                                        Desde esta aplicación web podrás consultar cuántos clientes has llevado, el estatus de tus comisiones en tiempo real y descargar tu código QR personalizado para compartir.
+                                    </p>
+                                    
+                                    <div style="background-color: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 30px;">
+                                        <p style="margin: 0 0 8px 0; color: #71717a; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                                            TU CÓDIGO SECRETO DE RP ES:
+                                        </p>
+                                        <p style="margin: 0; color: #18181b; font-size: 32px; font-weight: 900; font-family: monospace; letter-spacing: 2px;">
+                                            ${promoter.slug}
+                                        </p>
+                                    </div>
+
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="${generalPortalLink}" style="display: inline-block; background-color: #6366f1; color: #ffffff; font-size: 16px; font-weight: 700; text-decoration: none; padding: 16px 32px; border-radius: 12px; box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);">
+                                                    Entrar a mi Panel
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 30px; background-color: #fafafa; border-top: 1px solid #f4f4f5; text-align: center;">
+                                    <p style="margin: 0 0 10px 0; color: #a1a1aa; font-size: 14px;">
+                                        Si tienes problemas con el botón, copia y pega este enlace en tu navegador:
+                                    </p>
+                                    <a href="${portalLink}" style="color: #6366f1; font-size: 14px; text-decoration: none; word-break: break-all;">
+                                        ${portalLink}
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                        <p style="text-align: center; margin: 30px 0 0 0; color: #9ca3af; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">
+                            Powered by HappyMeter
+                        </p>
+                    </body>
+                    </html>
                 `
             })
             return { success: true }
