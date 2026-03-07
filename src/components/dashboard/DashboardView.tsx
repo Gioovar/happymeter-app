@@ -40,6 +40,7 @@ import VipAmbassadorsWidget from './VipAmbassadorsWidget'
 import OccupancyRadarWidget from './OccupancyRadarWidget'
 import ActiveTablesWidget from './ActiveTablesWidget'
 import RoiCalculatorWidget from './RoiCalculatorWidget'
+import AutopilotWidget from './AutopilotWidget'
 import CriticalMomentsWidget from './CriticalMomentsWidget'
 import ResolvedIssuesWidget from './ResolvedIssuesWidget'
 import ResponsesModal from '@/components/ResponsesModal'
@@ -441,7 +442,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                     </div>
 
                     {/* Advanced Operations AI Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                         <div className="lg:col-span-1 h-[450px]">
                             <ReputationWidget />
                         </div>
@@ -453,6 +454,9 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                         </div>
                         <div className="lg:col-span-1 h-[450px]">
                             <CampaignManagerWidget />
+                        </div>
+                        <div className="lg:col-span-1 h-[450px]">
+                            <AutopilotWidget />
                         </div>
                     </div>
 
