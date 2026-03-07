@@ -82,6 +82,19 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
         setDeferredPrompt(null)
     }
 
+    const handleInstallClickFallback = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt()
+            const { outcome } = await deferredPrompt.userChoice
+            if (outcome === 'accepted') {
+                setIsInstallable(false)
+            }
+            setDeferredPrompt(null)
+        } else {
+            alert("Para instalar la App, asegúrate de estar usando Google Chrome o Safari.\\nAbre el menú del navegador (los 3 puntitos arriba a la derecha) o el botón de compartir, y selecciona 'Agregar a la pantalla principal' o 'Instalar aplicación'.")
+        }
+    }
+
     // Kiosk Mode: Prevent back navigation
     useEffect(() => {
         // Push a dummy state so the user can't easily go "back" out of the app
@@ -768,6 +781,18 @@ export default function SurveyClient({ surveyId, isOwner }: { surveyId: string, 
                         </motion.form>
                     )}
                 </AnimatePresence>
+
+                {/* Fallback Install Button always visible at the bottom */}
+                <div className="pt-8 pb-4 flex justify-center opacity-40 hover:opacity-100 transition-opacity">
+                    <button
+                        type="button"
+                        onClick={handleInstallClickFallback}
+                        className="text-xs flex items-center gap-1 cursor-pointer"
+                        style={{ color: theme.textSecondary }}
+                    >
+                        <Download className="w-3 h-3" /> Instalar App
+                    </button>
+                </div>
             </div>
         </div>
     )
