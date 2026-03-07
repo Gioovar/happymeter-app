@@ -101,7 +101,7 @@ export default function ProcessTeamManager({ initialData, branchId, performanceS
             return
         }
 
-        const message = `👋 ¡Hola!\n\nHas sido invitado(a) a unirte al *Sistema Operativo de ${invite.businessName || 'HappyMeter'}*.\n\n🔑 *Tu PIN de acceso es:* ${pin}\n\n📱 *Pasos para ingresar:*\n1. Entra a este enlace desde tu celular: https://happy-meter.vercel.app/ops \n2. Ingresa tu PIN.\n\n💡 *Tip PRO:* Si abres el link en Safari (iPhone) o Chrome (Android), presiona "Compartir" u "Opciones" y selecciona *"Agregar a la pantalla de inicio"*. Así la tendrás como una App instalada en tu teléfono. 🚀\n\n¡Te esperamos adentro!`
+        const message = `👋 ¡Hola!\n\nHas sido invitado(a) a unirte al *Sistema Operativo de ${invite.businessName || 'HappyMeter'}*.\n\n🔑 *Tu PIN de acceso es:* ${pin}\n\n📱 *Pasos para ingresar:*\n1. Entra a este enlace desde tu celular: https://happy-meter.vercel.app/ops/join?token=${pin}\n2. Completa tu perfil y entra al sistema.\n\n💡 *Tip PRO:* Si abres el link en Safari (iPhone) o Chrome (Android), presiona "Compartir" u "Opciones" y selecciona *"Agregar a la pantalla de inicio"*. Así la tendrás como una App instalada en tu teléfono. 🚀\n\n¡Te esperamos adentro!`
 
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
         window.open(whatsappUrl, '_blank')
