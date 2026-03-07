@@ -113,7 +113,7 @@ export default async function BranchReservationsPage({ params }: { params: { bra
                     <p className="text-gray-400 mt-2">Gestiona agenda y capacidad local.</p>
                 </div>
                 <div className="flex flex-wrap gap-3 w-full md:w-auto items-center">
-                    <ReservationModeToggle currentMode={userSettings?.reservationSettings?.simpleMode ? 'SIMPLE' : 'ADVANCED'} />
+                    <ReservationModeToggle currentMode={userSettings?.reservationSettings?.simpleMode ? 'SIMPLE' : 'ADVANCED'} branchId={branchSlug} />
 
                     {program && <ReservationLinkButton programId={program.id} />}
 
@@ -188,7 +188,7 @@ export default async function BranchReservationsPage({ params }: { params: { bra
                 </div>
             </div>
             {/* Modal de Configuración (Popup) */}
-            <ReservationSetupModal isOpen={!isConfigured} setupLink={setupLink} />
+            <ReservationSetupModal isOpen={!isConfigured} setupLink={setupLink} branchId={branchSlug} />
         </div>
     )
 }

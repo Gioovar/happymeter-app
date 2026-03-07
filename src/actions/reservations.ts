@@ -618,6 +618,48 @@ export async function updateReservationSettings(settings: { standardTimeEnabled:
     }
 }
 
+export async function setReservationMode(simpleMode: boolean, branchId?: string) {
+    try {
+        const { userId } = await auth()
+        if (!userId) throw new Error("Unauthorized")
+
+        const effectiveUserId = await resolveEffectiveUserId(userId, branchId)
+
+        const userSettings = await prisma.userSettings.findUnique({
+            where: { userId: effectiveUserId },
+            select: { reservationSettings: true }
+        })
+
+        const currentSettings = userSettings?.reservationSettings as any || {}
+
+        await prisma.userSettings.upsert({
+            where: { userId: effectiveUserId },
+            update: {
+                reservationSettings: {
+                    ...currentSettings,
+                    simpleMode
+                }
+            },
+            create: {
+                userId: effectiveUserId,
+                plan: 'FREE',
+                reservationSettings: {
+                    standardTimeEnabled: false,
+                    standardDurationMinutes: 120,
+                    simpleMode,
+                    dailyPaxLimit: 50
+                }
+            }
+        })
+
+        revalidatePath('/dashboard/reservations')
+        return { success: true }
+    } catch (error) {
+        console.error("Error toggling reservation mode:", error)
+        return { success: false, error: "Failed to set mode" }
+    }
+}
+
 async function getEffectiveReservationSettings(userId: string) {
     const user = await prisma.userSettings.findUnique({
         where: { userId },

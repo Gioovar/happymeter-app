@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { updateReservationSettings } from "@/actions/reservations"
+import { updateReservationSettings, setReservationMode } from "@/actions/reservations"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { LayoutGrid, CalendarRange, Loader2 } from "lucide-react"
@@ -14,7 +14,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog"
 
-export function ReservationModeToggle({ currentMode }: { currentMode: 'SIMPLE' | 'ADVANCED' }) {
+export function ReservationModeToggle({ currentMode, branchId }: { currentMode: 'SIMPLE' | 'ADVANCED', branchId?: string }) {
     const [isUpdating, setIsUpdating] = useState(false)
     const [confirmModalOpen, setConfirmModalOpen] = useState(false)
     const [targetMode, setTargetMode] = useState<'SIMPLE' | 'ADVANCED'>('SIMPLE')
@@ -29,24 +29,13 @@ export function ReservationModeToggle({ currentMode }: { currentMode: 'SIMPLE' |
         setIsUpdating(true)
         setConfirmModalOpen(false)
         try {
-            // we don't know the full settings object here, but updateReservationSettings in the backend 
-            // does an upsert and might overwrite. Actually, we should call a specific server action to update ONLY this field,
-            // or fetch current settings here. 
-            // For now, let's create a dedicated server action in a moment or use fetch to an API.
-            // Wait, we can fetch current settings from the page and pass it, or we can just send the delta to a server action.
+            const res = await setReservationMode(targetMode === 'SIMPLE', branchId)
 
-            // To ensure we don't wipe out other settings, we will call an API endpoint.
-            const res = await fetch('/api/reservations/toggle-mode', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ simpleMode: targetMode === 'SIMPLE' })
-            })
-
-            if (res.ok) {
+            if (res.success) {
                 toast.success(`Sistema cambiado a modo ${targetMode === 'SIMPLE' ? 'Sencillo' : 'Avanzado'}`)
                 window.location.reload()
             } else {
-                toast.error("Error al cambiar de sistema")
+                toast.error(res.error || "Error al cambiar de sistema")
             }
         } catch (e) {
             toast.error("Ocurrió un error inesperado")

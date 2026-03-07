@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button'
 import { Settings, PlayCircle, Store, LayoutGrid, CalendarRange, Loader2, Info } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { setReservationMode } from '@/actions/reservations'
 
 interface ReservationSetupModalProps {
     isOpen: boolean
     setupLink: string
+    branchId?: string
 }
 
-export default function ReservationSetupModal({ isOpen, setupLink }: ReservationSetupModalProps) {
+export default function ReservationSetupModal({ isOpen, setupLink, branchId }: ReservationSetupModalProps) {
     // We keep it open unless they configure. 
     // Maybe allow closing? User request implies "pop up que le pida configurar". 
     // Usually forced setup modals block interaction or are persistent.
@@ -26,20 +28,16 @@ export default function ReservationSetupModal({ isOpen, setupLink }: Reservation
         toast.info('Tutorial próximamente disponible')
     }
 
-    const setSimpleMode = async () => {
+    const handleSimpleModeSelect = async () => {
         setIsUpdating(true)
         try {
-            const res = await fetch('/api/reservations/toggle-mode', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ simpleMode: true })
-            })
+            const res = await setReservationMode(true, branchId)
 
-            if (res.ok) {
+            if (res.success) {
                 toast.success('Modo Sencillo activado')
                 window.location.reload()
             } else {
-                toast.error("Error al configurar el modo")
+                toast.error(res.error || "Error al configurar el modo")
                 setIsUpdating(false)
             }
         } catch (e) {
@@ -96,7 +94,7 @@ export default function ReservationSetupModal({ isOpen, setupLink }: Reservation
 
                         <div className="flex flex-col gap-4 py-4">
                             <Button
-                                onClick={setSimpleMode}
+                                onClick={handleSimpleModeSelect}
                                 disabled={isUpdating}
                                 className="w-full h-auto py-4 bg-[#1A1A1A] hover:bg-white/10 border border-white/10 flex flex-col items-center justify-center text-white text-left gap-2 relative group"
                             >
