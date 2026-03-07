@@ -327,13 +327,44 @@ export async function getAvailableProgramsForCloning(currentProgramId: string) {
             select: {
                 id: true,
                 businessName: true,
+                userId: true, // we need userId to cross-check name
+                user: {
+                    select: {
+                        businessName: true,
+                    }
+                },
                 _count: {
                     select: { rewards: { where: { isActive: true } } }
                 }
             }
         })
 
-        return { success: true, programs }
+        // Resolve branch names manually since user might be a branch or the main owner
+        const formattedPrograms = await Promise.all(programs.map(async (p) => {
+            let finalName = p.businessName || "Programa de Lealtad"
+
+            // Check if userId belongs to a branch
+            const branch = await prisma.chainBranch.findFirst({
+                where: { branchId: p.userId },
+                select: { name: true, slug: true }
+            })
+
+            if (branch) {
+                // Return branch name or formatted slug
+                finalName = branch.name || (branch.slug ? branch.slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : finalName)
+            } else if (p.user && p.user.businessName && p.user.businessName !== "Mi Negocio") {
+                // If it's the main account, try to use its custom business name instead of generic "Mi Negocio"
+                finalName = p.user.businessName
+            }
+
+            return {
+                id: p.id,
+                businessName: finalName,
+                _count: p._count
+            }
+        }))
+
+        return { success: true, programs: formattedPrograms }
     } catch (error) {
         console.error("Error fetching cloneable programs:", error)
         return { success: false, programs: [] }
