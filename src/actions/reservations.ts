@@ -18,7 +18,10 @@ async function resolveEffectiveUserId(currentUserId: string, targetBranchId?: st
     // Verify ownership: Does the current user own the chain that contains this branch?
     const branch = await prisma.chainBranch.findFirst({
         where: {
-            branchId: targetBranchId,
+            OR: [
+                { slug: targetBranchId },
+                { branchId: targetBranchId }
+            ],
             chain: { ownerId: currentUserId }
         }
     })
@@ -27,7 +30,7 @@ async function resolveEffectiveUserId(currentUserId: string, targetBranchId?: st
         console.error(`Unauthorized access attempt: User ${currentUserId} -> Branch ${targetBranchId}`)
         throw new Error("Unauthorized Branch Access")
     }
-    return targetBranchId
+    return branch.branchId
 }
 
 export async function getFloorPlan(branchId?: string) {
