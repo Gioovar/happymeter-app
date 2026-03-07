@@ -65,12 +65,6 @@ export async function GET(
                     src: "/happymeter_logo.png",
                     sizes: "512x512",
                     type: "image/png"
-                },
-                {
-                    src: "/happymeter_logo.png",
-                    sizes: "512x512",
-                    type: "image/png",
-                    purpose: "maskable"
                 }
             ]
         }

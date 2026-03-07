@@ -13,7 +13,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'),
   title: "HappyMeter | Medición de Satisfacción con IA",
   description: "La plataforma definitiva para gestionar encuestas de satisfacción, lealtad de clientes y métricas de felicidad en tiempo real.",
-  manifest: "/manifest.json",
   themeColor: "#8b5cf6",
   appleWebApp: {
     capable: true,
