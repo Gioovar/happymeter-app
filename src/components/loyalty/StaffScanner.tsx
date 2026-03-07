@@ -405,11 +405,42 @@ export function StaffScanner({ staffId }: StaffScannerProps) {
                     >
                         <RefreshCcw className="w-6 h-6" />
                     </button>
+
+                    {/* iOS iPad WebRTC Fallback */}
+                    <div className="absolute top-4 left-4 z-10">
+                        <label className="flex items-center gap-2 px-4 py-2 bg-indigo-600/90 backdrop-blur-md text-white rounded-full text-xs font-bold shadow-lg shadow-indigo-900/40 cursor-pointer hover:bg-indigo-500 active:scale-95 transition-all">
+                            <Camera className="w-4 h-4" />
+                            <span>Captura Manual (iOS)</span>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                className="hidden"
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    toast.loading("Procesando imagen...");
+                                    try {
+                                        const html5QrCode = new Html5Qrcode("reader");
+                                        const decodedText = await html5QrCode.scanFile(file, true);
+                                        toast.dismiss();
+                                        handleScan(decodedText);
+                                    } catch (err) {
+                                        toast.dismiss();
+                                        toast.error("No se detectó ningún código QR en la foto");
+                                    }
+                                }}
+                            />
+                        </label>
+                    </div>
                 </div>
 
                 {scannerError && (
                     <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm text-center">
                         {scannerError}
+                        <p className="mt-2 text-xs opacity-80">
+                            Si estás en iPad/iPhone, usa la <b>Captura Manual</b> de arriba.
+                        </p>
                     </div>
                 )}
 
