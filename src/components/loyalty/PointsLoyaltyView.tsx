@@ -1,10 +1,8 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { CustomerLoyaltyCard } from "./CustomerLoyaltyCard"
-import { addLoyaltyReward, updateLoyaltyReward, deleteLoyaltyReward, updateLoyaltyProgram } from "@/actions/loyalty"
+import { addLoyaltyReward, updateLoyaltyReward, deleteLoyaltyReward, updateLoyaltyProgram, getAvailableProgramsForCloning, cloneLoyaltyRewards } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { ArrowRight, Save, Trash2, CheckCircle2, TrendingUp, DollarSign } from "lucide-react"
+import { ArrowRight, Save, Trash2, CheckCircle2, TrendingUp, DollarSign, Copy, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { PromotionsSlider } from "./PromotionsSlider"
 import { getPromotions } from "@/actions/loyalty"
@@ -32,15 +30,22 @@ export function PointsLoyaltyView({ userId, program, onBack }: PointsLoyaltyView
     const [previewSpend, setPreviewSpend] = useState(100)
     const [previewPoints, setPreviewPoints] = useState(0)
     const [promotions, setPromotions] = useState<any[]>([])
+    const [cloneablePrograms, setCloneablePrograms] = useState<any[]>([])
+    const [showCloneDropdown, setShowCloneDropdown] = useState(false)
+    const [isCloning, setIsCloning] = useState(false)
 
     useEffect(() => {
-        const loadPromos = async () => {
+        const loadPromosAndCloneables = async () => {
             if (program?.id) {
-                const res = await getPromotions(program.id)
-                if (res.success) setPromotions(res.promotions || [])
+                const [resPromos, resClone] = await Promise.all([
+                    getPromotions(program.id),
+                    getAvailableProgramsForCloning(program.id)
+                ])
+                if (resPromos.success) setPromotions(resPromos.promotions || [])
+                if (resClone.success) setCloneablePrograms(resClone.programs || [])
             }
         }
-        loadPromos()
+        loadPromosAndCloneables()
     }, [program?.id])
 
     // Calculate preview points whenever spend changes
@@ -95,6 +100,24 @@ export function PointsLoyaltyView({ userId, program, onBack }: PointsLoyaltyView
     // We assume if costInPoints > 0 it's for this view.
     const pointsRewards = (program.rewards || []).filter((r: any) => r.costInPoints > 0).sort((a: any, b: any) => a.costInPoints - b.costInPoints)
 
+    const handleClone = async (sourceProgramId: string) => {
+        if (!confirm("Esto reemplazará todos los premios actuales configurados para esta sucursal con los de la otra sucursal. ¿Estás seguro?")) return;
+        setIsCloning(true)
+        setShowCloneDropdown(false)
+        try {
+            const res = await cloneLoyaltyRewards(sourceProgramId, program.id)
+            if (res.success) {
+                toast.success("Premios clonados exitosamente")
+                router.refresh()
+            } else {
+                toast.error(res.error || "Error al clonar premios")
+            }
+        } catch (e) {
+            toast.error("Error de conexión al clonar")
+        } finally {
+            setIsCloning(false)
+        }
+    }
 
     return (
         <div className="min-h-screen bg-[#0a0a0f] p-4 lg:p-6 font-sans flex flex-col h-auto lg:h-screen overflow-y-auto lg:overflow-hidden">
@@ -158,7 +181,44 @@ export function PointsLoyaltyView({ userId, program, onBack }: PointsLoyaltyView
 
                     {/* REWARDS LIST */}
                     <div>
-                        <h3 className="text-lg font-bold text-white mb-4">Catálogo de Premios</h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                            <h3 className="text-lg font-bold text-white">Catálogo de Premios</h3>
+                            {cloneablePrograms.length > 0 && (
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowCloneDropdown(!showCloneDropdown)}
+                                        disabled={isCloning}
+                                        className="flex items-center gap-2 text-sm text-cyan-500 hover:text-cyan-400 font-medium px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 rounded-lg transition-colors border border-cyan-500/20"
+                                    >
+                                        {isCloning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
+                                        Clonar premios
+                                    </button>
+
+                                    {showCloneDropdown && (
+                                        <>
+                                            <div className="fixed inset-0 z-40" onClick={() => setShowCloneDropdown(false)} />
+                                            <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 w-[280px] bg-[#1A1A1A] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-white/5">
+                                                <div className="px-4 py-2 bg-black/50 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                                    Seleccionar Sucursal Origen
+                                                </div>
+                                                <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                                                    {cloneablePrograms.map(p => (
+                                                        <button
+                                                            key={p.id}
+                                                            onClick={() => handleClone(p.id)}
+                                                            className="w-full text-left px-4 py-3 hover:bg-white/5 transition-colors flex flex-col gap-1"
+                                                        >
+                                                            <span className="text-sm font-medium text-white">{p.businessName}</span>
+                                                            <span className="text-xs text-gray-500">{p._count.rewards} premios configurados</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                         <div className="space-y-3 mb-4">
                             {pointsRewards.map((reward: any) => (
                                 <div key={reward.id} className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5">

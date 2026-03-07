@@ -289,6 +289,98 @@ export async function addLoyaltyReward(programId: string, data: {
     }
 }
 
+export async function getAvailableProgramsForCloning(currentProgramId: string) {
+    try {
+        const { userId } = await auth()
+        if (!userId) return { success: false, programs: [] }
+
+        // Find the chain(s) this user belongs to, either as owner or branch
+        const ownedChains = await prisma.chain.findMany({
+            where: { ownerId: userId },
+            include: { branches: true }
+        })
+
+        let branchIds = [userId]
+
+        if (ownedChains.length > 0) {
+            ownedChains.forEach(c => c.branches.forEach(b => branchIds.push(b.branchId)))
+        } else {
+            // Check if user is a branch
+            const branchOf = await prisma.chainBranch.findFirst({
+                where: { branchId: userId },
+                include: { chain: { include: { branches: true } } }
+            })
+            if (branchOf) {
+                branchIds.push(branchOf.chain.ownerId) // Include owner
+                branchOf.chain.branches.forEach(b => branchIds.push(b.branchId)) // Include other branches
+            }
+        }
+
+        const uniqueBranchIds = [...new Set(branchIds)]
+
+        // Fetch loyalty programs for these userIds
+        const programs = await prisma.loyaltyProgram.findMany({
+            where: {
+                userId: { in: uniqueBranchIds },
+                id: { not: currentProgramId } // exclude current
+            },
+            select: {
+                id: true,
+                businessName: true,
+                _count: {
+                    select: { rewards: { where: { isActive: true } } }
+                }
+            }
+        })
+
+        return { success: true, programs }
+    } catch (error) {
+        console.error("Error fetching cloneable programs:", error)
+        return { success: false, programs: [] }
+    }
+}
+
+export async function cloneLoyaltyRewards(sourceProgramId: string, targetProgramId: string) {
+    try {
+        const { userId } = await auth()
+        if (!userId) return { success: false, error: "Unauthorized" }
+
+        const sourceRewards = await prisma.loyaltyReward.findMany({
+            where: { programId: sourceProgramId, isActive: true },
+            orderBy: { costInVisits: 'asc' }
+        })
+
+        if (sourceRewards.length === 0) {
+            return { success: false, error: "El programa origen no tiene premios activos." }
+        }
+
+        // Delete existing target rewards
+        await prisma.loyaltyReward.deleteMany({
+            where: { programId: targetProgramId }
+        })
+
+        // Insert new rewards cloned from source
+        const newRewardsData = sourceRewards.map(r => ({
+            programId: targetProgramId,
+            name: r.name,
+            description: r.description,
+            costInVisits: r.costInVisits,
+            costInPoints: r.costInPoints,
+            isActive: true
+        }))
+
+        await prisma.loyaltyReward.createMany({
+            data: newRewardsData
+        })
+
+        revalidatePath('/dashboard/loyalty')
+        return { success: true }
+    } catch (error) {
+        console.error("Error cloning rewards:", error)
+        return { success: false, error: "Error al clonar premios" }
+    }
+}
+
 export async function getLoyaltyProgram(userId: string) {
     try {
         const program = await prisma.loyaltyProgram.findUnique({
