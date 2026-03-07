@@ -50,8 +50,10 @@ const nextConfig = {
 
 const pwaConfig = withPWA({
     dest: "public",
+    disable: process.env.NODE_ENV === "development",
     register: true,
     skipWaiting: true,
+    reloadOnOnline: true,
     runtimeCaching: [
         {
             urlPattern: /^\/s\/.*/i,
