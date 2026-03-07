@@ -50,7 +50,7 @@ export default async function BranchReservationsPage({ params }: { params: { bra
     try {
         const [prog, settings] = await Promise.all([
             prisma.loyaltyProgram.findUnique({ where: { userId } }),
-            prisma.userSettings.findUnique({ where: { userId }, select: { createdAt: true, plan: true } })
+            prisma.userSettings.findUnique({ where: { userId }, select: { createdAt: true, plan: true, reservationSettings: true } })
         ])
         program = prog
         userSettings = settings
@@ -76,8 +76,10 @@ export default async function BranchReservationsPage({ params }: { params: { bra
     const setupLink = `/dashboard/${branchSlug}/reservations/setup`
 
     // Blocking check removed. Now using Popup.
-    // Enhanced check: Verify if floor plan actually has tables
-    const isConfigured = floorPlans && floorPlans.some((fp: any) => fp.tables && fp.tables.length > 0);
+    // Enhanced check: Verify if floor plan actually has tables, OR if simpleMode is activated.
+    const hasTables = floorPlans && floorPlans.some((fp: any) => fp.tables && fp.tables.length > 0);
+    const simpleModeActive = (userSettings?.reservationSettings as any)?.simpleMode === true;
+    const isConfigured = hasTables || simpleModeActive;
 
     // Compute dynamic stats
     const today = new Date()
