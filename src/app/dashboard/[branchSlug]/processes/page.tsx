@@ -20,6 +20,7 @@ import { getDashboardProcessStats } from '@/actions/processes';
 import ProcessTemplateGallery from '@/components/processes/ProcessTemplateGallery';
 import { ProcessZoneCard } from '@/components/processes/ProcessZoneCard'; // Correct import
 import StaffLeaderboard from '@/components/processes/StaffLeaderboard';
+import InviteStaffButton from '@/components/processes/InviteStaffButton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 
@@ -85,6 +86,7 @@ export default async function BranchProcessesPage({ params }: { params: { branch
                         <span className="text-sm text-gray-400">Hoy</span>
                         <span className="text-xl font-bold text-white font-mono">{new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric' })}</span>
                     </div>
+                    <InviteStaffButton branchId={userId} branchSlug={branchSlug} />
                     <Link href={newFlowLink} className="bg-white text-black px-6 py-3 rounded-xl font-bold shadow-lg shadow-white/10 hover:bg-gray-200 hover:scale-105 transition-all flex items-center gap-2">
                         <GitMerge className="w-5 h-5" />
                         Nuevo Flujo

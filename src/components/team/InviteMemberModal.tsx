@@ -15,9 +15,10 @@ interface InviteMemberModalProps {
     onOpenChange: (open: boolean) => void
     branchId?: string
     branchSlug?: string
+    staffOnly?: boolean
 }
 
-export default function InviteMemberModal({ isOpen, onOpenChange, branchId, branchSlug }: InviteMemberModalProps) {
+export default function InviteMemberModal({ isOpen, onOpenChange, branchId, branchSlug, staffOnly }: InviteMemberModalProps) {
     const [loading, setLoading] = useState(false)
 
     async function handleInvite(formData: FormData) {
@@ -53,10 +54,10 @@ export default function InviteMemberModal({ isOpen, onOpenChange, branchId, bran
                             <Mail className="w-6 h-6 text-violet-400" />
                         </div>
                         <DialogTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
-                            Invitar al Equipo
+                            {staffOnly ? 'Agregar Personal Operativo' : 'Invitar al Equipo'}
                         </DialogTitle>
                         <p className="text-sm text-gray-500 max-w-xs mx-auto sm:mx-0">
-                            Envía una invitación por correo electrónico para que se unan a esta sucursal.
+                            {staffOnly ? 'Añade operadores o hostess a esta sucursal.' : 'Envía una invitación por correo electrónico para que se unan a esta sucursal.'}
                         </p>
                     </DialogHeader>
 
@@ -79,7 +80,7 @@ export default function InviteMemberModal({ isOpen, onOpenChange, branchId, bran
 
                         <div className="space-y-2">
                             <Label className="text-xs font-medium text-gray-400 uppercase tracking-wider ml-1">Rol Asignado</Label>
-                            <Select name="role" defaultValue="OBSERVER">
+                            <Select name="role" defaultValue={staffOnly ? "OPERATOR" : "OBSERVER"}>
                                 <SelectTrigger className="h-12 bg-[#0a0a0a] border-white/10 text-white focus:border-violet-500/50 rounded-xl px-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded-md bg-violet-500/20 flex items-center justify-center">
@@ -89,24 +90,28 @@ export default function InviteMemberModal({ isOpen, onOpenChange, branchId, bran
                                     </div>
                                 </SelectTrigger>
                                 <SelectContent className="bg-[#18181b] border-white/10 text-white rounded-xl p-1 shadow-2xl">
-                                    <SelectItem value="ADMIN" className="focus:bg-white/10 focus:text-white rounded-lg my-0.5 cursor-pointer">
-                                        <div className="flex flex-col py-1">
-                                            <span className="font-medium text-white text-sm">Administrador</span>
-                                            <span className="text-[10px] text-gray-500">Gestión total de usuarios y ajustes</span>
-                                        </div>
-                                    </SelectItem>
-                                    <SelectItem value="EDITOR" className="focus:bg-white/10 focus:text-white rounded-lg my-0.5 cursor-pointer">
-                                        <div className="flex flex-col py-1">
-                                            <span className="font-medium text-white text-sm">Editor</span>
-                                            <span className="text-[10px] text-gray-500">Crear encuestas y campañas</span>
-                                        </div>
-                                    </SelectItem>
-                                    <SelectItem value="OBSERVER" className="focus:bg-white/10 focus:text-white rounded-lg my-0.5 cursor-pointer">
-                                        <div className="flex flex-col py-1">
-                                            <span className="font-medium text-white text-sm">Observador</span>
-                                            <span className="text-[10px] text-gray-500">Solo visualización de reportes</span>
-                                        </div>
-                                    </SelectItem>
+                                    {!staffOnly && (
+                                        <>
+                                            <SelectItem value="ADMIN" className="focus:bg-white/10 focus:text-white rounded-lg my-0.5 cursor-pointer">
+                                                <div className="flex flex-col py-1">
+                                                    <span className="font-medium text-white text-sm">Administrador</span>
+                                                    <span className="text-[10px] text-gray-500">Gestión total de usuarios y ajustes</span>
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem value="EDITOR" className="focus:bg-white/10 focus:text-white rounded-lg my-0.5 cursor-pointer">
+                                                <div className="flex flex-col py-1">
+                                                    <span className="font-medium text-white text-sm">Editor</span>
+                                                    <span className="text-[10px] text-gray-500">Crear encuestas y campañas</span>
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem value="OBSERVER" className="focus:bg-white/10 focus:text-white rounded-lg my-0.5 cursor-pointer">
+                                                <div className="flex flex-col py-1">
+                                                    <span className="font-medium text-white text-sm">Observador</span>
+                                                    <span className="text-[10px] text-gray-500">Solo visualización de reportes</span>
+                                                </div>
+                                            </SelectItem>
+                                        </>
+                                    )}
                                     <SelectItem value="OPERATOR" className="focus:bg-white/10 focus:text-white rounded-lg my-0.5 cursor-pointer">
                                         <div className="flex flex-col py-1">
                                             <span className="font-medium text-white text-sm">Operador (Staff)</span>
