@@ -37,6 +37,8 @@ export async function sendTaskMessage(taskId: string, content: string, role: 'SU
     // Use member ID if offline, otherwise user ID
     const senderId = session.member?.id || session.userId;
 
+    if (!senderId) throw new Error("Unauthorized");
+
     let chat = await prisma.processTaskChat.findUnique({
         where: { taskId }
     });

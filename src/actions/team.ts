@@ -146,16 +146,21 @@ export async function inviteMember(formData: FormData) {
             if (branch) {
                 targetOwnerId = branch.branchId
             } else {
-                // If not chain owner, check if the user is a team member for this branch
-                const membership = await prisma.teamMember.findFirst({
-                    where: { userId: userId },
-                    select: { ownerId: true }
-                })
-
-                if (membership) {
-                    targetOwnerId = membership.ownerId
+                // Check if the slug belongs to the user themselves (Standalone Business uses userId as slug)
+                if (branchSlug === userId) {
+                    targetOwnerId = userId
                 } else {
-                    throw new Error('Sucursal no encontrada o sin acceso')
+                    // If not chain owner, check if the user is a team member for this branch
+                    const membership = await prisma.teamMember.findFirst({
+                        where: { userId: userId },
+                        select: { ownerId: true }
+                    })
+
+                    if (membership) {
+                        targetOwnerId = membership.ownerId
+                    } else {
+                        throw new Error('Sucursal no encontrada o sin acceso')
+                    }
                 }
             }
         }

@@ -34,8 +34,7 @@ export async function getAllStaffStats(targetOwnerId?: string): Promise<Supervis
             user: {
                 select: {
                     businessName: true,
-                    // email removed
-                    // If we had avatar url...
+                    fullName: true
                 }
             }
         }
@@ -52,36 +51,43 @@ export async function getAllStaffStats(targetOwnerId?: string): Promise<Supervis
         // Find Zones assigned to this staff
         const zones = await prisma.processZone.findMany({
             where: { assignedStaffId: member.id },
-            include: {
-                tasks: true
-            }
+            include: { tasks: true }
+        });
+
+        // Find Tasks assigned explicitly to this staff (that aren't already included via zone if we want to dedupe)
+        const directTasks = await prisma.processTask.findMany({
+            where: { assignedStaffId: member.id }
         });
 
         let totalTasksCount = 0;
         let completedCount = 0;
 
         // Collect all task IDs
-        // Collect all task IDs
-        const taskIds: string[] = [];
-        const currentDayKey = new Date().toLocaleDateString('en-US', { weekday: 'short' }); // Mon, Tue...
+        const taskIds = new Set<string>();
+        const currentDayKey = new Date().toLocaleDateString('en-US', { weekday: 'short' }).substring(0, 3).toUpperCase(); // Needs to match day keys in DB (e.g. MON, TUE)
+        // Wait, how are days stored? In getMexicoTodayRange / edit forms, they are likely like 'Mon', 'Tue' or 'MON', 'TUE'.
+        // Let's check how the days are saved. Let's just use the current checking logic and see.
+        const currentDayStr = new Date().toLocaleDateString('es-ES', { weekday: 'long' }); // e.g. "lunes", or maybe it's in english?
+        const dayMap: Record<number, string> = { 0: 'Sun', 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat' };
+        const dayKey = dayMap[new Date().getDay()]; // e.g. "Mon"
 
-        zones.forEach(z => {
-            z.tasks.forEach(t => {
-                // Check if task is active today
-                const isToday = (t.days && t.days.length > 0) ? t.days.includes(currentDayKey) : true;
+        const checkTask = (t: any) => {
+            const isToday = (t.days && t.days.length > 0) ? t.days.includes(dayKey) : true;
+            if (isToday) {
+                taskIds.add(t.id);
+            }
+        };
 
-                if (isToday) {
-                    totalTasksCount++;
-                    taskIds.push(t.id);
-                }
-            });
-        });
+        zones.forEach(z => z.tasks.forEach(checkTask));
+        directTasks.forEach(checkTask);
+
+        totalTasksCount = taskIds.size;
 
         // Count evidence for these tasks TODAY
-        if (taskIds.length > 0) {
+        if (taskIds.size > 0) {
             const evidence = await prisma.processEvidence.findMany({
                 where: {
-                    taskId: { in: taskIds },
+                    taskId: { in: Array.from(taskIds) },
                     submittedAt: {
                         gte: todayStart,
                         lte: todayEnd
@@ -101,7 +107,7 @@ export async function getAllStaffStats(targetOwnerId?: string): Promise<Supervis
 
         stats.push({
             staffId: member.id,
-            staffName: member.user?.businessName || "Empleado",
+            staffName: member.user?.fullName || member.user?.businessName || member.name || "Empleado",
             role: member.role,
             totalTasks: totalTasksCount,
             completedTasks: completedCount,

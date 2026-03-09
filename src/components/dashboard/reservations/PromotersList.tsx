@@ -58,11 +58,11 @@ export function PromotersList({ initialPromoters, programId }: PromotersListProp
     }
 
     const handleSendNotification = async (id: string, type: 'sms' | 'email') => {
-        const res = await sendPromoterNotification(id, type)
+        const res: any = await sendPromoterNotification(id, type)
         if (res.success) {
             toast.success(`Notificación enviada por ${type.toUpperCase()}`)
         } else {
-            toast.error(res.error as string)
+            toast.error(res?.error || 'Error al enviar notificación')
         }
     }
 
