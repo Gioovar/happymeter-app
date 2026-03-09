@@ -524,6 +524,9 @@ export async function getPublicPromoterPortal(slug: string) {
         return {
             success: true,
             data: {
+                id: promoter.id,
+                role: (promoter as any).role,
+                leaderId: (promoter as any).leaderId,
                 name: promoter.name,
                 businessName: promoter.business?.businessName,
                 logoUrl: promoter.business?.logoUrl,
@@ -849,5 +852,156 @@ export async function createPromoterEvent(data: { name: string, description?: st
     } catch (error) {
         console.error("Error creating event:", error);
         return { success: false, error: "Error de servidor" };
+    }
+}
+
+// --- JEFE DE RPs (LEAD PROMOTER) ACTIONS ---
+
+export async function getJefeTeamInfo(leaderSlug: string) {
+    try {
+        const leader = await prisma.promoterProfile.findUnique({
+            where: { slug: leaderSlug }
+        });
+
+        if (!leader || (leader as any).role !== 'JEFE_RP') {
+            return { success: false, error: "Access denied" };
+        }
+
+        const team = await (prisma as any).promoterProfile.findMany({
+            where: { leaderId: leader.id, isActive: true },
+            include: {
+                reservations: {
+                    select: { status: true, partySize: true, commissionEarned: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // Calculate stats per team member
+        const formattedTeam = team.map((member) => {
+            const memberReservations = (member as any).reservations || [];
+            const confirmedAttendees = memberReservations
+                .filter((r: any) => r.status === 'CONFIRMED' || r.status === 'CHECKED_IN')
+                .reduce((sum: number, r: any) => sum + r.partySize, 0);
+
+            const totalCommission = memberReservations
+                .filter((r: any) => r.status === 'CHECKED_IN' && r.commissionEarned)
+                .reduce((sum: number, r: any) => sum + (r.commissionEarned || 0), 0);
+
+            return {
+                id: member.id,
+                name: member.name,
+                phone: member.phone,
+                email: member.email,
+                slug: member.slug,
+                commissionType: member.commissionType,
+                commissionValue: member.commissionValue,
+                confirmedAttendees,
+                totalCommission,
+            };
+        });
+
+        return { success: true, data: formattedTeam };
+    } catch (error) {
+        console.error("Error fetching team info:", error);
+        return { success: false, error: "Server error" };
+    }
+}
+
+function generateSlug(name: string): string {
+    return name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '') + '-' + Math.random().toString(36).substring(2, 6);
+}
+
+export async function createTeamPromoter(data: { name: string, phone: string, email: string, commissionType: 'PER_PERSON' | 'PERCENTAGE', commissionValue: number }, leaderSlug: string) {
+    try {
+        const leader = await prisma.promoterProfile.findUnique({
+            where: { slug: leaderSlug }
+        });
+
+        if (!leader || (leader as any).role !== 'JEFE_RP') {
+            return { success: false, error: "Access denied" };
+        }
+
+        const currentPromotersCount = await prisma.promoterProfile.count({
+            where: { businessId: leader.businessId }
+        });
+
+        if (currentPromotersCount >= 50) {
+            return { success: false, error: "Limit of 50 RPs reached for this branch." };
+        }
+
+        let cleanPhone = data.phone ? data.phone.replace(/[^0-9]/g, '') : null;
+        if (!cleanPhone && !data.email) return { success: false, error: "Se requiere un teléfono o un correo válido" };
+
+        const slug = generateSlug(data.name);
+
+        const newPromoter = await (prisma as any).promoterProfile.create({
+            data: {
+                businessId: leader.businessId,
+                branchId: leader.branchId,
+                name: data.name,
+                email: data.email || null,
+                phone: cleanPhone || null,
+                userId: cleanPhone || data.email, // Using as global linking key
+                slug,
+                commissionType: data.commissionType,
+                commissionValue: data.commissionValue,
+                isActive: true,
+                role: 'RP' as any,
+                leaderId: leader.id as any
+            }
+        });
+
+        if (cleanPhone) {
+            await (prisma as any).globalPromoter.upsert({
+                where: { phone: cleanPhone },
+                update: {}, // Don't overwrite existing
+                create: {
+                    phone: cleanPhone,
+                    name: data.name,
+                    email: data.email || null,
+                    pin: Math.floor(1000 + Math.random() * 9000).toString() // Generate random pin for now
+                }
+            });
+        }
+
+        revalidatePath(`/rps/${leaderSlug}`);
+        return { success: true, promoter: newPromoter };
+    } catch (error) {
+        console.error("Error creating team promoter:", error);
+        return { success: false, error: "Server error" };
+    }
+}
+
+export async function updatePromoterCommission(promoterId: string, commissionValue: number, leaderSlug: string) {
+    try {
+        const leader = await prisma.promoterProfile.findUnique({
+            where: { slug: leaderSlug }
+        });
+
+        if (!leader || (leader as any).role !== 'JEFE_RP') {
+            return { success: false, error: "Access denied" };
+        }
+
+        const targetPromoter = await (prisma as any).promoterProfile.findFirst({
+            where: { id: promoterId, leaderId: leader.id }
+        });
+
+        if (!targetPromoter) {
+            return { success: false, error: "RP not found or does not belong to your team" };
+        }
+
+        await prisma.promoterProfile.update({
+            where: { id: promoterId },
+            data: { commissionValue }
+        });
+
+        revalidatePath(`/rps/${leaderSlug}`);
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating promoter commission:", error);
+        return { success: false, error: "Server error" };
     }
 }

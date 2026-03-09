@@ -87,12 +87,12 @@ export async function updateReservationHostess(params: {
             where: { id: params.reservationId },
             data: {
                 status: params.status,
-                ...(params.actualGuests !== undefined && { actualGuests: params.actualGuests }),
+                ...(params.actualGuests !== undefined ? { actualGuests: params.actualGuests } : {} as any),
             },
         });
 
         // Create an audit log for transparency
-        if (params.actualGuests !== undefined && existing.actualGuests !== params.actualGuests) {
+        if (params.actualGuests !== undefined && (existing as any).actualGuests !== params.actualGuests) {
             await prisma.auditLog.create({
                 data: {
                     adminId: params.adminId,
@@ -100,7 +100,7 @@ export async function updateReservationHostess(params: {
                     entity: "RESERVATION",
                     entityId: params.reservationId,
                     details: {
-                        oldValue: existing.actualGuests ?? existing.partySize, // fallback to partySize if null
+                        oldValue: (existing as any).actualGuests ?? existing.partySize, // fallback to partySize if null
                         newValue: params.actualGuests,
                     },
                 },
@@ -142,7 +142,7 @@ export async function downloadDailyReservationsCSV(branchId: string) {
                 `"${r.customerName}"`,
                 r.customerPhone || "N/A",
                 r.partySize,
-                r.actualGuests || r.partySize,
+                (r as any).actualGuests || r.partySize,
                 r.promoter ? `"${r.promoter.name}"` : "Directo",
                 r.status,
             ].join(",");

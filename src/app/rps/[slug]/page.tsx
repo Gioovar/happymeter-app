@@ -1,4 +1,4 @@
-import { getPublicPromoterPortal } from "@/actions/promoters"
+import { getPublicPromoterPortal, getJefeTeamInfo } from "@/actions/promoters"
 import { notFound, redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { QRCodeSVG } from "qrcode.react"
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
 import Link from "next/link"
+import { TeamTab } from "./TeamTab"
 
 const getStatusBadge = (status: string) => {
     switch (status) {
@@ -45,8 +46,16 @@ export default async function PromoterPortal({ params }: { params: { slug: strin
         return notFound()
     }
 
-    const { name, businessName, logoUrl, stats, upcomingReservations, upcomingEvents, phone, aiCoachTip } = result.data
+    const { name, businessName, logoUrl, stats, upcomingReservations, upcomingEvents, phone, aiCoachTip, role, id: promoterId } = result.data
     const { gamification } = stats
+
+    let teamData: any = [];
+    if (role === 'JEFE_RP') {
+        const teamReq = await getJefeTeamInfo(slug);
+        if (teamReq.success) {
+            teamData = teamReq.data;
+        }
+    }
 
     // Security check: Only allow the owner of this slug to view it
     if (phone !== sessionCookie && sessionCookie !== 'admin') {
@@ -128,8 +137,20 @@ export default async function PromoterPortal({ params }: { params: { slug: strin
                             <TabsTrigger value="allTime" className="data-[state=active]:bg-white/10 data-[state=active]:text-white h-full px-6">Histórico</TabsTrigger>
                             <TabsTrigger value="ranking" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-black h-full px-6 font-bold shadow-lg shadow-amber-500/20">Nivel & Ranking</TabsTrigger>
                             <TabsTrigger value="events" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white h-full px-6">Eventos</TabsTrigger>
+                            {role === 'JEFE_RP' && (
+                                <TabsTrigger value="team" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white h-full px-6 flex items-center gap-2">
+                                    <Users className="w-4 h-4" />
+                                    Mi Equipo
+                                </TabsTrigger>
+                            )}
                         </TabsList>
                     </div>
+
+                    {role === 'JEFE_RP' && (
+                        <TabsContent value="team" className="focus:outline-none">
+                            <TeamTab leaderSlug={slug} teamData={teamData} />
+                        </TabsContent>
+                    )}
 
                     <TabsContent value="today" className="focus:outline-none">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -1230,6 +1230,11 @@ enum PromoterCommissionType {
   PERCENTAGE
 }
 
+enum PromoterRole {
+  RP
+  JEFE_RP
+}
+
 model PromoterProfile {
   id              String                 @id @default(uuid())
   businessId      String
@@ -1246,6 +1251,8 @@ model PromoterProfile {
   isActive        Boolean                @default(true)
   rpScore         Float                  @default(5.0) // Average rating 1 to 5
   totalReviews    Int                    @default(0) // Total distinct reviews received in this branch
+  role            PromoterRole           @default(RP)
+  leaderId        String? // For hierarchy: Which JEFE_RP manages this RP?
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
 
@@ -1253,6 +1260,10 @@ model PromoterProfile {
   settlements    PromoterSettlement[]
   business       UserSettings         @relation("BusinessPromoters", fields: [businessId], references: [userId], onDelete: Cascade)
   globalPromoter GlobalPromoter?      @relation(fields: [userId], references: [phone])
+  
+  // Hierarchy Relations
+  leader         PromoterProfile?     @relation("LeaderTeam", fields: [leaderId], references: [id], onDelete: SetNull)
+  teamMembers    PromoterProfile[]    @relation("LeaderTeam")
 
   @@index([businessId])
   @@index([branchId])
