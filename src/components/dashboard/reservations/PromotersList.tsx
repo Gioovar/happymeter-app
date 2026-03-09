@@ -62,7 +62,7 @@ export function PromotersList({ initialPromoters, programId }: PromotersListProp
         if (res.success) {
             toast.success(`Notificación enviada por ${type.toUpperCase()}`)
         } else {
-            toast.error(res.error)
+            toast.error(res.error as string)
         }
     }
 

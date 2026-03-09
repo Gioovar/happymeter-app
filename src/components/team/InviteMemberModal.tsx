@@ -113,6 +113,12 @@ export default function InviteMemberModal({ isOpen, onOpenChange, branchId, bran
                                             <span className="text-[10px] text-gray-500">App móvil, tareas y evidencias</span>
                                         </div>
                                     </SelectItem>
+                                    <SelectItem value="HOSTESS" className="focus:bg-white/10 focus:text-white rounded-lg my-0.5 cursor-pointer">
+                                        <div className="flex flex-col py-1">
+                                            <span className="font-medium text-white text-sm">Hostess (Recepción)</span>
+                                            <span className="text-[10px] text-gray-500">Gestión de reservaciones y escáner QR</span>
+                                        </div>
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

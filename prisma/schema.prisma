@@ -196,6 +196,7 @@ model Reservation {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   duration      Int      @default(120)
+  actualGuests  Int? // Added for Happy Hostess accurate tracking
   commissionEarned Float? // The calculated payout for this res (Base + Surge)
   guestType     String?  @default("NEW") // "NEW", "RETURNING", "VIP"
 
@@ -1186,6 +1187,7 @@ enum TeamRole {
   EDITOR
   OBSERVER
   OPERATOR
+  HOSTESS
 }
 
 enum CouponType {
