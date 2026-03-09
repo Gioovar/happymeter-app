@@ -44,10 +44,10 @@ export default async function SupervisionPage({ params }: { params: { branchSlug
                             {/* Blue Gradient Glow on Hover */}
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
-                            {/* Status Indicator Stripe */}
-                            <div className={`absolute top-0 left-0 bottom-0 w-1.5 transition-colors ${employee.status === 'BEHIND' ? 'bg-gradient-to-b from-rose-500 to-red-600 shadow-[0_0_10px_rgba(239,68,68,0.5)]' :
-                                employee.status === 'WARNING' ? 'bg-gradient-to-b from-amber-400 to-orange-500' :
-                                    'bg-gradient-to-b from-emerald-400 to-teal-500'
+                            {/* Modernized Status Indicator Stripe - Using blue/indigo motif instead of harsh red/green */}
+                            <div className={`absolute top-0 left-0 bottom-0 w-1.5 transition-all duration-300 ${employee.status === 'BEHIND' ? 'bg-gradient-to-b from-indigo-500 to-rose-500 group-hover:shadow-[0_0_15px_rgba(99,102,241,0.5)]' :
+                                employee.status === 'WARNING' ? 'bg-gradient-to-b from-indigo-400 to-amber-500 group-hover:shadow-[0_0_15px_rgba(99,102,241,0.5)]' :
+                                    'bg-gradient-to-b from-blue-400 to-indigo-500 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]'
                                 }`} />
 
                             <div className="pl-4">
@@ -80,19 +80,19 @@ export default async function SupervisionPage({ params }: { params: { branchSlug
                                     </div>
                                 </div>
 
-                                {/* Stats Grid */}
-                                <div className="grid grid-cols-3 gap-2 mb-6">
-                                    <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5 group-hover:bg-white/10 transition-colors">
-                                        <div className="text-2xl font-bold text-white">{employee.totalTasks}</div>
-                                        <div className="text-[10px] text-gray-500 uppercase">Total</div>
+                                {/* Stats Grid - Modernized with glassmorphism and subtle blue accents */}
+                                <div className="grid grid-cols-3 gap-3 mb-6 relative z-10">
+                                    <div className="bg-white/[0.03] backdrop-blur-sm rounded-xl p-3 text-center border border-white/5 group-hover:bg-blue-500/5 group-hover:border-blue-500/20 transition-all duration-300 shadow-inner group-hover:-translate-y-1">
+                                        <div className="text-2xl font-black text-white group-hover:text-blue-200 transition-colors tracking-tight">{employee.totalTasks}</div>
+                                        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Total</div>
                                     </div>
-                                    <div className="bg-emerald-500/10 rounded-lg p-2 text-center border border-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
-                                        <div className="text-2xl font-bold text-emerald-400">{employee.completedTasks}</div>
-                                        <div className="text-[10px] text-emerald-500/70 uppercase">Hechas</div>
+                                    <div className="bg-white/[0.03] backdrop-blur-sm rounded-xl p-3 text-center border border-white/5 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/30 transition-all duration-300 shadow-inner group-hover:-translate-y-1 delay-75">
+                                        <div className="text-2xl font-black text-indigo-400 group-hover:text-indigo-300 transition-colors tracking-tight">{employee.completedTasks}</div>
+                                        <div className="text-[10px] text-indigo-500/70 font-bold uppercase tracking-widest mt-1">Hechas</div>
                                     </div>
-                                    <div className="bg-red-500/10 rounded-lg p-2 text-center border border-red-500/10 group-hover:bg-red-500/20 transition-colors">
-                                        <div className="text-2xl font-bold text-red-400">{employee.pendingTasks}</div>
-                                        <div className="text-[10px] text-red-500/70 uppercase">Faltan</div>
+                                    <div className="bg-white/[0.03] backdrop-blur-sm rounded-xl p-3 text-center border border-white/5 group-hover:bg-violet-500/10 group-hover:border-violet-500/30 transition-all duration-300 shadow-inner group-hover:-translate-y-1 delay-150">
+                                        <div className="text-2xl font-black text-violet-400 group-hover:text-violet-300 transition-colors tracking-tight">{employee.pendingTasks}</div>
+                                        <div className="text-[10px] text-violet-500/70 font-bold uppercase tracking-widest mt-1">Faltan</div>
                                     </div>
                                 </div>
 
