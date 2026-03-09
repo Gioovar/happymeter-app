@@ -6,6 +6,7 @@ import { PromotersList } from "@/components/dashboard/reservations/PromotersList
 import { Target, Plus, TrendingUp, DollarSign, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CreatePromoterModal } from "@/components/dashboard/reservations/CreatePromoterModal"
+import { AssignLeadModal } from "@/components/dashboard/reservations/AssignLeadModal"
 import { Card, CardContent } from "@/components/ui/card"
 
 export default async function PromotersPage() {
@@ -58,7 +59,10 @@ export default async function PromotersPage() {
                     <p className="text-zinc-400">Administra, mide y calcula el rendimiento de tus Relaciones Públicas.</p>
                 </div>
 
-                <CreatePromoterModal branches={branches} />
+                <div className="flex items-center gap-2">
+                    <AssignLeadModal promoters={promoters || []} />
+                    <CreatePromoterModal branches={branches} />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -878,7 +878,7 @@ export async function getJefeTeamInfo(leaderSlug: string) {
         });
 
         // Calculate stats per team member
-        const formattedTeam = team.map((member) => {
+        const formattedTeam = team.map((member: any) => {
             const memberReservations = (member as any).reservations || [];
             const confirmedAttendees = memberReservations
                 .filter((r: any) => r.status === 'CONFIRMED' || r.status === 'CHECKED_IN')
@@ -1003,5 +1003,23 @@ export async function updatePromoterCommission(promoterId: string, commissionVal
     } catch (error) {
         console.error("Error updating promoter commission:", error);
         return { success: false, error: "Server error" };
+    }
+}
+
+export async function togglePromoterRole(promoterId: string, newRole: 'RP' | 'JEFE_RP') {
+    try {
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "No autorizado" };
+
+        await (prisma as any).promoterProfile.update({
+            where: { id: promoterId, businessId: userId },
+            data: { role: newRole }
+        });
+
+        revalidatePath('/dashboard/[branchSlug]/reservations/rps', 'page');
+        return { success: true };
+    } catch (error) {
+        console.error("Error toggling promoter role:", error);
+        return { success: false, error: "Error al cambiar el rol del promotor" };
     }
 }
