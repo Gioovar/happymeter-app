@@ -96,9 +96,12 @@ export default async function SupervisionPage({ params }: { params: { branchSlug
                                     </div>
                                 </div>
 
-                                {/* Link Footer */}
-                                <div className="flex items-center justify-end text-sm text-gray-400 group-hover:text-white transition-colors gap-1">
-                                    Ver Detalle <ChevronRight className="w-4 h-4" />
+                                {/* Premium Link Footer */}
+                                <div className="flex items-center justify-end mt-2">
+                                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-gray-300 group-hover:text-white group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-indigo-600 group-hover:border-transparent transition-all duration-300 shadow-lg shadow-transparent group-hover:shadow-blue-500/25 group-hover:-translate-x-1">
+                                        <span>Ver Detalle</span>
+                                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                                    </div>
                                 </div>
                             </div>
                         </Link>
