@@ -249,7 +249,8 @@ export async function getStaffTasks(staffId: string, targetOwnerId?: string) {
         member: {
             id: member.id,
             name: member.user?.fullName || member.name || "Empleado",
-            role: member.role
+            role: member.role,
+            phone: member.user?.phone || null
         },
         tasks: todolist
     };

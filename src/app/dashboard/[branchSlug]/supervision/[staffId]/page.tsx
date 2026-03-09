@@ -1,8 +1,8 @@
 import { getStaffTasks } from '@/actions/supervision';
-import { ArrowLeft, Clock, CheckCircle2, AlertCircle, Eye, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button'; // Assuming shadcn attached
 import { notFound } from 'next/navigation';
+import { TaskItemCard } from '@/components/supervision/TaskItemCard';
 
 import { getDashboardContext } from '@/lib/auth-context';
 
@@ -41,60 +41,7 @@ export default async function EmployeeSupervisionPage({ params }: { params: { st
                     </div>
                 ) : (
                     tasks.map((task) => (
-                        <div
-                            key={task.taskId}
-                            className="bg-[#111] border border-white/10 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-violet-500/30 group"
-                        >
-                            {/* Left: Info */}
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-white font-medium">{task.taskTitle}</h3>
-                                    {task.limitTime && (
-                                        <span className="text-[10px] bg-white/5 text-gray-400 px-2 py-0.5 rounded flex items-center gap-1">
-                                            <Clock className="w-3 h-3" />
-                                            {task.limitTime}
-                                        </span>
-                                    )}
-                                </div>
-                                <p className="text-sm text-gray-500">{task.zoneName}</p>
-                            </div>
-
-                            {/* Middle: Status */}
-                            <div className="flex items-center gap-4">
-                                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold ${task.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400' :
-                                    task.status === 'REJECTED' ? 'bg-red-500/10 text-red-400' :
-                                        task.status === 'REVIEW' ? 'bg-yellow-500/10 text-yellow-400' :
-                                            'bg-white/5 text-gray-500'
-                                    }`}>
-                                    {task.status === 'APPROVED' ? <CheckCircle2 className="w-4 h-4" /> :
-                                        task.status === 'REJECTED' ? <AlertCircle className="w-4 h-4" /> :
-                                            task.status === 'REVIEW' ? <Clock className="w-4 h-4" /> :
-                                                <Clock className="w-4 h-4 opacity-50" />}
-
-                                    {task.status === 'APPROVED' ? 'APROBADA' :
-                                        task.status === 'REJECTED' ? 'RECHAZADA' :
-                                            task.status === 'REVIEW' ? 'POR REVISAR' :
-                                                'PENDIENTE'}
-                                </div>
-                            </div>
-
-                            {/* Right: Actions */}
-                            <div className="flex items-center gap-2">
-                                {task.status === 'REVIEW' || task.status === 'APPROVED' || task.status === 'REJECTED' ? (
-                                    <Link
-                                        href={`/dashboard/${params.branchSlug}/supervision/task/${task.taskId}?evidenceId=${task.evidenceId}`}
-                                        className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-lg shadow-violet-900/20"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                        Revisar Evidencia
-                                    </Link>
-                                ) : (
-                                    <button disabled className="text-gray-600 px-4 py-2 text-sm font-medium cursor-not-allowed">
-                                        Sin Entregar
-                                    </button>
-                                )}
-                            </div>
-                        </div>
+                        <TaskItemCard key={task.taskId} task={task} employee={member} mode="employee" />
                     ))
                 )}
             </div>

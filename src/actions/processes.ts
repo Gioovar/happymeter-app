@@ -471,7 +471,16 @@ export async function getProcessAnalytics() {
         include: {
             task: {
                 include: {
-                    zone: true
+                    zone: {
+                        include: {
+                            assignedStaff: {
+                                include: { user: true }
+                            }
+                        }
+                    },
+                    assignedStaff: {
+                        include: { user: true }
+                    }
                 }
             }
         },
