@@ -108,7 +108,7 @@ export async function inviteMember(formData: FormData) {
         let targetOwnerId = userId
 
         if (branchId && branchId !== userId) {
-            // Verify Chain Ownership
+            // Check if user is the Chain Owner
             const branch = await prisma.chainBranch.findFirst({
                 where: {
                     OR: [
@@ -118,8 +118,22 @@ export async function inviteMember(formData: FormData) {
                     chain: { ownerId: userId }
                 }
             })
-            if (!branch) throw new Error('Unauthorized access to branch')
-            targetOwnerId = branch.branchId
+            if (branch) {
+                targetOwnerId = branch.branchId
+            } else {
+                // If not chain owner, check if the user is a team member acting as admin for this branch
+                const membership = await prisma.teamMember.findFirst({
+                    where: { userId: userId },
+                    select: { ownerId: true }
+                })
+
+                // Allow if the membership's ownerId matches the branchId (which might be the branch's actual userId)
+                if (membership && (membership.ownerId === branchId || membership.ownerId === branchSlug)) {
+                    targetOwnerId = membership.ownerId
+                } else {
+                    throw new Error('Sucursal no encontrada o sin acceso')
+                }
+            }
         } else if (branchSlug) {
             // Resolve Branch ID from Slug
             const branch = await prisma.chainBranch.findFirst({
@@ -128,8 +142,22 @@ export async function inviteMember(formData: FormData) {
                     chain: { ownerId: userId }
                 }
             })
-            if (!branch) throw new Error('Sucursal no encontrada o sin acceso')
-            targetOwnerId = branch.branchId
+
+            if (branch) {
+                targetOwnerId = branch.branchId
+            } else {
+                // If not chain owner, check if the user is a team member for this branch
+                const membership = await prisma.teamMember.findFirst({
+                    where: { userId: userId },
+                    select: { ownerId: true }
+                })
+
+                if (membership) {
+                    targetOwnerId = membership.ownerId
+                } else {
+                    throw new Error('Sucursal no encontrada o sin acceso')
+                }
+            }
         }
 
         // Check Plan Limits (Check limits of the TARGET OWNER i.e. the branch or the user)
