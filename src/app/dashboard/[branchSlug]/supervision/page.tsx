@@ -16,7 +16,9 @@ export default async function SupervisionPage({ params }: { params: { branchSlug
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                    <Shield className="w-8 h-8 text-violet-500" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <Shield className="w-5 h-5 text-white" />
+                    </div>
                     Supervisión de Tareas
                 </h1>
                 <p className="text-gray-400 mt-2 text-lg">
@@ -37,22 +39,25 @@ export default async function SupervisionPage({ params }: { params: { branchSlug
                         <Link
                             key={employee.staffId}
                             href={`/dashboard/${params.branchSlug}/supervision/${employee.staffId}`}
-                            className="group relative bg-[#111] border border-white/10 rounded-2xl p-6 hover:border-violet-500/30 transition-all hover:shadow-2xl hover:shadow-violet-900/10 active:scale-[0.99]"
+                            className="group relative bg-[#111] border border-white/10 rounded-2xl p-6 hover:border-blue-500/30 transition-all hover:shadow-2xl hover:shadow-blue-900/10 active:scale-[0.99] overflow-hidden"
                         >
+                            {/* Blue Gradient Glow on Hover */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
                             {/* Status Indicator Stripe */}
-                            <div className={`absolute top-0 left-0 bottom-0 w-1.5 rounded-l-2xl transition-colors ${employee.status === 'BEHIND' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' :
-                                employee.status === 'WARNING' ? 'bg-yellow-500' :
-                                    'bg-emerald-500'
+                            <div className={`absolute top-0 left-0 bottom-0 w-1.5 transition-colors ${employee.status === 'BEHIND' ? 'bg-gradient-to-b from-rose-500 to-red-600 shadow-[0_0_10px_rgba(239,68,68,0.5)]' :
+                                employee.status === 'WARNING' ? 'bg-gradient-to-b from-amber-400 to-orange-500' :
+                                    'bg-gradient-to-b from-emerald-400 to-teal-500'
                                 }`} />
 
                             <div className="pl-4">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-lg font-bold text-gray-300">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/20 flex items-center justify-center text-lg font-bold text-blue-400">
                                             {employee.staffName.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-bold text-white group-hover:text-violet-300 transition-colors">
+                                            <h3 className="text-lg font-bold text-white group-hover:text-blue-300 transition-colors">
                                                 {employee.staffName}
                                             </h3>
                                             <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">

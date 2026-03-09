@@ -34,7 +34,9 @@ export default async function OpsSupervisionPage() {
         <div className="space-y-6">
             <div className="flex flex-col gap-1 mb-6">
                 <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <ShieldCheck className="w-6 h-6 text-indigo-400" />
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20">
+                        <ShieldCheck className="w-4 h-4 text-white" />
+                    </div>
                     Supervisión Operativa
                 </h1>
                 <p className="text-sm text-slate-400 capitalize">{todayDate}</p>
@@ -71,8 +73,10 @@ export default async function OpsSupervisionPage() {
                         <Link
                             href={`/ops/supervision/task/${task.taskId}${task.evidenceId ? `?evidenceId=${task.evidenceId}` : ''}`}
                             key={task.taskId}
-                            className={`flex items-start gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98] cursor-pointer hover:bg-slate-800 ${bgStatus} ${borderStatus}`}
+                            className={`group relative flex items-start gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98] cursor-pointer hover:bg-slate-800 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-900/10 overflow-hidden ${bgStatus} ${borderStatus}`}
                         >
+                            {/* Subtle Blue Glow on Hover */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                             <StatusIcon className={`w-6 h-6 shrink-0 mt-0.5 ${statusColor}`} />
 
                             <div className="flex-1 min-w-0">
@@ -98,9 +102,9 @@ export default async function OpsSupervisionPage() {
 
                             <div className="flex flex-col items-end gap-2 ml-2">
                                 <span className={`text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider ${task.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' :
-                                        task.status === 'REJECTED' ? 'bg-rose-500/20 text-rose-400' :
-                                            task.status === 'REVIEW' ? 'bg-amber-500/20 text-amber-400' :
-                                                'bg-slate-800 text-slate-400'
+                                    task.status === 'REJECTED' ? 'bg-rose-500/20 text-rose-400' :
+                                        task.status === 'REVIEW' ? 'bg-amber-500/20 text-amber-400' :
+                                            'bg-slate-800 text-slate-400'
                                     }`}>
                                     {task.status === 'REVIEW' ? 'Por Revisar' :
                                         task.status === 'APPROVED' ? 'Aprobada' :
