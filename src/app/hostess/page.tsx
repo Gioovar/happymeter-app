@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getTodayReservations } from "@/actions/hostess";
-import { auth } from "@clerk/nextjs/server";
+import { getOpsSession } from "@/lib/ops-auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import OccupancyDashboard from "@/components/hostess/OccupancyDashboard";
@@ -10,23 +10,33 @@ import DownloadCSVButton from "@/components/hostess/DownloadCSVButton";
 export const revalidate = 0; // Ensure data is fresh
 
 export default async function HostessDashboardPage() {
-    const { userId } = await auth();
+    const { isAuthenticated, member, userId } = await getOpsSession();
 
-    if (!userId) {
-        redirect("/sign-in");
+    if (!isAuthenticated) {
+        redirect("/ops/login");
     }
 
-    // Get the team member's assigned branch (owner)
-    const teamMember = await prisma.teamMember.findFirst({
-        where: { userId: userId },
-        select: { ownerId: true },
-    });
+    let branchId = "";
 
-    if (!teamMember) {
-        redirect("/sign-in");
+    if (member) {
+        branchId = member.ownerId; // Offline operator or assigned member
+    } else if (userId) {
+        // Owner accessing directly without a specific member record
+        const teamMember = await prisma.teamMember.findFirst({
+            where: { userId: userId },
+            select: { ownerId: true },
+        });
+        if (teamMember) {
+            branchId = teamMember.ownerId;
+        } else {
+            branchId = userId; // Fallback to their own ID if they are the direct owner
+        }
     }
 
-    const branchId = teamMember.ownerId; // The branch ID is the owner's userId
+    if (!branchId) {
+        redirect("/ops/login");
+    }
+
     const response = await getTodayReservations(branchId);
 
     if (!response.success || !response.data) {
@@ -70,7 +80,7 @@ export default async function HostessDashboardPage() {
                 />
 
                 {/* List of Reservations */}
-                <ReservationsList reservations={reservations} adminId={userId} />
+                <ReservationsList reservations={reservations} adminId={userId || ""} />
             </div>
         </div>
     );

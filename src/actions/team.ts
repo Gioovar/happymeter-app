@@ -95,7 +95,7 @@ export async function inviteMember(formData: FormData) {
         if (!userId) throw new Error('Unauthorized')
 
         const email = (formData.get('email') as string)?.trim().toLowerCase()
-        const role = formData.get('role') as 'ADMIN' | 'EDITOR' | 'OBSERVER' | 'OPERATOR'
+        const role = formData.get('role') as 'ADMIN' | 'EDITOR' | 'OBSERVER' | 'OPERATOR' | 'HOSTESS'
         const name = formData.get('name') as string | undefined
         const jobTitle = formData.get('jobTitle') as string | undefined
         const phone = formData.get('phone') as string | undefined
@@ -208,10 +208,10 @@ export async function inviteMember(formData: FormData) {
         // of having a "from scratch" process for every invitation, ensuring emails are always sent.
 
         // Generate token
-        const isOperator = role === 'OPERATOR'
+        const isOfflineRole = role === 'OPERATOR' || role === 'HOSTESS'
 
         let token: string
-        if (isOperator) {
+        if (isOfflineRole) {
             // Generate a 6-digit numeric code
             token = Math.floor(100000 + Math.random() * 900000).toString()
 
@@ -245,8 +245,8 @@ export async function inviteMember(formData: FormData) {
             }
         })
 
-        const inviteLink = isOperator
-            ? `${process.env.NEXT_PUBLIC_APP_URL}/ops/join?token=${token}`
+        const inviteLink = isOfflineRole
+            ? `${process.env.NEXT_PUBLIC_APP_URL}/ops/login` // Updated to redirect directly to the new login
             : `${process.env.NEXT_PUBLIC_APP_URL}/join-team?token=${token}`
 
         const inviterName = userSettings?.businessName || 'El Administrador'
@@ -258,7 +258,7 @@ export async function inviteMember(formData: FormData) {
             teamName,
             role,
             inviteLink,
-            isOperator,
+            isOfflineRole, // Treat hostess as operator for email Template (shows PIN)
             token, // Use token as the access code
             name,
             jobTitle
@@ -403,9 +403,9 @@ export async function resendInvitation(inviteId: string) {
     })
 
     // Update token to refresh it
-    const isOperator = invite.role === 'OPERATOR'
+    const isOfflineRole = invite.role === 'OPERATOR' || invite.role === 'HOSTESS'
     let newToken: string
-    if (isOperator) {
+    if (isOfflineRole) {
         newToken = Math.floor(100000 + Math.random() * 900000).toString()
         const existing = await prisma.teamInvitation.findUnique({ where: { token: newToken } })
         if (existing) {
@@ -420,8 +420,8 @@ export async function resendInvitation(inviteId: string) {
         data: { token: newToken, updatedAt: new Date() }
     })
 
-    const inviteLink = isOperator
-        ? `${process.env.NEXT_PUBLIC_APP_URL}/ops/join?token=${newToken}`
+    const inviteLink = isOfflineRole
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/ops/login`
         : `${process.env.NEXT_PUBLIC_APP_URL}/join-team?token=${newToken}`
 
     const inviterName = userSettings?.businessName || 'El Administrador'
@@ -433,7 +433,7 @@ export async function resendInvitation(inviteId: string) {
         teamName,
         invite.role,
         inviteLink,
-        isOperator,
+        isOfflineRole,
         newToken,
         invite.name || undefined,
         invite.jobTitle || undefined
@@ -579,8 +579,8 @@ export async function acceptOfflineInvitation(token: string, profileData: { name
     })
     if (!invite) return { success: false, error: "Invitación inválida o expirada" }
 
-    if (invite.role !== 'OPERATOR') {
-        return { success: false, error: "Este código no es válido para operadores fuera de línea." }
+    if (invite.role !== 'OPERATOR' && invite.role !== 'HOSTESS') {
+        return { success: false, error: "Este código no es válido para acceso local." }
     }
 
     try {
@@ -588,7 +588,7 @@ export async function acceptOfflineInvitation(token: string, profileData: { name
         const newMember = await prisma.teamMember.create({
             data: {
                 ownerId: invite.inviterId,
-                role: 'OPERATOR',
+                role: invite.role, // Use the role from the invite instead of hardcoding 'OPERATOR'
                 name: profileData.name,
                 jobTitle: profileData.jobTitle,
                 phone: profileData.phone,
@@ -642,7 +642,7 @@ export async function checkOfflineInvitation(token: string) {
     })
 
     if (!invite) return { success: false, error: "Código inválido o expirado." }
-    if (invite.role !== 'OPERATOR') return { success: false, error: "Este código requiere una cuenta de administrador para ser aceptado." }
+    if (invite.role !== 'OPERATOR' && invite.role !== 'HOSTESS') return { success: false, error: "Este código requiere una cuenta de administrador para ser aceptado." }
 
     return { success: true, email: invite.email, role: invite.role, businessName: invite.name } // invite.name technically holds the person's typed name from the invite modal, we can return it to pre-fill.
 }
