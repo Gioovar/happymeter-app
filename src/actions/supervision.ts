@@ -144,7 +144,11 @@ export async function getStaffTasks(staffId: string, targetOwnerId?: string) {
 
     const todayStart = startOfDay(new Date());
     const todayEnd = endOfDay(new Date());
-    const currentDayKey = new Date().toLocaleDateString('en-US', { weekday: 'short' });
+
+    // Day keys should match the Spanish database format: 'lunes', 'martes', etc.
+    const daysMap = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const currentDayIndex = new Date().getDay();
+    const currentDayKey = daysMap[currentDayIndex];
 
     // Fetch zones assigned to staff
     const zones = await prisma.processZone.findMany({
@@ -167,9 +171,27 @@ export async function getStaffTasks(staffId: string, targetOwnerId?: string) {
         }
     });
 
+    // Fetch tasks directly assigned to staff
+    const directlyAssignedTasks = await prisma.processTask.findMany({
+        where: { assignedStaffId: staffId },
+        include: {
+            evidences: {
+                where: {
+                    submittedAt: {
+                        gte: todayStart,
+                        lte: todayEnd
+                    }
+                },
+                orderBy: { submittedAt: 'desc' },
+                take: 1
+            }
+        }
+    });
+
     // Flatten and formatting
     const todolist = [];
 
+    // 1. Process Zone Tasks
     for (const zone of zones) {
         for (const task of zone.tasks) {
             const isToday = (task.days && task.days.length > 0) ? task.days.includes(currentDayKey) : true;
@@ -197,10 +219,36 @@ export async function getStaffTasks(staffId: string, targetOwnerId?: string) {
         }
     }
 
+    // 2. Process Directly Assigned Tasks
+    for (const task of directlyAssignedTasks) {
+        const isToday = (task.days && task.days.length > 0) ? task.days.includes(currentDayKey) : true;
+        if (!isToday) continue;
+
+        const evidence = task.evidences && task.evidences.length > 0 ? task.evidences[0] : undefined;
+        let status = 'PENDING';
+        if (evidence) {
+            status = evidence.validationStatus === 'APPROVED' ? 'APPROVED' :
+                evidence.validationStatus === 'REJECTED' ? 'REJECTED' :
+                    'REVIEW';
+        }
+
+        todolist.push({
+            taskId: task.id,
+            taskTitle: task.title,
+            limitTime: task.limitTime,
+            zoneName: 'Asignación Directa', // Fallback name for direct tasks
+            evidenceType: task.evidenceType,
+            status: status,
+            evidenceId: evidence?.id,
+            evidenceUrl: evidence?.fileUrl,
+            submittedAt: evidence?.submittedAt
+        });
+    }
+
     return {
         member: {
             id: member.id,
-            name: member.user?.businessName || "Empleado",
+            name: member.user?.fullName || member.name || "Empleado",
             role: member.role
         },
         tasks: todolist
