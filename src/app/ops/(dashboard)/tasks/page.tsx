@@ -57,9 +57,9 @@ export default async function OpsTasksPage() {
 
                             return (
                                 <Link
-                                    href={isDone ? '#' : `/ops/tasks/${task.id}`}
+                                    href={`/ops/tasks/${task.id}`}
                                     key={task.id}
-                                    className={`flex items-center gap-4 p-4 transition-colors ${isDone ? 'opacity-60 cursor-default' : 'hover:bg-slate-800 active:bg-slate-800'}`}
+                                    className={`flex items-center gap-4 p-4 transition-colors ${isDone ? 'bg-slate-800/20' : 'hover:bg-slate-800 active:bg-slate-800'}`}
                                 >
                                     <StatusIcon className={`w-6 h-6 shrink-0 ${statusColor}`} />
 
@@ -86,9 +86,7 @@ export default async function OpsTasksPage() {
                                         </div>
                                     </div>
 
-                                    {!isDone && (
-                                        <ChevronRight className="w-5 h-5 text-slate-600" />
-                                    )}
+                                    <ChevronRight className={`w-5 h-5 ${isDone ? 'text-emerald-500/50' : 'text-slate-600'}`} />
                                 </Link>
                             )
                         })}

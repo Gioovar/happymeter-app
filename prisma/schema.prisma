@@ -966,6 +966,7 @@ model ProcessTask {
   days            String[]            @default([])
   assignedStaffId String?
   evidences       ProcessEvidence[]
+  chat            ProcessTaskChat?
   assignedStaff   TeamMember?         @relation(fields: [assignedStaffId], references: [id])
   zone            ProcessZone         @relation(fields: [zoneId], references: [id], onDelete: Cascade)
 
@@ -995,6 +996,29 @@ model ProcessEvidence {
   @@index([staffId])
   @@index([status])
   @@index([validationStatus])
+}
+
+model ProcessTaskChat {
+  id        String                 @id @default(uuid())
+  taskId    String                 @unique
+  task      ProcessTask            @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  messages  ProcessTaskChatMessage[]
+
+  @@index([taskId])
+}
+
+model ProcessTaskChatMessage {
+  id        String          @id @default(uuid())
+  chatId    String
+  chat      ProcessTaskChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId  String          // Could be a User, a TeamMember, or "SYSTEM"
+  role      String          // 'SUPERVISOR', 'STAFF', 'SYSTEM'
+  content   String
+  createdAt DateTime        @default(now())
+
+  @@index([chatId])
 }
 
 model ProcessTemplate {

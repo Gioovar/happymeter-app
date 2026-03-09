@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 import { startOfDay, endOfDay } from 'date-fns';
 import { sendNativePush } from '@/lib/push-engine';
+import { getOpsSession } from '@/lib/ops-auth';
+import { getMexicoTodayRange } from '@/actions/processes';
 
 export type SupervisionStats = {
     staffId: string;
@@ -331,4 +333,135 @@ export async function analyzeEvidence(evidenceId: string) {
     });
 
     return analysisResult;
+}
+
+// --- OPS SUPERVISION ACTIONS ---
+
+export async function getOpsSupervisionTasks() {
+    const session = await getOpsSession();
+    if (!session.isAuthenticated) return null;
+
+    const targetOwnerId = session.member?.ownerId || session.userId;
+    if (!targetOwnerId) return [];
+
+    const { start: todayStart, end: todayEnd, dayOfWeek } = await getMexicoTodayRange();
+
+    // Fetch all zones for the targetOwnerId
+    const zones = await prisma.processZone.findMany({
+        where: { userId: targetOwnerId },
+        include: {
+            assignedStaff: {
+                include: {
+                    user: {
+                        select: { businessName: true, phone: true }
+                    }
+                }
+            },
+            tasks: {
+                where: {
+                    days: { has: dayOfWeek }
+                },
+                include: {
+                    evidences: {
+                        where: {
+                            submittedAt: {
+                                gte: todayStart,
+                                lte: todayEnd
+                            }
+                        },
+                        take: 10,
+                        orderBy: { submittedAt: 'desc' }
+                    }
+                }
+            }
+        }
+    });
+
+    const tasksList: any[] = [];
+
+    zones.forEach(zone => {
+        zone.tasks.forEach(task => {
+            const latestEvidence = task.evidences[0];
+
+            let status = 'PENDING';
+            if (latestEvidence) {
+                if (latestEvidence.validationStatus === 'APPROVED') status = 'APPROVED';
+                else if (latestEvidence.validationStatus === 'REJECTED') status = 'REJECTED';
+                else status = 'REVIEW';
+            }
+
+            // Fallback for Assigned Staff Name
+            let assignedName = 'Sin Asignar';
+            if (task.assignedStaffId && zone.assignedStaff) {
+                //@ts-ignore
+                assignedName = zone.assignedStaff.user?.businessName || zone.assignedStaff.user?.phone || zone.assignedStaff.name || 'Empleado';
+            } else if (zone.assignedStaff) {
+                //@ts-ignore
+                assignedName = zone.assignedStaff.user?.businessName || zone.assignedStaff.user?.phone || zone.assignedStaff.name || 'Empleado';
+            }
+
+            tasksList.push({
+                taskId: task.id,
+                title: task.title,
+                limitTime: task.limitTime,
+                zoneName: zone.name,
+                assignedStaffName: assignedName,
+                status,
+                evidenceId: latestEvidence?.id,
+                hasEvidence: !!latestEvidence
+            });
+        });
+    });
+
+    return tasksList.sort((a, b) => {
+        const timeA = a.limitTime ? parseInt(a.limitTime.replace(':', '')) : 9999;
+        const timeB = b.limitTime ? parseInt(b.limitTime.replace(':', '')) : 9999;
+        return timeA - timeB;
+    });
+}
+
+export async function getOpsTaskDetails(taskId: string, evidenceId?: string) {
+    const session = await getOpsSession();
+    if (!session.isAuthenticated) return null;
+
+    const targetOwnerId = session.member?.ownerId || session.userId;
+
+    const task = await prisma.processTask.findUnique({
+        where: { id: taskId },
+        include: {
+            zone: true,
+            assignedStaff: {
+                include: { user: true }
+            },
+            evidences: {
+                orderBy: { submittedAt: 'desc' },
+            }
+        }
+    });
+
+    if (!task) return null;
+    if (task.zone.userId !== targetOwnerId) return null; // Logic check: process owner matches query context
+
+    // Determine which evidence to show
+    let currentEvidence = null;
+    if (evidenceId) {
+        currentEvidence = task.evidences.find(e => e.id === evidenceId);
+    } else {
+        currentEvidence = task.evidences[0];
+    }
+
+    return {
+        task: {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            limitTime: task.limitTime,
+            zoneName: task.zone.name,
+            days: task.days,
+            //@ts-ignore
+            assignedStaffName: task.assignedStaff?.name || task.assignedStaff?.user?.businessName || 'Sin Asignar'
+        },
+        currentEvidence,
+        history: task.evidences
+    };
 }

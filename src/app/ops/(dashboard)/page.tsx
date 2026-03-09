@@ -64,6 +64,19 @@ export default async function OpsPage() {
                         </div>
                     </div>
                 </Link>
+
+                {/* SUPERVISION BUTTON */}
+                <Link href="/ops/supervision" className="group relative overflow-hidden bg-gradient-to-br from-indigo-700/80 to-[#16161e] border border-indigo-500/20 rounded-3xl p-6 transition-all active:scale-95 hover:bg-slate-900 shadow-md">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-indigo-500/10 w-12 h-12 rounded-2xl flex items-center justify-center">
+                            <CheckCircle2 className="w-6 h-6 text-indigo-400 group-hover:text-white transition-colors" />
+                        </div>
+                        <div className="text-left">
+                            <h3 className="text-lg font-bold text-white">Supervisión</h3>
+                            <p className="text-indigo-200/50 text-sm">Validar tareas del personal</p>
+                        </div>
+                    </div>
+                </Link>
             </div>
         </div>
     )

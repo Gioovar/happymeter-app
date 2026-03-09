@@ -216,6 +216,18 @@ export default function OpsHeader() {
                             </Link>
 
                             <Link
+                                href="/ops/supervision"
+                                onClick={() => setIsOpen(false)}
+                                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname.startsWith('/ops/supervision')
+                                    ? 'bg-indigo-500/10 text-indigo-400 font-medium'
+                                    : 'text-slate-300 hover:bg-white/5'
+                                    }`}
+                            >
+                                <ShieldCheck className="w-5 h-5" />
+                                Supervisión
+                            </Link>
+
+                            <Link
                                 href="/ops/chat"
                                 onClick={() => setIsOpen(false)}
                                 className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname.startsWith('/ops/chat')
