@@ -17,8 +17,10 @@ const config: Config = {
     		animation: {
     			'spin-reverse': 'spin-reverse 1s linear infinite',
     			'spin-slow': 'spin 4s linear infinite',
-    			'float': 'float 6s ease-in-out infinite',
-    			'text-gradient': 'text-gradient 3s ease infinite'
+    			float: 'float 6s ease-in-out infinite',
+    			'text-gradient': 'text-gradient 3s ease infinite',
+    			'accordion-down': 'accordion-down 0.2s ease-out',
+    			'accordion-up': 'accordion-up 0.2s ease-out'
     		},
     		keyframes: {
     			'spin-reverse': {
@@ -29,7 +31,7 @@ const config: Config = {
     					transform: 'rotate(-360deg)'
     				}
     			},
-    			'float': {
+    			float: {
     				'0%, 100%': {
     					transform: 'translateY(0)'
     				},
@@ -45,6 +47,22 @@ const config: Config = {
     				'50%': {
     					'background-size': '200% 200%',
     					'background-position': 'right center'
+    				}
+    			},
+    			'accordion-down': {
+    				from: {
+    					height: '0'
+    				},
+    				to: {
+    					height: 'var(--radix-accordion-content-height)'
+    				}
+    			},
+    			'accordion-up': {
+    				from: {
+    					height: 'var(--radix-accordion-content-height)'
+    				},
+    				to: {
+    					height: '0'
     				}
     			}
     		},
