@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Clock, CheckCircle2, AlertCircle, Phone, MessageCircle, FileText, X } from "lucide-react"
+import { Clock, CheckCircle2, AlertCircle, Phone, MessageCircle, FileText, X, MessageSquare } from "lucide-react"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useParams, useRouter } from "next/navigation"
 
 interface TaskItemCardProps {
     task: {
@@ -28,6 +29,9 @@ interface TaskItemCardProps {
 
 export function TaskItemCard({ task, employee, mode }: TaskItemCardProps) {
     const [open, setOpen] = useState(false)
+    const params = useParams()
+    const router = useRouter()
+    const branchSlug = params.branchSlug as string
 
     const isDone = ['APPROVED', 'REJECTED', 'REVIEW'].includes(task.status)
     const statusText = task.status === 'APPROVED' ? 'APROBADA' :
@@ -168,11 +172,19 @@ export function TaskItemCard({ task, employee, mode }: TaskItemCardProps) {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="grid grid-cols-2 gap-3 mt-8">
+                    <div className="grid grid-cols-3 gap-3 mt-8">
+                        <Button
+                            onClick={() => router.push(`/dashboard/${branchSlug}/chat?with=${employee.name}`)}
+                            className="bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 border border-white/10 h-12 rounded-xl flex items-center justify-center transition-all"
+                            title="Chat Interno"
+                        >
+                            <MessageSquare className="w-5 h-5 mr-0" />
+                        </Button>
                         <Button
                             onClick={handleWhatsApp}
                             disabled={!employee.phone}
                             className="bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] border border-[#25D366]/30 h-12 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,211,102,0.1)] transition-all"
+                            title="WhatsApp"
                         >
                             <MessageCircle className="w-5 h-5 mr-0" />
                         </Button>
@@ -180,6 +192,7 @@ export function TaskItemCard({ task, employee, mode }: TaskItemCardProps) {
                             onClick={handleCall}
                             disabled={!employee.phone}
                             className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 h-12 rounded-xl flex items-center justify-center transition-all"
+                            title="Llamada Telefónica"
                         >
                             <Phone className="w-5 h-5 mr-0" />
                         </Button>
