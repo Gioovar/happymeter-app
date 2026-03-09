@@ -145,8 +145,8 @@ export async function getStaffTasks(staffId: string, targetOwnerId?: string) {
     const todayStart = startOfDay(new Date());
     const todayEnd = endOfDay(new Date());
 
-    // Day keys should match the Spanish database format: 'lunes', 'martes', etc.
-    const daysMap = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    // Day keys must match the database format: 'Mon', 'Tue', etc.
+    const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const currentDayIndex = new Date().getDay();
     const currentDayKey = daysMap[currentDayIndex];
 
