@@ -1,15 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { UploadCloud, Check, Building2, Globe, Heart, MessageCircle } from 'lucide-react'
 import BrandLogo from '@/components/BrandLogo'
 import { toast } from 'sonner'
 import { completeOnboarding } from '@/actions/onboarding'
 import { upload } from '@vercel/blob/client'
+import { useDashboardRouter } from '@/hooks/useDashboardRouter'
 
 export default function OnboardingPage() {
-    const router = useRouter()
+    const { push: rootPush } = useDashboardRouter()
     const [step, setStep] = useState(1)
     const [isLoading, setIsLoading] = useState(false)
     const [uploading, setUploading] = useState(false)
@@ -62,7 +62,7 @@ export default function OnboardingPage() {
 
             await completeOnboarding(data)
             toast.success('¡Negocio configurado correctamente!')
-            router.push('/dashboard')
+            rootPush('/dashboard')
         } catch (error) {
             toast.error('Error al guardar la información. Inténtalo de nuevo.')
             console.error(error)

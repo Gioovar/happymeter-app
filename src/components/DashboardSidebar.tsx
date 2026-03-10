@@ -13,6 +13,8 @@ import CommandCenter from '@/components/CommandCenter'
 import PWAInstallButton from '@/components/PWAInstallButton'
 import { GLOBAL_NAV_ITEMS, NAVIGATION_CONFIG, NavigationMode, MODES } from '@/config/navigation'
 import { useDashboard } from '@/context/DashboardContext'
+import { useDashboardRouter } from '@/hooks/useDashboardRouter'
+import { DashboardRoutes, RouteKey } from '@/config/routes'
 import SalesModal from '@/components/plans/SalesModal'
 import CreateBranchModal from './chains/CreateBranchModal'
 import InviteMemberModal from '@/components/team/InviteMemberModal'
@@ -34,6 +36,7 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const { checkFeature, activeContextRole, basePath } = useDashboard()
+    const { getUrl } = useDashboardRouter()
 
     const activeMode = getActiveMode(pathname)
     const currentModeItems = NAVIGATION_CONFIG[activeMode] || []
@@ -51,11 +54,22 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
             {filteredItems.map((item) => {
                 const Icon = item.icon
-                let finalHref = item.href;
-                if (finalHref === '/dashboard') {
-                    finalHref = basePath
-                } else if (finalHref.startsWith('/dashboard/')) {
-                    finalHref = finalHref.replace('/dashboard', basePath)
+
+                // Dynamic Router translation
+                let finalHref = basePath; // default homepage fallback
+
+                // Check mapping between config href literals and DashboardRoutes RouteKeys
+                // Depending on the legacy config, mapping it manually:
+                if (item.href === '/dashboard') finalHref = getUrl('home')
+                else if (item.href === '/dashboard/reports') finalHref = getUrl('reports')
+                else if (item.href === '/dashboard/reservations') finalHref = getUrl('reservations')
+                else if (item.href === '/dashboard/processes') finalHref = getUrl('processes')
+                else if (item.href === '/dashboard/games') finalHref = getUrl('games')
+                else if (item.href.startsWith('/dashboard/')) {
+                    // Fallback for not strictly mapped keys (e.g., config is extending faster than dict)
+                    finalHref = item.href.replace('/dashboard', basePath)
+                } else {
+                    finalHref = item.href
                 }
 
                 const isActive = (() => {
@@ -138,6 +152,7 @@ export default function DashboardSidebar({
     const [isSalesModalOpen, setIsSalesModalOpen] = useState(false)
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
     const pathname = usePathname()
+    const { getUrl } = useDashboardRouter()
 
     // Helper to get chain dashboard url
     const firstBranchUrl = '/dashboard/chains'
@@ -362,7 +377,7 @@ export default function DashboardSidebar({
                     <div className="px-4 pb-2 pt-2">
                         <FeatureGuard feature="ai_analytics">
                             <Link
-                                href={`${basePath}/chat`}
+                                href={getUrl('chat') as string}
                                 id="nav-item-ai-chat"
                                 onClick={() => toggleMobileMenu(false)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
@@ -381,7 +396,7 @@ export default function DashboardSidebar({
                             </Link>
                         </FeatureGuard>
                         <Link
-                            href={`${basePath}/settings`}
+                            href={getUrl('settings') as string}
                             onClick={() => toggleMobileMenu(false)}
                             className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group mt-2"
                         >

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
+import { useDashboardRouter } from '@/hooks/useDashboardRouter'
 import Link from 'next/link'
 import { useAuth } from '@clerk/nextjs'
 import { Check, Sparkles, Zap, Building2, ArrowLeft, Loader2, Globe, BarChart, ShieldCheck, Info, X } from 'lucide-react'
@@ -75,7 +76,7 @@ export default function PricingPage() {
     const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
     const [interval, setInterval] = useState<'month' | 'year'>('month') // Default to Month for better conversion
     const [promoCode, setPromoCode] = useState('') // [NEW] Promo Code State
-    const router = useRouter()
+    const { navigateTo, push: rootPush } = useDashboardRouter()
 
     const { userId } = useAuth() // Get auth state
 
@@ -113,12 +114,12 @@ export default function PricingPage() {
             params.set('intent', 'checkout')
             params.set('plan', planKey)
             params.set('interval', selectedInterval)
-            router.push(`/sign-up?${params.toString()}`)
+            rootPush(`/sign-up?${params.toString()}`)
             return
         }
 
         if (planKey === 'FREE') {
-            router.push('/dashboard')
+            navigateTo('home')
             return
         }
         if (planKey === 'ENTERPRISE') {
@@ -147,7 +148,7 @@ export default function PricingPage() {
             if (!res.ok) {
                 if (res.status === 401) {
                     toast.error('Sesión expirada. Por favor inicia sesión nuevamente.')
-                    router.push('/sign-in')
+                    rootPush('/sign-in')
                     return
                 }
                 const errData = await res.text()
@@ -162,7 +163,7 @@ export default function PricingPage() {
             toast.error(error.message || 'Error desconocido', { id: 'checkout-toast', duration: 5000 })
             setLoadingPlan(null)
         }
-    }, [userId, interval, router, promoCode])
+    }, [userId, interval, rootPush, navigateTo, promoCode])
 
     const plans = [
         {

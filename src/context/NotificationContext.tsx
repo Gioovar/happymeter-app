@@ -1,10 +1,11 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { toast } from 'sonner'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
+import { useDashboardRouter } from '@/hooks/useDashboardRouter'
 
 interface Notification {
     id: string
@@ -35,9 +36,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const [loadingId, setLoadingId] = useState<string | null>(null)
     const lastNotificationIdRef = useRef<string | null>(null)
     const audioRef = useRef<HTMLAudioElement | null>(null)
-    const router = useRouter()
-    const params = useParams()
-    const branchSlug = params?.branchSlug as string | undefined
+    const { navigateTo, branchSlug, push: rootPush } = useDashboardRouter()
     const { userId } = useAuth()
 
     // Push Notifications Hook
@@ -86,20 +85,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             body: JSON.stringify({ notificationId: notif.id, markAll: false })
         }).catch(console.error)
 
-        // Resolve dynamic URL context
-        const baseUrl = branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'
-
         // Navigation
         if (notif.meta?.responseId) {
-            router.push(`${baseUrl}/responses?responseId=${notif.meta.responseId}`)
+            navigateTo('responses')
+            // Add parameter context if supported or wait via URL param handling
+            // NOTE: The dictionary current implementation does not take responseId explicitly
+            // But we can append queries naturally or enhance the dictionnary, using push directly on known params
+            rootPush(`/dashboard/${branchSlug ? branchSlug + '/' : ''}responses?responseId=${notif.meta.responseId}`)
         } else if (notif.meta?.url) {
-            router.push(notif.meta.url)
+            rootPush(notif.meta.url)
         } else if (notif.type === 'ACHIEVEMENT') {
-            router.push(`${baseUrl}/achievements`)
+            navigateTo('achievements')
         } else if (notif.type === 'REPORT') {
-            // ... existing logic for report date range ...
-            // Simplified generic push for now or copy logic if needed. 
-            // Assuming minimal change, let's keep it robust:
             const endDate = new Date(notif.createdAt)
             const startDate = new Date(endDate)
             startDate.setDate(endDate.getDate() - 15)
@@ -110,9 +107,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             }).toString()
 
             if (notif.meta?.surveyId) {
-                router.push(`${baseUrl}/reports/${notif.meta.surveyId}?${query}`)
+                // Navigate internally uses rootPush if query params are complex, but for dictionary:
+                rootPush(`/dashboard/${branchSlug ? branchSlug + '/' : ''}reports/${notif.meta.surveyId}?${query}`)
             } else {
-                router.push(`${baseUrl}/reports?${query}`)
+                rootPush(`/dashboard/${branchSlug ? branchSlug + '/' : ''}reports?${query}`)
             }
         }
 
