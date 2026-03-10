@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Star, TrendingUp, TrendingDown, Minus, RefreshCw } from 'lucide-react'
+import { Star, TrendingUp, TrendingDown, Minus, RefreshCw, Info, X, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import FeatureGuard from '@/components/common/FeatureGuard'
+import { AnimatePresence, motion } from 'framer-motion'
 
 interface ReputationScore {
     id: string
@@ -22,6 +23,7 @@ export default function ReputationWidget() {
     const [latestReputation, setLatestReputation] = useState<ReputationScore | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isCalculating, setIsCalculating] = useState(false)
+    const [showInfo, setShowInfo] = useState(false)
 
     useEffect(() => {
         fetchHistory()
@@ -98,14 +100,26 @@ export default function ReputationWidget() {
                         <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
                         Reputación (IA)
                     </h3>
-                    <button
-                        onClick={calculateReputation}
-                        disabled={isCalculating}
-                        className={`p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition ${isCalculating ? 'animate-spin cursor-not-allowed' : ''}`}
-                        title="Analizar Reputación"
-                    >
-                        <RefreshCw className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowInfo(true)}
+                            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition group/btn relative"
+                            title="¿Cómo funciona?"
+                        >
+                            <Info className="w-4 h-4 text-indigo-400" />
+                            <span className="absolute -top-8 right-0 bg-black text-xs px-2 py-1 rounded opacity-0 group-hover/btn:opacity-100 transition whitespace-nowrap pointer-events-none">
+                                ¿Cómo funciona?
+                            </span>
+                        </button>
+                        <button
+                            onClick={calculateReputation}
+                            disabled={isCalculating}
+                            className={`p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition ${isCalculating ? 'animate-spin cursor-not-allowed' : ''}`}
+                            title="Analizar Reputación"
+                        >
+                            <RefreshCw className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
 
                 {!latestReputation ? (
@@ -174,6 +188,58 @@ export default function ReputationWidget() {
                         </div>
                     </div>
                 )}
+
+                {/* AI Explanation Modal */}
+                <AnimatePresence>
+                    {showInfo && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                            onClick={() => setShowInfo(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.95, y: 10 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.95, y: 10 }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="bg-[#111] border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar"
+                            >
+                                <div className="flex justify-between items-start mb-6">
+                                    <h3 className="text-xl font-bold flex items-center gap-2 text-white">
+                                        <Sparkles className="w-6 h-6 text-indigo-400" />
+                                        ¿Cómo funciona la IA?
+                                    </h3>
+                                    <button onClick={() => setShowInfo(false)} className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4 text-sm text-gray-300 leading-relaxed">
+                                    <p>
+                                        El widget de <strong className="text-amber-400">Reputación</strong> evalúa automáticamente la calidad de tu servicio basándose en los sentimientos expresados en las encuestas de clientes de los últimos 30 días.
+                                    </p>
+
+                                    <ul className="space-y-3 bg-white/5 rounded-xl p-4 border border-white/5">
+                                        <li><strong className="text-white">Lectura Semántica:</strong> La IA lee y comprende el contexto real de los comentarios abiertos, determinando si son quejas, elogios o sugerencias.</li>
+                                        <li><strong className="text-white">Métricas Específicas:</strong> Calcula promedios para categorías como Servicio, Comida, Ambiente, Limpieza y Tiempo de Atención.</li>
+                                        <li><strong className="text-white">Tendencia:</strong> Determina automáticamente la línea de tendencia de tu negocio (si está subiendo, bajando, o se mantiene estable en el mes actual).</li>
+                                    </ul>
+
+                                    <p className="text-xs text-gray-500 italic mt-2">
+                                        * La puntuación general se ajusta inteligentemente de forma ponderada y evita que opiniones destructivas aisladas hundan por completo la calificación.
+                                    </p>
+                                </div>
+
+                                <button onClick={() => setShowInfo(false)} className="w-full py-3 mt-6 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition">
+                                    Entendido
+                                </button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
             </div>
         </FeatureGuard>
     )

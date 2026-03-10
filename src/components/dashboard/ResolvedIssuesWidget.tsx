@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AlertTriangle, CheckCircle, Clock, Check, X } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Clock, Check, X, Info, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import FeatureGuard from '@/components/common/FeatureGuard'
+import { AnimatePresence, motion } from 'framer-motion'
 
 interface ResolvedIssue {
     id: string
@@ -16,6 +17,7 @@ interface ResolvedIssue {
 export default function ResolvedIssuesWidget() {
     const [issues, setIssues] = useState<ResolvedIssue[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [showInfo, setShowInfo] = useState(false)
 
     interface ActiveIncident {
         id: string
@@ -99,6 +101,16 @@ export default function ResolvedIssuesWidget() {
                             Resuelve problemas para entrenar la Memoria Dinámica de la IA.
                         </p>
                     </div>
+                    <button
+                        onClick={() => setShowInfo(true)}
+                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition group/btn relative shrink-0"
+                        title="¿Cómo funciona?"
+                    >
+                        <Info className="w-4 h-4 text-indigo-400" />
+                        <span className="absolute -top-8 right-0 bg-black text-xs px-2 py-1 rounded opacity-0 group-hover/btn:opacity-100 transition whitespace-nowrap pointer-events-none z-50">
+                            ¿Cómo funciona?
+                        </span>
+                    </button>
                 </div>
 
                 <div className="flex-1 p-6 overflow-y-auto space-y-6">
@@ -161,6 +173,54 @@ export default function ResolvedIssuesWidget() {
                     </div>
 
                 </div>
+
+                {/* AI Explanation Modal */}
+                <AnimatePresence>
+                    {showInfo && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                            onClick={() => setShowInfo(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.95, y: 10 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.95, y: 10 }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="bg-[#111] border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar"
+                            >
+                                <div className="flex justify-between items-start mb-6">
+                                    <h3 className="text-xl font-bold flex items-center gap-2 text-white">
+                                        <Sparkles className="w-6 h-6 text-indigo-400" />
+                                        ¿Cómo funciona la IA?
+                                    </h3>
+                                    <button onClick={() => setShowInfo(false)} className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4 text-sm text-gray-300 leading-relaxed">
+                                    <p>
+                                        Este widget de <strong className="text-amber-400">Incidentes Operativos</strong> analiza todas las encuestas y alertas recibidas para detectar automáticamente quejas críticas.
+                                    </p>
+
+                                    <ul className="space-y-3 bg-white/5 rounded-xl p-4 border border-white/5">
+                                        <li><strong className="text-white">Identificación Oculta:</strong> La IA puede detectar problemas reales en los comentarios (comida fría, servicio lento), incluso si el cliente dejó una calificación numérica alta (ej. 5 estrellas).</li>
+                                        <li><strong className="text-white">Panel Interactivo:</strong> Los problemas se colocan aquí como <i>Incidentes Activos</i>. Un humano debe leerlos y darle click a "Ya lo solucioné" una vez que el problema operativo fue arreglado en el restaurante.</li>
+                                        <li><strong className="text-white">Memoria Dinámica:</strong> Al solucionarlo, la IA lo guarda en su memoria profunda para no volver a alertarte sobre la misma queja ya resuelta, ajustando así su entendimiento de tu negocio.</li>
+                                    </ul>
+                                </div>
+
+                                <button onClick={() => setShowInfo(false)} className="w-full py-3 mt-6 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition">
+                                    Entendido
+                                </button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
             </div>
         </FeatureGuard>
     )

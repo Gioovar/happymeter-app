@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Activity, ArrowRight, UserCheck, Utensils, Music, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
+import { Activity, ArrowRight, UserCheck, Utensils, Music, CheckCircle2, AlertTriangle, XCircle, Info, Sparkles, X } from 'lucide-react'
 import FeatureGuard from '@/components/common/FeatureGuard'
 import { toast } from 'sonner'
 import { useDashboard } from '@/context/DashboardContext'
+import { AnimatePresence, motion } from 'framer-motion'
 
 interface PhaseData {
     id: string
@@ -18,6 +19,7 @@ export default function HeatmapWidget() {
     const { branchId } = useDashboard()
     const [journey, setJourney] = useState<PhaseData[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [showInfo, setShowInfo] = useState(false)
 
     useEffect(() => {
         fetchHeatmapData()
@@ -79,14 +81,26 @@ export default function HeatmapWidget() {
         <FeatureGuard feature="ai_analytics">
             <div className="flex flex-col h-full rounded-3xl bg-[#0F0F0F] border border-white/5 overflow-hidden shadow-2xl transition-all p-6">
 
-                <div className="mb-6">
-                    <h3 className="text-xl font-bold flex items-center gap-2 text-white">
-                        <Activity className="w-5 h-5 text-indigo-400" />
-                        Mapa de Calor de Experiencia
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Identifica los cuellos de botella operativos a lo largo del recorrido del cliente.
-                    </p>
+                <div className="mb-6 flex items-start justify-between">
+                    <div>
+                        <h3 className="text-xl font-bold flex items-center gap-2 text-white">
+                            <Activity className="w-5 h-5 text-indigo-400" />
+                            Mapa de Calor de Experiencia
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Identifica los cuellos de botella operativos a lo largo del recorrido del cliente.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setShowInfo(true)}
+                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition group/btn relative shrink-0"
+                        title="¿Cómo funciona?"
+                    >
+                        <Info className="w-4 h-4 text-indigo-400" />
+                        <span className="absolute -top-8 right-0 bg-black text-xs px-2 py-1 rounded opacity-0 group-hover/btn:opacity-100 transition whitespace-nowrap pointer-events-none z-50">
+                            ¿Cómo funciona?
+                        </span>
+                    </button>
                 </div>
 
                 <div className="flex-1 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-4 md:pb-0">
@@ -137,6 +151,54 @@ export default function HeatmapWidget() {
                     </div>
                 </div>
             </div>
+
+            {/* AI Explanation Modal */}
+            <AnimatePresence>
+                {showInfo && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                        onClick={() => setShowInfo(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, y: 10 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 10 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-[#111] border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar"
+                        >
+                            <div className="flex justify-between items-start mb-6">
+                                <h3 className="text-xl font-bold flex items-center gap-2 text-white">
+                                    <Sparkles className="w-6 h-6 text-indigo-400" />
+                                    ¿Cómo funciona la IA?
+                                </h3>
+                                <button onClick={() => setShowInfo(false)} className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4 text-sm text-gray-300 leading-relaxed">
+                                <p>
+                                    El <strong className="text-amber-400">Mapa de Calor</strong> segmenta la experiencia de tu cliente en 4 fases críticas para identificar exactamente en qué punto operativo estás fallando o sobresaliendo.
+                                </p>
+
+                                <ul className="space-y-3 bg-white/5 rounded-xl p-4 border border-white/5">
+                                    <li><strong className="text-white">Detección de Fases:</strong> La IA clasifica miles de comentarios en: <i>(1) Llegada, (2) Servicio, (3) Comida, y (4) Ambiente</i>.</li>
+                                    <li><strong className="text-white">Puntuación:</strong> Asigna una calificación de 0 a 5 a cada fase basal a los sentimientos extraídos.</li>
+                                    <li><strong className="text-white">Alerta Visual:</strong> Te colorea en <strong className="text-emerald-400">Verde</strong> lo que haces excelente, en <strong className="text-amber-400">Amarillo</strong> lo que requiere atención y en <strong className="text-red-500">Rojo</strong> los focos críticos que están ahuyentando clientes.</li>
+                                </ul>
+                            </div>
+
+                            <button onClick={() => setShowInfo(false)} className="w-full py-3 mt-6 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition">
+                                Entendido
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
         </FeatureGuard>
     )
 }
