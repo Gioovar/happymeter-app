@@ -12,29 +12,40 @@ export async function GET(request: Request) {
             return new NextResponse("Unauthorized", { status: 401 })
         }
 
+        // Get the active context (Cookie or Fallback to userId)
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const effectiveUserId = activeContextId || userId
+
         // --- Context Switching Logic ---
-        let targetUserIds: string | string[] = [userId];
+        let targetUserIds: string | string[] = [effectiveUserId];
         const { searchParams } = new URL(request.url)
         const branchId = searchParams.get('branchId')
 
         if (branchId) {
             const isOwner = await prisma.chainBranch.findFirst({
-                where: { branchId: branchId, chain: { ownerId: userId } }
+                where: { branchId: branchId, chain: { ownerId: effectiveUserId } }
             });
 
             if (!isOwner) {
-                return new NextResponse("Unauthorized: You do not own this branch", { status: 403 })
+                // Check if they are a team member with access to this branch
+                const isMember = await prisma.teamMember.findFirst({
+                    where: { ownerId: branchId, userId: userId }
+                });
+                if (!isMember) {
+                    return new NextResponse("Unauthorized: You do not own this branch", { status: 403 })
+                }
             }
             targetUserIds = [branchId];
         } else {
             // Root View: Fetch Owner + All Branches
             const userChains = await prisma.chain.findMany({
-                where: { ownerId: userId },
+                where: { ownerId: effectiveUserId },
                 include: { branches: true }
             })
             const branchIds = userChains.flatMap(c => c.branches.map(b => b.branchId))
             if (branchIds.length > 0) {
-                targetUserIds = [userId, ...branchIds];
+                targetUserIds = [effectiveUserId, ...branchIds];
             }
         }
 

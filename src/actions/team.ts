@@ -204,13 +204,72 @@ export async function inviteMember(formData: FormData) {
         })
 
         if (existingInvite) {
-            // Re-send invitation if it exists, instead of failing
             console.log(`Re-sending invitation to ${email}`)
-            // We proceed with the same logic but we'll update the record below
         }
 
-        // REMOVED: Direct add logic for existing Clerk users to satisfy the user request 
-        // of having a "from scratch" process for every invitation, ensuring emails are always sent.
+        // ==========================================
+        // MULTI-TENANT LOGIC: Check if user already exists
+        // ==========================================
+        const client = await clerkClient()
+        const clerkUsers = await client.users.getUserList({ emailAddress: [email] })
+
+        if (clerkUsers.data && clerkUsers.data.length > 0) {
+            const existingClerkUser = clerkUsers.data[0]
+
+            // Validate if they are already in THIS team
+            const existingMember = await prisma.teamMember.findFirst({
+                where: { userId: existingClerkUser.id, ownerId: targetOwnerId }
+            })
+
+            if (existingMember) {
+                return { success: false, error: 'Este usuario ya es miembro de tu equipo.' }
+            }
+
+            // Check if they have UserSettings, if not, create it
+            let targetUserSettings = await prisma.userSettings.findUnique({ where: { userId: existingClerkUser.id } })
+
+            if (!targetUserSettings) {
+                targetUserSettings = await prisma.userSettings.create({
+                    data: {
+                        userId: existingClerkUser.id,
+                        fullName: `${existingClerkUser.firstName || ''} ${existingClerkUser.lastName || ''}`.trim() || name || "Usuario Invitado",
+                        photoUrl: existingClerkUser.imageUrl,
+                    }
+                })
+            }
+
+            // AUTO-ADMIT THEM TO THE TEAM
+            await prisma.teamMember.create({
+                data: {
+                    userId: existingClerkUser.id,
+                    ownerId: targetOwnerId,
+                    role: role,
+                    name: name || targetUserSettings.fullName || null,
+                    jobTitle: jobTitle,
+                    phone: phone
+                }
+            })
+
+            // Clean up any pending invites for this person to this team
+            if (existingInvite) {
+                await prisma.teamInvitation.delete({ where: { id: existingInvite.id } })
+            }
+
+            const inviterName = userSettings?.businessName || 'El Administrador'
+            const teamName = userSettings?.businessName || 'HappyMeter Team'
+
+            // Send "You've been added to a new team" email (Using sendTeamAddedEmail or similar)
+            await sendTeamAddedEmail(
+                email,
+                teamName,
+                role,
+                inviterName
+            )
+
+            revalidatePath('/dashboard/team')
+            return { success: true }
+        }
+        // ==========================================
 
         // Generate token
         const isOfflineRole = role === 'OPERATOR' || role === 'HOSTESS'

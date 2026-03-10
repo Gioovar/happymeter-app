@@ -9,24 +9,36 @@ export async function GET(req: Request) {
         const { userId } = await auth()
         if (!userId) return new NextResponse("Unauthorized", { status: 401 })
 
+        // Get the active context (Cookie or Fallback to userId)
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const effectiveUserId = activeContextId || userId
+
         // --- Context Switching Logic ---
-        let targetUserIds = [userId];
+        let targetUserIds = [effectiveUserId];
 
         // Check for 'branchId' query param to support delegated access
         const { searchParams } = new URL(req.url);
         const branchId = searchParams.get('branchId');
 
         if (branchId) {
-            // Security Check: Verify I own this branch
+            // Security Check: Verify I own this branch or I am a member
             const isOwner = await prisma.chainBranch.findFirst({
                 where: {
                     branchId: branchId,
-                    chain: { ownerId: userId }
+                    chain: { ownerId: effectiveUserId }
                 }
             });
 
             if (!isOwner) {
-                return new NextResponse("Unauthorized: You do not own this branch", { status: 403 })
+                // Check if they are a team member with access to this branch
+                const isMember = await prisma.teamMember.findFirst({
+                    where: { ownerId: branchId, userId: userId }
+                });
+
+                if (!isMember) {
+                    return new NextResponse("Unauthorized: You do not own this branch", { status: 403 })
+                }
             }
 
             // Valid context switch
@@ -35,7 +47,7 @@ export async function GET(req: Request) {
             // If no branchId is specified (Root Dashboard), fetch ALL surveys owned by this user (Personal + Branches)
             // 1. Get all chains owned by user
             const userChains = await prisma.chain.findMany({
-                where: { ownerId: userId },
+                where: { ownerId: effectiveUserId },
                 include: { branches: true }
             })
 

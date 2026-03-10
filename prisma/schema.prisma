@@ -1209,6 +1209,7 @@ enum UserRole {
 enum TeamRole {
   ADMIN
   EDITOR
+  SUPERVISOR
   OBSERVER
   OPERATOR
   HOSTESS

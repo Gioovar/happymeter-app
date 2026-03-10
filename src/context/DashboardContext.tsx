@@ -80,6 +80,7 @@ interface DashboardContextType {
     branchSlug?: string
     branchId?: string
     // Subscription Logic
+    userRole: string
     plan: string
     subscriptionStatus: 'ACTIVE' | 'TRIALING' | 'GRACE' | 'EXPIRED' | 'SUSPENDED'
     daysRemaining: number
@@ -105,13 +106,14 @@ const defaultStats: StatsData = {
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)
 
 // Add branchId to Props
-export function DashboardProvider({ children, branchId, branchSlug, initialPlan = 'FREE', userCreatedAt, dbSubscriptionStatus }: {
+export function DashboardProvider({ children, branchId, branchSlug, initialPlan = 'FREE', userCreatedAt, dbSubscriptionStatus, userRole = 'USER' }: {
     children: React.ReactNode,
     branchId?: string,
     branchSlug?: string,
     initialPlan?: string,
     userCreatedAt?: string | Date,
-    dbSubscriptionStatus?: string
+    dbSubscriptionStatus?: string,
+    userRole?: string
 }) {
     const { userId } = useAuth()
 
@@ -300,6 +302,7 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
             toggleMobileMenu: setIsMobileMenuOpen,
             branchSlug,
             branchId,
+            userRole,
             plan,
             subscriptionStatus,
             daysRemaining,

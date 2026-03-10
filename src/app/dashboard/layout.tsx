@@ -4,6 +4,8 @@ import { redirect } from "next/navigation"
 import { prisma } from '@/lib/prisma'
 import DashboardSidebar from '@/components/DashboardSidebar'
 import GiftCelebration from '@/components/dashboard/GiftCelebration' // Correct import location
+import BusinessSelector from '@/components/dashboard/BusinessSelector'
+import { cookies } from 'next/headers'
 
 import ModeSelector from '@/components/ModeSelector'
 import { UserButton } from '@clerk/nextjs'
@@ -76,11 +78,54 @@ export default async function DashboardLayout({
     // 1. Mandatory Onboarding Check & New User Handling
 
     // TEAM MEMBER BYPASS & INVITATION CHECK
-    // Check if the user is already a team member (so they don't need to create a business)
-    const membership = await prisma.teamMember.findFirst({
-        where: { userId },
-        select: { id: true }
+    // Fetch ALL memberships for this user to support Multi-Tenant
+    const memberships = await prisma.teamMember.findMany({
+        where: { userId, isActive: true },
+        include: { owner: { select: { businessName: true, isActive: true } } }
     })
+
+    // Check if the user is a direct business owner themselves
+    const personalSettings = await prisma.userSettings.findUnique({
+        where: { userId },
+        select: { hasSeenTour: true, role: true, plan: true, isActive: true, isOnboarded: true, createdAt: true, subscriptionStatus: true, businessName: true, fullName: true }
+    })
+
+    // Determine all active business contexts
+    const businessContexts = []
+
+    if (personalSettings?.isOnboarded) {
+        businessContexts.push({
+            id: userId,
+            name: personalSettings.businessName || 'Mi Negocio',
+            role: 'ADMIN',
+            isActive: personalSettings.isActive
+        })
+    }
+
+    memberships.forEach(m => {
+        businessContexts.push({
+            id: m.ownerId,
+            name: m.owner?.businessName || 'Negocio Afiliado',
+            role: m.role,
+            isActive: m.owner?.isActive || false
+        })
+    })
+
+    // Resolve Active Context
+    const cookieStore = await cookies()
+    const activeContextCookie = cookieStore.get('happy_active_business')
+    let activeContextId = activeContextCookie?.value
+
+    // Validate if the cookie context is actually one of the user's available contexts
+    const isValidContext = businessContexts.some(c => c.id === activeContextId)
+
+    if (!activeContextId || !isValidContext) {
+        // Fallback to the first available context
+        activeContextId = businessContexts.length > 0 ? businessContexts[0].id : userId
+    }
+
+    const activeContext = businessContexts.find(c => c.id === activeContextId)
+    const membership = memberships.find(m => m.ownerId === activeContextId)
 
     // If NOT a member, check if they have a PENDING invitation to redirect them
     if (!membership) {
@@ -152,24 +197,34 @@ export default async function DashboardLayout({
         }
     }
 
-    // Default to FREE if no settings or plan found
-    // We need to re-fetch settings if we accessed them inside the Try block but scoping is tricky.
-    // Actually, I declared realRole outside. I should declare `userPlan` outside too.
-
-    // Simpler: Just access fetching result again or restructure. 
-    // But `settings` is inside the try block.
-    // Let's refactor slightly to expose settings outside or use a default variable.
-
+    // RESOLVE USER PLAN (INHERITANCE)
     let userPlan = 'FREE'
+    let effectiveUserId = userId
+
+    if (membership && membership.ownerId) {
+        effectiveUserId = membership.ownerId
+        realRole = membership.role as string // Override local role with TeamRole
+    }
+
     try {
-        if (userId) {
-            const settings = await prisma.userSettings.findUnique({ where: { userId }, select: { hasSeenTour: true, role: true, plan: true, subscriptionStatus: true } })
-            if (settings) {
-                userPlan = settings.plan || 'FREE'
+        if (effectiveUserId) {
+            const effectiveSettings = await prisma.userSettings.findUnique({
+                where: { userId: effectiveUserId },
+                select: { plan: true, subscriptionStatus: true, createdAt: true }
+            })
+            if (effectiveSettings) {
+                userPlan = effectiveSettings.plan || 'FREE'
+
+                // Inherit settings to bypass the paywall
+                if (settings) {
+                    (settings as any).plan = userPlan;
+                    (settings as any).subscriptionStatus = effectiveSettings.subscriptionStatus;
+                    (settings as any).createdAt = effectiveSettings.createdAt;
+                }
             }
         }
     } catch (e) {
-        // ...
+        console.error("Error fetching inherited plan", e)
     }
 
     const checkedSettings = settings || null
@@ -178,6 +233,7 @@ export default async function DashboardLayout({
         // ... existing code ...
 
         <DashboardProvider
+            userRole={realRole}
             initialPlan={checkedSettings?.plan || 'FREE'}
             userCreatedAt={checkedSettings?.createdAt?.toISOString()}
             dbSubscriptionStatus={checkedSettings?.subscriptionStatus || undefined}
@@ -202,20 +258,25 @@ export default async function DashboardLayout({
                             <div className="pointer-events-auto pl-4">
                                 <ModeSelector />
                             </div>
-                            <div className="pointer-events-auto bg-[#111] border border-white/10 rounded-full px-4 py-2 flex items-center gap-4 shadow-xl">
-                                <div className="text-right hidden lg:block">
-                                    <p className="text-xs text-gray-400 font-medium">Conectado como</p>
+                            <div className="pointer-events-auto flex items-center gap-3">
+                                {businessContexts.length > 1 && (
+                                    <BusinessSelector contexts={businessContexts} activeContextId={activeContextId} />
+                                )}
+                                <div className="bg-[#111] border border-white/10 rounded-full px-4 py-2 flex items-center gap-4 shadow-xl">
+                                    <div className="text-right hidden lg:block">
+                                        <p className="text-xs text-gray-400 font-medium">Conectado como</p>
+                                    </div>
+                                    <UserButton
+                                        afterSignOutUrl="/"
+                                        appearance={{
+                                            elements: {
+                                                userButtonBox: "flex flex-row-reverse",
+                                                userButtonOuterIdentifier: "text-white font-bold text-sm",
+                                            }
+                                        }}
+                                        showName
+                                    />
                                 </div>
-                                <UserButton
-                                    afterSignOutUrl="/"
-                                    appearance={{
-                                        elements: {
-                                            userButtonBox: "flex flex-row-reverse",
-                                            userButtonOuterIdentifier: "text-white font-bold text-sm",
-                                        }
-                                    }}
-                                    showName
-                                />
                             </div>
                         </div>
 
