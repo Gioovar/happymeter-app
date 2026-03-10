@@ -58,52 +58,62 @@ export default function ExtraSurveyUpsellModal({ isOpen, onClose, currentPlanNam
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] bg-white text-gray-900 border-gray-200">
-                <DialogHeader>
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-red-100 rounded-full shrink-0">
-                            <Ban className="w-6 h-6 text-red-600" />
+            <DialogContent className="sm:max-w-[450px] bg-[#0a0a0a] text-white border-white/10 shadow-[0_0_50px_rgba(139,92,246,0.1)] p-0 overflow-hidden hide-close-button ring-1 ring-white/5">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500"></div>
+                <div className="p-6">
+                    <DialogHeader className="mb-6">
+                        <div className="flex flex-col items-center text-center gap-4">
+                            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-full shrink-0 relative">
+                                <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full"></div>
+                                <Ban className="w-8 h-8 text-red-500 relative z-10" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-2xl font-bold tracking-tight text-white mb-2">
+                                    Límite de Encuestas Alcanzado
+                                </DialogTitle>
+                                <DialogDescription className="text-gray-400 text-sm leading-relaxed max-w-[90%] mx-auto">
+                                    Has consumido todas las encuestas incluidas en tu plan. ¿Deseas agregar una encuesta extra por <span className="font-bold text-white bg-white/10 px-1.5 py-0.5 rounded text-xs">$200 MXN</span> al mes?
+                                </DialogDescription>
+                            </div>
                         </div>
-                        <div>
-                            <DialogTitle className="text-xl font-bold text-gray-900">
-                                Alcanzaste el límite de encuestas de tu plan
-                            </DialogTitle>
-                            <DialogDescription className="text-gray-600 mt-2 text-base">
-                                ¿Deseas agregar una encuesta extra por <span className="font-bold text-gray-900">$200 MXN</span> al mes?
-                            </DialogDescription>
-                        </div>
-                    </div>
-                </DialogHeader>
+                    </DialogHeader>
 
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <div className="flex items-start gap-3">
-                        <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                        <div className="space-y-1">
-                            <p className="text-sm font-medium text-gray-900">Activación Inmediata</p>
-                            <p className="text-sm text-gray-500">
-                                Se agregará a tu suscripción actual automáticamente. Puedes cancelarla cuando quieras.
-                            </p>
+                    <div className="p-4 bg-gradient-to-br from-violet-500/10 to-transparent rounded-xl border border-violet-500/20 mb-6">
+                        <div className="flex items-start gap-3">
+                            <div className="p-2 bg-amber-500/10 rounded-lg shrink-0">
+                                <Zap className="w-5 h-5 text-amber-500" />
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-sm font-bold text-white">Activación Inmediata</p>
+                                <p className="text-xs text-gray-400 leading-relaxed">
+                                    Se agregará a tu suscripción actual automáticamente. Podrás crear tu nueva encuesta de inmediato y cancelarla cuando desees en ajustes.
+                                </p>
+                            </div>
                         </div>
                     </div>
+
+                    <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+                        <Button
+                            variant="ghost"
+                            onClick={onClose}
+                            disabled={isLoading}
+                            className="text-gray-400 hover:text-white hover:bg-white/5 px-6"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handlePurchase}
+                            disabled={isLoading}
+                            className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold shadow-lg shadow-violet-600/25 border-0 px-6"
+                        >
+                            {isLoading ? (
+                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Procesando...</>
+                            ) : (
+                                "Agregar Encuesta"
+                            )}
+                        </Button>
+                    </DialogFooter>
                 </div>
-
-                <DialogFooter className="flex gap-3 sm:justify-end mt-2">
-                    <Button
-                        variant="ghost"
-                        onClick={onClose}
-                        disabled={isLoading}
-                        className="text-gray-500 hover:text-gray-900"
-                    >
-                        ❌ Cancelar
-                    </Button>
-                    <Button
-                        onClick={handlePurchase}
-                        disabled={isLoading}
-                        className="bg-green-600 hover:bg-green-700 text-white font-medium"
-                    >
-                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "✅ Agregar encuesta (+$200/mes)"}
-                    </Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     )
