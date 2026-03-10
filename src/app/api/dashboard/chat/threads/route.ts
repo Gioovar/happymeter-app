@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { getActiveBusinessId } from '@/lib/tenant'
 
 export async function GET(req: Request) {
     try {
@@ -13,7 +14,8 @@ export async function GET(req: Request) {
         const branchId = url.searchParams.get('branchId')
 
         // Target User: If branchId provided, fetch threads for that branch (sub-account)
-        const targetUserId = branchId || userId
+        const activeBusinessId = await getActiveBusinessId()
+        const targetUserId = branchId || activeBusinessId || userId
 
         // Auto-Cleanup: Delete threads older than 7 days
         const sevenDaysAgo = new Date()
@@ -50,7 +52,8 @@ export async function POST(req: Request) {
         const { branchId } = body
 
         // Create thread for the specific branch context if provided
-        const targetUserId = branchId || userId
+        const activeBusinessId = await getActiveBusinessId()
+        const targetUserId = branchId || activeBusinessId || userId
 
         const thread = await prisma.chatThread.create({
             data: {

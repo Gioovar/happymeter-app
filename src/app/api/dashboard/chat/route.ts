@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getGeminiModel } from '@/lib/gemini'
+import { getActiveBusinessId } from '@/lib/tenant'
 
 export async function POST(req: Request) {
     try {
@@ -31,7 +32,8 @@ export async function POST(req: Request) {
             })
         }
 
-        const targetUserId = branchId || userId
+        const activeBusinessId = await getActiveBusinessId()
+        const targetUserId = branchId || activeBusinessId || userId
 
         console.log(`[AI_CHAT_DEBUG] Request for Thread: ${threadId}`)
         console.log(`[AI_CHAT_DEBUG] Incoming BranchID: ${branchId} (Type: ${typeof branchId})`)
