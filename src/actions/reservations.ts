@@ -1079,7 +1079,8 @@ export async function createReservation(data: {
         if (newReservationId && reservationDate) {
             console.log(`[Notification Debug] Starting notifications for ${newReservationId}`);
             try {
-                const qrCodeDataUrl = await QRCode.toDataURL(`RESERVATION:${newReservationId}`)
+                const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com';
+                const qrCodeDataUrl = `${baseUrl}/api/qr?data=RESERVATION:${newReservationId}`;
                 const finalDate = reservationDate as Date
 
                 // Use Intl.DateTimeFormat for robustness
