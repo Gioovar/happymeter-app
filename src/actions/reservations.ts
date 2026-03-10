@@ -13,25 +13,32 @@ import { DEFAULT_SENDER } from "@/lib/email"
 
 // Helper to resolve and verify access
 async function resolveEffectiveUserId(currentUserId: string, targetBranchId?: string) {
-    if (!targetBranchId) return currentUserId
-    if (targetBranchId === currentUserId) return currentUserId
+    if (targetBranchId) {
+        if (targetBranchId === currentUserId) return currentUserId
 
-    // Verify ownership: Does the current user own the chain that contains this branch?
-    const branch = await prisma.chainBranch.findFirst({
-        where: {
-            OR: [
-                { slug: targetBranchId },
-                { branchId: targetBranchId }
-            ],
-            chain: { ownerId: currentUserId }
+        // Verify ownership: Does the current user own the chain that contains this branch?
+        const branch = await prisma.chainBranch.findFirst({
+            where: {
+                OR: [
+                    { slug: targetBranchId },
+                    { branchId: targetBranchId }
+                ],
+                chain: { ownerId: currentUserId }
+            }
+        })
+
+        if (!branch) {
+            console.error(`Unauthorized access attempt: User ${currentUserId} -> Branch ${targetBranchId}`)
+            throw new Error("Unauthorized Branch Access")
         }
-    })
-
-    if (!branch) {
-        console.error(`Unauthorized access attempt: User ${currentUserId} -> Branch ${targetBranchId}`)
-        throw new Error("Unauthorized Branch Access")
+        return branch.branchId
     }
-    return branch.branchId
+
+    // Fall back to the cookie-based context resolution
+    const { getActiveBusinessId } = await import('@/lib/tenant')
+    const effectiveUserId = await getActiveBusinessId()
+    if (!effectiveUserId) throw new Error("No active business context found")
+    return effectiveUserId
 }
 
 export async function getFloorPlan(branchId?: string) {
@@ -582,8 +589,12 @@ export async function getReservationSettings() {
     const defaults = { standardTimeEnabled: false, standardDurationMinutes: 120, simpleMode: false, dailyPaxLimit: 50, availability: DEFAULT_AVAILABILITY }
     if (!userId) return defaults
 
+    const { getActiveBusinessId } = await import('@/lib/tenant')
+    const effectiveUserId = await getActiveBusinessId()
+    if (!effectiveUserId) return defaults
+
     const user = await prisma.userSettings.findUnique({
-        where: { userId },
+        where: { userId: effectiveUserId },
         select: { reservationSettings: true }
     })
 
@@ -598,15 +609,19 @@ export async function updateReservationSettings(settings: { standardTimeEnabled:
         const { userId } = await auth()
         if (!userId) throw new Error("Unauthorized")
 
-        console.log("SERVER: upserting settings for user", userId)
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const effectiveUserId = await getActiveBusinessId()
+        if (!effectiveUserId) throw new Error("Unauthorized context")
+
+        console.log("SERVER: upserting settings for user", effectiveUserId)
         // Ensure settings exist or update them
         await prisma.userSettings.upsert({
-            where: { userId },
+            where: { userId: effectiveUserId },
             update: {
                 reservationSettings: settings
             },
             create: {
-                userId,
+                userId: effectiveUserId,
                 plan: 'FREE', // Default plan if creating
                 reservationSettings: settings
             }
@@ -1355,7 +1370,9 @@ export async function getAllReservationsList(userIdOverride?: string) {
         const { userId: authUserId } = await auth()
         if (!authUserId) return { success: false, reservations: [] }
 
-        const targetUserId = userIdOverride || authUserId
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const effectiveUserId = await getActiveBusinessId()
+        const targetUserId = userIdOverride || effectiveUserId || authUserId
 
         // Find floor plans owned by user
         const floorPlans = await prisma.floorPlan.findMany({
@@ -1418,7 +1435,9 @@ export async function getReservationsAnalytics(userIdOverride?: string) {
         const { userId: authUserId } = await auth()
         if (!authUserId) return { success: false }
 
-        const targetUserId = userIdOverride || authUserId
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const effectiveUserId = await getActiveBusinessId()
+        const targetUserId = userIdOverride || effectiveUserId || authUserId
         const floorPlans = await prisma.floorPlan.findMany({
             where: { userId: targetUserId },
             select: { id: true }

@@ -71,7 +71,8 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
         loadingSurveys,
         loadingAnalytics,
         refreshData,
-        setSurveys
+        setSurveys,
+        chains
     } = useDashboard()
 
     // SABOTAGE SAFEGUARD: Check for pending checkout cookie
@@ -332,12 +333,28 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                         <div className="space-y-2">
                             <div className="flex flex-col gap-2">
                                 <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-gray-400">
-                                    {branchName ? branchName : `${getGreeting()}, Bienvenido.`}
+                                    {getGreeting()}, Bienvenido.
                                     <br className="md:hidden" />
                                 </h1>
-                                <div className="flex items-center gap-3">
-                                    <p className="text-gray-400 text-sm">
-                                        {branchName ? 'Gestionando métricas' : 'Gestiona tus encuestas de satisfacción.'}
+                                <div className="flex flex-col items-start gap-1">
+                                    <p className="text-gray-400 text-sm font-medium">
+                                        Administrando: <span className="text-white font-bold">{
+                                            (() => {
+                                                if (branchName) return branchName;
+                                                const match = typeof document !== 'undefined' ? document.cookie.match(/happy_active_business=([^;]+)/) : null;
+                                                const currentActiveId = match ? match[1] : undefined;
+                                                if (currentActiveId && chains) {
+                                                    for (const chain of chains) {
+                                                        const found = chain.branches.find(b => b.branchId === currentActiveId || b.slug === currentActiveId);
+                                                        if (found) return found.name || found.branch?.businessName || 'Mi Negocio';
+                                                    }
+                                                }
+                                                return 'Mi Negocio';
+                                            })()
+                                        }</span>
+                                    </p>
+                                    <p className="text-gray-500 text-xs">
+                                        Gestiona tus encuestas de satisfacción.
                                     </p>
                                 </div>
                             </div>

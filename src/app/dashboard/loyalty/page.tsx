@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server"
 import { getLoyaltyProgram } from "@/actions/loyalty"
 import { LoyaltyDashboard } from "@/components/loyalty/LoyaltyDashboard"
+import { getActiveBusinessId } from "@/lib/tenant"
 import { redirect } from "next/navigation"
 
 export default async function LoyaltyPage() {
@@ -9,7 +10,10 @@ export default async function LoyaltyPage() {
         redirect("/sign-in")
     }
 
-    const program = await getLoyaltyProgram(userId)
+    const effectiveUserId = await getActiveBusinessId()
+    if (!effectiveUserId) redirect("/sign-in")
+
+    const program = await getLoyaltyProgram(effectiveUserId)
 
     return (
         <div className="p-0 md:p-8 max-w-5xl mx-auto">
@@ -20,7 +24,7 @@ export default async function LoyaltyPage() {
                 <p className="text-gray-400 mt-2">Motor de reglas, estatus y recompensas automatizadas</p>
             </div>
 
-            <LoyaltyDashboard userId={userId} program={program} />
+            <LoyaltyDashboard userId={effectiveUserId} program={program} />
         </div>
     )
 }

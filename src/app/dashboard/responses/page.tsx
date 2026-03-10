@@ -6,5 +6,9 @@ export default async function ResponsesPage() {
     const { userId } = await auth()
     if (!userId) redirect('/')
 
-    return <ResponsesWrapper effectiveUserId={userId} />
+    const { getActiveBusinessId } = await import('@/lib/tenant')
+    const activeContextId = await getActiveBusinessId()
+    const effectiveUserId = activeContextId || userId
+
+    return <ResponsesWrapper effectiveUserId={effectiveUserId} />
 }

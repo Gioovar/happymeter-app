@@ -43,12 +43,10 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
     const { userId } = await auth();
     if (!userId) throw new Error("No autorizado");
 
-    const targetUserId = data.branchId || userId;
-
-    if (targetUserId !== userId) {
-        const hasAccess = await verifyZoneAccess(targetUserId, userId);
-        if (!hasAccess) throw new Error("No tienes acceso a esta sucursal");
-    }
+    const { getActiveBusinessId } = await import('@/lib/tenant');
+    const effectiveUserId = await getActiveBusinessId();
+    if (!effectiveUserId) throw new Error("No autorizado - Falta contexto de negocio");
+    const targetUserId = effectiveUserId;
 
     if (!data.name) throw new Error("El nombre de la zona es requerido");
 

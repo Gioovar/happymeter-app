@@ -15,6 +15,7 @@ import { ReservationsList } from "@/components/dashboard/reservations/Reservatio
 import { prisma } from "@/lib/prisma"
 import { ReservationLinkButton } from "@/components/dashboard/reservations/ReservationLinkButton"
 
+import { getActiveBusinessId } from "@/lib/tenant"
 
 export const dynamic = 'force-dynamic'
 
@@ -26,28 +27,28 @@ export default async function ReservationsPage() {
         phone: user?.phoneNumbers[0]?.phoneNumber
     }
 
+    // Resolve tenant ID
+    const { effectiveUserId } = await getActiveBusinessId()
+
     // Fetch existing floor plan
     const floorPlans = await getFloorPlans()
 
     // Fetch User Settings for Reservation Config
     const userSettings = await prisma.userSettings.findUnique({
-        where: { userId: user?.id }
+        where: { userId: effectiveUserId }
     })
-
-    // Fetch reservations for calendar
 
     // Fetch reservations for calendar
     const reservationsResult = await getDashboardReservations()
     const reservations = reservationsResult.success ? reservationsResult.reservations : []
 
     // Fetch program for Link Button
-    // Fetch program for Link Button
     let program = null
     try {
-        if (user) {
+        if (effectiveUserId) {
             // Correct field is 'userId' based on schema, not 'clerkUserId'
             program = await prisma.loyaltyProgram.findUnique({
-                where: { userId: user.id }
+                where: { userId: effectiveUserId }
             })
 
             // AUTO-CREATE if missing so user sees the button
@@ -55,7 +56,7 @@ export default async function ReservationsPage() {
                 console.log("Auto-creating Loyalty Program for Reservations...")
                 program = await prisma.loyaltyProgram.create({
                     data: {
-                        userId: user.id,
+                        userId: effectiveUserId,
                         businessName: userProfile.name || "Mi Negocio",
                         description: "Programa de lealtad creado automáticamente."
                     }

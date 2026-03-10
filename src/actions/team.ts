@@ -14,7 +14,9 @@ export async function getTeamData(branchId?: string) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
-    let effectiveOwnerId = userId;
+    const { getActiveBusinessId } = await import('@/lib/tenant')
+    const activeContextId = await getActiveBusinessId()
+    let effectiveOwnerId = activeContextId || userId;
 
     if (branchId && branchId !== userId) {
         // Verify Chain Ownership or direct matching

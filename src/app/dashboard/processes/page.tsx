@@ -14,18 +14,23 @@ import { auth } from '@clerk/nextjs/server';
 import TeamAccessCard from '@/components/processes/TeamAccessCard';
 import DailyProcessReport from '@/components/processes/DailyProcessReport';
 
-import { getBranchId } from '@/lib/branch-utils';
+import { getActiveBusinessId } from '@/lib/tenant';
 
 export default async function ProcessesPage() {
     const { userId } = await auth();
     if (!userId) return null;
 
-    const branchId = await getBranchId();
-    if (!branchId) return null;
+    const effectiveUserId = await getActiveBusinessId();
+    if (!effectiveUserId) return null;
 
-    // Fetch Real Data
+    // Fetch Real Data using the resolved tenant context
     const zones = await prisma.processZone.findMany({
-        where: { userId, branchId },
+        where: {
+            OR: [
+                { userId: effectiveUserId },
+                { branchId: effectiveUserId }
+            ]
+        },
         include: {
             _count: {
                 select: { tasks: true }
@@ -66,7 +71,7 @@ export default async function ProcessesPage() {
             </div>
 
             {/* Daily Report Section */}
-            <DailyProcessReport branchId={branchId} />
+            <DailyProcessReport branchId={effectiveUserId} />
 
             {/* Zones List */}
             <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
