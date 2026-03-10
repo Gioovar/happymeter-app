@@ -22,8 +22,10 @@ import {
 type Ticket = {
     id: string;
     businessId: string;
-    title: string;
-    description: string;
+    title?: string | null;
+    description?: string | null;
+    category?: string | null;
+    aiContext?: string | null;
     status: string; // "OPEN", "IN_PROGRESS", "RESOLVED"
     severity: string; // "LOW", "MEDIUM", "HIGH", "CRITICAL"
     createdAt: string;
@@ -74,8 +76,8 @@ export default function TicketsClientPage({ initialTickets, businessId }: { init
     };
 
     const filteredTickets = tickets.filter(t =>
-        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.description.toLowerCase().includes(searchQuery.toLowerCase())
+        (t.title || t.category || "Sin título").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.description || t.aiContext || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const columns = [
@@ -177,9 +179,9 @@ export default function TicketsClientPage({ initialTickets, businessId }: { init
                                             </div>
 
                                             <div className="pl-4">
-                                                <h4 className="font-bold text-white text-[15px] mb-2 leading-snug">{ticket.title}</h4>
-                                                <p className="text-gray-400 text-xs line-clamp-3 mb-5 leading-relaxed font-medium">
-                                                    {ticket.description}
+                                                <h4 className="font-bold text-white text-[15px] mb-2 leading-snug">{ticket.title || ticket.category || "Incidencia sin título"}</h4>
+                                                <p className="text-gray-400 text-[13px] leading-relaxed mb-4 line-clamp-3">
+                                                    {ticket.description || ticket.aiContext || "Sin detalles adicionales."}
                                                 </p>
 
                                                 <div className="flex items-center justify-between text-[11px] font-semibold text-gray-500 pt-3 border-t border-white/5">
