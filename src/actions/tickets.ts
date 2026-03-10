@@ -11,6 +11,20 @@ export async function getTickets(businessId: string) {
             return { success: false, error: "Unauthorized" };
         }
 
+        // Verify the user owns the chain that contains this branch or is a team member
+        const [isBranch, isMember] = await Promise.all([
+            prisma.chainBranch.findFirst({
+                where: { branchId: businessId, chain: { ownerId: userId } }
+            }),
+            prisma.teamMember.findFirst({
+                where: { ownerId: businessId, userId: userId }
+            })
+        ]);
+
+        if (businessId !== userId && !isBranch && !isMember) {
+            return { success: false, error: "Unauthorized Access to Business Tickets" };
+        }
+
         const tickets = await prisma.issueTicket.findMany({
             where: {
                 businessId: businessId,
