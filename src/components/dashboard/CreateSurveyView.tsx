@@ -54,7 +54,7 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
     const mode = searchParams.get('mode')
 
     // We get chains, but we also now get the global branchId / branchSlug from context 
-    const { chains, branchId: contextBranchId, branchSlug } = useDashboard()
+    const { chains, branchId: contextBranchId, branchSlug, activeContextBannerUrl } = useDashboard()
 
     // Determine the true branch ID to use for this creation session
     let effectiveBranchId = propBranchId || contextBranchId || branchSlug || undefined
@@ -95,30 +95,27 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
 
     // Pre-fill Banner from Business Settings
     useEffect(() => {
-        if (!banner && !bannerPreview && chains.length > 0) {
-            let targetBranch = null
-            if (effectiveBranchId) {
-                targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === effectiveBranchId || b.slug === effectiveBranchId)
-            } else {
-                // Default to first branch if available
-                targetBranch = chains[0]?.branches?.[0]
+        if (!banner && !bannerPreview) {
+            // First priority: use the active context's provided banner (e.g., if editing the root business)
+            if (activeContextBannerUrl) {
+                setBannerPreview(activeContextBannerUrl)
+                return
             }
 
-            if (targetBranch?.branch?.bannerUrl) {
-                setBannerPreview(targetBranch.branch.bannerUrl)
+            // Fallback for branching logic: check within chains if it's a specific sub-branch
+            if (chains.length > 0 && effectiveBranchId) {
+                const targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === effectiveBranchId || b.slug === effectiveBranchId)
+                if (targetBranch?.branch?.bannerUrl) {
+                    setBannerPreview(targetBranch.branch.bannerUrl)
+                }
             }
         }
-    }, [chains, effectiveBranchId, banner, bannerPreview])
+    }, [chains, effectiveBranchId, banner, bannerPreview, activeContextBannerUrl])
 
     // Pre-fill Alert Config defaults
     useEffect(() => {
-        if (!alertConfig && chains.length > 0) {
-            let targetBranch = null
-            if (effectiveBranchId) {
-                targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === effectiveBranchId || b.slug === effectiveBranchId)
-            } else {
-                targetBranch = chains[0]?.branches?.[0]
-            }
+        if (!alertConfig && chains.length > 0 && effectiveBranchId) {
+            let targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === effectiveBranchId || b.slug === effectiveBranchId)
 
             const branchUser = targetBranch?.branch
             // Prefer whatsappContact, fallback to phone

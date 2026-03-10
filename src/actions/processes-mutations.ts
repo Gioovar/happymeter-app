@@ -56,7 +56,7 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
         const { isLimitReached, FREE_PLAN_LIMITS } = await import('@/lib/limits')
 
         // 1. Check Zone Count
-        const existingZones = await prisma.processZone.count({ where: { userId } })
+        const existingZones = await prisma.processZone.count({ where: { userId: targetUserId } })
         if (isLimitReached(existingZones, FREE_PLAN_LIMITS.MAX_PROCESS_FLOWS, userSettings.plan)) {
             throw new Error("Límite de flujos alcanzado (Plan Gratuito: 1). Actualiza tu plan.")
         }

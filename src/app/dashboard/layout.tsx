@@ -81,13 +81,13 @@ export default async function DashboardLayout({
     // Fetch ALL memberships for this user to support Multi-Tenant
     const memberships = await prisma.teamMember.findMany({
         where: { userId, isActive: true },
-        include: { owner: { select: { businessName: true, isActive: true } } }
+        include: { owner: { select: { businessName: true, isActive: true, bannerUrl: true } } }
     })
 
     // Check if the user is a direct business owner themselves
     const personalSettings = await prisma.userSettings.findUnique({
         where: { userId },
-        select: { hasSeenTour: true, role: true, plan: true, isActive: true, isOnboarded: true, createdAt: true, subscriptionStatus: true, businessName: true, fullName: true }
+        select: { hasSeenTour: true, role: true, plan: true, isActive: true, isOnboarded: true, createdAt: true, subscriptionStatus: true, businessName: true, fullName: true, bannerUrl: true }
     })
 
     // Determine all active business contexts
@@ -98,7 +98,8 @@ export default async function DashboardLayout({
             id: userId,
             name: personalSettings.businessName || 'Mi Negocio',
             role: 'ADMIN',
-            isActive: personalSettings.isActive
+            isActive: personalSettings.isActive,
+            bannerUrl: personalSettings.bannerUrl || null
         })
     }
 
@@ -107,7 +108,8 @@ export default async function DashboardLayout({
             id: m.ownerId,
             name: m.owner?.businessName || 'Negocio Afiliado',
             role: m.role,
-            isActive: m.owner?.isActive || false
+            isActive: m.owner?.isActive || false,
+            bannerUrl: m.owner?.bannerUrl || null
         })
     })
 
@@ -239,6 +241,7 @@ export default async function DashboardLayout({
             dbSubscriptionStatus={checkedSettings?.subscriptionStatus || undefined}
             activeContextName={activeContext?.name}
             activeContextRole={activeContext?.role}
+            activeContextBannerUrl={(activeContext as any)?.bannerUrl}
         >
             <NotificationProvider>
                 <GiftCelebration userId={userId} />

@@ -493,9 +493,13 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
         const { userId } = await auth()
         if (!userId) return { success: false, reservations: [] }
 
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const effectiveContextId = activeContextId || userId
+
         // Find floor plans owned by user
         const floorPlans = await prisma.floorPlan.findMany({
-            where: { userId },
+            where: { userId: effectiveContextId },
             select: { id: true }
         })
 
@@ -527,7 +531,7 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
                 },
                 OR: [
                     { table: { floorPlanId: { in: floorPlanIds } } },
-                    { userId: userId }
+                    { userId: effectiveContextId }
                 ]
             },
             include: {
@@ -1520,7 +1524,10 @@ export async function getReservationsClients(userIdOverride?: string) {
         const { userId: authUserId } = await auth()
         if (!authUserId) return { success: false, clients: [] }
 
-        const targetUserId = userIdOverride || authUserId
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const effectiveUserId = await getActiveBusinessId()
+
+        const targetUserId = userIdOverride || effectiveUserId || authUserId
         const floorPlans = await prisma.floorPlan.findMany({
             where: { userId: targetUserId },
             select: { id: true }

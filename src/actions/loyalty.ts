@@ -167,11 +167,14 @@ export async function createLoyaltyProgram(data: {
     themeColor?: string
 }) {
     try {
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const effectiveContextId = activeContextId || data.userId
         // LIMIT CHECK
-        const userSettings = await prisma.userSettings.findUnique({ where: { userId: data.userId } })
+        const userSettings = await prisma.userSettings.findUnique({ where: { userId: effectiveContextId } })
         if (userSettings) {
             const { isLimitReached, FREE_PLAN_LIMITS } = await import('@/lib/limits')
-            const existingPrograms = await prisma.loyaltyProgram.count({ where: { userId: data.userId, isActive: true } })
+            const existingPrograms = await prisma.loyaltyProgram.count({ where: { userId: effectiveContextId, isActive: true } })
 
             if (isLimitReached(existingPrograms, FREE_PLAN_LIMITS.MAX_LOYALTY_PROGRAMS, userSettings.plan)) {
                 return { success: false, error: "Límite de programas alcanzado (Plan Gratuito: 1). Actualiza tu plan." }
@@ -180,7 +183,7 @@ export async function createLoyaltyProgram(data: {
 
         const program = await prisma.loyaltyProgram.create({
             data: {
-                userId: data.userId,
+                userId: effectiveContextId,
                 businessName: data.businessName,
                 description: data.description,
                 themeColor: data.themeColor,
@@ -292,22 +295,26 @@ export async function addLoyaltyReward(programId: string, data: {
 export async function getAvailableProgramsForCloning(currentProgramId: string) {
     try {
         const { userId } = await auth()
-        if (!userId) return { success: false, programs: [] }
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const effectiveContextId = activeContextId || userId
+
+        if (!effectiveContextId) return { success: false, programs: [] }
 
         // Find the chain(s) this user belongs to, either as owner or branch
         const ownedChains = await prisma.chain.findMany({
-            where: { ownerId: userId },
+            where: { ownerId: effectiveContextId },
             include: { branches: true }
         })
 
-        let branchIds = [userId]
+        let branchIds = [effectiveContextId]
 
         if (ownedChains.length > 0) {
             ownedChains.forEach(c => c.branches.forEach(b => branchIds.push(b.branchId)))
         } else {
             // Check if user is a branch
             const branchOf = await prisma.chainBranch.findFirst({
-                where: { branchId: userId },
+                where: { branchId: effectiveContextId },
                 include: { chain: { include: { branches: true } } }
             })
             if (branchOf) {
@@ -414,8 +421,12 @@ export async function cloneLoyaltyRewards(sourceProgramId: string, targetProgram
 
 export async function getLoyaltyProgram(userId: string) {
     try {
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const effectiveContextId = activeContextId || userId
+
         const program = await prisma.loyaltyProgram.findUnique({
-            where: { userId },
+            where: { userId: effectiveContextId },
             include: {
                 rewards: {
                     where: { isActive: true },

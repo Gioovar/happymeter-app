@@ -391,25 +391,33 @@ export async function getOpsTasks() {
     }
 
     // 2. Owner View (Fallback)
-    // If not a team member, assume Owner and show ALL zones they own.
-    // Only possible if userId is present (Clerk Login as Owner)
+    // If not a team member, assume Owner and show ALL zones they own (or specifically what they are viewing)
     if (userId) {
-        console.log(`[getOpsTasks] User ${userId} is Owner (or has no memberships). Showing all owned zones.`);
+        console.log(`[getOpsTasks] User ${userId} is Owner (or has no memberships). Showing branch context zones.`);
 
-        // Find all branches owned by this user
-        const ownedBranches = await prisma.chainBranch.findMany({
-            where: {
-                chain: {
-                    ownerId: userId
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+
+        let ownerIds = [userId]
+
+        if (activeContextId) {
+            ownerIds = [activeContextId]
+        } else {
+            // Find all branches owned by this user
+            const ownedBranches = await prisma.chainBranch.findMany({
+                where: {
+                    chain: {
+                        ownerId: userId
+                    }
+                },
+                select: {
+                    branchId: true
                 }
-            },
-            select: {
-                branchId: true
-            }
-        });
+            });
 
-        const branchIds = ownedBranches.map(b => b.branchId);
-        const ownerIds = [userId, ...branchIds];
+            const branchIds = ownedBranches.map(b => b.branchId);
+            ownerIds = [userId, ...branchIds];
+        }
 
         const zones = await prisma.processZone.findMany({
             where: {
@@ -525,11 +533,15 @@ export async function getDailyTaskReport(dateStr?: string, branchId?: string) {
         console.log(`[getDailyTaskReport] Using Calendar Day logic (History). Date: ${dateStr}, Day: ${dayOfWeek}`);
     }
 
+    const { getActiveBusinessId } = await import('@/lib/tenant')
+    const activeContextId = await getActiveBusinessId()
+    const effectiveContextId = activeContextId || userId
+
     // 1. Fetch All Relevant Tasks (User's Zones filtered by branchId)
     // We fetch ALL tasks for the user in the specified branch
     const zones = await prisma.processZone.findMany({
         where: {
-            userId,
+            userId: effectiveContextId,
             ...(branchId ? { branchId } : {})
         },
         include: {
