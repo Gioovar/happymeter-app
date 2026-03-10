@@ -443,19 +443,19 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
 
                     {/* Advanced Operations AI Row */}
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                        <div className="lg:col-span-1 h-[450px]">
+                        <div className="lg:col-span-1 h-auto lg:h-[450px]">
                             <ReputationWidget />
                         </div>
-                        <div className="lg:col-span-1 h-[450px]">
+                        <div className="lg:col-span-1 h-auto lg:h-[450px]">
                             <ResolvedIssuesWidget />
                         </div>
-                        <div className="lg:col-span-1 h-[450px]">
+                        <div className="lg:col-span-1 h-auto lg:h-[450px]">
                             <GrowthEngineWidget />
                         </div>
-                        <div className="lg:col-span-1 h-[450px]">
+                        <div className="lg:col-span-1 h-auto lg:h-[450px]">
                             <CampaignManagerWidget />
                         </div>
-                        <div className="lg:col-span-1 h-[450px]">
+                        <div className="lg:col-span-1 h-auto lg:h-[450px]">
                             <AutopilotWidget />
                         </div>
                     </div>

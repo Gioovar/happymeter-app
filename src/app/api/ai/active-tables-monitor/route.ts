@@ -9,41 +9,43 @@ export async function GET(req: Request) {
 
         const now = new Date()
 
-        // Simular mesas activas
-        const activeTables = [
-            {
-                reservationId: 'res-1',
-                tableName: 'M-12 (Terraza)',
-                customerName: 'A. García',
-                partySize: 4,
-                startedAt: new Date(now.getTime() - 45 * 60000).toISOString(), // 45 min ago
-                expectedDuration: 90,
+        const startOfToday = new Date(now)
+        startOfToday.setHours(0, 0, 0, 0)
+
+        // Obtener reservaciones reales del día de hoy que estén activas
+        // Se asume que una reservación está "activa" si su hora de inicio ya pasó,
+        // pero no ha excedido por más de 4 horas (en caso de que no marquen salida manually)
+        const activeReservations = await prisma.reservation.findMany({
+            where: {
+                userId,
+                date: {
+                    gte: startOfToday,
+                    lte: now // Ya empezaron
+                },
+                status: {
+                    in: ['CONFIRMED', 'SEATED', 'IN_PROGRESS'] // Asumiendo estos estados
+                }
             },
-            {
-                reservationId: 'res-2',
-                tableName: 'M-05 (Salón)',
-                customerName: 'C. Martínez',
-                partySize: 2,
-                startedAt: new Date(now.getTime() - 110 * 60000).toISOString(), // 110 min ago
-                expectedDuration: 90,
-            },
-            {
-                reservationId: 'res-3',
-                tableName: 'M-08 (VIP)',
-                customerName: 'R. Sánchez',
-                partySize: 6,
-                startedAt: new Date(now.getTime() - 85 * 60000).toISOString(), // 85 min ago
-                expectedDuration: 120,
-            },
-            {
-                reservationId: 'res-4',
-                tableName: 'M-15 (Bar)',
-                customerName: 'Walk-in',
-                partySize: 1,
-                startedAt: new Date(now.getTime() - 20 * 60000).toISOString(), // 20 min ago
-                expectedDuration: 60,
+            include: {
+                table: true
             }
-        ]
+        })
+
+        const activeTables = activeReservations
+            .filter(res => {
+                const startTime = new Date(res.date)
+                const elapsedHours = (now.getTime() - startTime.getTime()) / (1000 * 60 * 60)
+                // Filtrar las que tienen menos de 4 horas de haber iniciado (están "vivas")
+                return elapsedHours >= 0 && elapsedHours <= 4
+            })
+            .map(res => ({
+                reservationId: res.id,
+                tableName: res.table?.label || 'Mesa S/N',
+                customerName: res.customerName || 'Cliente',
+                partySize: res.partySize || 1,
+                startedAt: res.date.toISOString(),
+                expectedDuration: res.duration || 120, // Minutos esperados
+            }))
 
         // Procesar estados
         const processedTables = activeTables.map(table => {
