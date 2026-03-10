@@ -35,14 +35,23 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
     const searchParams = useSearchParams()
     const params = useParams()
     const branchSlug = params?.branchSlug as string
-    const { checkFeature } = useDashboard()
+    const { checkFeature, activeContextRole } = useDashboard()
 
     const activeMode = getActiveMode(pathname)
     const currentModeItems = NAVIGATION_CONFIG[activeMode] || []
 
+    // Filter items based on allowedRoles
+    const roleToCheck = activeContextRole || 'ADMIN' // Fallback to ADMIN if owner
+    const filteredItems = currentModeItems.filter(item => {
+        if (item.allowedRoles && !item.allowedRoles.includes(roleToCheck)) {
+            return false
+        }
+        return true
+    })
+
     return (
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-            {currentModeItems.map((item) => {
+            {filteredItems.map((item) => {
                 const Icon = item.icon
                 let finalHref = item.href;
                 if (branchSlug) {
