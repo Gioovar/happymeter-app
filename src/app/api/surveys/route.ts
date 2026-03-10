@@ -176,7 +176,10 @@ export async function POST(req: Request) {
         }
 
         // --- Context Switching Logic for POST ---
-        let targetUserId = userId;
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        let targetUserId = activeContextId || userId;
+
         const { searchParams } = new URL(req.url);
         const branchId = searchParams.get('branchId');
 
@@ -184,7 +187,11 @@ export async function POST(req: Request) {
             const isOwner = await prisma.chainBranch.findFirst({
                 where: { branchId: branchId, chain: { ownerId: userId } }
             });
-            if (!isOwner) return new NextResponse("Unauthorized Branch Access", { status: 403 })
+            const isMember = await prisma.teamMember.findFirst({
+                where: { ownerId: branchId, userId: userId }
+            });
+
+            if (!isOwner && !isMember) return new NextResponse("Unauthorized Branch Access", { status: 403 })
             targetUserId = branchId;
         }
         // ----------------------------------------

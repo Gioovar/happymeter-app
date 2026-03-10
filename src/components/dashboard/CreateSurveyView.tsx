@@ -48,11 +48,16 @@ interface CreateSurveyViewProps {
     backLink?: string
 }
 
-export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: CreateSurveyViewProps) {
+export default function CreateSurveyView({ branchId: propBranchId, backLink = '/dashboard' }: CreateSurveyViewProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
     const mode = searchParams.get('mode')
-    const { chains } = useDashboard()
+
+    // We get chains, but we also now get the global branchId / branchSlug from context 
+    const { chains, branchId: contextBranchId, branchSlug } = useDashboard()
+
+    // Determine the true branch ID to use for this creation session
+    let effectiveBranchId = propBranchId || contextBranchId || branchSlug || undefined
 
     // Initialize state based on mode
     const isAnonymousMode = mode === 'anonymous'
@@ -92,8 +97,8 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
     useEffect(() => {
         if (!banner && !bannerPreview && chains.length > 0) {
             let targetBranch = null
-            if (branchId) {
-                targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === branchId)
+            if (effectiveBranchId) {
+                targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === effectiveBranchId || b.slug === effectiveBranchId)
             } else {
                 // Default to first branch if available
                 targetBranch = chains[0]?.branches?.[0]
@@ -103,14 +108,14 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
                 setBannerPreview(targetBranch.branch.bannerUrl)
             }
         }
-    }, [chains, branchId, banner, bannerPreview])
+    }, [chains, effectiveBranchId, banner, bannerPreview])
 
     // Pre-fill Alert Config defaults
     useEffect(() => {
         if (!alertConfig && chains.length > 0) {
             let targetBranch = null
-            if (branchId) {
-                targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === branchId)
+            if (effectiveBranchId) {
+                targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === effectiveBranchId || b.slug === effectiveBranchId)
             } else {
                 targetBranch = chains[0]?.branches?.[0]
             }
@@ -128,7 +133,7 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
                 })
             }
         }
-    }, [chains, branchId, alertConfig])
+    }, [chains, effectiveBranchId, alertConfig])
 
     const [questions, setQuestions] = useState<Question[]>(isAnonymousMode ? TEMPLATE_ANONYMOUS : TEMPLATE_STANDARD)
 
@@ -233,7 +238,8 @@ export default function CreateSurveyView({ branchId, backLink = '/dashboard' }: 
             }
 
             // Append branchId if present
-            const queryParams = branchId ? `?branchId=${branchId}` : ''
+            // We use effectiveBranchId here so it routes correctly on the server action.
+            const queryParams = effectiveBranchId ? `?branchId=${effectiveBranchId}` : ''
 
             const res = await fetch(`/api/surveys${queryParams}`, {
                 method: 'POST',
