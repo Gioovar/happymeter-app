@@ -45,8 +45,8 @@ export interface NavItem {
 export const NAVIGATION_CONFIG: Record<NavigationMode, NavItem[]> = {
     surveys: [
         { title: 'Mis Encuestas', href: '/dashboard', icon: LayoutDashboard, matchExact: true },
-        { title: 'Crear Nueva', href: '/dashboard/create', icon: PlusCircle, allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
-        { title: 'Buzón Staff', href: '/dashboard/create', query: { mode: 'anonymous' }, icon: Shield, feature: 'growth_locked', allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
+        { title: 'Crear Nueva', href: '/dashboard/create', icon: PlusCircle, allowedRoles: ['ADMIN', 'SUPER_ADMIN', 'EDITOR'] },
+        { title: 'Buzón Staff', href: '/dashboard/create', query: { mode: 'anonymous' }, icon: Shield, feature: 'growth_locked', allowedRoles: ['ADMIN', 'SUPER_ADMIN', 'EDITOR'] },
         { title: 'Respuestas', href: '/dashboard/responses', icon: MessageSquare, feature: 'growth_locked' },
         { title: 'Gestión de Acceso', href: '/dashboard/team', icon: Users, feature: 'growth_locked' },
         { title: 'Incidencias (AI)', href: '/dashboard/tickets', icon: AlertCircle },
