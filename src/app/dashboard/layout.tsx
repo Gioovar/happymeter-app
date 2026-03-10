@@ -237,6 +237,8 @@ export default async function DashboardLayout({
             initialPlan={checkedSettings?.plan || 'FREE'}
             userCreatedAt={checkedSettings?.createdAt?.toISOString()}
             dbSubscriptionStatus={checkedSettings?.subscriptionStatus || undefined}
+            activeContextName={activeContext?.name}
+            activeContextRole={activeContext?.role}
         >
             <NotificationProvider>
                 <GiftCelebration userId={userId} />

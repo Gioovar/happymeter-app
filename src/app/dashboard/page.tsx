@@ -19,6 +19,7 @@ export default function DashboardPage() {
         chains,
         loadingSurveys,
         loadingAnalytics,
+        activeContextName
     } = useDashboard()
 
     // --- LOGIC: Master Dashboard vs Branch Dashboard ---
@@ -81,13 +82,11 @@ export default function DashboardPage() {
     }
 
     // Resolve Branch Name for Standard Dashboard View
-    let resolvedBranchName = undefined
-    if (branchId) {
+    let resolvedBranchName = activeContextName
+    if (!resolvedBranchName && branchId) {
         const foundBranch = chains.flatMap(c => c.branches).find(b => b.branchId === branchId)
         if (foundBranch) {
             resolvedBranchName = foundBranch.name || foundBranch.branch.businessName || 'Sucursal'
-        } else {
-            resolvedBranchName = 'Sucursal'
         }
     }
 

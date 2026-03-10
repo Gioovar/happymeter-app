@@ -116,7 +116,7 @@ export default function DashboardSidebar({
     userPlan?: string,
     user?: any
 }) {
-    const { isMobileMenuOpen, toggleMobileMenu, chains } = useDashboard() // Get chains from context
+    const { isMobileMenuOpen, toggleMobileMenu, chains, activeContextName, activeContextRole } = useDashboard() // Get context
     const params = useParams()
     const branchSlug = params?.branchSlug as string
     const [isModeSelectorOpen, setIsModeSelectorOpen] = useState(false)
@@ -138,25 +138,23 @@ export default function DashboardSidebar({
                         <BrandLogo className="mb-1" />
                     </Link>
                     {(() => {
-                        let currentBranchName = null
-                        if (branchSlug) {
-                            for (const chain of chains) {
-                                const found = chain.branches.find(b => b.slug === branchSlug || b.branchId === branchSlug)
-                                if (found) {
-                                    currentBranchName = found.name || found.branch.businessName || 'Sucursal'
-                                    break
-                                }
-                            }
-                        }
+                        const displayName = activeContextName || branchSlug || 'Mi Negocio'
 
-                        return currentBranchName ? (
+                        let roleLabel = 'Dueño / Admin'
+                        if (activeContextRole === 'SUPERVISOR') roleLabel = 'Supervisor'
+                        else if (activeContextRole === 'EDITOR') roleLabel = 'Editor'
+                        else if (activeContextRole === 'OPERATOR') roleLabel = 'Operador'
+                        else if (activeContextRole === 'OBSERVER') roleLabel = 'Observador'
+
+                        return (
                             <div className="mt-1.5 flex flex-col items-start gap-1">
-                                <span className="bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 text-violet-200 text-[10px] font-bold px-2 py-0.5 rounded-full border border-violet-500/30 uppercase tracking-wider shadow-sm">
-                                    {currentBranchName}
+                                <span className="bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 text-violet-200 text-[10px] font-bold px-2 py-0.5 rounded-full border border-violet-500/30 max-w-[200px] truncate shadow-sm uppercase tracking-wider" title={displayName}>
+                                    {displayName}
                                 </span>
+                                <p className="text-[11px] text-gray-400 font-medium tracking-wide">
+                                    {roleLabel} ({userPlan === 'FREE' ? 'Gratuito' : 'Pro'})
+                                </p>
                             </div>
-                        ) : (
-                            <p className="text-xs text-gray-500 mt-1">Panel de Usuario ({userPlan === 'FREE' ? 'Gratuito' : 'Pro'})</p>
                         )
                     })()}
                 </div>

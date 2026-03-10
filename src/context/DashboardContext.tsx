@@ -88,6 +88,8 @@ interface DashboardContextType {
     userCreatedAt?: string | Date
     checkFeature: (feature: string) => boolean
     checkModuleAccess: (module: string) => boolean
+    activeContextName?: string
+    activeContextRole?: string
 }
 
 const defaultStats: StatsData = {
@@ -106,14 +108,16 @@ const defaultStats: StatsData = {
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)
 
 // Add branchId to Props
-export function DashboardProvider({ children, branchId, branchSlug, initialPlan = 'FREE', userCreatedAt, dbSubscriptionStatus, userRole = 'USER' }: {
+export function DashboardProvider({ children, branchId, branchSlug, initialPlan = 'FREE', userCreatedAt, dbSubscriptionStatus, userRole = 'USER', activeContextName, activeContextRole }: {
     children: React.ReactNode,
     branchId?: string,
     branchSlug?: string,
     initialPlan?: string,
     userCreatedAt?: string | Date,
     dbSubscriptionStatus?: string,
-    userRole?: string
+    userRole?: string,
+    activeContextName?: string,
+    activeContextRole?: string
 }) {
     const { userId } = useAuth()
 
@@ -322,7 +326,9 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
                 if (PREMIUM_MODULES.includes(module)) return false
 
                 return true
-            }
+            },
+            activeContextName,
+            activeContextRole
         }}>
             {children}
         </DashboardContext.Provider>

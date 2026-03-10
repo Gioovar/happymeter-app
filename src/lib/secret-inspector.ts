@@ -22,13 +22,15 @@ export async function invokeSecretInspector(responseId: string, businessId: stri
         let openComments = "";
 
         for (const ans of responseData.answers) {
-            if (ans.question.type === 'starts' || ans.question.type === 'nps') {
+            const qType = (ans.question.type || '').toUpperCase();
+
+            if (qType === 'STARS' || qType === 'RATING' || qType === 'NPS' || qType === 'EMOJI') {
                 const val = Number(ans.value);
                 if (!isNaN(val)) {
                     totalScore += val;
                     scorableQuestions++;
                 }
-            } else if (ans.question.type === 'text' && ans.value) {
+            } else if (qType === 'TEXT' && ans.value) {
                 openComments += ans.value + " ";
             }
         }
@@ -40,9 +42,8 @@ export async function invokeSecretInspector(responseId: string, businessId: stri
         // Adjust scale: NPS is 1-10, Stars is 1-5. Let's just pass raw data to Gemini.
 
         const SYSTEM_PROMPT = `
-        Eres el "Inspector Secreto", una IA experta en analizar la satisfacción de clientes en restaurantes.
-        Tu trabajo es detectar "Quejas Ocultas" (Hidden Complaints).
-        Esto ocurre cuando un cliente deja una calificación decente o alta (ej. 4 o 5 estrellas), pero en sus comentarios menciona un problema operativo (ej. "Todo rico pero tardaron mucho", "El mesero fue grosero", "Había mucho ruido").
+        Eres el "Inspector de Calidad", una IA experta en analizar la satisfacción de clientes en restaurantes.
+        Tu trabajo principal es interceptar QUEJAS CRÍTICAS y RIESGOS DE REPUTACIÓN antes de que lleguen a internet.
 
         DATOS DE LA ENCUESTA:
         Promedio de Calificación Numérica: ${avgScore.toFixed(1)}
@@ -50,11 +51,12 @@ export async function invokeSecretInspector(responseId: string, businessId: stri
 
         INSTRUCCIONES:
         1. Analiza el sentimiento y la intención del comentario.
-        2. Detecta si existe una QUEJA OCULTA (problemas de limpieza, alimentos, tiempo, ambiente, actitud).
-        3. Si TODO está bien, devuelve {"hasHiddenComplaint": false}.
-        4. Si detectas un problema real, devuelve {"hasHiddenComplaint": true, "category": "Categoría (Ej. Servicio Lento)", "severity": "Alta/Media/Baja", "summary": "Resumen corto de la falla"}
+        2. Detecta si existe una QUEJA o PROBLEMA REAL (limpieza, calidad de alimentos, tiempos de espera, servicio al cliente, precios, instalaciones).
+        3. No importa si la calificación es alta o baja; si el comentario menciona un problema operativo evidente, DEBES reportarlo.
+        4. Si TODO está excelente o son comentarios sin relevancia operativa, devuelve {"hasComplaint": false}.
+        5. Si detectas un problema, devuelve {"hasComplaint": true, "category": "Categoría (Ej. Servicio Lento o Comida)", "severity": "Alta/Media/Baja/Critica", "summary": "Resumen corto y directo de la falla"}
         
-        Debes devolver SOLO JSON puro.
+        Debes devolver SOLO JSON puro con la estructura indicada.
         `
 
         const model = getGeminiModel('gemini-2.5-flash', {
@@ -68,7 +70,7 @@ export async function invokeSecretInspector(responseId: string, businessId: stri
         const content = result.response.text()
         const evaluation = JSON.parse(content)
 
-        if (evaluation.hasHiddenComplaint && evaluation.summary) {
+        if (evaluation.hasComplaint && evaluation.summary) {
             // Save as an internal alert/incident
             await prisma.issueTicket.create({
                 data: {
