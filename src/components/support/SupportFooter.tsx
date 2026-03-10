@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Twitter, Instagram, Linkedin } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 export function SupportFooter() {
     return (
@@ -8,9 +9,7 @@ export function SupportFooter() {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
                     <div className="md:col-span-5">
                         <Link href="/" className="flex items-center mb-6">
-                            <span className="font-bold text-[22px] text-white tracking-tight flex items-center gap-2">
-                                Happy<span className="text-fuchsia-500">Meter</span>
-                            </span>
+                            <BrandLogo size="lg" variant="light" />
                         </Link>
                         <p className="text-sm text-slate-400 leading-relaxed max-w-sm font-medium">
                             La plataforma de gestión tecnológica y operativa más fácil y potente para negocios modernos.

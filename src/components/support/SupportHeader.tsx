@@ -1,17 +1,13 @@
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 export function SupportHeader() {
   return (
     <header className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-xl border-b border-white/5">
       <div className="container flex h-20 items-center justify-between px-4 sm:px-6 mx-auto">
         <Link href="/" className="flex items-center">
-          <span className="font-bold text-[22px] text-white tracking-tight flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500">
-              <span className="text-black text-lg">◡̈</span>
-            </div>
-            Happy<span className="text-fuchsia-500">Meter</span>
-          </span>
+          <BrandLogo size="md" variant="light" />
         </Link>
 
         {/* Nav links Pill */}

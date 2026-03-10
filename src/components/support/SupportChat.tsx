@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "ai/react";
-import { Smile, Send, X, Bot, User } from "lucide-react";
+import { Send, X, User } from "lucide-react";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,7 +66,7 @@ export function SupportChat() {
                         onClick={handleOpenWithQuery}
                         className="w-full sm:w-auto rounded-[2.5rem] h-16 px-8 text-lg font-bold bg-black text-white hover:bg-black/90 border border-fuchsia-500/30 shadow-[0_0_25px_rgba(217,70,239,0.25)] hover:shadow-[0_0_35px_rgba(217,70,239,0.35)] hover:border-fuchsia-400 transition-all flex items-center justify-center gap-4 shrink-0"
                     >
-                        <Smile className="h-6 w-6 text-slate-300 hidden sm:block" strokeWidth={1.5} />
+                        <Image src="/assets/branding/logo-primary.png" width={26} height={26} alt="HappyMeter" className="hidden sm:block opacity-90 drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
                         <span>Hablar</span>
                         <span className="h-6 w-px bg-slate-700 block mx-1"></span>
                         <div className="flex items-center gap-2 text-[15px] font-bold tracking-widest text-[#B392F0] uppercase">
@@ -81,8 +82,8 @@ export function SupportChat() {
                 {/* Custom Header */}
                 <DialogHeader className="px-6 py-4 border-b border-slate-800 bg-[#131620] flex flex-row items-center justify-between shadow-sm shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20 shadow-[0_0_15px_rgba(217,70,239,0.2)]">
-                            <Smile className="h-6 w-6" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 shadow-[0_0_15px_rgba(217,70,239,0.2)] p-2">
+                            <Image src="/assets/branding/logo-variant-purple.png" width={24} height={24} alt="AI" className="object-contain" />
                         </div>
                         <div>
                             <DialogTitle className="text-white text-lg font-bold">Asistente HappyMeter</DialogTitle>
@@ -107,7 +108,9 @@ export function SupportChat() {
                     <div className="flex flex-col gap-6 w-full max-w-3xl mx-auto pb-4">
                         {messages.length === 0 && !isLoading ? (
                             <div className="flex flex-col items-center justify-center text-center h-full mt-20 gap-4 opacity-70">
-                                <Smile className="h-16 w-16 text-slate-600" strokeWidth={1} />
+                                <div className="h-16 w-16 relative mb-2 opacity-60 grayscale hover:grayscale-0 transition-all">
+                                    <Image src="/assets/branding/logo-variant-purple.png" fill alt="HappyMeter AI" className="object-contain" />
+                                </div>
                                 <div>
                                     <p className="text-slate-300 text-lg">¡Hola! Soy el agente de soporte técnico de HappyMeter.</p>
                                     <p className="text-slate-500">Hazme cualquier pregunta sobre nuestras aplicaciones.</p>
@@ -116,8 +119,8 @@ export function SupportChat() {
                         ) : (
                             messages.map((m) => (
                                 <div key={m.id} className={"flex gap-4 w-full " + (m.role === "user" ? "flex-row-reverse" : "flex-row")}>
-                                    <div className={"flex shrink-0 h-10 w-10 items-center justify-center border rounded-full " + (m.role === "user" ? "bg-white/5 border-slate-700 text-slate-300" : "bg-fuchsia-500/10 border-fuchsia-500/30 text-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.1)]")}>
-                                        {m.role === "user" ? <User className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
+                                    <div className={"flex shrink-0 h-10 w-10 items-center justify-center border rounded-full overflow-hidden " + (m.role === "user" ? "bg-white/5 border-slate-700 text-slate-300" : "bg-fuchsia-500/10 border-fuchsia-500/30 shadow-[0_0_15px_rgba(217,70,239,0.1)] p-2")}>
+                                        {m.role === "user" ? <User className="h-5 w-5" /> : <Image src="/assets/branding/logo-variant-purple.png" width={22} height={22} alt="AI" className="object-contain" />}
                                     </div>
                                     <div className={"flex flex-col max-w-[80%] " + (m.role === "user" ? "items-end" : "items-start")}>
                                         <div className={"px-5 py-3.5 rounded-2xl " + (m.role === "user" ? "bg-[#1A1F2E] text-white border border-slate-700/50 rounded-tr-sm" : "bg-[#131620] text-slate-200 border border-slate-800 rounded-tl-sm")}>
@@ -133,8 +136,8 @@ export function SupportChat() {
                         )}
                         {isLoading && messages.length > 0 && messages[messages.length - 1].role !== "assistant" && (
                             <div className="flex gap-4 flex-row w-full">
-                                <div className="flex shrink-0 h-10 w-10 items-center justify-center border rounded-full bg-fuchsia-500/10 border-fuchsia-500/30 text-fuchsia-400">
-                                    <Bot className="h-5 w-5" />
+                                <div className="flex shrink-0 h-10 w-10 items-center justify-center border rounded-full bg-fuchsia-500/10 border-fuchsia-500/30 overflow-hidden p-2">
+                                    <Image src="/assets/branding/logo-variant-purple.png" width={22} height={22} alt="AI" className="object-contain" />
                                 </div>
                                 <div className="px-5 py-4 rounded-2xl bg-[#131620] border border-slate-800 rounded-tl-sm flex items-center justify-center gap-1.5 h-[52px]">
                                     <span className="h-2 w-2 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
