@@ -36,7 +36,6 @@ import StaffImpactWidget from './StaffImpactWidget'
 import VipAmbassadorsWidget from './VipAmbassadorsWidget'
 import OccupancyRadarWidget from './OccupancyRadarWidget'
 import ActiveTablesWidget from './ActiveTablesWidget'
-import RoiCalculatorWidget from './RoiCalculatorWidget'
 import CriticalMomentsWidget from './CriticalMomentsWidget'
 import ResolvedIssuesWidget from './ResolvedIssuesWidget'
 import ResponsesModal from '@/components/ResponsesModal'
@@ -481,11 +480,10 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                     </div>
 
                     {/* Predictive AI & Real-Time Ops (Phase 3) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                         <OccupancyRadarWidget />
                         <CriticalMomentsWidget />
                         <ActiveTablesWidget />
-                        <RoiCalculatorWidget />
                     </div>
 
                     <div className="space-y-6 mt-6">

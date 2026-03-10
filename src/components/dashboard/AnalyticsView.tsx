@@ -7,6 +7,7 @@ import ExportReportModal from '@/components/ExportReportModal'
 import HappyLoader from '@/components/HappyLoader'
 import dynamic from 'next/dynamic'
 import { useDashboard } from '@/context/DashboardContext'
+import RoiCalculatorWidget from '@/components/dashboard/RoiCalculatorWidget'
 
 // Lazy load heavy chart component
 const DetailedAnalytics = dynamic(() => import('@/components/DetailedAnalytics'), {
@@ -127,6 +128,11 @@ export default function AnalyticsView() {
                         ))}
                     </select>
                 </div>
+            </div>
+
+            {/* AI ROI Module Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 mb-6">
+                <RoiCalculatorWidget />
             </div>
 
             {isLoading ? (
