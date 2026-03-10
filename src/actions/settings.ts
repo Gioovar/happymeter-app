@@ -9,10 +9,14 @@ export async function updateSettings(formData: FormData) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
-    const branchId = formData.get('branchId') as string | undefined
-    let targetUserId = userId
+    // Context Resolution
+    const { getActiveBusinessId } = await import('@/lib/tenant')
+    const activeContextId = await getActiveBusinessId()
+    let targetUserId = activeContextId || userId
 
-    if (branchId && branchId !== userId) {
+    const branchId = formData.get('branchId') as string | undefined
+
+    if (branchId && branchId !== targetUserId) {
         // Verify Chain Ownership
         const branch = await prisma.chainBranch.findFirst({
             where: {
@@ -20,7 +24,12 @@ export async function updateSettings(formData: FormData) {
                 chain: { ownerId: userId }
             }
         })
-        if (!branch) throw new Error('Unauthorized access to branch settings')
+        // Verify Membership
+        const isMember = await prisma.teamMember.findFirst({
+            where: { ownerId: branchId, userId: userId }
+        })
+
+        if (!branch && !isMember) throw new Error('Unauthorized access to branch settings')
         targetUserId = branchId
     }
 
