@@ -7,9 +7,9 @@ export default function SupportLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-screen flex-col bg-background">
+        <div className="flex min-h-screen flex-col bg-[#0B0F19] text-slate-200">
             <SupportHeader />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 selection:bg-fuchsia-500/30">{children}</main>
             <SupportFooter />
         </div>
     );
