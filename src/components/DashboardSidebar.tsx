@@ -125,13 +125,15 @@ export default function DashboardSidebar({
     userRole,
     hasChain,
     userPlan = 'FREE',
-    user
+    user,
+    isOwnContext
 }: {
     isCreator?: boolean,
     userRole?: string,
     hasChain?: boolean,
     userPlan?: string,
-    user?: any
+    user?: any,
+    isOwnContext?: boolean
 }) {
     const { isMobileMenuOpen, toggleMobileMenu, chains, activeContextName, activeContextRole } = useDashboard() // Get context
     const params = useParams()
@@ -419,8 +421,8 @@ export default function DashboardSidebar({
                     )}
 
                     {
-                        /* Link to Chains/Branches */
-                        (!isCreator && userRole !== 'STAFF' && userRole !== 'OPERATOR') && (
+                        /* Link to Chains/Branches - ONLY show if it's the user's OWN context, not when managing someone else's branch */
+                        (!isCreator && userRole !== 'STAFF' && userRole !== 'OPERATOR' && isOwnContext !== false) && (
                             <div className="px-4 pb-3">
                                 {userPlan === 'FREE' ? (
                                     <>

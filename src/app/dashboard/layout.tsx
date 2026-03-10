@@ -254,6 +254,7 @@ export default async function DashboardLayout({
                             hasChain={hasChain}
                             userPlan={userPlan}
                             user={userData ? { ...userData, fullName: (settings as any)?.fullName, businessName: (settings as any)?.businessName, createdAt: (settings as any)?.createdAt?.toISOString() } : null}
+                            isOwnContext={activeContextId === userId}
                         // We will let Sidebar handle resolutions or passing slug
                         />
                     </Suspense>
