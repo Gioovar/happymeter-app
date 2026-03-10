@@ -35,14 +35,14 @@ interface UserProfileProps {
 
 import { useParams } from 'next/navigation'
 import InviteMemberModal from '@/components/team/InviteMemberModal'
-
-// ... existing imports
+import { useDashboard } from '@/context/DashboardContext'
 
 export default function UserProfile({ user, plan, onUpgrade }: UserProfileProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
     const { signOut } = useClerk()
     const { branchSlug } = useParams()
+    const { basePath } = useDashboard()
 
     // Derived state
     const fullName = user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Usuario'
@@ -125,7 +125,7 @@ export default function UserProfile({ user, plan, onUpgrade }: UserProfileProps)
                             </button>
                         ) : (
                             <Link
-                                href="/dashboard/settings"
+                                href={`${basePath}/settings`}
                                 onClick={() => setIsOpen(false)}
                                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#222] hover:bg-[#333] text-white font-bold text-sm transition-all border border-white/10"
                             >
@@ -162,11 +162,11 @@ export default function UserProfile({ user, plan, onUpgrade }: UserProfileProps)
 
                     {/* Menu Items */}
                     <div className="p-2 space-y-0.5">
-                        <Link href="/dashboard/settings" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                        <Link href={`${basePath}/settings`} onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                             <CreditCard className="w-4 h-4" />
                             Plan y Facturación
                         </Link>
-                        <Link href="/dashboard/settings" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                        <Link href={`${basePath}/settings`} onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                             <Settings className="w-4 h-4" />
                             Ajustes
                         </Link>

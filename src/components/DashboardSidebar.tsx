@@ -33,9 +33,7 @@ const getActiveMode = (pathname: string | null): NavigationMode => {
 function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => void }) {
     const pathname = usePathname()
     const searchParams = useSearchParams()
-    const params = useParams()
-    const branchSlug = params?.branchSlug as string
-    const { checkFeature, activeContextRole } = useDashboard()
+    const { checkFeature, activeContextRole, basePath } = useDashboard()
 
     const activeMode = getActiveMode(pathname)
     const currentModeItems = NAVIGATION_CONFIG[activeMode] || []
@@ -54,12 +52,10 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
             {filteredItems.map((item) => {
                 const Icon = item.icon
                 let finalHref = item.href;
-                if (branchSlug) {
-                    if (finalHref === '/dashboard') {
-                        finalHref = `/dashboard/${branchSlug}`
-                    } else if (finalHref.startsWith('/dashboard/')) {
-                        finalHref = finalHref.replace('/dashboard', `/dashboard/${branchSlug}`)
-                    }
+                if (finalHref === '/dashboard') {
+                    finalHref = basePath
+                } else if (finalHref.startsWith('/dashboard/')) {
+                    finalHref = finalHref.replace('/dashboard', basePath)
                 }
 
                 const isActive = (() => {
@@ -135,7 +131,7 @@ export default function DashboardSidebar({
     user?: any,
     isOwnContext?: boolean
 }) {
-    const { isMobileMenuOpen, toggleMobileMenu, chains, activeContextName, activeContextRole, branchId } = useDashboard() // Get context
+    const { isMobileMenuOpen, toggleMobileMenu, chains, activeContextName, activeContextRole, branchId, basePath } = useDashboard() // Get context
     const params = useParams()
     const branchSlug = params?.branchSlug as string
     const [isModeSelectorOpen, setIsModeSelectorOpen] = useState(false)
@@ -153,17 +149,33 @@ export default function DashboardSidebar({
         <>
             <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#111]">
                 <div>
-                    <Link href={branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'} className="block hover:opacity-90 transition-opacity">
+                    <Link href={basePath} className="block hover:opacity-90 transition-opacity">
                         <BrandLogo className="mb-1" />
                     </Link>
                     {(() => {
-                        const displayName = activeContextName || branchSlug || 'Mi Negocio'
+                        let actualName = activeContextName;
+                        if (branchSlug) {
+                            for (const chain of chains) {
+                                const branch = chain.branches.find(b => b.slug === branchSlug || b.branchId === branchSlug)
+                                if (branch && branch.name) {
+                                    actualName = branch.name;
+                                    break;
+                                }
+                            }
+                        }
+                        const displayName = actualName || branchSlug || 'Mi Negocio'
+
+                        let actualRole = activeContextRole || 'ADMIN';
+                        if (branchSlug) {
+                            // If user is Owner, they act as ADMIN in their branch
+                            actualRole = 'ADMIN';
+                        }
 
                         let roleLabel = 'Dueño / Admin'
-                        if (activeContextRole === 'SUPERVISOR') roleLabel = 'Supervisor'
-                        else if (activeContextRole === 'EDITOR') roleLabel = 'Editor'
-                        else if (activeContextRole === 'OPERATOR') roleLabel = 'Operador'
-                        else if (activeContextRole === 'OBSERVER') roleLabel = 'Observador'
+                        if (actualRole === 'SUPERVISOR') roleLabel = 'Supervisor'
+                        else if (actualRole === 'EDITOR') roleLabel = 'Editor'
+                        else if (actualRole === 'OPERATOR') roleLabel = 'Operador'
+                        else if (actualRole === 'OBSERVER') roleLabel = 'Observador'
 
                         return (
                             <div className="mt-1.5 flex flex-col items-start gap-1">
@@ -350,21 +362,7 @@ export default function DashboardSidebar({
                     <div className="px-4 pb-2 pt-2">
                         <FeatureGuard feature="ai_analytics">
                             <Link
-                                href={(() => {
-                                    if (branchSlug) return `/dashboard/${branchSlug}/chat`
-                                    if (branchId) return `/dashboard/${branchId}/chat`
-
-                                    // 1. Try from Chains
-                                    const firstBranch = chains.flatMap(c => c.branches)[0]
-                                    if (firstBranch) return `/dashboard/${firstBranch.slug || firstBranch.branchId}/chat`
-
-                                    // 2. Fallback for Single Business (No Chain) - Use User ID as Slug/ID
-                                    // The main dashboard handles this by looking up user ID if no slug.
-                                    // We need to pass the ID to the chat.
-                                    if (user?.id) return `/dashboard/${user.id}/chat`
-
-                                    return `/dashboard/chat`
-                                })()}
+                                href={`${basePath}/chat`}
                                 id="nav-item-ai-chat"
                                 onClick={() => toggleMobileMenu(false)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md hover:shadow-cyan-600/20 transition-all group"
@@ -383,7 +381,7 @@ export default function DashboardSidebar({
                             </Link>
                         </FeatureGuard>
                         <Link
-                            href={branchSlug ? `/dashboard/${branchSlug}/settings` : `/dashboard/settings`}
+                            href={`${basePath}/settings`}
                             onClick={() => toggleMobileMenu(false)}
                             className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group mt-2"
                         >

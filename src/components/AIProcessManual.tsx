@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { Share2, Copy, Sparkles, TrendingUp, Users, Zap, CheckCircle2, ChevronRight, ChevronDown, MessageSquare, Star, Activity, ArrowRight, Download, Send, Calendar, Eye, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DateRange } from 'react-day-picker'
@@ -35,6 +36,9 @@ interface AIProcessManualProps {
 export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry, publicToken, availableSurveys, initialAutoStart = false, initialFrom, initialTo, targetUserId, branchName, initialAutoDownload = false }: AIProcessManualProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
+    const params = useParams()
+    const branchSlug = params?.branchSlug as string
+    const basePath = branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'
     const [loading, setLoading] = useState(true)
     const [strategiesLoading, setStrategiesLoading] = useState(false)
     const [manualData, setManualData] = useState<any>(null)
@@ -573,7 +577,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                                 <div className="p-2 space-y-1">
                                                     <button
                                                         onClick={() => {
-                                                            router.push('/dashboard/reports')
+                                                            router.push(`${basePath}/reports`)
                                                             setIsSurveySelectorOpen(false)
                                                         }}
                                                         className={`w-full text-left px-4 py-3 rounded-lg text-sm transition flex items-center justify-between ${surveyId === 'all'
@@ -588,7 +592,7 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                                         <button
                                                             key={survey.id}
                                                             onClick={() => {
-                                                                router.push(`/dashboard/reports/${survey.id}`)
+                                                                router.push(`${basePath}/reports/${survey.id}`)
                                                                 setIsSurveySelectorOpen(false)
                                                             }}
                                                             className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition flex items-center justify-between ${surveyId === survey.id
@@ -1307,13 +1311,13 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
                                 </div>
 
                                 <div className="relative z-10 flex items-center w-full md:w-auto justify-center">
-                                    <a
-                                        href="/dashboard/chat"
-                                        className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-white text-black font-bold rounded-full hover:scale-105 transition transform shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] w-full md:w-auto text-sm md:text-base"
+                                    <Link
+                                        href={`${basePath}/chat`}
+                                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold hover:shadow-lg hover:shadow-violet-600/30 hover:scale-105 active:scale-95 transition-all text-sm group"
                                     >
                                         <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
                                         Iniciar Conversación IA
-                                    </a>
+                                    </Link>
                                 </div>
 
                                 {/* Decorator */}

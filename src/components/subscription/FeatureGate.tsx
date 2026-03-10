@@ -8,7 +8,7 @@ import { useDashboard } from '@/context/DashboardContext'
 // Using simple absolute overlay for now to be framework agnostic or standard tailwind
 
 export default function FeatureGate({ children, featureName = "Función Premium" }: { children: React.ReactNode, featureName?: string }) {
-    const { isLocked } = useDashboard()
+    const { isLocked, basePath } = useDashboard()
     const [isOpen, setIsOpen] = useState(false)
     const router = useRouter()
 
@@ -56,7 +56,7 @@ export default function FeatureGate({ children, featureName = "Función Premium"
                         </p>
 
                         <button
-                            onClick={() => router.push('/dashboard/settings')}
+                            onClick={() => router.push(`${basePath}/settings`)}
                             className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                         >
                             Actualizar Plan

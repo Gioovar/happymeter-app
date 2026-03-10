@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ArrowLeft, Flame, Beer, Users } from 'lucide-react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import GameContainer from '@/components/games/GameContainer'
 import SpicyRoulette from '@/components/games/SpicyRoulette'
 import SpicyBottle from '@/components/games/SpicyBottle'
@@ -82,6 +83,8 @@ const DEFAULT_EXTREME = [
 ]
 
 export default function BarGamesPage() {
+    const params = useParams()
+    const basePath = params?.branchSlug ? `/dashboard/${params.branchSlug}` : '/dashboard'
     const [selectedGame, setSelectedGame] = useState<string | null>(null)
     const [isQRModalOpen, setIsQRModalOpen] = useState(false)
     const [rouletteOutcomes, setRouletteOutcomes] = useState<RouletteOutcome[]>(DEFAULT_ROULETTE_CONFIG)
@@ -254,7 +257,7 @@ export default function BarGamesPage() {
     return (
         <div className="p-8 max-w-7xl mx-auto min-h-screen">
             <div className="mb-8">
-                <Link href="/dashboard/games" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition">
+                <Link href={`${basePath}/games`} className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition">
                     <ArrowLeft className="w-4 h-4" /> Volver al Centro de Juegos
                 </Link>
                 <h1 className="text-3xl font-bold text-white mb-2">

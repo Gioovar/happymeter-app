@@ -5,6 +5,7 @@ import { Download, Info, CheckCircle, TrendingUp, Users, Sparkles } from 'lucide
 import Link from 'next/link'
 import { getCampaignCounts } from '@/actions/campaigns'
 import CopyGeneratorModal from './CopyGeneratorModal'
+import { useDashboard } from '@/context/DashboardContext'
 
 interface CampaignManagerProps {
     selectedSurveyTitle?: string
@@ -18,6 +19,7 @@ export default function CampaignManager({ selectedSurveyTitle = 'Todas', selecte
     const [counts, setCounts] = useState({ vip: 0, neutral: 0, angry: 0, promo: 0 })
     const [loadingCounts, setLoadingCounts] = useState(false)
     const [isGeneratorOpen, setIsGeneratorOpen] = useState(false)
+    const { basePath } = useDashboard()
 
     // Fetch real counts
     useEffect(() => {
@@ -183,7 +185,7 @@ export default function CampaignManager({ selectedSurveyTitle = 'Todas', selecte
                     </div>
 
                     <div className="pt-2 text-center">
-                        <Link href="/dashboard/help" className="text-xs text-gray-500 hover:text-gray-300 transition underline decoration-gray-700 underline-offset-4">
+                        <Link href={`${basePath}/help`} className="text-xs text-gray-500 hover:text-gray-300 transition underline decoration-gray-700 underline-offset-4">
                             ¿Cómo cargar mi audiencia en Meta Ads Manager?
                         </Link>
                     </div>

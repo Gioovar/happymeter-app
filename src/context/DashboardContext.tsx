@@ -91,6 +91,7 @@ interface DashboardContextType {
     activeContextName?: string
     activeContextRole?: string
     activeContextBannerUrl?: string | null
+    basePath: string
 }
 
 const defaultStats: StatsData = {
@@ -139,6 +140,9 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
     let subscriptionStatus: 'ACTIVE' | 'TRIALING' | 'GRACE' | 'EXPIRED' | 'SUSPENDED' = 'ACTIVE'
     let daysRemaining = 0
     let isLocked = false
+
+    // Computación del Base Path (Single Source of Truth)
+    const basePath = `/dashboard/${branchSlug || branchId || ''}`.replace(/\/$/, '')
 
     // If server passed an explicit status (from Stripe webhook ideally)
     if (dbSubscriptionStatus === 'ACTIVE') {
@@ -331,7 +335,8 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
             },
             activeContextName,
             activeContextRole,
-            activeContextBannerUrl
+            activeContextBannerUrl,
+            basePath
         }}>
             {children}
         </DashboardContext.Provider>

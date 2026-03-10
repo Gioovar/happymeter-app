@@ -58,7 +58,7 @@ export async function DELETE(
 
         const { surveyId } = await params
 
-        const survey = await verifySurveyAccess(surveyId, userId)
+        const survey = await verifySurveyAccess(surveyId, userId, 'DELETE')
         if (!survey) {
             return new NextResponse("Unauthorized or Not Found", { status: 403 })
         }
@@ -88,7 +88,7 @@ export async function PATCH(
 
         const { surveyId } = await params
 
-        const survey = await verifySurveyAccess(surveyId, userId)
+        const survey = await verifySurveyAccess(surveyId, userId, 'EDIT')
         if (!survey) {
             return new NextResponse("Unauthorized or Not Found", { status: 403 })
         }

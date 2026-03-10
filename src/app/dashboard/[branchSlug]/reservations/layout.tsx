@@ -59,7 +59,7 @@ export default async function ReservationsLayout({
                         </ul>
                     </div>
 
-                    <Link href="/dashboard/settings/billing" className="w-full">
+                    <Link href={`/dashboard/${params.branchSlug ? params.branchSlug + '/' : ''}settings/billing`} className="w-full">
                         <button className="w-full py-4 rounded-xl bg-violet-600 text-white font-bold text-lg hover:bg-violet-500 transition shadow-lg shadow-violet-600/20 hover:scale-[1.02] active:scale-[0.98]">
                             Ver Paquetes y Actualizar
                         </button>

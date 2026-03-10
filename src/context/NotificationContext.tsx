@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { toast } from 'sonner'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
@@ -36,6 +36,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const lastNotificationIdRef = useRef<string | null>(null)
     const audioRef = useRef<HTMLAudioElement | null>(null)
     const router = useRouter()
+    const params = useParams()
+    const branchSlug = params?.branchSlug as string | undefined
     const { userId } = useAuth()
 
     // Push Notifications Hook
@@ -84,13 +86,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             body: JSON.stringify({ notificationId: notif.id, markAll: false })
         }).catch(console.error)
 
+        // Resolve dynamic URL context
+        const baseUrl = branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'
+
         // Navigation
         if (notif.meta?.responseId) {
-            router.push(`/dashboard/responses?responseId=${notif.meta.responseId}`)
+            router.push(`${baseUrl}/responses?responseId=${notif.meta.responseId}`)
         } else if (notif.meta?.url) {
             router.push(notif.meta.url)
         } else if (notif.type === 'ACHIEVEMENT') {
-            router.push('/dashboard/achievements')
+            router.push(`${baseUrl}/achievements`)
         } else if (notif.type === 'REPORT') {
             // ... existing logic for report date range ...
             // Simplified generic push for now or copy logic if needed. 
@@ -105,9 +110,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             }).toString()
 
             if (notif.meta?.surveyId) {
-                router.push(`/dashboard/reports/${notif.meta.surveyId}?${query}`)
+                router.push(`${baseUrl}/reports/${notif.meta.surveyId}?${query}`)
             } else {
-                router.push(`/dashboard/reports?${query}`)
+                router.push(`${baseUrl}/reports?${query}`)
             }
         }
 
@@ -117,7 +122,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     // Polling Logic
     const fetchNotifications = async (isPolling = false) => {
         try {
-            const res = await fetch(`/api/notifications?t=${Date.now()}`, {
+            const queryParam = branchSlug ? `branchSlug=${branchSlug}&` : ''
+            const res = await fetch(`/api/notifications?${queryParam}t=${Date.now()}`, {
                 cache: 'no-store',
                 headers: { 'Pragma': 'no-cache' }
             })
@@ -167,7 +173,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         fetchNotifications(false)
         const interval = setInterval(() => fetchNotifications(true), 3000)
         return () => clearInterval(interval)
-    }, [])
+    }, [branchSlug])
 
     const markAsRead = async (id?: string) => {
         if (id) {
@@ -181,7 +187,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         try {
             await fetch('/api/notifications', {
                 method: 'PATCH',
-                body: JSON.stringify({ notificationId: id, markAll: !id })
+                body: JSON.stringify({ notificationId: id, markAll: !id, branchSlug })
             })
         } catch (e) { console.error(e) }
     }
@@ -189,7 +195,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const deleteRead = async () => {
         setNotifications(prev => prev.filter(n => !n.isRead))
         try {
-            await fetch('/api/notifications', { method: 'DELETE' })
+            const queryParam = branchSlug ? `?branchSlug=${branchSlug}` : ''
+            await fetch(`/api/notifications${queryParam}`, { method: 'DELETE' })
         } catch (e) { console.error(e) }
     }
 

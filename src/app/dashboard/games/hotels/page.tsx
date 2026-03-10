@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Flame, Heart, ArrowLeft, Gamepad2, Skull, BedDouble } from 'lucide-react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import GameContainer from '@/components/games/GameContainer'
 import GameQRModal from '@/components/games/GameQRModal'
 import CoupleDice from '@/components/games/CoupleDice'
@@ -39,6 +40,8 @@ const GAMES = [
 ]
 
 export default function HotelGamesPage() {
+    const params = useParams()
+    const basePath = params?.branchSlug ? `/dashboard/${params.branchSlug}` : '/dashboard'
     const [selectedGame, setSelectedGame] = useState<string | null>(null)
     const [isQRModalOpen, setIsQRModalOpen] = useState(false)
     const [title, setTitle] = useState("Dados del Pasión")
@@ -193,7 +196,7 @@ export default function HotelGamesPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <Link href="/dashboard/games" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition">
+                        <Link href={`${basePath}/games`} className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition">
                             <ArrowLeft className="w-4 h-4" /> Volver al Centro de Juegos
                         </Link>
                         <h1 className="text-4xl font-black tracking-tight mb-2">Juegos para Hoteles 🏨</h1>

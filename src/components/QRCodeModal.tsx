@@ -5,6 +5,7 @@ import { X, Download, Smartphone, Printer, HelpCircle, ExternalLink, Copy } from
 import QRCode from 'qrcode'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { useDashboard } from '@/context/DashboardContext'
 
 interface QRCodeModalProps {
     isOpen: boolean
@@ -17,6 +18,7 @@ export default function QRCodeModal({ isOpen, onClose, surveyUrl, surveyTitle }:
     const [qrDataUrl, setQrDataUrl] = useState<string>('')
     const [activeTab, setActiveTab] = useState<'mobile' | 'print'>('mobile')
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    const { basePath } = useDashboard()
 
     useEffect(() => {
         if (isOpen && surveyUrl) {
@@ -182,7 +184,7 @@ export default function QRCodeModal({ isOpen, onClose, surveyUrl, surveyTitle }:
                             Copiar Enlace
                         </button>
 
-                        <Link href="/dashboard/help/qr" className="block text-center">
+                        <Link href={`${basePath}/help/qr`} className="block text-center">
                             <span className="text-xs text-gray-500 hover:text-violet-400 transition flex items-center justify-center gap-1">
                                 ¿Cómo usar estos códigos? Ver guía <ExternalLink className="w-3 h-3" />
                             </span>

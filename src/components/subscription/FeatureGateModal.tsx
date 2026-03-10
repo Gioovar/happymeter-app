@@ -1,7 +1,7 @@
 'use client'
 
 import { X, Check } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
 
@@ -14,15 +14,18 @@ interface FeatureGateModalProps {
     benefits?: string[]
 }
 
-export default function FeatureGateModal({ 
-    isOpen, 
-    onClose, 
+export default function FeatureGateModal({
+    isOpen,
+    onClose,
     featureName = "Función Premium",
     title = "Mejora tu plan para acceder",
     description = "Esta función está disponible exclusivamente en nuestros planes de pago.",
     benefits = ["Acceso ilimitado", "Soporte prioritario", "Análisis avanzado"]
 }: FeatureGateModalProps) {
     const router = useRouter()
+    const params = useParams()
+    const branchSlug = params?.branchSlug as string
+    const basePath = branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'
 
     if (!isOpen) return null
 
@@ -33,7 +36,7 @@ export default function FeatureGateModal({
         <AnimatePresence>
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                 {/* Backdrop */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -42,7 +45,7 @@ export default function FeatureGateModal({
                 />
 
                 {/* Modal */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -53,7 +56,7 @@ export default function FeatureGateModal({
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] pointer-events-none" />
 
                     <div className="relative z-10 p-8">
-                        <button 
+                        <button
                             onClick={onClose}
                             className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
                         >
@@ -84,7 +87,7 @@ export default function FeatureGateModal({
                         <div className="flex gap-3">
                             <button
                                 onClick={() => {
-                                    router.push('/dashboard/settings')
+                                    router.push(`${basePath}/settings`)
                                     onClose()
                                 }}
                                 className="flex-1 bg-white text-black font-semibold py-3 px-6 rounded-xl hover:bg-gray-100 transition-colors"

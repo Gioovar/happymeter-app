@@ -72,7 +72,9 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
         loadingAnalytics,
         refreshData,
         setSurveys,
-        chains
+        chains,
+        activeContextRole,
+        basePath
     } = useDashboard()
 
     // SABOTAGE SAFEGUARD: Check for pending checkout cookie
@@ -167,7 +169,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
 
     const handleCreateSurvey = () => {
         if (checkLimits()) {
-            router.push(isBranchMode ? `${window.location.pathname}/create` : '/dashboard/create')
+            router.push(isBranchMode ? `${window.location.pathname}/create` : `${basePath}/create`)
         }
     }
 
@@ -507,7 +509,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                 Mis Encuestas
                                 <span className="text-sm font-normal text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">{surveys.length}</span>
                             </h2>
-                            <Link href={branchSlug ? `/dashboard/${branchSlug}/surveys` : "/dashboard/surveys"} className="text-sm text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1 transition">
+                            <Link href={`${basePath}/surveys`} className="text-sm text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1 transition">
                                 Ver todas <ArrowRight className="w-4 h-4" />
                             </Link>
                         </div>
@@ -569,10 +571,10 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
 
                                                     {menuOpenId === survey.id && (
                                                         <div className="absolute right-0 top-full mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                                                            <Link href={`/dashboard/reports/${survey.id}`} className="block px-4 py-3 text-sm hover:bg-white/5 flex items-center gap-2">
+                                                            <Link href={`${basePath}/reports/${survey.id}`} className="block px-4 py-3 text-sm hover:bg-white/5 flex items-center gap-2">
                                                                 <FileText className="w-4 h-4" /> Reportes
                                                             </Link>
-                                                            <Link href={`/dashboard/edit/${survey.id}`} className="block px-4 py-3 text-sm hover:bg-white/5 flex items-center gap-2">
+                                                            <Link href={`${basePath}/edit/${survey.id}`} className="block px-4 py-3 text-sm hover:bg-white/5 flex items-center gap-2">
                                                                 <Pencil className="w-4 h-4" /> Editar
                                                             </Link>
                                                             <button onClick={() => handleDelete(survey.id)} className="block w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/5 flex items-center gap-2">

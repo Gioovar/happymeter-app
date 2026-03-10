@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ArrowLeft, ChefHat, Pizza, Activity, Trophy } from 'lucide-react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import GameContainer from '@/components/games/GameContainer'
 import PacManRestaurant from '@/components/games/PacManRestaurant'
 import SnakeCoop from '@/components/games/SnakeCoop'
@@ -31,6 +32,8 @@ const GAMES = [
 ]
 
 export default function RestaurantGamesPage() {
+    const params = useParams()
+    const basePath = params?.branchSlug ? `/dashboard/${params.branchSlug}` : '/dashboard'
     const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
     const [isQRModalOpen, setIsQRModalOpen] = useState(false)
     const [gameTitle, setGameTitle] = useState('')
@@ -111,7 +114,7 @@ export default function RestaurantGamesPage() {
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen">
             <div className="mb-8">
-                <Link href="/dashboard/games" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition">
+                <Link href={`${basePath}/games`} className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition">
                     <ArrowLeft className="w-4 h-4" /> Volver al Centro de Juegos
                 </Link>
                 <div className="flex items-center gap-3 mb-2">

@@ -6,7 +6,7 @@ import { ArrowLeft, Save, Layers, Plus, Trash2, Clock, Camera, Video } from 'luc
 import { TimePicker } from '@/components/ui/TimePicker';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'sonner';
 
 type TaskDraft = {
@@ -19,6 +19,9 @@ type TaskDraft = {
 
 export default function NewProcessPage() {
     const router = useRouter();
+    const params = useParams();
+    const branchSlug = params?.branchSlug as string;
+    const basePath = branchSlug ? `/dashboard/${branchSlug}` : '/dashboard';
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Zone State
@@ -104,7 +107,7 @@ export default function NewProcessPage() {
             });
 
             toast.success("Zona y tareas creadas correctamente");
-            router.push('/dashboard/processes');
+            router.push(`${basePath}/processes`);
             router.refresh();
         } catch (error) {
             console.error(error);
@@ -116,7 +119,7 @@ export default function NewProcessPage() {
     return (
         <div className="p-6 md:p-10 max-w-5xl mx-auto">
             <div className="mb-8 flex items-center gap-4">
-                <Link href="/dashboard/processes" className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
+                <Link href={`${basePath}/processes`} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
                     <ArrowLeft className="w-5 h-5 text-gray-400" />
                 </Link>
                 <div>
@@ -276,7 +279,7 @@ export default function NewProcessPage() {
 
                 <div className="flex justify-end gap-3 pt-6 border-t border-white/10">
                     <Link
-                        href="/dashboard/processes"
+                        href={`${basePath}/processes`}
                         className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
                     >
                         Cancelar
