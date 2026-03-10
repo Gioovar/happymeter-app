@@ -31,16 +31,12 @@ import AIReportModal from '@/components/AIReportModal'
 import AnalyticsChart from '@/components/AnalyticsChart'
 import RestaurantHealthWidget from './RestaurantHealthWidget'
 import ReputationWidget from './ReputationWidget'
-import GrowthEngineWidget from './GrowthEngineWidget'
-import CampaignManagerWidget from './CampaignManagerWidget'
 import HeatmapWidget from './HeatmapWidget'
-import RetentionRadarWidget from './RetentionRadarWidget'
 import StaffImpactWidget from './StaffImpactWidget'
 import VipAmbassadorsWidget from './VipAmbassadorsWidget'
 import OccupancyRadarWidget from './OccupancyRadarWidget'
 import ActiveTablesWidget from './ActiveTablesWidget'
 import RoiCalculatorWidget from './RoiCalculatorWidget'
-import AutopilotWidget from './AutopilotWidget'
 import CriticalMomentsWidget from './CriticalMomentsWidget'
 import ResolvedIssuesWidget from './ResolvedIssuesWidget'
 import ResponsesModal from '@/components/ResponsesModal'
@@ -462,31 +458,19 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                     </div>
 
                     {/* Advanced Operations AI Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div className="lg:col-span-1 h-auto lg:h-[450px]">
                             <ReputationWidget />
                         </div>
                         <div className="lg:col-span-1 h-auto lg:h-[450px]">
                             <ResolvedIssuesWidget />
                         </div>
-                        <div className="lg:col-span-1 h-auto lg:h-[450px]">
-                            <GrowthEngineWidget />
-                        </div>
-                        <div className="lg:col-span-1 h-auto lg:h-[450px]">
-                            <CampaignManagerWidget />
-                        </div>
-                        <div className="lg:col-span-1 h-auto lg:h-[450px]">
-                            <AutopilotWidget />
-                        </div>
                     </div>
 
                     {/* Advanced Customer Intelligence (Phase 2) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
                         <div className="lg:col-span-2">
                             <HeatmapWidget />
-                        </div>
-                        <div className="lg:col-span-1">
-                            <RetentionRadarWidget />
                         </div>
                         <div className="lg:col-span-1">
                             <StaffImpactWidget />

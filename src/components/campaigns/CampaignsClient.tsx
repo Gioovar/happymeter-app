@@ -4,7 +4,11 @@ import { useState } from 'react'
 import CampaignManager from '@/components/CampaignManager'
 import WhatsAppManager from '@/components/WhatsAppManager'
 import PushCampaignBuilder from './PushCampaignBuilder'
-import { MessageSquare, BellRing } from 'lucide-react'
+import { MessageSquare, BellRing, Sparkles } from 'lucide-react'
+import GrowthEngineWidget from '@/components/dashboard/GrowthEngineWidget'
+import CampaignManagerWidget from '@/components/dashboard/CampaignManagerWidget'
+import AutopilotWidget from '@/components/dashboard/AutopilotWidget'
+import RetentionRadarWidget from '@/components/dashboard/RetentionRadarWidget'
 
 interface CampaignsClientProps {
     initialSurveys: { id: string, title: string }[]
@@ -18,7 +22,7 @@ export default function CampaignsClient({ initialSurveys, branchId, branchName }
     const selectedSurveyTitle = initialSurveys.find(s => s.id === selectedSurveyId)?.title || 'Todas las Encuestas'
     const displayName = branchName ? `Marketing Hub: ${branchName}` : 'Marketing Hub'
 
-    const [activeTab, setActiveTab] = useState<'EXPORT' | 'PUSH'>('EXPORT')
+    const [activeTab, setActiveTab] = useState<'EXPORT' | 'PUSH' | 'IA'>('IA')
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8 space-y-8 font-sans">
@@ -63,6 +67,13 @@ export default function CampaignsClient({ initialSurveys, branchId, branchName }
                     <BellRing className="w-4 h-4" />
                     Push Nativas (Lealtad)
                 </button>
+                <button
+                    onClick={() => setActiveTab('IA')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'IA' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                >
+                    <Sparkles className="w-4 h-4 fill-indigo-400/50" />
+                    Campañas e Inteligencia
+                </button>
             </div>
 
             {/* Grid Principal */}
@@ -79,11 +90,18 @@ export default function CampaignsClient({ initialSurveys, branchId, branchName }
                         branchId={branchId}
                     />
                 </div>
-            ) : (
+            ) : activeTab === 'PUSH' ? (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <PushCampaignBuilder branchId={branchId} />
                 </div>
-            )}
+            ) : activeTab === 'IA' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6 h-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="h-full lg:h-[450px]"><GrowthEngineWidget /></div>
+                    <div className="h-full lg:h-[450px]"><RetentionRadarWidget /></div>
+                    <div className="h-full lg:h-[450px]"><CampaignManagerWidget /></div>
+                    <div className="h-full lg:h-[450px]"><AutopilotWidget /></div>
+                </div>
+            ) : null}
         </div>
     )
 }
