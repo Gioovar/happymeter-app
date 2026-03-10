@@ -135,7 +135,7 @@ export default function DashboardSidebar({
     user?: any,
     isOwnContext?: boolean
 }) {
-    const { isMobileMenuOpen, toggleMobileMenu, chains, activeContextName, activeContextRole } = useDashboard() // Get context
+    const { isMobileMenuOpen, toggleMobileMenu, chains, activeContextName, activeContextRole, branchId } = useDashboard() // Get context
     const params = useParams()
     const branchSlug = params?.branchSlug as string
     const [isModeSelectorOpen, setIsModeSelectorOpen] = useState(false)
@@ -352,6 +352,7 @@ export default function DashboardSidebar({
                             <Link
                                 href={(() => {
                                     if (branchSlug) return `/dashboard/${branchSlug}/chat`
+                                    if (branchId) return `/dashboard/${branchId}/chat`
 
                                     // 1. Try from Chains
                                     const firstBranch = chains.flatMap(c => c.branches)[0]

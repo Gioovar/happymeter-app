@@ -235,6 +235,7 @@ export default async function DashboardLayout({
         // ... existing code ...
 
         <DashboardProvider
+            branchId={activeContextId}
             userRole={realRole}
             initialPlan={checkedSettings?.plan || 'FREE'}
             userCreatedAt={checkedSettings?.createdAt?.toISOString()}
