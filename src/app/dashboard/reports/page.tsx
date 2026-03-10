@@ -7,7 +7,10 @@ export default async function ReportsIndexPage({ searchParams }: { searchParams:
     const { userId } = await auth()
     console.log("Rendering Reports Index Page for user:", userId)
 
-    if (!userId) {
+    const { getActiveBusinessId } = await import('@/lib/tenant')
+    const effectiveUserId = await getActiveBusinessId()
+
+    if (!effectiveUserId) {
         redirect('/')
     }
 
@@ -15,7 +18,7 @@ export default async function ReportsIndexPage({ searchParams }: { searchParams:
     let userSettings = null
     try {
         userSettings = await prisma.userSettings.findUnique({
-            where: { userId }
+            where: { userId: effectiveUserId as string }
         })
     } catch (error) {
         console.error("Failed to fetch user settings:", error)
@@ -24,7 +27,7 @@ export default async function ReportsIndexPage({ searchParams }: { searchParams:
 
     // Fetch all surveys for the selector
     const surveys = await prisma.survey.findMany({
-        where: { userId },
+        where: { userId: effectiveUserId as string },
         select: { id: true, title: true },
         orderBy: { createdAt: 'desc' }
     })
@@ -47,6 +50,7 @@ export default async function ReportsIndexPage({ searchParams }: { searchParams:
                 initialAutoStart={initialAutoStart}
                 initialFrom={initialFrom}
                 initialTo={initialTo}
+                targetUserId={effectiveUserId !== userId ? effectiveUserId : undefined}
             />
         </div>
     )

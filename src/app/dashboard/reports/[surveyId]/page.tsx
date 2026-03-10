@@ -51,6 +51,20 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
             const targetUrl = `/dashboard/${ownedBranch.slug || ownedBranch.branchId}/reports/${surveyId}${queryString ? `?${queryString}` : ''}`
             redirect(targetUrl)
         }
+
+        // C. Team Member Check
+        const teamMember = await prisma.teamMember.findUnique({
+            where: {
+                userId_ownerId: {
+                    userId: userId,
+                    ownerId: survey.userId
+                }
+            }
+        })
+
+        if (teamMember) {
+            hasAccess = true
+        }
     }
 
     if (!hasAccess) {

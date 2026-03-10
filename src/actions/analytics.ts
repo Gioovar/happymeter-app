@@ -54,6 +54,7 @@ export async function getSurveyAnalytics(surveyId: string, dateRange: DateRange,
     // If an override is requested (e.g. looking at a specific branch)
     if (overrideUserId && overrideUserId !== userId) {
         // SECURITY CHECK: Ensure the authenticated `userId` OWNS the `overrideUserId` (which represents a Branch)
+        // OR the user is a TeamMember of the target user.
         const isOwner = await prisma.chain.findFirst({
             where: {
                 ownerId: userId,
@@ -65,10 +66,18 @@ export async function getSurveyAnalytics(surveyId: string, dateRange: DateRange,
             }
         });
 
-        if (!isOwner) {
-            // Check if it's the other way around? (Branch accessing itself? Unlikely with this architecture)
-            // Or maybe a super-admin?
-            console.warn(`[Security] User ${userId} attempted to access analytics for ${overrideUserId} without ownership.`);
+        // Check if invited as TeamMember
+        const isTeamMember = await prisma.teamMember.findUnique({
+            where: {
+                userId_ownerId: {
+                    userId: userId,
+                    ownerId: overrideUserId
+                }
+            }
+        });
+
+        if (!isOwner && !isTeamMember) {
+            console.warn(`[Security] User ${userId} attempted to access analytics for ${overrideUserId} without ownership or team membership.`);
             throw new Error("Unauthorized Access to Branch Data");
         }
 
