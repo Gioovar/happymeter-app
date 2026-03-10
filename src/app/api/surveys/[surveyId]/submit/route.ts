@@ -114,14 +114,14 @@ export async function POST(
             checkCrisis(surveyId, resolvedBranchId)
             checkFraud(surveyId, ip, resolvedBranchId)
 
-            // Step 2: Trigger AI Secret Inspector
-            invokeSecretInspector(response.id, resolvedBranchId)
-
             // Step 3: Recalculate Promoter Score if linked
             if (resolvedReservationId) {
                 processPromoterScore(response.id)
             }
         }
+
+        // Step 2: Trigger AI Secret Inspector (For ALL survey types)
+        invokeSecretInspector(response.id, resolvedBranchId)
 
         // Force cache invalidation for real-time dashboard updates
         revalidateTag('analytics-full')
