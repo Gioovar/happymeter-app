@@ -292,7 +292,7 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
         <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 pb-20 -mx-4 md:-mx-8">
             {/* Header */}
             <header className="border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
-                <nav className="w-full max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
+                <nav className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3">
                             <div className="relative">
@@ -338,7 +338,7 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
             {/* ... Rest of UI same as before, no changes needed except replacing Link href='/dashboard' with backLink */}
             {/* Tab Navigation (Only for normal mode) */}
             {!isAnonymousMode && (
-                <div className="w-full max-w-[1600px] mx-auto px-4 mt-8 mb-4">
+                <div className="max-w-3xl mx-auto px-6 mt-8 mb-4">
                     <div className="flex flex-wrap gap-3 items-center">
                         <button
                             onClick={() => setActiveTab('edit')}
@@ -373,7 +373,7 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
             )}
 
             {/* Main Content */}
-            <main className="w-full max-w-[1600px] mx-auto px-4 py-4 space-y-8">
+            <main className="max-w-3xl mx-auto px-6 py-4 space-y-8">
                 {activeTab === 'edit' ? (
                     <form onSubmit={handleSubmit} className="space-y-8">
 

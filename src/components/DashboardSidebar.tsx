@@ -65,14 +65,22 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
                 const isActive = (() => {
                     const [itemPath, itemQuery] = finalHref.split('?')
                     if (pathname !== itemPath) return false;
+
+                    // If the navigation item specifically demands query parameters
                     if (item.query || itemQuery) {
                         const targetParams = item.query || Object.fromEntries(new URLSearchParams(itemQuery));
                         for (const [key, value] of Object.entries(targetParams)) {
                             if (searchParams?.get(key) !== value) return false
                         }
                         return true
+                    } else {
+                        // If the navigation item has NO query parameters defined, 
+                        // we must ensure the current URL doesn't have differentiating queries like 'mode'
+                        // otherwise both "Crear Nueva" and "Buzón Staff" would highlight.
+                        if (searchParams?.has('mode')) return false;
+
+                        return true;
                     }
-                    return true;
                 })()
 
 
