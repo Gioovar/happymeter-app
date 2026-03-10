@@ -1,22 +1,36 @@
 import Link from 'next/link';
-import { Layers } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export function SupportHeader() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <div className="mr-8 flex items-center space-x-2">
-          <Link href="/support" className="flex items-center space-x-2">
-            <Layers className="h-6 w-6 text-primary" />
-            <span className="hidden font-bold sm:inline-block">Happy Support Center</span>
+    <header className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-xl border-b border-white/5">
+      <div className="container flex h-20 items-center justify-between px-4 sm:px-6 mx-auto">
+        <Link href="/" className="flex items-center">
+          <span className="font-bold text-[22px] text-white tracking-tight flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500">
+              <span className="text-black text-lg">◡̈</span>
+            </div>
+            Happy<span className="text-fuchsia-500">Meter</span>
+          </span>
+        </Link>
+
+        {/* Nav links Pill */}
+        <nav className="hidden lg:flex items-center space-x-2 bg-white/5 border border-white/10 rounded-full px-5 py-2 text-sm font-medium">
+          <Link href="/pricing" className="px-3 py-1.5 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors">Precios</Link>
+          <Link href="/blog" className="px-3 py-1.5 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1.5">
+            Blog <span className="bg-fuchsia-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">NEW</span>
           </Link>
-        </div>
-        <nav className="flex flex-1 items-center space-x-6 text-sm font-medium">
-          <Link href="/support/faq" className="transition-colors hover:text-foreground/80 text-foreground/60">FAQ</Link>
-          <Link href="/support/contact" className="transition-colors hover:text-foreground/80 text-foreground/60">Contacto</Link>
-          <Link href="/support/privacy" className="transition-colors hover:text-foreground/80 text-foreground/60">Privacidad</Link>
-          <Link href="/support/terms" className="transition-colors hover:text-foreground/80 text-foreground/60">Términos</Link>
+          <Link href="/tutorials" className="px-3 py-1.5 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors">Tutoriales</Link>
+          <Link href="/join" className="px-3 py-1.5 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1.5">
+            Únete <span className="bg-fuchsia-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">NEW</span>
+          </Link>
+          <Link href="/support" className="px-3 py-1.5 rounded-full text-white bg-white/10 transition-colors">Ayuda</Link>
         </nav>
+
+        {/* Iniciar sesión */}
+        <Link href="/login" className="flex items-center gap-2 bg-black border border-fuchsia-500/40 px-5 py-2.5 rounded-full text-sm font-semibold text-white hover:bg-white/5 transition-all shadow-[0_0_20px_rgba(217,70,239,0.2)] hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] hover:border-fuchsia-400">
+          <Sparkles className="h-4 w-4 text-fuchsia-400" /> Iniciar sesión
+        </Link>
       </div>
     </header>
   );
