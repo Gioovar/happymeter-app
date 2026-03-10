@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getTickets } from "@/actions/tickets";
 import TicketsClientPage from "../../tickets/TicketsClientPage";
-import { prisma } from "@/lib/prisma";
+import { getDashboardContext } from "@/lib/auth-context";
 
 export const metadata = {
     title: "Incidencias Sucursal | HappyMeter",
@@ -16,49 +16,14 @@ export default async function BranchTicketsPage({ params }: { params: { branchSl
         redirect("/sign-in");
     }
 
-    // First, check if the slug is actually the current user's ID
-    // Single-branch owners get redirected to /dashboard/user_xxxxx
-    const isOwnerSlug = params.branchSlug === userId;
+    const context = await getDashboardContext(params.branchSlug);
+    if (!context) redirect("/dashboard");
 
-    let businessId = userId;
-    let businessName = "Sucursal";
-
-    if (!isOwnerSlug) {
-        // If it's not the owner's ID, it must be a Branch Slug (e.g., from Chains)
-        const branch = await prisma.chainBranch.findFirst({
-            where: { slug: params.branchSlug },
-            include: {
-                chain: { select: { ownerId: true } }
-            }
-        })
-
-        if (!branch) {
-            redirect("/dashboard/chains");
-        }
-
-        // Ensure user has access
-        const hasAccess = branch.chain.ownerId === userId || await prisma.teamMember.findFirst({
-            where: { userId, ownerId: branch.chain.ownerId }
-        })
-
-        if (!hasAccess) {
-            redirect("/dashboard/chains");
-        }
-
-        businessId = branch.chain.ownerId;
-        businessId = branch.chain.ownerId;
-        businessName = branch.name || "Sucursal";
-    } else {
-        // Fetch UserSettings for business name
-        const settings = await prisma.userSettings.findUnique({
-            where: { userId },
-            select: { businessName: true }
-        })
-        if (settings?.businessName) businessName = settings.businessName;
-    }
+    const businessId = context.userId;
+    const businessName = context.name;
 
     // Now, get tickets for the specific context.
-    const { success, tickets } = await getTickets(businessId);
+    const { success, tickets } = await getTickets(params.branchSlug);
 
     return (
         <div className="flex flex-col h-full bg-[#f8fafc] relative overflow-hidden">

@@ -3,31 +3,29 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
+import { getEffectiveUserId } from "@/lib/auth-context";
 
-export async function getTickets(businessId: string) {
+export async function getTickets(branchSlug?: string) {
     try {
         const { userId } = await auth();
         if (!userId) {
             return { success: false, error: "Unauthorized" };
         }
 
-        // Verify the user owns the chain that contains this branch or is a team member
-        const [isBranch, isMember] = await Promise.all([
-            prisma.chainBranch.findFirst({
-                where: { branchId: businessId, chain: { ownerId: userId } }
-            }),
-            prisma.teamMember.findFirst({
-                where: { ownerId: businessId, userId: userId }
-            })
-        ]);
+        const effectiveUserId = await getEffectiveUserId(branchSlug || undefined);
 
-        if (businessId !== userId && !isBranch && !isMember) {
+        if (!effectiveUserId) {
             return { success: false, error: "Unauthorized Access to Business Tickets" };
         }
 
+        // We fetch tickets either by effectiveUserId (which handles branches properly)
+        // or explicitly linking to the branchId/businessId scope
         const tickets = await prisma.issueTicket.findMany({
             where: {
-                businessId: businessId,
+                OR: [
+                    { businessId: effectiveUserId },
+                    { branchId: effectiveUserId }
+                ]
             },
             orderBy: {
                 createdAt: "desc",

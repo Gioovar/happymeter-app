@@ -2,15 +2,86 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getGeminiModel } from '@/lib/gemini'
+import { getEffectiveUserId } from '@/lib/auth-context'
+
+export async function GET(req: Request) {
+    try {
+        const { userId } = await auth()
+        if (!userId) return new NextResponse("Unauthorized", { status: 401 })
+
+        // 1. Obtener BranchSlug (Tenant Isolation)
+        const { searchParams } = new URL(req.url)
+        const branchSlug = searchParams.get('branchSlug')
+
+        // Determinar qué "userId" usar (Root o Miembro de Sucursal)
+        const effectiveUserId = await getEffectiveUserId(branchSlug || undefined)
+
+        if (!effectiveUserId) {
+            return new NextResponse("Branch not found or unauthorized", { status: 403 })
+        }
+
+        // 2. Fetch de datos más recientes de reputación
+        const latestReputation = await prisma.restaurantReputationScore.findFirst({
+            where: {
+                businessId: effectiveUserId
+            },
+            orderBy: {
+                createdAt: 'desc' // Traer el escaneo más certero/reciente
+            }
+        })
+
+        if (!latestReputation) {
+            // Auto-Generate First Time using POST's logic silently to prevent empty heatmaps
+            const result = await generateReputationLogic(effectiveUserId)
+            if (result.error) {
+                return NextResponse.json({ error: result.error, empty: true }, { status: 200 })
+            }
+            return NextResponse.json([result.data])
+        }
+
+        return NextResponse.json([latestReputation]) // Enviamos array para retro-compatibilidad del widget actual
+    } catch (error) {
+        console.error('[REPUTATION_GET_API_ERROR]', error)
+        return new NextResponse("Internal Server Error", { status: 500 })
+    }
+}
 
 export async function POST(req: Request) {
     try {
         const { userId } = await auth()
         if (!userId) return new NextResponse("Unauthorized", { status: 401 })
 
+        // 1. Obtener BranchSlug (Tenant Isolation)
+        const body = await req.json().catch(() => ({}))
+        const branchSlug = body.branchSlug
+
+        // Determinar qué "userId" usar (Root o Miembro de Sucursal)
+        const effectiveUserId = await getEffectiveUserId(branchSlug || undefined)
+
+        if (!effectiveUserId) {
+            return new NextResponse("Branch not found or unauthorized", { status: 403 })
+        }
+
+        const result = await generateReputationLogic(effectiveUserId)
+
+        if (result.error) {
+            return new NextResponse("Internal Server Error", { status: 500 })
+        }
+
+        return NextResponse.json(result.data)
+
+    } catch (error: any) {
+        console.error('[REPUTATION_API_POST_ERROR]', error)
+        return new NextResponse("Internal Server Error", { status: 500 })
+    }
+}
+
+// Shared Logic to generate AI analysis to avoid duplication between POST and Auto-GET
+async function generateReputationLogic(effectiveUserId: string) {
+    try {
         // Find business info
         const userSettings = await prisma.userSettings.findUnique({
-            where: { userId },
+            where: { userId: effectiveUserId },
             select: { industry: true, businessName: true }
         })
 
@@ -22,7 +93,7 @@ export async function POST(req: Request) {
 
         const recentFeedback = await prisma.response.findMany({
             where: {
-                survey: { userId },
+                survey: { userId: effectiveUserId },
                 createdAt: { gte: recentDate }
             },
             take: 200,
@@ -33,7 +104,7 @@ export async function POST(req: Request) {
         })
 
         if (recentFeedback.length === 0) {
-            return NextResponse.json({ error: "Not enough recent data to calculate reputation" }, { status: 400 })
+            return { error: "Not enough recent data to calculate reputation" }
         }
 
         // Extract textual and rating feedback to send to the AI
@@ -123,7 +194,7 @@ export async function POST(req: Request) {
         // Save into DB
         const savedReputation = await prisma.restaurantReputationScore.create({
             data: {
-                businessId: userId,
+                businessId: effectiveUserId,
                 generalScore: parseFloat(reputationData.generalScore),
                 serviceScore: parseFloat(reputationData.serviceScore),
                 foodScore: parseFloat(reputationData.foodScore),
@@ -134,10 +205,9 @@ export async function POST(req: Request) {
             }
         })
 
-        return NextResponse.json(savedReputation)
-
+        return { data: savedReputation }
     } catch (error: any) {
         console.error('[REPUTATION_API_ERROR]', error)
-        return new NextResponse("Internal Server Error", { status: 500 })
+        return { error: "Internal Server Error" }
     }
 }
