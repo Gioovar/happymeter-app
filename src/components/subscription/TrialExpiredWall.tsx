@@ -8,9 +8,9 @@ export default function TrialExpiredWall() {
     const router = useRouter()
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505] p-4 overflow-y-auto">
+        <div className="flex items-center justify-center p-4 min-h-[80vh] w-full">
             {/* Background Effects */}
-            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-2xl">
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-violet-600/10 blur-[120px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[120px]" />
             </div>
