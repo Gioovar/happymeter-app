@@ -58,6 +58,18 @@ const pwaConfig = withPWA({
     reloadOnOnline: true,
     runtimeCaching: [
         {
+            urlPattern: /^\/(dashboard|ops|admin)(\/.*)?$/i,
+            handler: 'NetworkFirst',
+            options: {
+                cacheName: 'app-pages-cache',
+                expiration: {
+                    maxEntries: 64,
+                    maxAgeSeconds: 60 * 60, // 1 hour max if offline
+                },
+                networkTimeoutSeconds: 5, // Fast fallback to cache if network is slow
+            },
+        },
+        {
             urlPattern: /^\/s\/.*/i,
             handler: 'NetworkFirst',
             options: {
