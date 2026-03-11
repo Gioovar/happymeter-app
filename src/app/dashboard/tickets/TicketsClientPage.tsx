@@ -10,10 +10,8 @@ import {
     AlertCircle,
     CheckCircle2,
     Clock,
-    Filter,
     MoreVertical,
     Plus,
-    Search,
     MessageSquareWarning,
     Flame,
     Archive
@@ -36,7 +34,6 @@ type Ticket = {
 
 export default function TicketsClientPage({ initialTickets, businessId }: { initialTickets: any[], businessId: string }) {
     const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
-    const [searchQuery, setSearchQuery] = useState("");
     const [isUpdating, setIsUpdating] = useState(false);
 
     const getSeverityColor = (severity: string) => {
@@ -77,10 +74,7 @@ export default function TicketsClientPage({ initialTickets, businessId }: { init
         setIsUpdating(false);
     };
 
-    const filteredTickets = tickets.filter(t =>
-        (t.title || t.category || "Sin título").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (t.description || t.aiContext || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );
+
 
     const columns = [
         { id: "OPEN", title: "Nuevas/Activas", icon: <MessageSquareWarning className="w-4 h-4 text-rose-400" />, borderColor: "border-rose-500/20", headerBg: "bg-rose-500/10", shadowGlow: "shadow-[0_0_30px_-5px_var(--tw-shadow-color)] shadow-rose-500/10" },
@@ -91,22 +85,6 @@ export default function TicketsClientPage({ initialTickets, businessId }: { init
     return (
         <div className="h-full flex flex-col space-y-6">
 
-            {/* Filters and Search Bar */}
-            <div className="flex items-center justify-between gap-4 bg-[#111] backdrop-blur-3xl border border-white/10 p-3.5 rounded-2xl shadow-xl z-20">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <input
-                        type="text"
-                        placeholder="Buscar ID, título o descripción..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50 transition-all placeholder:text-gray-600"
-                    />
-                </div>
-                <button className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/30">
-                    <Filter className="w-4 h-4" /> Filtros
-                </button>
-            </div>
 
             {/* AI Insights Section */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-4 border-b border-white/5">
@@ -129,7 +107,7 @@ export default function TicketsClientPage({ initialTickets, businessId }: { init
             {/* Kanban Board */}
             <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden pb-4">
                 {columns.map(col => {
-                    const columnTickets = filteredTickets.filter(t => t.status === col.id);
+                    const columnTickets = tickets.filter(t => t.status === col.id);
 
                     return (
                         <div key={col.id} className={`flex flex-col rounded-[24px] border border-white/5 bg-[#0A0A0A]/40 backdrop-blur-xl relative group/column ${col.shadowGlow} transition-all duration-500`}>
