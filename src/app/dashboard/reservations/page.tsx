@@ -28,7 +28,12 @@ export default async function ReservationsPage() {
     }
 
     // Resolve tenant ID
-    const { effectiveUserId } = await getActiveBusinessId()
+    const activeId = await getActiveBusinessId()
+    const effectiveUserId = activeId || user?.id
+
+    if (!effectiveUserId) {
+        return <div>Error: Sesión no válida</div>
+    }
 
     // Fetch existing floor plan
     const floorPlans = await getFloorPlans()
