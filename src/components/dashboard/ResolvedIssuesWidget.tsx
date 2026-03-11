@@ -88,14 +88,18 @@ export default function ResolvedIssuesWidget() {
 
     return (
         <FeatureGuard feature="ai_analytics">
-            <div className="flex flex-col h-full rounded-3xl bg-[#0F0F0F] border border-white/5 overflow-hidden shadow-2xl transition-all">
+            <div className="flex flex-col h-full rounded-[32px] bg-[#0A0A0A] border border-white/5 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.5)] transition-all group relative">
+                {/* Decorative background glow */}
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/5 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 group-hover:bg-amber-500/10 transition-all duration-700" />
 
                 {/* Header */}
                 <div className="p-6 pb-4 border-b border-white/5 flex items-center justify-between">
                     <div>
-                        <h3 className="text-xl font-bold flex items-center gap-2 text-white">
-                            <AlertTriangle className="w-5 h-5 text-amber-500 fill-amber-500/20" />
-                            Incidentes de Operación (IA)
+                        <h3 className="text-xl font-bold flex items-center gap-2 text-white/90">
+                            <div className="p-1.5 rounded-lg bg-amber-500/10">
+                                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                            </div>
+                            Memoria Dinámica (IA)
                         </h3>
                         <p className="text-xs text-gray-500 mt-1">
                             Resuelve problemas para entrenar la Memoria Dinámica de la IA.
@@ -116,60 +120,108 @@ export default function ResolvedIssuesWidget() {
                 <div className="flex-1 p-6 overflow-y-auto space-y-6">
 
                     {/* Active Incidents */}
-                    <div>
-                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Detectados Ahora</h4>
-                        {activeIncidents.length === 0 ? (
-                            <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] text-center">
-                                <CheckCircle className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
-                                <p className="text-xs text-gray-400">Todo en orden. No hay incidentes activos.</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {activeIncidents.map(incident => (
-                                    <div key={incident.id} className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                                        <h5 className="font-bold text-amber-400 text-sm mb-1">{incident.aiSummary || incident.title || 'Incidente no especificado'}</h5>
-                                        <p className="text-xs text-amber-200/60 mb-3">{incident.aiContext}</p>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => markAsResolved(incident.id, incident.aiSummary || 'Incidente', incident.aiContext || '')}
-                                                className="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-lg transition"
-                                            >
-                                                <Check className="w-3 h-3 inline mr-1" /> Ya lo solucioné
-                                            </button>
-                                        </div>
+                    <div className="relative">
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            Detectados Ahora
+                        </h4>
+
+                        <AnimatePresence mode="popLayout">
+                            {activeIncidents.length === 0 ? (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    className="p-6 rounded-[20px] border border-dashed border-white/10 bg-white/[0.01] text-center flex flex-col items-center justify-center min-h-[160px]"
+                                >
+                                    <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+                                        <CheckCircle className="w-6 h-6 text-emerald-500" />
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                    <p className="text-sm font-bold text-gray-300">Todo en orden operativo</p>
+                                    <p className="text-xs text-gray-500 mt-1">La IA no detecta incidentes activos críticos.</p>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="space-y-4"
+                                >
+                                    {activeIncidents.map((incident, idx) => (
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                            key={incident.id}
+                                            className="p-5 rounded-[20px] bg-gradient-to-br from-[#1a1510] to-[#120f0a] border border-amber-500/10 shadow-[0_8px_30px_rgb(0,0,0,0.5)] relative overflow-hidden group"
+                                        >
+                                            {/* Decorative amber glow */}
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-3xl rounded-full" />
+
+                                            <div className="relative z-10">
+                                                <h5 className="font-bold text-amber-500 text-sm mb-2 text-balance leading-snug">{incident.aiSummary || incident.title || 'Incidente no especificado'}</h5>
+                                                <p className="text-[13px] text-amber-200/50 mb-4 leading-relaxed font-medium line-clamp-2 group-hover:line-clamp-none transition-all duration-300">{incident.aiContext}</p>
+
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => markAsResolved(incident.id, incident.aiSummary || 'Incidente', incident.aiContext || '')}
+                                                        className="w-full py-2.5 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-black font-bold text-xs rounded-xl transition-all duration-300 flex items-center justify-center gap-2 border border-amber-500/20 hover:border-transparent"
+                                                    >
+                                                        <Check className="w-4 h-4" /> Ya lo solucioné en sitio
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Dynamic Memory History */}
-                    <div>
-                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center justify-between">
-                            Memoria Dinámica (Ignorados)
-                            <span className="bg-white/10 text-gray-400 px-2 py-0.5 rounded-full text-[10px]">{issues.length}</span>
+                    <div className="mt-8">
+                        <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center justify-between border-t border-white/5 pt-6">
+                            Memoria Dinámica (Aprendizaje IA)
+                            <span className="bg-white/5 border border-white/10 text-gray-400 px-2.5 py-1 rounded-full text-[10px] font-mono">{issues.length}</span>
                         </h4>
 
-                        {isLoading ? (
-                            <div className="animate-pulse h-12 bg-white/5 rounded-xl"></div>
-                        ) : issues.length === 0 ? (
-                            <p className="text-xs text-gray-600 italic">No hay historial de incidentes solucionados.</p>
-                        ) : (
-                            <div className="space-y-2">
-                                {issues.slice(0, 5).map(issue => (
-                                    <div key={issue.id} className="flex items-start gap-3 p-3 rounded-xl border border-white/5 bg-[#151515]">
-                                        <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-xs text-gray-300 font-medium line-clamp-1">{issue.issueSummary}</p>
-                                            <p className="text-[10px] text-gray-600 flex items-center gap-1 mt-1">
-                                                <Clock className="w-3 h-3" />
-                                                Resuelto el {new Date(issue.createdAt).toLocaleDateString()}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <AnimatePresence>
+                            {isLoading ? (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="h-16 bg-white/5 rounded-2xl animate-pulse"></div>
+                                    ))}
+                                </motion.div>
+                            ) : issues.length === 0 ? (
+                                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-gray-600 italic text-center py-4">No hay historial de incidentes solucionados.</motion.p>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="space-y-3"
+                                >
+                                    {issues.slice(0, 5).map((issue, idx) => (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                            key={issue.id}
+                                            className="flex items-start gap-3 p-4 rounded-2xl border border-white/5 bg-[#121212] hover:bg-[#151515] transition-colors group"
+                                        >
+                                            <div className="p-1.5 rounded-full bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors shrink-0 mt-0.5">
+                                                <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[13px] text-gray-300 font-medium line-clamp-2 leading-relaxed">{issue.issueSummary}</p>
+                                                <p className="text-[11px] text-gray-500 font-medium flex items-center gap-1.5 mt-2">
+                                                    <Clock className="w-3.5 h-3.5 opacity-70" />
+                                                    Resuelto el {new Date(issue.createdAt).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                 </div>

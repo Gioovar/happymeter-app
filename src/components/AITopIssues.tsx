@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { Zap, AlertTriangle, CheckCircle, BrainCircuit, Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface Issue {
     title: string
@@ -51,31 +52,53 @@ export default function AITopIssues() {
 
     if (!hasAnalyzed) {
         return (
-            <div className="h-full min-h-[250px] flex flex-col items-center justify-center text-center p-6 bg-white/5 rounded-xl border border-white/5 group hover:border-violet-500/30 transition-all cursor-pointer" onClick={handleAnalyze}>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="h-full min-h-[300px] flex flex-col items-center justify-center text-center p-8 bg-[#0a0a0a]/50 backdrop-blur-sm rounded-[24px] border border-white/5 relative overflow-hidden group cursor-pointer"
+                onClick={handleAnalyze}
+            >
+                {/* Background glow effects */}
+                <div className="absolute inset-0 bg-gradient-to-b from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-violet-600/20 blur-[60px] rounded-full pointer-events-none group-hover:bg-violet-600/30 transition-all duration-700" />
+
                 {isLoading ? (
-                    <div className="flex flex-col items-center animate-pulse">
-                        <BrainCircuit className="w-12 h-12 text-violet-400 mb-4 animate-spin-slow" />
-                        <h3 className="text-white font-bold text-lg">Analizando Feedback...</h3>
-                        <p className="text-gray-400 text-sm mt-2">Nuestra IA está leyendo los comentarios...</p>
-                    </div>
-                ) : (
-                    <>
-                        <div className="w-16 h-16 rounded-full bg-violet-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition duration-300">
-                            <BrainCircuit className="w-8 h-8 text-violet-400" />
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-col items-center relative z-10"
+                    >
+                        <div className="relative mb-6">
+                            <div className="absolute inset-0 bg-violet-500/20 rounded-full blur-xl animate-pulse" />
+                            <BrainCircuit className="w-16 h-16 text-violet-400 animate-[spin_3s_linear_infinite]" />
                         </div>
-                        <h3 className="text-white font-bold text-lg mb-2">Análisis de IA</h3>
-                        <p className="text-gray-400 text-sm mb-4 max-w-[200px]">
-                            Detecta automáticamente los problemas más recurrentes usando Inteligencia Artificial.
+                        <h3 className="text-white font-black text-2xl tracking-tight mb-2">Escaneando Inteligencia Analítica...</h3>
+                        <p className="text-violet-200/60 font-medium">Procesando miles de variables en segundos.</p>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-col items-center relative z-10"
+                    >
+                        <div className="w-20 h-20 rounded-[20px] bg-gradient-to-br from-violet-500/20 to-fuchsia-500/10 border border-white/10 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(139,92,246,0.15)] group-hover:scale-110 group-hover:shadow-[0_0_50px_rgba(139,92,246,0.3)] transition-all duration-500">
+                            <BrainCircuit className="w-10 h-10 text-violet-400 group-hover:text-fuchsia-400 transition-colors duration-500" />
+                        </div>
+                        <h3 className="text-white font-black text-2xl tracking-tight mb-3">Diagnóstico Profundo (IA)</h3>
+                        <p className="text-gray-400 text-[15px] mb-8 max-w-[340px] leading-relaxed font-medium">
+                            Nuestra Inteligencia Artificial escanea cada reseña para identificar los <span className="text-violet-300">patrones críticos</span> ocultos en tu operación.
                         </p>
                         <button
-                            className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition"
+                            className="relative overflow-hidden group/btn bg-white text-black px-8 py-3.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.2)]"
                         >
-                            <Zap className="w-4 h-4 fill-white" />
-                            Analizar Ahora
+                            <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-violet-200 via-white to-violet-200 -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
+                            <Zap className="w-4 h-4 fill-black relative z-10" />
+                            <span className="relative z-10">Iniciar Diagnóstico</span>
                         </button>
-                    </>
+                    </motion.div>
                 )}
-            </div>
+            </motion.div>
         )
     }
 
@@ -117,47 +140,63 @@ export default function AITopIssues() {
             )}
 
             {/* Issues List - Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {issues?.map((issue, idx) => (
-                    <div key={idx} className="bg-[#1a1a1a] rounded-xl p-4 border-l-[6px] border-[#1a1a1a] hover:bg-[#202020] transition group flex flex-col gap-3"
-                        style={{
-                            borderLeftColor: issue.severity === 'HIGH' ? '#ef4444' : issue.severity === 'MEDIUM' ? '#f59e0b' : '#22c55e'
-                        }}
-                    >
-                        <div className="flex-1">
-                            <div className="flex justify-between items-start mb-2 gap-2">
-                                <h4 className="font-bold text-white text-base leading-tight">
-                                    {issue.title}
-                                    {issue.ticketId ? (
-                                        <span className="block mt-1 w-max bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-red-500/30">
-                                            Recurrente
-                                        </span>
-                                    ) : (
-                                        <span className="block mt-1 w-max bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-blue-500/30">
-                                            Nuevo
-                                        </span>
-                                    )}
-                                </h4>
-                                <span className={`shrink-0 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${issue.severity === 'HIGH' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
-                                    issue.severity === 'MEDIUM' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
-                                        'bg-green-500/10 border-green-500/20 text-green-500'
-                                    }`}>
-                                    {issue.severity === 'HIGH' ? 'ALTA' : issue.severity === 'MEDIUM' ? 'MEDIA' : 'BAJA'}
-                                </span>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, staggerChildren: 0.1 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pt-2"
+            >
+                <AnimatePresence>
+                    {issues?.map((issue, idx) => (
+                        <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.4, delay: idx * 0.1, ease: "easeOut" }}
+                            className="bg-[#111111]/80 backdrop-blur-xl rounded-[20px] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.4)] border border-white/5 hover:border-white/10 hover:shadow-violet-900/10 hover:-translate-y-1 transition-all group flex flex-col gap-4 relative overflow-hidden"
+                        >
+                            {/* Colorful animated side gradient based on severity */}
+                            <div className={`absolute left-0 top-0 bottom-0 w-1.5 opacity-70 group-hover:opacity-100 transition-opacity`}
+                                style={{
+                                    background: issue.severity === 'HIGH' ? 'linear-gradient(to bottom, #ef4444, transparent)' :
+                                        issue.severity === 'MEDIUM' ? 'linear-gradient(to bottom, #f59e0b, transparent)' :
+                                            'linear-gradient(to bottom, #22c55e, transparent)'
+                                }}
+                            />
+                            <div className="flex-1">
+                                <div className="flex justify-between items-start mb-2 gap-2">
+                                    <h4 className="font-bold text-white text-base leading-tight">
+                                        {issue.title}
+                                        {issue.ticketId ? (
+                                            <span className="block mt-1 w-max bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-red-500/30">
+                                                Recurrente
+                                            </span>
+                                        ) : (
+                                            <span className="block mt-1 w-max bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-blue-500/30">
+                                                Nuevo
+                                            </span>
+                                        )}
+                                    </h4>
+                                    <span className={`shrink-0 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${issue.severity === 'HIGH' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                                        issue.severity === 'MEDIUM' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
+                                            'bg-green-500/10 border-green-500/20 text-green-500'
+                                        }`}>
+                                        {issue.severity === 'HIGH' ? 'ALTA' : issue.severity === 'MEDIUM' ? 'MEDIA' : 'BAJA'}
+                                    </span>
+                                </div>
+
+                                <p className="text-gray-400 text-[13px] mb-4 leading-relaxed font-medium">{issue.summary}</p>
+
+                                <div className="flex items-start gap-3 p-3.5 bg-black/60 rounded-xl border border-white/5 group-hover:bg-violet-900/10 transition-colors">
+                                    <Zap className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                                    <p className="text-gray-300 text-xs italic font-semibold leading-relaxed">"{issue.recommendation}"</p>
+                                </div>
                             </div>
 
-                            <p className="text-gray-400 text-sm mb-4 leading-snug">{issue.summary}</p>
-
-                            <div className="flex items-start gap-3 p-3 bg-black/40 rounded-lg border border-white/5">
-                                <Zap className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
-                                <p className="text-gray-300 text-xs italic font-medium">"{issue.recommendation}"</p>
-                            </div>
-                        </div>
-
-                        {/* Smart Smart Ticket Actions */}
-                        <div className="flex items-center gap-2 pt-3 border-t border-white/5 mt-1">
-                            {issue.ticketId ? (
-                                <>
+                            {/* Smart Ticket Actions */}
+                            <div className="flex items-center gap-2 pt-4 border-t border-white/5 mt-auto">
+                                {issue.ticketId ? (
                                     <button
                                         onClick={async (e) => {
                                             const btn = e.currentTarget;
@@ -168,19 +207,17 @@ export default function AITopIssues() {
                                                 body: JSON.stringify({ status: 'RESOLVED', resolutionNotes: 'Resuelto por el gerente desde Análisis UI.' })
                                             });
                                             btn.innerHTML = "¡Resuelto!";
-                                            btn.className = "w-full mt-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 px-3 py-1.5 rounded-md text-xs font-bold transition";
+                                            btn.className = "w-full bg-emerald-500/20 text-emerald-400 px-4 py-2.5 rounded-xl text-xs font-bold transition";
                                         }}
-                                        className="w-full mt-2 bg-white/5 hover:bg-white/10 text-white px-3 py-1.5 rounded-md text-xs font-bold transition">
-                                        Marcar como Resuelto
+                                        className="w-full bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                                        <CheckCircle className="w-3.5 h-3.5" /> Marcar Resuelto
                                     </button>
-                                </>
-                            ) : (
-                                <>
+                                ) : (
                                     <button
                                         onClick={async (e) => {
                                             const btn = e.currentTarget;
                                             btn.disabled = true;
-                                            btn.innerHTML = "Creando...";
+                                            btn.innerHTML = "Creando Ticket...";
                                             await fetch('/api/issues', {
                                                 method: 'POST',
                                                 body: JSON.stringify({
@@ -190,18 +227,18 @@ export default function AITopIssues() {
                                                     aiSummary: issue.recommendation
                                                 })
                                             });
-                                            btn.innerHTML = "Ticket Creado";
-                                            btn.className = "w-full mt-2 bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 px-3 py-1.5 rounded-md text-xs font-bold transition";
+                                            btn.innerHTML = "¡Ticket Creado!";
+                                            btn.className = "w-full bg-violet-500/20 text-violet-400 px-4 py-2.5 rounded-xl text-xs font-bold transition";
                                         }}
-                                        className="w-full mt-2 bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-md text-xs font-bold transition">
-                                        Crear Ticket de Seguimiento
+                                        className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-lg shadow-violet-500/20 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                                        Generar Acción (Smart Ticket)
                                     </button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </motion.div>
 
             {/* Strengths Section */}
             {strengths && strengths.length > 0 && (
@@ -220,14 +257,17 @@ export default function AITopIssues() {
                 </div>
             )}
 
-            <div className="text-center mt-2">
+            <div className="text-center mt-6">
                 <button
                     onClick={handleAnalyze}
                     disabled={isLoading}
-                    className="text-xs text-violet-400 hover:text-white transition flex items-center justify-center gap-1 w-full opacity-50 hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="group relative inline-flex items-center justify-center px-6 py-2.5 bg-white/5 border border-white/10 hover:border-violet-500/50 hover:bg-violet-500/10 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
                 >
-                    <Loader2 className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
-                    {isLoading ? 'Analizando...' : 'Re-analizar'}
+                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-violet-600/0 via-violet-600/10 to-violet-600/0 -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
+                    <span className="relative flex items-center gap-2 text-xs font-bold text-gray-300 group-hover:text-white transition-colors">
+                        <Loader2 className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-violet-400' : 'group-hover:text-violet-400 transition-colors'}`} />
+                        {isLoading ? 'Analizando en vivo...' : 'Forzar Nuevo Análisis IA'}
+                    </span>
                 </button>
             </div>
         </div>
