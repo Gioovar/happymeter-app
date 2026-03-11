@@ -405,8 +405,8 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent Feedback Table - Takes 2 cols */}
-                <div className="lg:col-span-2 bg-[#111111] p-6 rounded-2xl border border-white/5">
+                {/* Recent Feedback Table - Full Width */}
+                <div className="lg:col-span-3 bg-[#111111] p-6 rounded-2xl border border-white/5">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="font-bold text-lg text-white">Feedback Reciente</h3>
                     </div>
@@ -471,8 +471,8 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
                     </div>
                 </div>
 
-                {/* Top Issues - Takes 1 col */}
-                <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 flex flex-col">
+                {/* Top Issues - Full Width Below */}
+                <div className="col-span-1 lg:col-span-3 bg-[#111111] p-6 rounded-2xl border border-white/5 flex flex-col">
                     <h3 className="font-bold text-lg mb-4">Problemas Detectados (IA)</h3>
                     <div className="flex-1 min-h-[300px]">
                         <FeatureGuard feature="ai_analytics">

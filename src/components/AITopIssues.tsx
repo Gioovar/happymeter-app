@@ -116,29 +116,29 @@ export default function AITopIssues() {
                 </div>
             )}
 
-            {/* Issues List */}
-            <div className="space-y-3">
+            {/* Issues List - Grid Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {issues?.map((issue, idx) => (
                     <div key={idx} className="bg-[#1a1a1a] rounded-xl p-4 border-l-[6px] border-[#1a1a1a] hover:bg-[#202020] transition group flex flex-col gap-3"
                         style={{
                             borderLeftColor: issue.severity === 'HIGH' ? '#ef4444' : issue.severity === 'MEDIUM' ? '#f59e0b' : '#22c55e'
                         }}
                     >
-                        <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <h4 className="font-bold text-white text-base flex items-center gap-2">
+                        <div className="flex-1">
+                            <div className="flex justify-between items-start mb-2 gap-2">
+                                <h4 className="font-bold text-white text-base leading-tight">
                                     {issue.title}
                                     {issue.ticketId ? (
-                                        <span className="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-red-500/30">
+                                        <span className="block mt-1 w-max bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-red-500/30">
                                             Recurrente
                                         </span>
                                     ) : (
-                                        <span className="bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-blue-500/30">
+                                        <span className="block mt-1 w-max bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-blue-500/30">
                                             Nuevo
                                         </span>
                                     )}
                                 </h4>
-                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${issue.severity === 'HIGH' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                                <span className={`shrink-0 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${issue.severity === 'HIGH' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
                                     issue.severity === 'MEDIUM' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
                                         'bg-green-500/10 border-green-500/20 text-green-500'
                                     }`}>
@@ -168,9 +168,9 @@ export default function AITopIssues() {
                                                 body: JSON.stringify({ status: 'RESOLVED', resolutionNotes: 'Resuelto por el gerente desde Análisis UI.' })
                                             });
                                             btn.innerHTML = "¡Resuelto!";
-                                            btn.className = "flex-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 px-3 py-1.5 rounded-md text-xs font-bold transition";
+                                            btn.className = "w-full mt-2 bg-green-500/20 text-green-400 hover:bg-green-500/30 px-3 py-1.5 rounded-md text-xs font-bold transition";
                                         }}
-                                        className="flex-1 bg-white/5 hover:bg-white/10 text-white px-3 py-1.5 rounded-md text-xs font-bold transition">
+                                        className="w-full mt-2 bg-white/5 hover:bg-white/10 text-white px-3 py-1.5 rounded-md text-xs font-bold transition">
                                         Marcar como Resuelto
                                     </button>
                                 </>
@@ -191,9 +191,9 @@ export default function AITopIssues() {
                                                 })
                                             });
                                             btn.innerHTML = "Ticket Creado";
-                                            btn.className = "flex-1 bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 px-3 py-1.5 rounded-md text-xs font-bold transition";
+                                            btn.className = "w-full mt-2 bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 px-3 py-1.5 rounded-md text-xs font-bold transition";
                                         }}
-                                        className="flex-1 bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-md text-xs font-bold transition">
+                                        className="w-full mt-2 bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-md text-xs font-bold transition">
                                         Crear Ticket de Seguimiento
                                     </button>
                                 </>
@@ -209,9 +209,9 @@ export default function AITopIssues() {
                     <h4 className="text-xs font-bold text-green-400 uppercase mb-2 flex items-center gap-1">
                         <CheckCircle className="w-3 h-3" /> Fortalezas Detectadas
                     </h4>
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                         {strengths.map((strength, idx) => (
-                            <div key={idx} className="bg-green-500/5 border border-green-500/10 rounded-lg p-3">
+                            <div key={idx} className="bg-green-500/5 border border-green-500/10 rounded-lg p-3 h-full">
                                 <h5 className="text-green-300 font-bold text-xs mb-1">{strength.title}</h5>
                                 <p className="text-green-400/80 text-[10px] italic">"{strength.summary}"</p>
                             </div>
