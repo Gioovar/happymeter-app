@@ -15,7 +15,12 @@ export default async function ResponsesWrapper({ effectiveUserId, isBranch }: Re
 
     const responses = await prisma.response.findMany({
         where: isBranch
-            ? { branchId: effectiveUserId }
+            ? {
+                OR: [
+                    { branchId: effectiveUserId },
+                    { survey: { userId: effectiveUserId } }
+                ]
+            }
             : { survey: { userId: effectiveUserId } },
         include: {
             survey: {
