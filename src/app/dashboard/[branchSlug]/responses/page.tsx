@@ -10,5 +10,5 @@ export default async function BranchResponsesPage({
     const context = await getDashboardContext(params.branchSlug)
     if (!context) redirect('/dashboard')
 
-    return <ResponsesWrapper effectiveUserId={context.userId} />
+    return <ResponsesWrapper effectiveUserId={context.userId} isBranch={context.isBranch} />
 }

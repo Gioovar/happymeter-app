@@ -2,13 +2,11 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import ResponsesWrapper from '@/components/responses/ResponsesWrapper'
 
+import { getDashboardContext } from '@/lib/auth-context'
+
 export default async function ResponsesPage() {
-    const { userId } = await auth()
-    if (!userId) redirect('/')
+    const context = await getDashboardContext()
+    if (!context) redirect('/')
 
-    const { getActiveBusinessId } = await import('@/lib/tenant')
-    const activeContextId = await getActiveBusinessId()
-    const effectiveUserId = activeContextId || userId
-
-    return <ResponsesWrapper effectiveUserId={effectiveUserId} />
+    return <ResponsesWrapper effectiveUserId={context.userId} isBranch={context.isBranch} />
 }

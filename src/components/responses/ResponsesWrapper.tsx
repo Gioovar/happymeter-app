@@ -3,9 +3,10 @@ import ResponsesClientPage from '@/components/responses/ResponsesClientPage'
 
 interface ResponsesWrapperProps {
     effectiveUserId: string
+    isBranch: boolean
 }
 
-export default async function ResponsesWrapper({ effectiveUserId }: ResponsesWrapperProps) {
+export default async function ResponsesWrapper({ effectiveUserId, isBranch }: ResponsesWrapperProps) {
     const branchInfo = await prisma.userSettings.findUnique({
         where: { userId: effectiveUserId },
         select: { businessName: true }
@@ -13,9 +14,9 @@ export default async function ResponsesWrapper({ effectiveUserId }: ResponsesWra
     const branchName = branchInfo?.businessName || ''
 
     const responses = await prisma.response.findMany({
-        where: {
-            survey: { userId: effectiveUserId }
-        },
+        where: isBranch
+            ? { branchId: effectiveUserId }
+            : { survey: { userId: effectiveUserId } },
         include: {
             survey: {
                 select: { title: true }
@@ -34,9 +35,9 @@ export default async function ResponsesWrapper({ effectiveUserId }: ResponsesWra
     })
 
     const tickets = await prisma.issueTicket.findMany({
-        where: {
-            businessId: effectiveUserId
-        },
+        where: isBranch
+            ? { branchId: effectiveUserId }
+            : { businessId: effectiveUserId },
         orderBy: {
             createdAt: 'desc'
         }
