@@ -19,13 +19,13 @@ export async function GET(req: Request) {
         })
         const activeUserIds = surveysWithUsers.map(s => s.userId)
 
-        const yesterday = subDays(new Date(), 1)
+        const yesterday = subDays(new Date(), 3) // Cambiado a 3 días (72h)
         const lastWeek = subDays(new Date(), 7)
         const twoWeeksAgo = subDays(new Date(), 14)
 
         for (const userId of activeUserIds) {
             // --- A. INACTIVITY CHECK ---
-            // Check if ANY survey has received a response in the last 24h
+            // Check if ANY survey has received a response in the last 72h
             const recentResponseCount = await prisma.response.count({
                 where: {
                     survey: { userId: userId },
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
                         userId: userId,
                         type: 'SYSTEM',
                         title: { contains: '📉 Alerta de Inactividad' },
-                        createdAt: { gte: yesterday }
+                        createdAt: { gte: subDays(new Date(), 1) } // Make sure we only alert once a day max
                     }
                 })
 
@@ -49,8 +49,8 @@ export async function GET(req: Request) {
                         data: {
                             userId: userId,
                             type: 'SYSTEM',
-                            title: '📉 Alerta de Inactividad (24h)',
-                            message: 'No hemos recibido ninguna encuesta en las últimas 24 horas. Verifica que los códigos QR estén visibles o que el staff esté solicitando feedback.',
+                            title: '📉 Alerta de Inactividad (72h)',
+                            message: 'No hemos recibido ninguna encuesta en los últimos 3 días. Verifica que los códigos QR estén visibles o que el staff esté solicitando feedback.',
                             meta: { branchId: userId }
                         }
                     })

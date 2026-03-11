@@ -255,7 +255,18 @@ export default function NotificationCenter() {
                                                         {notif.title}
                                                     </h4>
                                                     <span className="text-[10px] text-gray-500 whitespace-nowrap ml-2">
-                                                        {format(new Date(notif.createdAt || notif.timestamp || new Date()), "d MMM", { locale: es })}
+                                                        {(() => {
+                                                            try {
+                                                                const dt = new Date(notif.createdAt || notif.timestamp || new Date());
+                                                                return new Intl.DateTimeFormat('es-MX', {
+                                                                    timeZone: 'America/Mexico_City',
+                                                                    day: 'numeric',
+                                                                    month: 'short'
+                                                                }).format(dt);
+                                                            } catch (e) {
+                                                                return '';
+                                                            }
+                                                        })()}
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-gray-400 leading-relaxed line-clamp-2 group-hover:text-gray-300 transition-colors">

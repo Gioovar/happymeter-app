@@ -12,6 +12,8 @@ import { getFloorPlans, getDashboardReservations, getOtherBranchSchedules } from
 import { ReservationCalendar } from "@/components/dashboard/reservations/ReservationCalendar"
 import { NewReservationButton } from "@/components/dashboard/reservations/NewReservationButton"
 import { ReservationsList } from "@/components/dashboard/reservations/ReservationsList"
+import OccupancyRadarWidget from '@/components/dashboard/OccupancyRadarWidget'
+import ActiveTablesWidget from '@/components/dashboard/ActiveTablesWidget'
 import { prisma } from "@/lib/prisma"
 import { ReservationLinkButton } from "@/components/dashboard/reservations/ReservationLinkButton"
 import { getDashboardContext } from "@/lib/auth-context"
@@ -185,6 +187,12 @@ export default async function BranchReservationsPage({ params }: { params: { bra
                         <p className="text-2xl font-bold text-white">{stats.canceladas}</p>
                     </div>
                 </div>
+            </div>
+
+            {/* Real-Time Ops */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-8">
+                <OccupancyRadarWidget />
+                <ActiveTablesWidget />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

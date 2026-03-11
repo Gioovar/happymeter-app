@@ -187,11 +187,17 @@ export const getCachedAnalyticsData = async (userId: string | string[], surveyId
     const responsesByDate: Record<string, number> = {}
     const satisfactionByDate: Record<string, { sum: number, count: number }> = {}
 
-    const today = new Date()
+    const timeZone = 'America/Mexico_City'
+    const todayStr = new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+    const [month, day, year] = todayStr.split('/')
+    const today = new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0)
+
     for (let i = 29; i >= 0; i--) {
         const date = new Date(today)
         date.setDate(date.getDate() - i)
-        const dateString = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        // Keep English locale string representation for internal matching if preferred, but user wants Spanish "11 mar"
+        // so let's use es-MX.
+        const dateString = date.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })
         responsesByDate[dateString] = 0
         satisfactionByDate[dateString] = { sum: 0, count: 0 }
     }
@@ -202,7 +208,7 @@ export const getCachedAnalyticsData = async (userId: string | string[], surveyId
 
     bulkStatsResponses.forEach(r => {
         const date = new Date(r.createdAt)
-        const dateString = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        const dateString = date.toLocaleDateString('es-MX', { timeZone, month: 'short', day: 'numeric' })
 
         if (responsesByDate[dateString] !== undefined) {
             responsesByDate[dateString]++

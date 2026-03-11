@@ -204,7 +204,7 @@ export default function ResponsesClientPage({ initialResponses, initialTickets =
                     </div>
 
                     {/* Filters Toolbar */}
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 bg-[#111] p-2 rounded-2xl border border-white/5 overflow-x-auto w-full">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 bg-[#111] p-2 rounded-2xl border border-white/5 w-full relative z-30">
                         {/* Sentiment Tabs */}
                         <div className="w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                             <div className="flex bg-black/40 p-1 rounded-xl min-w-max">

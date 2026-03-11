@@ -118,7 +118,7 @@ export function DateRangePicker({
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]" onClick={() => setIsOpen(false)} />
-                    <div className="absolute top-full left-0 mt-4 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-left">
+                    <div className="absolute top-full right-0 mt-4 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                         <div className="bg-[#0f1115] border border-white/10 rounded-[24px] shadow-2xl p-6 w-auto min-w-[350px] overflow-hidden">
 
                             {/* Header */}
