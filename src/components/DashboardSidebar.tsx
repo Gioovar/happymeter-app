@@ -64,6 +64,7 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
                 else if (item.href === '/dashboard/reservations') finalHref = getUrl('reservations')
                 else if (item.href === '/dashboard/processes') finalHref = getUrl('processes')
                 else if (item.href === '/dashboard/games') finalHref = getUrl('games')
+                else if (item.href === '/dashboard/tickets') finalHref = getUrl('tickets')
                 else if (item.href.startsWith('/dashboard/')) {
                     // Fallback for not strictly mapped keys 
                     finalHref = item.href.replace('/dashboard', routerBasePath)

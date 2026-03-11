@@ -23,6 +23,7 @@ export const DashboardRoutes = {
     responses: (slug: string) => `/dashboard${slug ? `/${slug}` : ''}/responses`,
     createPrompt: (slug: string) => `/dashboard${slug ? `/${slug}` : ''}/create`,
     editSurvey: (slug: string, surveyId: string) => `/dashboard${slug ? `/${slug}` : ''}/edit/${surveyId}`,
+    tickets: (slug: string) => `/dashboard${slug ? `/${slug}` : ''}/tickets`,
 
     // Sub-Dashboards Operativos Independientes
     reservations: (slug: string) => `/dashboard${slug ? `/${slug}` : ''}/reservations`,

@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 import * as admin from 'firebase-admin';
 
 // Initialize Firebase Admin (Only once)
-if (!admin.apps.length) {
+if (!admin.apps.length && process.env.FIREBASE_PROJECT_ID) {
     try {
         admin.initializeApp({
             credential: admin.credential.cert({

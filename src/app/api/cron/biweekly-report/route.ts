@@ -8,7 +8,7 @@ import { getPublicSurveyAnalytics } from '@/actions/analytics';
 import { subDays } from 'date-fns';
 
 // Initialize Clients
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 let twilioClient: any = null;
 
 if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {

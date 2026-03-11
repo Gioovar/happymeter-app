@@ -29,10 +29,8 @@ import LaserBorder from '@/components/ui/LaserBorder'
 import HelpModal from '@/components/HelpModal'
 import AIReportModal from '@/components/AIReportModal'
 import AnalyticsChart from '@/components/AnalyticsChart'
-import RestaurantHealthWidget from './RestaurantHealthWidget'
-import ReputationWidget from './ReputationWidget'
+
 import HeatmapWidget from './HeatmapWidget'
-import CriticalMomentsWidget from './CriticalMomentsWidget'
 
 import ResponsesModal from '@/components/ResponsesModal'
 import HappyLoader from '@/components/HappyLoader'
@@ -415,8 +413,8 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                         ))}
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2 rounded-3xl bg-[#0F0F0F] border border-white/5 p-1 relative overflow-hidden group flex flex-col">
+                    <div className="grid grid-cols-1 gap-6">
+                        <div className="rounded-3xl bg-[#0F0F0F] border border-white/5 p-1 relative overflow-hidden group flex flex-col">
                             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
                             <div className="relative z-10 bg-[#0a0a0a] rounded-[20px] p-6 flex flex-col flex-1 min-h-[350px]">
                                 <div className="flex justify-between items-center mb-6">
@@ -446,25 +444,15 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                 )}
                             </div>
                         </div>
-
-                        <div className="lg:col-span-1">
-                            <RestaurantHealthWidget />
-                        </div>
                     </div>
                     {/* Advanced Operations & Intelligence (Phase 2 & 3 Combined) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6 items-stretch">
-                        <div className="lg:col-span-1 h-full">
-                            <ReputationWidget />
-                        </div>
-                        <div className="lg:col-span-2 h-full">
+                    <div className="grid grid-cols-1 gap-6 mt-6 items-stretch">
+                        <div className="h-full">
                             <HeatmapWidget />
                         </div>
                     </div>
 
-                    {/* Predictive AI & Real-Time Ops (Phase 3) */}
-                    <div className="grid grid-cols-1 gap-6 mt-6">
-                        <CriticalMomentsWidget />
-                    </div>
+
 
                     <div className="space-y-6 mt-6">
                         <div className="flex items-center justify-between">

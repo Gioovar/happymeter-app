@@ -375,8 +375,38 @@ export async function getOpsTasks() {
             }
         });
 
-        // Combine both result sets
-        const allZones = [...zonesWhereManager, ...zonesWithAssignedTasks];
+        // 3. Zones that are completely unassigned (Cualquiera puede completar)
+        const unassignedZones = await prisma.processZone.findMany({
+            where: {
+                userId: member.ownerId, // Strict isolation to the business
+                assignedStaffId: null
+            },
+            include: {
+                tasks: {
+                    where: {
+                        assignedStaffId: null, // Only unassigned tasks
+                        days: { has: dayOfWeek }
+                    },
+                    include: {
+                        evidences: {
+                            where: {
+                                submittedAt: {
+                                    gte: todayStart,
+                                    lte: todayEnd
+                                }
+                            },
+                            take: 10,
+                            orderBy: { submittedAt: 'desc' }
+                        }
+                    }
+                }
+            }
+        });
+
+        const validUnassignedZones = unassignedZones.filter(z => z.tasks.length > 0);
+
+        // Combine all result sets
+        const allZones = [...zonesWhereManager, ...zonesWithAssignedTasks, ...validUnassignedZones];
 
         // Sort tasks within each zone
         allZones.forEach((zone: any) => {
