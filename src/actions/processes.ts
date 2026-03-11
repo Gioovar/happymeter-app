@@ -316,6 +316,10 @@ export async function getOpsTasks() {
 
         const zonesWhereManager = await prisma.processZone.findMany({
             where: {
+                OR: [
+                    { userId: member.ownerId },
+                    { branchId: member.ownerId }
+                ],
                 assignedStaffId: { in: memberIds }
             },
             include: {
@@ -341,6 +345,10 @@ export async function getOpsTasks() {
 
         const zonesWithAssignedTasks = await prisma.processZone.findMany({
             where: {
+                OR: [
+                    { userId: member.ownerId },
+                    { branchId: member.ownerId }
+                ],
                 tasks: {
                     some: {
                         assignedStaffId: { in: memberIds },
@@ -348,9 +356,13 @@ export async function getOpsTasks() {
                     }
                 },
                 // Exclude zones where I am already the manager
-                OR: [
-                    { assignedStaffId: null },
-                    { NOT: { assignedStaffId: { in: memberIds } } }
+                AND: [
+                    {
+                        OR: [
+                            { assignedStaffId: null },
+                            { NOT: { assignedStaffId: { in: memberIds } } }
+                        ]
+                    }
                 ]
             },
             include: {
@@ -378,7 +390,10 @@ export async function getOpsTasks() {
         // 3. Zones that are completely unassigned (Cualquiera puede completar)
         const unassignedZones = await prisma.processZone.findMany({
             where: {
-                userId: member.ownerId, // Strict isolation to the business
+                OR: [
+                    { userId: member.ownerId },
+                    { branchId: member.ownerId }
+                ],
                 assignedStaffId: null
             },
             include: {
