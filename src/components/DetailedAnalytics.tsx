@@ -61,7 +61,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-violet-500/20 transition-all duration-300 group relative overflow-hidden">
                     {/* Laser Border Effect */}
-                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#8b5cf6_360deg)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#8b5cf6_360deg)] animate-spin-slower opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
 
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
@@ -85,7 +85,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
 
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-yellow-500/20 transition-all duration-300 group relative overflow-hidden">
                     {/* Laser Border Effect */}
-                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#eab308_360deg)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#eab308_360deg)] animate-spin-slower opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
 
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
@@ -108,7 +108,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
 
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-blue-500/20 transition-all duration-300 group relative overflow-hidden">
                     {/* Laser Border Effect */}
-                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#3b82f6_360deg)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#3b82f6_360deg)] animate-spin-slower opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
 
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
@@ -133,7 +133,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
 
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-green-500/20 transition-all duration-300 group relative overflow-hidden">
                     {/* Laser Border Effect */}
-                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#22c55e_360deg)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#22c55e_360deg)] animate-spin-slower opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
 
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
@@ -229,7 +229,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
                 {/* Feedback Trend - Takes 2 cols */}
                 <div className="lg:col-span-2 bg-[#111111] p-6 rounded-2xl border border-white/5">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-bold text-lg">Tendencia de Feedback</h3>
+                        <h3 className="font-bold text-lg text-white">Tendencia de Feedback</h3>
                         <select className="bg-white/5 border border-white/10 rounded-lg text-xs px-2 py-1 text-gray-400 outline-none">
                             <option>Volumen Diario</option>
                             <option>Volumen Semanal</option>
@@ -250,6 +250,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
                                     itemStyle={{ color: '#fff' }}
+                                    labelStyle={{ color: '#9ca3af' }}
                                 />
                                 <Area type="monotone" dataKey="respuestas" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorVisits)" />
                             </AreaChart>
@@ -259,7 +260,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
 
                 {/* Sentiment Analysis - Takes 1 col */}
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 flex flex-col items-center justify-center">
-                    <h3 className="font-bold text-lg w-full text-left mb-4">Análisis de Sentimiento</h3>
+                    <h3 className="font-bold text-lg w-full text-left mb-4 text-white">Análisis de Sentimiento</h3>
                     <div className="h-[200px] w-full relative">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -295,7 +296,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
                                         return <Cell key={`cell-${index}`} fill={gradientId} style={{ filter: 'drop-shadow(0px 0px 4px rgba(255,255,255,0.2))' }} stroke="none" />;
                                     })}
                                 </Pie>
-                                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                                <Legend verticalAlign="bottom" height={36} iconType="circle" formatter={(value) => <span className="text-gray-300">{value}</span>} />
                             </PieChart>
                         </ResponsiveContainer>
                         {/* Center Text */}
@@ -407,11 +408,11 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
                 {/* Recent Feedback Table - Takes 2 cols */}
                 <div className="lg:col-span-2 bg-[#111111] p-6 rounded-2xl border border-white/5">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-bold text-lg">Feedback Reciente</h3>
+                        <h3 className="font-bold text-lg text-white">Feedback Reciente</h3>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
-                            <thead className="text-gray-500 border-b border-white/5">
+                            <thead className="text-gray-400 border-b border-white/5">
                                 <tr>
                                     <th className="py-3 font-medium">Usuario</th>
                                     <th className="py-3 font-medium">Comentario</th>
@@ -430,10 +431,10 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
                                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-xs font-bold">
                                                 {item.user.charAt(0)}
                                             </div>
-                                            <span className="font-medium">{item.user}</span>
+                                            <span className="font-medium text-gray-200">{item.user}</span>
                                         </td>
                                         <td className="py-4 text-gray-400 max-w-[300px] lg:max-w-[400px]">
-                                            <p className="line-clamp-2 text-sm" text-gray-400>{item.feedback}</p>
+                                            <p className="line-clamp-2 text-sm text-gray-400">{item.feedback}</p>
                                         </td>
                                         <td className="py-4">
                                             {isStaffSurvey ? (
