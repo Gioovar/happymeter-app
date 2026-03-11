@@ -30,7 +30,6 @@ import HelpModal from '@/components/HelpModal'
 import AIReportModal from '@/components/AIReportModal'
 import AnalyticsChart from '@/components/AnalyticsChart'
 
-import HeatmapWidget from './HeatmapWidget'
 
 import ResponsesModal from '@/components/ResponsesModal'
 import HappyLoader from '@/components/HappyLoader'
@@ -443,12 +442,6 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                     </FeatureGuard>
                                 )}
                             </div>
-                        </div>
-                    </div>
-                    {/* Advanced Operations & Intelligence (Phase 2 & 3 Combined) */}
-                    <div className="grid grid-cols-1 gap-6 mt-6 items-stretch">
-                        <div className="h-full">
-                            <HeatmapWidget />
                         </div>
                     </div>
 
