@@ -73,7 +73,7 @@ export default function ReservationSettings({ initialSettings }: ReservationSett
                                 type="number"
                                 value={settings.dailyPaxLimit || 50}
                                 onChange={(e) => setSettings(prev => ({ ...prev, dailyPaxLimit: parseInt(e.target.value) || 0 }))}
-                                className="w-32 bg-zinc-900 border-zinc-800"
+                                className="w-32 bg-zinc-900 border-zinc-800 text-white"
                             />
                             <span className="text-sm text-gray-500">personas máximo</span>
                         </div>

@@ -92,11 +92,31 @@ export default async function ReservationsPage() {
         if (resDate >= today && resDate <= nextWeek && res.status !== 'CANCELED') {
             stats.semana++
         }
-
-        if (res.status === 'CANCELED') {
-            stats.canceladas++
-        }
     })
+
+    stats.canceladas = reservations.filter((r: any) => r.status === 'CANCELED').length
+
+    // Calculate dynamic occupancy
+    let totalCapacity = 0
+    if (floorPlans && floorPlans.length > 0) {
+        floorPlans.forEach((fp: any) => {
+            if (fp.tables) {
+                fp.tables.forEach((t: any) => {
+                    totalCapacity += (t.capacity || 0)
+                })
+            }
+        })
+    }
+    
+    // User daily limit override if available
+    if (userSettings?.reservationSettings && (userSettings.reservationSettings as any).dailyPaxLimit) {
+        totalCapacity = (userSettings.reservationSettings as any).dailyPaxLimit
+    }
+
+    // Default to a sensible number if no capacity is set to avoid NaN
+    if (totalCapacity === 0) totalCapacity = 100
+
+    const occupancyPercentage = Math.min(100, Math.round((stats.personasHoy / totalCapacity) * 100))
 
     if (!floorPlans || floorPlans.length === 0) {
         return (
@@ -206,14 +226,18 @@ export default async function ReservationsPage() {
                         <div>
                             <div className="flex justify-between text-xs mb-2">
                                 <span className="text-gray-400">Ocupación Tool</span>
-                                <span className="text-white font-bold">65%</span>
+                                <span className="text-white font-bold">{occupancyPercentage}%</span>
                             </div>
                             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                <div className="h-full w-[65%] bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" />
+                                <div 
+                                    className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-1000" 
+                                    style={{ width: `${occupancyPercentage}%` }}
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     )
