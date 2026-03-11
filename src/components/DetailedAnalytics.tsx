@@ -61,7 +61,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-violet-500/20 transition-all duration-300 group relative overflow-hidden">
                     {/* Laser Border Effect */}
-                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#8b5cf6_360deg)] animate-spin-slower opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_50%,rgba(139,92,246,0.1)_70%,rgba(139,92,246,0.6)_95%,#8b5cf6_100%)] animate-spin-comet opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
 
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
@@ -85,7 +85,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
 
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-yellow-500/20 transition-all duration-300 group relative overflow-hidden">
                     {/* Laser Border Effect */}
-                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#eab308_360deg)] animate-spin-slower opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_50%,rgba(234,179,8,0.1)_70%,rgba(234,179,8,0.6)_95%,#eab308_100%)] animate-spin-comet opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
 
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
@@ -108,7 +108,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
 
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-blue-500/20 transition-all duration-300 group relative overflow-hidden">
                     {/* Laser Border Effect */}
-                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#3b82f6_360deg)] animate-spin-slower opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_50%,rgba(59,130,246,0.1)_70%,rgba(59,130,246,0.6)_95%,#3b82f6_100%)] animate-spin-comet opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
 
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">
@@ -133,7 +133,7 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
 
                 <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 hover:border-green-500/20 transition-all duration-300 group relative overflow-hidden">
                     {/* Laser Border Effect */}
-                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#22c55e_360deg)] animate-spin-slower opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="absolute inset-[-100%] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_50%,rgba(34,197,94,0.1)_70%,rgba(34,197,94,0.6)_95%,#22c55e_100%)] animate-spin-comet opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     <div className="absolute inset-[1px] rounded-2xl z-0 bg-[#111111]" />
 
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition z-10">

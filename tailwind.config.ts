@@ -18,6 +18,7 @@ const config: Config = {
 				'spin-reverse': 'spin-reverse 1s linear infinite',
 				'spin-slow': 'spin 4s linear infinite',
 				'spin-slower': 'spin 8s linear infinite',
+				'spin-comet': 'spin 12s linear infinite',
 				float: 'float 6s ease-in-out infinite',
 				'text-gradient': 'text-gradient 3s ease infinite',
 				'accordion-down': 'accordion-down 0.2s ease-out',
