@@ -471,16 +471,6 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
                     </div>
                 </div>
 
-                {/* Top Issues - Full Width Below */}
-                <div className="col-span-1 lg:col-span-3 bg-[#111111] p-6 rounded-2xl border border-white/5 flex flex-col">
-                    <h3 className="font-bold text-lg mb-4">Problemas Detectados (IA)</h3>
-                    <div className="flex-1 min-h-[300px]">
-                        <FeatureGuard feature="ai_analytics">
-                            <AITopIssues />
-                        </FeatureGuard>
-                    </div>
-                </div>
-
                 {/* Menu Insights Section - Full Width */}
                 <div className="lg:col-span-3">
                     <MenuInsights />

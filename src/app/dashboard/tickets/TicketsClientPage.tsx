@@ -18,6 +18,8 @@ import {
     Flame,
     Archive
 } from "lucide-react";
+import AITopIssues from "@/components/AITopIssues";
+import ResolvedIssuesWidget from "@/components/dashboard/ResolvedIssuesWidget";
 
 type Ticket = {
     id: string;
@@ -104,6 +106,24 @@ export default function TicketsClientPage({ initialTickets, businessId }: { init
                 <button className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/30">
                     <Filter className="w-4 h-4" /> Filtros
                 </button>
+            </div>
+
+            {/* AI Insights Section */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-4 border-b border-white/5">
+                <div className="bg-[#111] p-6 rounded-3xl border border-white/5 flex flex-col shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 blur-[80px] rounded-full pointer-events-none" />
+                    <h3 className="font-bold text-lg mb-4 text-white relative z-10 flex items-center gap-2">
+                        <MessageSquareWarning className="w-5 h-5 text-violet-400" />
+                        Problemas Detectados (IA)
+                    </h3>
+                    <div className="flex-1 relative z-10">
+                        <AITopIssues />
+                    </div>
+                </div>
+
+                <div className="h-full relative z-10">
+                    <ResolvedIssuesWidget />
+                </div>
             </div>
 
             {/* Kanban Board */}

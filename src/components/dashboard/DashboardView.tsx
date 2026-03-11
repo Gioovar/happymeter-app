@@ -34,7 +34,7 @@ import ReputationWidget from './ReputationWidget'
 import HeatmapWidget from './HeatmapWidget'
 import StaffImpactWidget from './StaffImpactWidget'
 import CriticalMomentsWidget from './CriticalMomentsWidget'
-import ResolvedIssuesWidget from './ResolvedIssuesWidget'
+
 import ResponsesModal from '@/components/ResponsesModal'
 import HappyLoader from '@/components/HappyLoader'
 import QRCodeModal from '@/components/QRCodeModal'
@@ -454,12 +454,9 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                     </div>
 
                     {/* Advanced Operations AI Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-                        <div className="lg:col-span-1 h-full">
+                    <div className="grid grid-cols-1 gap-6 items-stretch">
+                        <div className="w-full h-full">
                             <ReputationWidget />
-                        </div>
-                        <div className="lg:col-span-1 h-full">
-                            <ResolvedIssuesWidget />
                         </div>
                     </div>
 
