@@ -451,17 +451,12 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                             <RestaurantHealthWidget />
                         </div>
                     </div>
-
-                    {/* Advanced Operations AI Row */}
-                    <div className="grid grid-cols-1 gap-6 items-stretch">
-                        <div className="w-full h-full">
+                    {/* Advanced Operations & Intelligence (Phase 2 & 3 Combined) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6 items-stretch">
+                        <div className="lg:col-span-1 h-full">
                             <ReputationWidget />
                         </div>
-                    </div>
-
-                    {/* Advanced Customer Intelligence (Phase 2) */}
-                    <div className="grid grid-cols-1 gap-6 mt-6">
-                        <div className="w-full">
+                        <div className="lg:col-span-2 h-full">
                             <HeatmapWidget />
                         </div>
                     </div>

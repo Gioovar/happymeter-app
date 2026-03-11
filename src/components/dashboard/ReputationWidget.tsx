@@ -182,7 +182,7 @@ export default function ReputationWidget() {
                                 {renderStars(latestReputation.cleanlinessScore)}
                             </div>
                             <div className="space-y-1 col-span-2">
-                                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Tiempo de Atención</p>
+                                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Atención</p>
                                 {renderStars(latestReputation.speedScore)}
                             </div>
                         </div>
@@ -223,7 +223,7 @@ export default function ReputationWidget() {
 
                                     <ul className="space-y-3 bg-white/5 rounded-xl p-4 border border-white/5">
                                         <li><strong className="text-white">Lectura Semántica:</strong> La IA lee y comprende el contexto real de los comentarios abiertos, determinando si son quejas, elogios o sugerencias.</li>
-                                        <li><strong className="text-white">Métricas Específicas:</strong> Calcula promedios para categorías como Servicio, Comida, Ambiente, Limpieza y Tiempo de Atención.</li>
+                                        <li><strong className="text-white">Métricas Específicas:</strong> Calcula promedios para categorías como Servicio, Comida, Ambiente, Limpieza y Atención.</li>
                                         <li><strong className="text-white">Tendencia:</strong> Determina automáticamente la línea de tendencia de tu negocio (si está subiendo, bajando, o se mantiene estable en el mes actual).</li>
                                     </ul>
 
