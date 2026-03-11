@@ -30,12 +30,15 @@ async function getRpsData(userId: string) {
     });
 
     // Fetch branches for modal
-    const branches = await (prisma as any).branch.findMany({
+    const branches = await prisma.chainBranch.findMany({
         where: { chain: { ownerId: userId } },
-        select: { id: true, businessName: true }
+        include: { branch: true }
     });
 
-    const mappedBranches = branches.map((b: any) => ({ id: b.id, name: b.businessName || 'Sucursal' }));
+    const mappedBranches = branches.map((b: any) => ({ 
+        id: b.branchId, 
+        name: b.name || b.branch?.businessName || 'Sucursal' 
+    }));
 
     return { promoters, settings, branches: mappedBranches };
 }
