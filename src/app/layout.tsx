@@ -75,8 +75,8 @@ export default function RootLayout({
         }
       }}
     >
-      <html lang="es" suppressHydrationWarning>
-        <body className={inter.className}>
+      <html lang="es" suppressHydrationWarning className="bg-[#0a0a0a]">
+        <body className={`${inter.className} bg-[#0a0a0a] text-white min-h-screen`}>
           {children}
           <Toaster position="top-center" theme="dark" richColors closeButton />
           <Analytics />
