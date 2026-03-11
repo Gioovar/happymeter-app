@@ -103,6 +103,7 @@ export default function NewProcessPage() {
                 name,
                 description,
                 assignedStaffId,
+                branchId: branchSlug || undefined,
                 tasks: validTasks
             });
 
