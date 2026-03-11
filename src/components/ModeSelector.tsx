@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import {
@@ -14,11 +14,11 @@ import {
 import { useMemo } from 'react';
 import { NavigationMode, MODES } from '@/config/navigation';
 import { useDashboard } from '@/context/DashboardContext';
+import { useDashboardRouter } from '@/hooks/useDashboardRouter';
 
 export default function ModeSelector() {
     const pathname = usePathname();
-    const params = useParams();
-    const branchSlug = params?.branchSlug as string;
+    const { basePath } = useDashboardRouter();
 
     // Hide on Chain Dashboard and Corporate Chat views
     const isChainView = pathname === '/dashboard/chains' || pathname === '/dashboard/chat' || pathname === '/dashboard/team/chat';
@@ -42,12 +42,10 @@ export default function ModeSelector() {
                 const isLocked = !checkModuleAccess(mode.id);
 
                 let finalHref: string = mode.href;
-                if (branchSlug) {
-                    if (finalHref === '/dashboard') {
-                        finalHref = `/dashboard/${branchSlug}`;
-                    } else if (finalHref.startsWith('/dashboard/')) {
-                        finalHref = finalHref.replace('/dashboard', `/dashboard/${branchSlug}`);
-                    }
+                if (finalHref === '/dashboard') {
+                    finalHref = basePath;
+                } else if (finalHref.startsWith('/dashboard/')) {
+                    finalHref = finalHref.replace('/dashboard', basePath);
                 }
 
                 return (

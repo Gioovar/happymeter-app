@@ -35,8 +35,8 @@ const getActiveMode = (pathname: string | null): NavigationMode => {
 function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => void }) {
     const pathname = usePathname()
     const searchParams = useSearchParams()
-    const { checkFeature, activeContextRole, basePath } = useDashboard()
-    const { getUrl } = useDashboardRouter()
+    const { checkFeature, activeContextRole } = useDashboard()
+    const { getUrl, basePath: routerBasePath } = useDashboardRouter()
 
     const activeMode = getActiveMode(pathname)
     const currentModeItems = NAVIGATION_CONFIG[activeMode] || []
@@ -56,18 +56,17 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
                 const Icon = item.icon
 
                 // Dynamic Router translation
-                let finalHref = basePath; // default homepage fallback
+                let finalHref = routerBasePath; // default homepage fallback
 
                 // Check mapping between config href literals and DashboardRoutes RouteKeys
-                // Depending on the legacy config, mapping it manually:
                 if (item.href === '/dashboard') finalHref = getUrl('home')
                 else if (item.href === '/dashboard/reports') finalHref = getUrl('reports')
                 else if (item.href === '/dashboard/reservations') finalHref = getUrl('reservations')
                 else if (item.href === '/dashboard/processes') finalHref = getUrl('processes')
                 else if (item.href === '/dashboard/games') finalHref = getUrl('games')
                 else if (item.href.startsWith('/dashboard/')) {
-                    // Fallback for not strictly mapped keys (e.g., config is extending faster than dict)
-                    finalHref = item.href.replace('/dashboard', basePath)
+                    // Fallback for not strictly mapped keys 
+                    finalHref = item.href.replace('/dashboard', routerBasePath)
                 } else {
                     finalHref = item.href
                 }
@@ -152,7 +151,7 @@ export default function DashboardSidebar({
     const [isSalesModalOpen, setIsSalesModalOpen] = useState(false)
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
     const pathname = usePathname()
-    const { getUrl } = useDashboardRouter()
+    const { getUrl, basePath: routerBasePath } = useDashboardRouter()
 
     // Helper to get chain dashboard url
     const firstBranchUrl = '/dashboard/chains'
@@ -164,7 +163,7 @@ export default function DashboardSidebar({
         <>
             <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#111]">
                 <div>
-                    <Link href={basePath} className="block hover:opacity-90 transition-opacity">
+                    <Link href={routerBasePath} className="block hover:opacity-90 transition-opacity">
                         <BrandLogo className="mb-1" />
                     </Link>
                     {(() => {
