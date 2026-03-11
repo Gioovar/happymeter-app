@@ -432,8 +432,8 @@ export default function DetailedAnalytics({ data, isStaffSurvey = false }: Detai
                                             </div>
                                             <span className="font-medium">{item.user}</span>
                                         </td>
-                                        <td className="py-4 text-gray-400 max-w-[200px] truncate" title={item.feedback}>
-                                            {item.feedback}
+                                        <td className="py-4 text-gray-400 max-w-[300px] lg:max-w-[400px]">
+                                            <p className="line-clamp-2 text-sm" text-gray-400>{item.feedback}</p>
                                         </td>
                                         <td className="py-4">
                                             {isStaffSurvey ? (
