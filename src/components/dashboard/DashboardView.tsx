@@ -32,7 +32,6 @@ import AnalyticsChart from '@/components/AnalyticsChart'
 import RestaurantHealthWidget from './RestaurantHealthWidget'
 import ReputationWidget from './ReputationWidget'
 import HeatmapWidget from './HeatmapWidget'
-import StaffImpactWidget from './StaffImpactWidget'
 import CriticalMomentsWidget from './CriticalMomentsWidget'
 
 import ResponsesModal from '@/components/ResponsesModal'
@@ -461,12 +460,9 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                     </div>
 
                     {/* Advanced Customer Intelligence (Phase 2) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                        <div className="lg:col-span-2">
+                    <div className="grid grid-cols-1 gap-6 mt-6">
+                        <div className="w-full">
                             <HeatmapWidget />
-                        </div>
-                        <div className="lg:col-span-1">
-                            <StaffImpactWidget />
                         </div>
                     </div>
 
