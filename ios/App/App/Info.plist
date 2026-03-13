@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>HappyMeters</string>
+	<string>Happy RP</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,6 +26,10 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Esta aplicación requiere acceso a la cámara para escanear los códigos QR de las tarjetas de lealtad de los clientes.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Esta aplicación requiere permiso para guardar fotos en tu galería cuando tomas capturas de los establecimientos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Esta aplicación necesita acceso a la galería para que puedas subir fotos de perfil o de tu negocio.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

@@ -71,8 +71,14 @@ export default function ReservationSettings({ initialSettings }: ReservationSett
                         <div className="flex items-center gap-3">
                             <Input
                                 type="number"
-                                value={settings.dailyPaxLimit || 50}
-                                onChange={(e) => setSettings(prev => ({ ...prev, dailyPaxLimit: parseInt(e.target.value) || 0 }))}
+                                value={settings.dailyPaxLimit ?? ''}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setSettings(prev => ({ 
+                                        ...prev, 
+                                        dailyPaxLimit: val === '' ? undefined : parseInt(val)
+                                    }))
+                                }}
                                 className="w-32 bg-zinc-900 border-zinc-800 text-white"
                             />
                             <span className="text-sm text-gray-500">personas máximo</span>

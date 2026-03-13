@@ -90,8 +90,8 @@ export default function Page() {
             <div className="hidden lg:block relative overflow-hidden bg-gray-100">
                 <div className="absolute inset-0">
                     <img
-                        src="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2670&auto=format&fit=crop"
-                        alt="Office Background"
+                        src="/105906.jpg"
+                        alt="Background"
                         className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-violet-900/40 to-transparent mix-blend-multiply" />
@@ -296,21 +296,28 @@ export default function Page() {
                                         colorText: '#111827', // gray-900
                                         colorTextSecondary: '#6b7280', // gray-500
                                         colorBackground: '#ffffff',
-                                        borderRadius: '0.75rem',
+                                        colorInputText: '#111827', // Explicitly dark text for inputs
+                                        borderRadius: '1rem', // Increased border radius
                                     },
                                     elements: {
                                         rootBox: "w-full",
-                                        card: "bg-transparent shadow-none p-0",
+                                        card: "bg-white shadow-2xl shadow-gray-200/50 border border-gray-100 rounded-2xl p-8 w-full",
                                         headerTitle: "text-2xl font-bold text-gray-900 mb-2",
                                         headerSubtitle: "text-gray-500 text-base",
 
-                                        socialButtonsBlockButton: "w-full h-12 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-xl",
+                                        socialButtonsBlockButton: "w-full h-12 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-xl transition-all shadow-sm flex items-center justify-center gap-3",
+                                        socialButtonsBlockButtonText: "!text-gray-700 font-semibold text-base",
+                                        socialButtonsProviderIcon: "w-5 h-5",
 
-                                        formFieldLabel: "text-gray-700 font-medium ml-1 mb-1.5",
-                                        formFieldInput: "bg-gray-50 border-gray-200 text-gray-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 h-12 rounded-xl transition-all",
+                                        formFieldLabel: "text-gray-700 font-medium ml-1 mb-1.5 text-sm",
+                                        formFieldInput: "bg-gray-50 border border-gray-200 text-gray-900 !text-gray-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:bg-white h-12 rounded-xl transition-all shadow-sm",
 
                                         footerActionText: "text-gray-500",
-                                        footerActionLink: "text-violet-600 hover:text-violet-700 font-bold"
+                                        footerActionLink: "text-violet-600 hover:text-violet-700 font-bold ml-1",
+                                        formButtonPrimary: "bg-violet-600 hover:bg-violet-700 h-12 rounded-xl font-bold transition-all shadow-lg shadow-violet-500/30",
+                                        dividerRow: "my-6 flex items-center",
+                                        dividerLine: "bg-gray-200 h-[1px] w-full",
+                                        dividerText: "text-gray-400 text-xs font-bold uppercase tracking-widest px-4",
                                     }
                                 }}
                                 forceRedirectUrl={redirectUrl}
