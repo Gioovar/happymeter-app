@@ -677,9 +677,6 @@ export async function acceptB2BReferralTerms() {
             data: { agreedToB2BReferral: true }
         });
 
-        // Revalidate the wallet page so the UI updates
-        revalidatePath('/rps/wallet');
-
         return { success: true };
     } catch (error) {
         console.error("Error accepting B2B referral terms:", error);
