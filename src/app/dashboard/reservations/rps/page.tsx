@@ -20,6 +20,9 @@ async function getRpsData(userId: string) {
         include: {
             reservations: {
                 where: { status: { in: ['CONFIRMED', 'CHECKED_IN'] } }
+            },
+            globalPromoter: {
+                select: { pin: true }
             }
         },
         orderBy: { createdAt: 'desc' }
@@ -143,6 +146,11 @@ export default async function RpsManagementPage() {
                                                 <div className="flex flex-col">
                                                     <span className="text-sm text-zinc-300">{promoter.phone}</span>
                                                     {promoter.email && <span className="text-xs text-zinc-500">{promoter.email}</span>}
+                                                    {promoter.globalPromoter?.pin ? (
+                                                        <span className="text-xs font-mono text-indigo-400 mt-1">PIN: {promoter.globalPromoter.pin}</span>
+                                                    ) : (
+                                                        <span className="text-xs text-amber-500 mt-1">Sin PIN (Falta registro)</span>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
