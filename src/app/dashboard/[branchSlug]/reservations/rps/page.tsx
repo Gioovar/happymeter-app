@@ -22,11 +22,23 @@ export default async function PromotersPage() {
     })
     const programId = loyaltyProgram?.id || ''
 
+    const settings = await prisma.userSettings.findUnique({
+        where: { userId: context.userId },
+        select: { businessName: true }
+    })
+
     // Flatten branches for selection
     const branches = chains?.flatMap(c => c.branches.map(b => ({
         id: b.branchId,
         name: b.name || b.branch.businessName || 'Sin nombre'
     }))) || []
+
+    if (!branches.some(b => b.id === context.userId)) {
+        branches.unshift({
+            id: context.userId,
+            name: settings?.businessName || 'Mi Negocio Principal'
+        })
+    }
 
     // Calculate Global Stats
     const totalPromoters = promoters?.length || 0

@@ -273,7 +273,7 @@ export async function sendPromoterNotification(promoterId: string, type: 'sms' |
 
         if (type === 'sms') {
             if (!promoter.phone) return { success: false, error: "El promotor no tiene teléfono registrado" }
-            const message = `Hola ${promoter.name}, este es el acceso a tu App de RP para ${businessName}. Entra a ${generalPortalLink} y usa tu código secreto: ${promoter.slug}`
+            const message = `Hola ${promoter.name}, has sido invitado como RP en ${businessName}. Entra a ${generalPortalLink} con tu número de teléfono para crear tu perfil y PIN de acceso.`
             return await sendSMS(promoter.phone, message)
         } else {
             if (!promoter.email) return { success: false, error: "El promotor no tiene correo registrado" }
@@ -309,10 +309,10 @@ export async function sendPromoterNotification(promoterId: string, type: 'sms' |
                                     
                                     <div style="background-color: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 30px;">
                                         <p style="margin: 0 0 8px 0; color: #71717a; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
-                                            TU CÓDIGO SECRETO DE RP ES:
+                                            TU CÓDIGO DE INVITACIÓN ES UNILINK:
                                         </p>
-                                        <p style="margin: 0; color: #18181b; font-size: 32px; font-weight: 900; font-family: monospace; letter-spacing: 2px;">
-                                            ${promoter.slug}
+                                        <p style="margin: 0; color: #18181b; font-size: 16px; font-weight: 500;">
+                                            Usa únicamente tu <strong>número de celular</strong> para acceder.
                                         </p>
                                     </div>
 
@@ -609,7 +609,7 @@ export async function verifyPromoterPhone(phone: string) {
     }
 }
 
-export async function setupGlobalPromoter(phone: string, pin: string, name: string, email: string, avatarBase64: string) {
+export async function setupGlobalPromoter(phone: string, pin: string, name: string, email: string, avatarBase64: string, bankAccount: string) {
     try {
         const cleanPhone = phone.replace(/[^0-9]/g, '');
 
@@ -620,6 +620,7 @@ export async function setupGlobalPromoter(phone: string, pin: string, name: stri
                 pin,
                 name,
                 email,
+                bankAccount,
                 avatarUrl: avatarBase64 || null
             },
             create: {
@@ -627,6 +628,7 @@ export async function setupGlobalPromoter(phone: string, pin: string, name: stri
                 pin,
                 name,
                 email,
+                bankAccount,
                 avatarUrl: avatarBase64 || null
             }
         });
@@ -658,6 +660,30 @@ export async function verifyGlobalPromoterPin(phone: string, pin: string) {
     } catch (error) {
         console.error("Error verifying global pin:", error);
         return { success: false, error: "Error del servidor." };
+    }
+}
+
+export async function acceptB2BReferralTerms() {
+    try {
+        const cookieStore = await cookies();
+        const phone = cookieStore.get('rps_global_session')?.value;
+
+        if (!phone) {
+            return { success: false, error: "No se encontró sesión activa" };
+        }
+
+        await (prisma as any).globalPromoter.update({
+            where: { phone },
+            data: { agreedToB2BReferral: true }
+        });
+
+        // Revalidate the wallet page so the UI updates
+        revalidatePath('/rps/wallet');
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error accepting B2B referral terms:", error);
+        return { success: false, error: "Error de servidor al aceptar los términos" };
     }
 }
 

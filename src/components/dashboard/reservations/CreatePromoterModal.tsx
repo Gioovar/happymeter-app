@@ -113,9 +113,14 @@ export function CreatePromoterModal({ branches }: CreatePromoterModalProps) {
                             <Label>Teléfono</Label>
                             <Input
                                 value={form.phone}
-                                onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))}
+                                onChange={e => {
+                                    let val = e.target.value
+                                    if (val.startsWith('+52')) val = val.substring(3).trim()
+                                    else if (val.startsWith('52') && val.replace(/[^0-9]/g, '').length === 12) val = val.substring(2).trim()
+                                    setForm(prev => ({ ...prev, phone: val.replace(/[^0-9]/g, '') }))
+                                }}
                                 placeholder="5512345678"
-                                className="bg-zinc-900 border-white/10"
+                                className="bg-zinc-900 border-white/10 font-mono"
                             />
                         </div>
                         <div className="space-y-2">
@@ -146,7 +151,7 @@ export function CreatePromoterModal({ branches }: CreatePromoterModalProps) {
                             <SelectTrigger className="bg-zinc-900 border-white/10">
                                 <SelectValue placeholder="Seleccionar sucursal" />
                             </SelectTrigger>
-                            <SelectContent className="bg-zinc-900 border-white/10 text-white">
+                            <SelectContent className="z-[100] bg-zinc-900 border-white/10 text-white">
                                 {branches.map(b => (
                                     <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                                 ))}
@@ -164,7 +169,7 @@ export function CreatePromoterModal({ branches }: CreatePromoterModalProps) {
                                 <SelectTrigger className="bg-zinc-900 border-white/10">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-white/10 text-white">
+                                <SelectContent className="z-[100] bg-zinc-900 border-white/10 text-white">
                                     <SelectItem value="PER_PERSON">Por Persona ($)</SelectItem>
                                     <SelectItem value="PERCENTAGE">Porcentaje (%)</SelectItem>
                                 </SelectContent>

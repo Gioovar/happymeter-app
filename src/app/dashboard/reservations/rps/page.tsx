@@ -9,6 +9,8 @@ import { CreatePromoterModal } from "@/components/dashboard/reservations/CreateP
 import { ConfigCommissionsModal } from "@/components/dashboard/reservations/ConfigCommissionsModal"
 import { CreateEventModal } from "@/components/dashboard/reservations/CreateEventModal"
 import { EditPromoterModal } from "@/components/dashboard/reservations/EditPromoterModal"
+import { DeleteRPButton } from "@/components/dashboard/reservations/DeleteRPButton"
+import { RPActionsDropdown } from "@/components/dashboard/reservations/RPActionsDropdown"
 
 export const metadata = {
     title: "Gestión de RPs | HappyMeter",
@@ -30,7 +32,7 @@ async function getRpsData(userId: string) {
 
     const settings = await (prisma.userSettings as any).findUnique({
         where: { userId },
-        select: { defaultCommissionPerPerson: true }
+        select: { defaultCommissionPerPerson: true, businessName: true }
     });
 
     // Fetch branches for modal
@@ -43,6 +45,14 @@ async function getRpsData(userId: string) {
         id: b.branchId, 
         name: b.name || b.branch?.businessName || 'Sucursal' 
     }));
+
+    // If no chain branches exist, or the parent itself isn't in the list, add the parent business as an option
+    if (!mappedBranches.some((b: any) => b.id === userId)) {
+        mappedBranches.unshift({
+            id: userId,
+            name: settings?.businessName || 'Mi Negocio Principal'
+        });
+    }
 
     return { promoters, settings, branches: mappedBranches };
 }
@@ -167,6 +177,8 @@ export default async function RpsManagementPage() {
                                                             Ver Detalle <Activity className="w-4 h-4" />
                                                         </Button>
                                                     </Link>
+                                                    <DeleteRPButton promoterId={promoter.id} promoterName={promoter.name} />
+                                                    <RPActionsDropdown promoterId={promoter.id} promoterSlug={promoter.slug} />
                                                 </div>
                                             </td>
                                         </tr>

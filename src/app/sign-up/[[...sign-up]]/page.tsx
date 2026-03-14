@@ -24,6 +24,7 @@ export default function Page() {
     const [tempEmail, setTempEmail] = useState('')
     const [error, setError] = useState('')
     const { signUp, isLoaded } = useSignUp()
+    const ref = searchParams.get('ref')
 
     useEffect(() => {
         const errCode = searchParams.get('err_code')
@@ -284,6 +285,7 @@ export default function Page() {
 
                             <SignUp
                                 initialValues={formValues}
+                                unsafeMetadata={ref ? { ref } : undefined}
                                 // localization={esES} // Handled globally in layout.tsx
                                 appearance={{
                                     // baseTheme: dark, // Removed Dark Theme

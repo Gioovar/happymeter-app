@@ -1,14 +1,22 @@
-import { getPublicPromoterPortal, getJefeTeamInfo } from "@/actions/promoters"
+import { getPublicPromoterPortal, getJefeTeamInfo, getGlobalPromoterWallet, logoutGlobalPromoter } from "@/actions/promoters"
 import { notFound, redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { QRCodeSVG } from "qrcode.react"
-import { Target, Users, DollarSign, Share2, Copy, BarChart3, ArrowUpRight, Calendar, User, Phone, MapPin, ChevronDown, Trophy, Medal, Star, CalendarHeart, Music } from "lucide-react"
+import { Target, Users, DollarSign, Share2, Copy, BarChart3, ArrowUpRight, Calendar, User, Phone, MapPin, ChevronDown, Trophy, Medal, Star, CalendarHeart, Music, LogOut, Sparkles } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import Image from "next/image"
 import Link from "next/link"
 import { TeamTab } from "./TeamTab"
@@ -49,6 +57,9 @@ export default async function PromoterPortal({ params }: { params: { slug: strin
     const { name, businessName, logoUrl, stats, upcomingReservations, upcomingEvents, phone, aiCoachTip, role, id: promoterId } = result.data
     const { gamification } = stats
 
+    const walletResponse = await getGlobalPromoterWallet(sessionCookie)
+    const globalProfile = walletResponse.data?.globalProfile
+
     let teamData: any = [];
     if (role === 'JEFE_RP') {
         const teamReq = await getJefeTeamInfo(slug);
@@ -69,23 +80,56 @@ export default async function PromoterPortal({ params }: { params: { slug: strin
             <div className="border-b border-white/5 bg-[#0a0a0f]/50 backdrop-blur-xl sticky top-0 z-50">
                 <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-zinc-400 hover:text-white" asChild>
+                        <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-zinc-400 hover:text-white shrink-0" asChild>
                             <Link href="/rps/wallet">
                                 <ChevronDown className="w-4 h-4 rotate-90" />
                             </Link>
                         </Button>
                         {logoUrl ? (
-                            <Image src={logoUrl} alt={businessName || ''} width={32} height={32} className="rounded-lg ring-1 ring-white/10" />
+                            <Image src={logoUrl} alt={businessName || ''} width={32} height={32} className="rounded-lg ring-1 ring-white/10 shrink-0" />
                         ) : (
-                            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-xs ring-1 ring-white/10">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-xs ring-1 ring-white/10 shrink-0">
                                 {businessName?.charAt(0)}
                             </div>
                         )}
-                        <span className="font-bold tracking-tight text-zinc-100">{businessName}</span>
+                        <span className="font-bold tracking-tight text-zinc-100 hidden sm:block truncate pr-2">{businessName}</span>
                     </div>
-                    <Badge variant="outline" className="border-indigo-500/30 text-indigo-400 bg-indigo-500/5">
-                        Portal de RP
-                    </Badge>
+                    
+                    {globalProfile && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="flex items-center gap-2 outline-none group bg-zinc-900/40 hover:bg-zinc-800/60 p-1 pl-3 rounded-full border border-white/5 transition-colors">
+                                <div className="text-right hidden sm:block">
+                                    <h2 className="font-bold text-sm leading-none text-white">{globalProfile.name.split(' ')[0]}</h2>
+                                </div>
+                                <div className="w-8 h-8 rounded-full overflow-hidden relative group-hover:scale-105 transition-transform border border-white/10 ring-1 ring-white/5">
+                                    {globalProfile.avatarUrl ? (
+                                        <Image src={globalProfile.avatarUrl} alt="Avatar" fill className="object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                                            <Image src="/assets/icons/logo-outline-purple.png" alt="HappyMeter RPS" width={16} height={16} className="opacity-90 grayscale brightness-200 contrast-200" />
+                                        </div>
+                                    )}
+                                </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 bg-zinc-900 border border-white/10 text-white rounded-xl shadow-2xl p-2 z-[100]">
+                                <DropdownMenuLabel className="font-normal p-2">
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-bold leading-none">{globalProfile.name}</p>
+                                        <p className="text-xs leading-none text-zinc-500 font-mono mt-1">{sessionCookie}</p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-white/10 my-1" />
+                                <DropdownMenuItem className="p-0 border-none focus:bg-transparent">
+                                    <form action={logoutGlobalPromoter} className="w-full">
+                                        <button type="submit" className="flex items-center w-full px-2 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer transition-colors">
+                                            <LogOut className="mr-2 h-4 w-4" />
+                                            <span>Cerrar sesión</span>
+                                        </button>
+                                    </form>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                 </div>
             </div>
 
@@ -132,13 +176,13 @@ export default async function PromoterPortal({ params }: { params: { slug: strin
                 {/* Primary Stats with Tabs */}
                 <Tabs defaultValue="today" className="space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <TabsList className="bg-zinc-900 border border-white/5 h-12 w-full sm:w-auto p-1 overflow-x-auto justify-start hide-scrollbars">
-                            <TabsTrigger value="today" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white h-full px-6">Hoy</TabsTrigger>
-                            <TabsTrigger value="allTime" className="data-[state=active]:bg-white/10 data-[state=active]:text-white h-full px-6">Histórico</TabsTrigger>
-                            <TabsTrigger value="ranking" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-black h-full px-6 font-bold shadow-lg shadow-amber-500/20">Nivel & Ranking</TabsTrigger>
-                            <TabsTrigger value="events" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white h-full px-6">Eventos</TabsTrigger>
+                        <TabsList className="bg-zinc-900 border border-white/5 h-12 w-full sm:w-auto p-1 overflow-x-auto justify-start hide-scrollbars whitespace-nowrap">
+                            <TabsTrigger value="today" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white h-full px-6 whitespace-nowrap">Hoy</TabsTrigger>
+                            <TabsTrigger value="allTime" className="data-[state=active]:bg-white/10 data-[state=active]:text-white h-full px-6 whitespace-nowrap">Histórico</TabsTrigger>
+                            <TabsTrigger value="ranking" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-black h-full px-6 font-bold shadow-lg shadow-amber-500/20 whitespace-nowrap">Nivel & Ranking</TabsTrigger>
+                            <TabsTrigger value="events" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white h-full px-6 whitespace-nowrap">Eventos</TabsTrigger>
                             {role === 'JEFE_RP' && (
-                                <TabsTrigger value="team" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white h-full px-6 flex items-center gap-2">
+                                <TabsTrigger value="team" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white h-full px-6 flex items-center gap-2 whitespace-nowrap">
                                     <Users className="w-4 h-4" />
                                     Mi Equipo
                                 </TabsTrigger>

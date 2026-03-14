@@ -117,6 +117,10 @@ model UserSettings {
   defaultCommissionPerPerson Float                       @default(0)
   weeklyGoalAttendees        Int?                        @default(50)
   monthlyGoalAttendees       Int?                        @default(200)
+  
+  // B2B Referral Program
+  referredByPromoterPhone    String? // Link to a GlobalPromoter who referred this business
+
   reservations               Reservation[]               @relation("BusinessReservations")
   fullName                   String?
   affiliateProfile           AffiliateProfile?
@@ -1277,8 +1281,13 @@ model GlobalPromoter {
   name          String?
   email         String?
   avatarUrl     String?
+  bankAccount   String?
   globalRpScore Float    @default(5.0) // Aggregated Global score
   totalReviews  Int      @default(0)
+  
+  // B2B Referral Program
+  agreedToB2BReferral Boolean @default(false)
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

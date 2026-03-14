@@ -22,6 +22,7 @@ export default function RpsGlobalLoginPortal() {
     // Profile Creation Data
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
+    const [bankAccount, setBankAccount] = useState('')
     const [photoBase64, setPhotoBase64] = useState<string | null>(null)
 
     const [promoterData, setPromoterData] = useState<{ name?: string, email?: string, avatarUrl?: string | null } | null>(null)
@@ -32,9 +33,15 @@ export default function RpsGlobalLoginPortal() {
         e.preventDefault()
         setError(null)
 
-        const cleanPhone = phone.replace(/[^0-9]/g, '')
-        if (cleanPhone.length < 10) {
-            setError("Por favor ingresa un número de teléfono válido (10 dígitos).")
+        let cleanPhone = phone.replace(/[^0-9]/g, '')
+        
+        // Auto-remove +52 country code if it got past the onChange or was typed as 52...
+        if (cleanPhone.length === 12 && cleanPhone.startsWith('52')) {
+            cleanPhone = cleanPhone.substring(2)
+        }
+
+        if (cleanPhone.length !== 10) {
+            setError("Por favor ingresa un número de teléfono válido a 10 dígitos.")
             return
         }
 
@@ -84,7 +91,7 @@ export default function RpsGlobalLoginPortal() {
         setError(null)
 
         if (!name || !email) {
-            setError("Por favor completa tu nombre y correo.")
+            setError("Por favor completa tu Nombre y Correo.")
             return
         }
         if (pin.length !== 4 || isNaN(Number(pin))) {
@@ -99,7 +106,7 @@ export default function RpsGlobalLoginPortal() {
         setIsLoading(true)
         try {
             // Provide a default empty avatar if none selected (can be handled backend side or default UI side later)
-            const setupRes = await setupGlobalPromoter(phone, pin, name, email, photoBase64 || "")
+            const setupRes = await setupGlobalPromoter(phone, pin, name, email, photoBase64 || "", bankAccount)
             if (setupRes.success) {
                 await createGlobalPromoterSession(phone)
                 router.push(`/rps/wallet`)
@@ -199,7 +206,11 @@ export default function RpsGlobalLoginPortal() {
                                             type="tel"
                                             placeholder="55 1234 5678"
                                             value={phone}
-                                            onChange={(e) => setPhone(e.target.value)}
+                                            onChange={(e) => {
+                                                let val = e.target.value
+                                                if (val.startsWith('+52')) val = val.substring(3).trim()
+                                                setPhone(val)
+                                            }}
                                             className="h-14 pl-12 bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:bg-black focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 rounded-2xl transition-all font-mono text-lg"
                                             autoComplete="off"
                                             disabled={isLoading}
@@ -266,24 +277,43 @@ export default function RpsGlobalLoginPortal() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Correo (Para recuperación)</label>
-                                        <div className="relative flex items-center">
-                                            <Mail className="absolute left-4 w-4 h-4 text-zinc-500" />
-                                            <Input
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                className="h-12 pl-10 bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:bg-black focus:border-indigo-500/50 rounded-xl"
-                                                disabled={isLoading}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4 pt-2">
+                                    <div className="space-y-4 pt-4 border-t border-white/5">
+                                        
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 text-center block">Nuevo PIN</label>
+                                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Teléfono Registrado (No Editable)</label>
+                                            <div className="relative flex items-center">
+                                                <Lock className="absolute left-4 w-4 h-4 text-emerald-500" />
+                                                <Input
+                                                    type="text"
+                                                    value={phone}
+                                                    className="h-12 pl-10 bg-black/80 border-white/5 text-zinc-500 font-mono focus:ring-0 cursor-not-allowed opacity-70"
+                                                    disabled
+                                                    readOnly
+                                                />
+                                            </div>
+                                            <p className="text-[10px] text-zinc-500 leading-tight">Tu número es la llave de acceso a todas tus sucursales actuales y futuras. Si solicitas cambiarlo, avisa a tu RH.</p>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Cuenta Bancaria / CLABE</label>
+                                            <div className="relative flex items-center">
+                                                <Input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    maxLength={18}
+                                                    value={bankAccount}
+                                                    onChange={(e) => setBankAccount(e.target.value.replace(/[^0-9]/g, ''))}
+                                                    placeholder="Ej. 123456789012345678 (La puedes poner ahora o después)"
+                                                    className="h-12 px-4 bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:bg-black focus:border-indigo-500/50 rounded-xl font-mono text-sm tracking-widest"
+                                                    disabled={isLoading}
+                                                />
+                                            </div>
+                                            <p className="text-[10px] text-indigo-400/80 leading-tight">Aquí recibirás todos los depósitos correspondientes a tus cortes y comisiones.</p>
+                                        </div>
+
+                                        <div className="space-y-2 pt-2">
+                                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 text-center block">Crea tu PIN de Acceso (4 Dígitos)</label>
                                             <Input
                                                 type="password"
                                                 inputMode="numeric"
@@ -318,7 +348,7 @@ export default function RpsGlobalLoginPortal() {
                                 <Button
                                     type="submit"
                                     disabled={isLoading || pin.length !== 4 || confirmPin.length !== 4 || !name || !email}
-                                    className="w-full h-14 mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-2xl text-[15px] shadow-[0_0_40px_rgba(99,102,241,0.2)] hover:shadow-[0_0_50px_rgba(99,102,241,0.4)] transition-all group/btn"
+                                    className="w-full h-14 mt-6 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-2xl text-[15px] shadow-[0_0_40px_rgba(99,102,241,0.2)] hover:shadow-[0_0_50px_rgba(99,102,241,0.4)] transition-all group/btn"
                                 >
                                     {isLoading ? (
                                         <div className="flex items-center gap-2">

@@ -72,13 +72,17 @@ export async function POST(req: Request) {
             }
         }
 
+        // Check for B2B Referral
+        const referredByPhone = evt.data.unsafe_metadata?.ref as string | undefined;
+
         // Create UserSettings first
         await prisma.userSettings.create({
             data: {
                 userId: id,
                 role: role as any,
                 plan: 'FREE',
-                maxSurveys: 3
+                maxSurveys: 3,
+                referredByPromoterPhone: referredByPhone || null
             }
         })
 

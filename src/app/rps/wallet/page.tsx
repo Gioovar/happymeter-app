@@ -1,10 +1,19 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { getGlobalPromoterWallet, logoutGlobalPromoter } from "@/actions/promoters"
-import { ShieldCheck, CalendarCheck, DollarSign, Wallet2, Sparkles, Building2, ChevronRight, LogOut, ArrowRight } from "lucide-react"
+import { ShieldCheck, CalendarCheck, DollarSign, Wallet2, Sparkles, Building2, ChevronRight, LogOut, ArrowRight, User } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import RpsPushInitializer from "@/components/rps/RpsPushInitializer"
+import { B2BReferralDialog } from "./B2BReferralDialog"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-MX', {
@@ -43,24 +52,81 @@ export default async function RpsWalletPage() {
             {/* Header */}
             <header className="sticky top-0 z-40 bg-black/50 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 ring-1 ring-white/10 overflow-hidden relative">
-                        {globalProfile.avatarUrl ? (
-                            <Image src={globalProfile.avatarUrl} alt="Avatar" fill className="object-cover" />
-                        ) : (
-                            <Sparkles className="w-5 h-5 text-white" />
-                        )}
+                    <div className="w-10 h-10 rounded-xl bg-indigo-600/20 flex items-center justify-center border border-indigo-500/30">
+                        <Wallet2 className="w-5 h-5 text-indigo-400" />
                     </div>
                     <div>
-                        <h1 className="font-bold text-lg leading-none">{globalProfile.name}</h1>
-                        <p className="text-xs text-zinc-400 font-mono mt-1">Nivel {globalProfile.rpScore >= 4.5 ? '🏆 Oro' : globalProfile.rpScore >= 4.0 ? '🥈 Plata' : '🥉 Bronce'}</p>
+                        <h1 className="font-bold text-lg leading-none">Mi Billetera RP</h1>
+                        <p className="text-xs text-zinc-400 font-medium mt-1">Gestión global</p>
                     </div>
                 </div>
 
-                <form action={logoutGlobalPromoter}>
-                    <button type="submit" className="p-2 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white transition-colors">
-                        <LogOut className="w-5 h-5" />
-                    </button>
-                </form>
+                <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center gap-3 outline-none group bg-zinc-900/40 hover:bg-zinc-800/60 p-1.5 pl-3 rounded-full border border-white/5 transition-colors">
+                        <div className="text-right hidden sm:block">
+                            <h2 className="font-bold text-sm leading-none text-white">{globalProfile.name.split(' ')[0]}</h2>
+                            <p className="text-[10px] text-zinc-400 font-mono mt-0.5">Nivel {globalProfile.rpScore >= 4.5 ? '🏆 Oro' : globalProfile.rpScore >= 4.0 ? '🥈 Plata' : '🥉 Bronce'}</p>
+                        </div>
+                        <div className="w-9 h-9 rounded-full overflow-hidden relative group-hover:scale-105 transition-transform border border-white/10 ring-1 ring-white/5">
+                            {globalProfile.avatarUrl ? (
+                                <Image src={globalProfile.avatarUrl} alt="Avatar" fill className="object-cover" />
+                            ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                                    <Image src="/assets/icons/logo-outline-purple.png" alt="HappyMeter RPS" width={20} height={20} className="opacity-90 grayscale brightness-200 contrast-200" />
+                                </div>
+                            )}
+                        </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-64 bg-zinc-900 border border-white/10 text-white rounded-xl shadow-2xl p-2 z-[100]">
+                        <DropdownMenuLabel className="font-normal p-2">
+                            <div className="flex flex-col space-y-1">
+                                <p className="text-sm font-bold leading-none">{globalProfile.name}</p>
+                                <p className="text-xs leading-none text-zinc-500 font-mono mt-1">{sessionPhone}</p>
+                            </div>
+                        </DropdownMenuLabel>
+                        
+                        {places.length > 0 && (
+                            <>
+                                <DropdownMenuSeparator className="bg-white/10 my-1" />
+                                <div className="px-2 py-1.5">
+                                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Mis Sucursales</p>
+                                    <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                                        {places.map((place: any) => (
+                                            <Link href={`/rps/${place.slug}`} key={place.businessId} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                                                <div className="w-6 h-6 rounded bg-black border border-white/10 overflow-hidden relative shrink-0">
+                                                    {place.logoUrl ? (
+                                                        <Image src={place.logoUrl} alt={place.name} fill className="object-cover" />
+                                                    ) : (
+                                                        <Building2 className="w-3 h-3 text-zinc-600 m-auto mt-1" />
+                                                    )}
+                                                </div>
+                                                <span className="text-sm font-medium truncate">{place.name}</span>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        <DropdownMenuSeparator className="bg-white/10 my-1" />
+                        
+                        {/* B2B Referral Trigger */}
+                        <div className="p-1">
+                            <B2BReferralDialog phone={globalProfile.phone} hasAgreed={globalProfile.agreedToB2BReferral} />
+                        </div>
+
+                        <DropdownMenuSeparator className="bg-white/10 my-1" />
+                        
+                        <DropdownMenuItem className="p-0 border-none focus:bg-transparent">
+                            <form action={logoutGlobalPromoter} className="w-full">
+                                <button type="submit" className="flex items-center w-full px-2 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer transition-colors">
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <span>Cerrar sesión</span>
+                                </button>
+                            </form>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </header>
 
             <div className="max-w-md mx-auto px-6 py-8 space-y-8 relative z-10">
