@@ -6,6 +6,7 @@ import Link from "next/link"
 import Image from "next/image"
 import RpsPushInitializer from "@/components/rps/RpsPushInitializer"
 import { B2BReferralDialog } from "./B2BReferralDialog"
+import { EditProfileDialog } from "./EditProfileDialog"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -110,6 +111,11 @@ export default async function RpsWalletPage() {
 
                         <DropdownMenuSeparator className="bg-white/10 my-1" />
                         
+                        {/* Profile Edit Trigger */}
+                        <div className="p-1">
+                            <EditProfileDialog profile={globalProfile} />
+                        </div>
+
                         {/* B2B Referral Trigger */}
                         <div className="p-1">
                             <B2BReferralDialog phone={globalProfile.phone} hasAgreed={globalProfile.agreedToB2BReferral} />

@@ -640,6 +640,45 @@ export async function setupGlobalPromoter(phone: string, pin: string, name: stri
     }
 }
 
+export async function updateGlobalPromoterProfile(name: string, email: string, bankAccount: string, avatarBase64: string | null) {
+    try {
+        const cookieStore = await cookies();
+        const phone = cookieStore.get('rps_global_session')?.value;
+
+        if (!phone) {
+            return { success: false, error: "No se encontró sesión activa" };
+        }
+
+        const dataToUpdate: any = {
+            name,
+            email,
+            bankAccount,
+        };
+
+        if (avatarBase64 !== null) {
+            dataToUpdate.avatarUrl = avatarBase64;
+        }
+
+        await (prisma as any).globalPromoter.update({
+            where: { phone },
+            data: dataToUpdate
+        });
+
+        // Update local profiles too to keep names synced
+        await prisma.promoterProfile.updateMany({
+            where: { phone },
+            data: { name, email }
+        });
+
+        revalidatePath('/rps/wallet');
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating global promoter profile:", error);
+        return { success: false, error: "Error de servidor al guardar perfil" };
+    }
+}
+
 export async function verifyGlobalPromoterPin(phone: string, pin: string) {
     try {
         const cleanPhone = phone.replace(/[^0-9]/g, '');
