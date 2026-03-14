@@ -5,7 +5,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { PromoterCommissionType } from "@prisma/client"
+import { PromoterCommissionType, PromoterRole } from "@prisma/client"
 import { sendSMS } from "@/lib/sms"
 import { DEFAULT_SENDER } from "@/lib/email"
 import { resend } from "@/lib/resend"
@@ -37,6 +37,7 @@ export async function createPromoter(data: {
     commissionValue: number
     branchId?: string
     slug: string
+    role?: PromoterRole
 }) {
     try {
         const { userId: ownerId } = await auth()

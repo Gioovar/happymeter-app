@@ -40,7 +40,8 @@ export function CreatePromoterModal({ branches }: CreatePromoterModalProps) {
         commissionType: 'PER_PERSON',
         commissionValue: '',
         branchId: '',
-        slug: ''
+        slug: '',
+        role: 'RP'
     })
 
     const generateSlug = (name: string) => {
@@ -58,7 +59,8 @@ export function CreatePromoterModal({ branches }: CreatePromoterModalProps) {
             ...form,
             commissionType: form.commissionType as any,
             commissionValue: parseFloat(form.commissionValue) || 0,
-            slug: form.slug || generateSlug(form.name)
+            slug: form.slug || generateSlug(form.name),
+            role: form.role as any
         })
 
         if (res.success) {
@@ -72,7 +74,8 @@ export function CreatePromoterModal({ branches }: CreatePromoterModalProps) {
                 commissionType: 'PER_PERSON',
                 commissionValue: '',
                 branchId: '',
-                slug: ''
+                slug: '',
+                role: 'RP'
             })
         } else {
             toast.error(res.error)
@@ -145,18 +148,35 @@ export function CreatePromoterModal({ branches }: CreatePromoterModalProps) {
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>Sucursal Asignada</Label>
-                        <Select onValueChange={v => setForm(prev => ({ ...prev, branchId: v }))}>
-                            <SelectTrigger className="bg-zinc-900 border-white/10">
-                                <SelectValue placeholder="Seleccionar sucursal" />
-                            </SelectTrigger>
-                            <SelectContent className="z-[100] bg-zinc-900 border-white/10 text-white">
-                                {branches.map(b => (
-                                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Sucursal Asignada</Label>
+                            <Select onValueChange={v => setForm(prev => ({ ...prev, branchId: v }))}>
+                                <SelectTrigger className="bg-zinc-900 border-white/10">
+                                    <SelectValue placeholder="Seleccionar" />
+                                </SelectTrigger>
+                                <SelectContent className="z-[100] bg-zinc-900 border-white/10 text-white">
+                                    {branches.map(b => (
+                                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Tipo de Perfil</Label>
+                            <Select
+                                value={form.role}
+                                onValueChange={v => setForm(prev => ({ ...prev, role: v }))}
+                            >
+                                <SelectTrigger className="bg-zinc-900 border-white/10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="z-[100] bg-zinc-900 border-white/10 text-white">
+                                    <SelectItem value="RP">RP (Promotor Estándar)</SelectItem>
+                                    <SelectItem value="JEFE_RP">Jefe de RPs (Coordinador)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { Target, Plus, Users, DollarSign, Activity } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { CreatePromoterModal } from "@/components/dashboard/reservations/CreatePromoterModal"
 import { ConfigCommissionsModal } from "@/components/dashboard/reservations/ConfigCommissionsModal"
@@ -147,8 +148,13 @@ export default async function RpsManagementPage() {
                                     return (
                                         <tr key={promoter.id} className="hover:bg-white/[0.02] transition-colors">
                                             <td className="px-6 py-4">
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-white">{promoter.name}</span>
+                                                <div className="flex flex-col items-start gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-white">{promoter.name}</span>
+                                                        {promoter.role === 'JEFE_RP' && (
+                                                            <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] px-1.5 py-0">Jefe</Badge>
+                                                        )}
+                                                    </div>
                                                     <span className="text-xs text-zinc-500">/{promoter.slug}</span>
                                                 </div>
                                             </td>
