@@ -22,7 +22,11 @@ export function B2BReferralDialog({ phone, hasAgreed }: { phone: string, hasAgre
 
     const referralLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'}/partners?ref=${phone}`
 
-    const handleAcceptTerms = async () => {
+    const handleAcceptTerms = async (e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault()
+            e.stopPropagation()
+        }
         setIsLoading(true)
         try {
             const res = await acceptB2BReferralTerms()
@@ -39,12 +43,20 @@ export function B2BReferralDialog({ phone, hasAgreed }: { phone: string, hasAgre
         }
     }
 
-    const copyToClipboard = () => {
+    const copyToClipboard = (e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault()
+            e.stopPropagation()
+        }
         navigator.clipboard.writeText(referralLink)
         toast.success("Enlace copiado al portapapeles")
     }
 
-    const handleShare = async () => {
+    const handleShare = async (e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault()
+            e.stopPropagation()
+        }
         if (navigator.share) {
             try {
                 await navigator.share({
@@ -133,8 +145,8 @@ export function B2BReferralDialog({ phone, hasAgreed }: { phone: string, hasAgre
                             </Button>
                         </div>
                     ) : (
-                        <div className="space-y-6 flex flex-col items-center animate-in fade-in zoom-in-95 duration-700">
-                            <div className="relative group">
+                        <div className="flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-700 w-full space-y-6">
+                            <div className="relative group mx-auto">
                                 <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
                                 <div className="relative bg-white p-5 rounded-3xl flex items-center justify-center border-4 border-white/10 shadow-2xl">
                                     <QRCodeSVG 
@@ -147,9 +159,9 @@ export function B2BReferralDialog({ phone, hasAgreed }: { phone: string, hasAgre
                                 </div>
                             </div>
                             
-                            <div className="w-full space-y-3">
-                                <div className="w-full pl-4 pr-1 py-1.5 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-between backdrop-blur-md">
-                                    <span className="text-xs font-mono text-zinc-400 truncate mr-2">{referralLink}</span>
+                            <div className="w-full flex flex-col items-center gap-3">
+                                <div className="w-full max-w-[320px] pl-4 pr-1 py-1.5 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-between backdrop-blur-md">
+                                    <span className="text-[11px] font-mono text-zinc-400 truncate mr-2">{referralLink}</span>
                                     <Button size="icon" variant="ghost" onClick={copyToClipboard} className="h-9 w-9 bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white shrink-0 rounded-xl transition-colors">
                                         <Copy className="h-4 w-4" />
                                     </Button>
@@ -157,7 +169,7 @@ export function B2BReferralDialog({ phone, hasAgreed }: { phone: string, hasAgre
                                 
                                 <Button 
                                     onClick={handleShare}
-                                    className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold h-12 shadow-[0_0_30px_rgba(139,92,246,0.3)] rounded-xl border border-white/10 transition-all duration-300"
+                                    className="w-full max-w-[320px] bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold h-12 shadow-[0_0_30px_rgba(139,92,246,0.3)] rounded-xl border border-white/10 transition-all duration-300"
                                 >
                                     <Share2 className="w-4 h-4 mr-2" />
                                     Compartir mi Link
