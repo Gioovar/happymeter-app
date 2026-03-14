@@ -670,7 +670,12 @@ export async function getGlobalPromoterWallet(phone: string) {
         if (!globalProfile) return { success: false, error: "Perfil no encontrado" };
 
         const localProfiles = await (prisma.promoterProfile as any).findMany({
-            where: { phone },
+            where: {
+                OR: [
+                    { phone: phone },
+                    { userId: phone }
+                ]
+            },
             include: {
                 business: {
                     select: {

@@ -437,163 +437,139 @@ export default function DashboardSidebar({
                     {
                         /* Link to Chains/Branches - ONLY show if it's the user's OWN context, not when managing someone else's branch */
                         (!isCreator && userRole !== 'STAFF' && userRole !== 'OPERATOR' && isOwnContext !== false) && (
-                            <div className="px-4 pb-3">
-                                {userPlan === 'FREE' ? (
-                                    <>
+                            <div className="px-4 pb-3 space-y-3">
+                                {/* Branch Selector or Create Branch */}
+                                {hasChain ? (
+                                    <div className="relative">
                                         <button
                                             type="button"
-                                            onClick={(e) => {
-                                                e.preventDefault()
-                                                e.stopPropagation()
-                                                toggleMobileMenu(false)
-                                                setIsSalesModalOpen(true)
-                                            }}
-                                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md hover:shadow-emerald-600/20 transition-all group text-left animate-pulse mb-3"
+                                            onClick={() => setIsModeSelectorOpen(!isModeSelectorOpen)}
+                                            className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group text-left"
                                         >
-                                            <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Mejorar Plan</span>
-                                                <span className="text-xs font-bold leading-tight">Activar Negocio</span>
-                                            </div>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.preventDefault()
-                                                e.stopPropagation()
-                                                toggleMobileMenu(false)
-                                                setIsInviteModalOpen(true)
-                                            }}
-                                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group text-left"
-                                        >
-                                            <Users className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                            <span className="text-xs font-bold leading-tight">Añadir Miembros</span>
-                                        </button>
-
-                                        <SalesModal
-                                            isOpen={isSalesModalOpen}
-                                            onOpenChange={setIsSalesModalOpen}
-                                        />
-                                        <InviteMemberModal
-                                            isOpen={isInviteModalOpen}
-                                            onOpenChange={setIsInviteModalOpen}
-                                            branchSlug={branchSlug}
-                                        />
-                                    </>
-                                ) : (
-                                    hasChain ? (
-                                        <div className="mb-3 relative">
-                                            {/* Quick Branch Selector */}
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsModeSelectorOpen(!isModeSelectorOpen)}
-                                                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group text-left"
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <Store className="w-4 h-4" />
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
-                                                        <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
-                                                    </div>
+                                            <div className="flex items-center gap-2">
+                                                <Store className="w-4 h-4" />
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
+                                                    <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
                                                 </div>
-                                                <ChevronDown className={cn("w-4 h-4 transition-transform", isModeSelectorOpen ? "rotate-180" : "")} />
-                                            </button>
+                                            </div>
+                                            <ChevronDown className={cn("w-4 h-4 transition-transform", isModeSelectorOpen ? "rotate-180" : "")} />
+                                        </button>
 
-                                            {isModeSelectorOpen && (
-                                                <div className="absolute top-full left-0 right-0 mt-2 md:bottom-full md:top-auto md:mt-0 md:mb-2 bg-[#18181b] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top md:origin-bottom">
+                                        {isModeSelectorOpen && (
+                                            <div className="absolute top-full left-0 right-0 mt-2 md:bottom-full md:top-auto md:mt-0 md:mb-2 bg-[#18181b] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top md:origin-bottom">
+                                                <div className="p-2 border-b border-white/5">
+                                                    <Link
+                                                        href="/dashboard/chains"
+                                                        onClick={() => {
+                                                            setIsModeSelectorOpen(false)
+                                                            toggleMobileMenu(false)
+                                                        }}
+                                                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-all group"
+                                                    >
+                                                        <div className="p-1.5 rounded-md bg-white/5">
+                                                            <LayoutDashboard className="w-4 h-4 text-gray-400 group-hover:text-white" />
+                                                        </div>
+                                                        <span className="text-sm font-medium">Panel Corporativo</span>
+                                                    </Link>
+                                                </div>
 
-                                                    {/* Header: Corporate View */}
-                                                    <div className="p-2 border-b border-white/5">
+                                                <div className="max-h-60 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                                    <p className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sucursales</p>
+                                                    {chains.flatMap(c => c.branches).map(branch => (
                                                         <Link
-                                                            href="/dashboard/chains"
+                                                            key={branch.id}
+                                                            href={`/dashboard/${branch.slug || branch.branchId}`}
                                                             onClick={() => {
                                                                 setIsModeSelectorOpen(false)
                                                                 toggleMobileMenu(false)
                                                             }}
-                                                            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-all group"
+                                                            className={cn(
+                                                                "flex items-center gap-2 px-3 py-2 rounded-lg transition-all group",
+                                                                (branch.slug === branchSlug || branch.branchId === branchSlug)
+                                                                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                                                    : "hover:bg-white/5 text-gray-400 hover:text-white"
+                                                            )}
                                                         >
-                                                            <div className="p-1.5 rounded-md bg-white/5">
-                                                                <LayoutDashboard className="w-4 h-4 text-gray-400 group-hover:text-white" />
-                                                            </div>
-                                                            <span className="text-sm font-medium">Panel Corporativo</span>
+                                                            <div className={cn(
+                                                                "w-2 h-2 rounded-full",
+                                                                (branch.slug === branchSlug || branch.branchId === branchSlug) ? "bg-amber-500" : "bg-gray-600 group-hover:bg-gray-500"
+                                                            )} />
+                                                            <span className="text-sm font-medium truncate">
+                                                                {branch.name || branch.branch?.businessName || 'Sucursal'}
+                                                            </span>
                                                         </Link>
-                                                    </div>
-
-                                                    {/* Branch List */}
-                                                    <div className="max-h-60 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                                                        <p className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sucursales</p>
-                                                        {chains.flatMap(c => c.branches).map(branch => (
-                                                            <Link
-                                                                key={branch.id}
-                                                                href={`/dashboard/${branch.slug || branch.branchId}`}
-                                                                onClick={() => {
-                                                                    setIsModeSelectorOpen(false)
-                                                                    toggleMobileMenu(false)
-                                                                }}
-                                                                className={cn(
-                                                                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-all group",
-                                                                    (branch.slug === branchSlug || branch.branchId === branchSlug)
-                                                                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                                                        : "hover:bg-white/5 text-gray-400 hover:text-white"
-                                                                )}
-                                                            >
-                                                                <div className={cn(
-                                                                    "w-2 h-2 rounded-full",
-                                                                    (branch.slug === branchSlug || branch.branchId === branchSlug) ? "bg-amber-500" : "bg-gray-600 group-hover:bg-gray-500"
-                                                                )} />
-                                                                <span className="text-sm font-medium truncate">
-                                                                    {branch.name || branch.branch.businessName || 'Sucursal'}
-                                                                </span>
-                                                            </Link>
-                                                        ))}
-                                                    </div>
+                                                    ))}
                                                 </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <CreateBranchModal
-                                                isFirstChain={true}
-                                                trigger={
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.preventDefault()
-                                                            e.stopPropagation()
-                                                            toggleMobileMenu(false)
-                                                        }}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group text-left mb-3"
-                                                    >
-                                                        <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
-                                                            <span className="text-xs font-bold leading-tight">Mis Sucursales</span>
-                                                        </div>
-                                                    </button>
-                                                }
-                                            />
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <CreateBranchModal
+                                        isFirstChain={true}
+                                        trigger={
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
                                                     e.preventDefault()
                                                     e.stopPropagation()
                                                     toggleMobileMenu(false)
-                                                    setIsInviteModalOpen(true)
                                                 }}
-                                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group text-left"
+                                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md hover:shadow-amber-600/20 transition-all group text-left"
                                             >
-                                                <Users className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                                <span className="text-xs font-bold leading-tight">Añadir Miembros</span>
+                                                <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Negocios</span>
+                                                    <span className="text-xs font-bold leading-tight">Nueva Sucursal</span>
+                                                </div>
                                             </button>
-                                            <InviteMemberModal
-                                                isOpen={isInviteModalOpen}
-                                                onOpenChange={setIsInviteModalOpen}
-                                                branchSlug={branchSlug}
-                                            />
-                                        </>
-                                    )
+                                        }
+                                    />
                                 )}
+
+                                {/* Free Plan Actions */}
+                                {userPlan === 'FREE' && (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            toggleMobileMenu(false)
+                                            setIsSalesModalOpen(true)
+                                        }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md hover:shadow-emerald-600/20 transition-all group text-left animate-pulse"
+                                    >
+                                        <Store className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-medium text-white/80 uppercase leading-none">Mejorar Plan</span>
+                                            <span className="text-xs font-bold leading-tight">Activar Negocio</span>
+                                        </div>
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        toggleMobileMenu(false)
+                                        setIsInviteModalOpen(true)
+                                    }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group text-left"
+                                >
+                                    <Users className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    <span className="text-xs font-bold leading-tight">Añadir Miembros</span>
+                                </button>
+
+                                <SalesModal
+                                    isOpen={isSalesModalOpen}
+                                    onOpenChange={setIsSalesModalOpen}
+                                />
+                                <InviteMemberModal
+                                    isOpen={isInviteModalOpen}
+                                    onOpenChange={setIsInviteModalOpen}
+                                    branchSlug={branchSlug}
+                                />
                             </div>
                         )
                     }
