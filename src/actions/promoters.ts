@@ -1005,34 +1005,27 @@ export async function createTeamPromoter(data: { name: string, phone: string, em
 
         const slug = generateSlug(data.name);
 
-        const newPromoter = await (prisma as any).promoterProfile.create({
+        const newPromoter = await prisma.promoterProfile.create({
             data: {
                 businessId: leader.businessId,
                 branchId: leader.branchId,
                 name: data.name,
                 email: data.email || null,
                 phone: cleanPhone || null,
-                userId: cleanPhone || data.email, // Using as global linking key
                 slug,
                 commissionType: data.commissionType,
                 commissionValue: data.commissionValue,
                 isActive: true,
-                role: 'RP' as any,
-                leaderId: leader.id as any
+                role: 'RP',
+                leaderId: leader.id
             }
         });
 
-        if (cleanPhone) {
-            await (prisma as any).globalPromoter.upsert({
-                where: { phone: cleanPhone },
-                update: {}, // Don't overwrite existing
-                create: {
-                    phone: cleanPhone,
-                    name: data.name,
-                    email: data.email || null,
-                    pin: Math.floor(1000 + Math.random() * 9000).toString() // Generate random pin for now
-                }
-            });
+        // Trigger the exact same notification system the Owner uses
+        if (data.email) {
+            await sendPromoterNotification(newPromoter.id, 'email')
+        } else if (cleanPhone) {
+            await sendPromoterNotification(newPromoter.id, 'sms')
         }
 
         revalidatePath(`/rps/${leaderSlug}`);
