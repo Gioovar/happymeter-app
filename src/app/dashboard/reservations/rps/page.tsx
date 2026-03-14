@@ -8,6 +8,7 @@ import Link from "next/link"
 import { CreatePromoterModal } from "@/components/dashboard/reservations/CreatePromoterModal"
 import { ConfigCommissionsModal } from "@/components/dashboard/reservations/ConfigCommissionsModal"
 import { CreateEventModal } from "@/components/dashboard/reservations/CreateEventModal"
+import { EditPromoterModal } from "@/components/dashboard/reservations/EditPromoterModal"
 
 export const metadata = {
     title: "Gestión de RPs | HappyMeter",
@@ -151,11 +152,14 @@ export default async function RpsManagementPage() {
                                                 <span className="text-sm font-medium text-emerald-400">{totalAttendees} pax</span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <Link href={`/dashboard/reservations/rps/${promoter.id}`}>
-                                                    <Button variant="ghost" size="sm" className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 gap-2">
-                                                        Ver Detalle <Activity className="w-4 h-4" />
-                                                    </Button>
-                                                </Link>
+                                                <div className="flex items-center gap-2">
+                                                    <EditPromoterModal promoter={promoter} branches={branches} />
+                                                    <Link href={`/dashboard/reservations/rps/${promoter.id}`}>
+                                                        <Button variant="ghost" size="sm" className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 gap-2">
+                                                            Ver Detalle <Activity className="w-4 h-4" />
+                                                        </Button>
+                                                    </Link>
+                                                </div>
                                             </td>
                                         </tr>
                                     )
