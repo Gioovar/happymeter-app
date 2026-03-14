@@ -46,7 +46,7 @@ export function ConfigCommissionsModal({ currentCommission }: ConfigCommissionsM
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className="border-white/10 gap-2">
+                <Button variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/5 gap-2">
                     <Settings className="w-4 h-4" />
                     Configurar Comisiones
                 </Button>

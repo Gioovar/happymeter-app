@@ -64,7 +64,7 @@ export function CreateEventModal() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className="border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/10 gap-2">
+                <Button variant="outline" className="bg-transparent border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/10 gap-2">
                     <CalendarPlus className="w-4 h-4" />
                     Publicar Evento RP
                 </Button>
