@@ -129,8 +129,8 @@ export function TeamTab({ leaderSlug, teamData }: TeamTabProps) {
 
             <Card className="bg-zinc-900 border-white/5">
                 <CardHeader>
-                    <CardTitle className="text-lg">Ranking del Equipo</CardTitle>
-                    <CardDescription>Rendimiento individual de tus promotores</CardDescription>
+                    <CardTitle className="text-lg text-zinc-100">Ranking del Equipo</CardTitle>
+                    <CardDescription className="text-zinc-400">Rendimiento individual de tus promotores</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="divide-y divide-white/5">
