@@ -2,7 +2,7 @@ import { getPublicPromoterPortal, getJefeTeamInfo, getGlobalPromoterWallet, logo
 import { notFound, redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { QRCodeSVG } from "qrcode.react"
-import { Target, Users, DollarSign, Share2, Copy, BarChart3, ArrowUpRight, Calendar, User, Phone, MapPin, ChevronDown, Trophy, Medal, Star, CalendarHeart, Music, LogOut, Sparkles } from "lucide-react"
+import { Target, Users, DollarSign, Share2, Copy, BarChart3, ArrowUpRight, Calendar, User, Phone, MapPin, ChevronDown, Trophy, Medal, Star, CalendarHeart, Music, LogOut, Sparkles, Building2 } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,8 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { TeamTab } from "./TeamTab"
+import { B2BReferralDialog } from "../wallet/B2BReferralDialog"
+import { EditProfileDialog } from "../wallet/EditProfileDialog"
 
 const getStatusBadge = (status: string) => {
     switch (status) {
@@ -59,6 +61,7 @@ export default async function PromoterPortal({ params }: { params: { slug: strin
 
     const walletResponse = await getGlobalPromoterWallet(sessionCookie)
     const globalProfile = walletResponse.data?.globalProfile
+    const places = walletResponse.data?.places || []
 
     let teamData: any = [];
     if (role === 'JEFE_RP') {
@@ -111,14 +114,51 @@ export default async function PromoterPortal({ params }: { params: { slug: strin
                                     )}
                                 </div>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56 bg-zinc-900 border border-white/10 text-white rounded-xl shadow-2xl p-2 z-[100]">
+                            <DropdownMenuContent align="end" className="w-64 bg-zinc-900 border border-white/10 text-white rounded-xl shadow-2xl p-2 z-[100]">
                                 <DropdownMenuLabel className="font-normal p-2">
                                     <div className="flex flex-col space-y-1">
                                         <p className="text-sm font-bold leading-none">{globalProfile.name}</p>
                                         <p className="text-xs leading-none text-zinc-500 font-mono mt-1">{sessionCookie}</p>
                                     </div>
                                 </DropdownMenuLabel>
+                                
+                                {places.length > 0 && (
+                                    <>
+                                        <DropdownMenuSeparator className="bg-white/10 my-1" />
+                                        <div className="px-2 py-1.5">
+                                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Mis Sucursales</p>
+                                            <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                                                {places.map((place: any) => (
+                                                    <Link href={`/rps/${place.slug}`} key={place.businessId} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                                                        <div className="w-6 h-6 rounded bg-black border border-white/10 overflow-hidden relative shrink-0">
+                                                            {place.logoUrl ? (
+                                                                <Image src={place.logoUrl} alt={place.name} fill className="object-cover" />
+                                                            ) : (
+                                                                <Building2 className="w-3 h-3 text-zinc-600 m-auto mt-1" />
+                                                            )}
+                                                        </div>
+                                                        <span className="text-sm font-medium truncate">{place.name}</span>
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
                                 <DropdownMenuSeparator className="bg-white/10 my-1" />
+                                
+                                {/* Profile Edit Trigger */}
+                                <div className="p-1">
+                                    <EditProfileDialog profile={globalProfile} />
+                                </div>
+
+                                {/* B2B Referral Trigger */}
+                                <div className="p-1">
+                                    <B2BReferralDialog phone={globalProfile.phone} hasAgreed={globalProfile.agreedToB2BReferral} />
+                                </div>
+
+                                <DropdownMenuSeparator className="bg-white/10 my-1" />
+                                
                                 <DropdownMenuItem className="p-0 border-none focus:bg-transparent">
                                     <form action={logoutGlobalPromoter} className="w-full">
                                         <button type="submit" className="flex items-center w-full px-2 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer transition-colors">

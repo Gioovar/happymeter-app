@@ -135,13 +135,13 @@ export default async function RpsWalletPage() {
                 </DropdownMenu>
             </header>
 
-            <div className="max-w-md mx-auto px-6 py-8 space-y-8 relative z-10">
+            <div className="max-w-4xl mx-auto px-6 py-8 space-y-12 relative z-10">
                 {/* Balance Hero */}
-                <div className="text-center space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="text-center space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center justify-center gap-2">
-                        <Wallet2 className="w-4 h-4" /> Billetera Total
+                        <Wallet2 className="w-5 h-5" /> Billetera Total
                     </p>
-                    <h2 className="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 via-white to-zinc-500">
+                    <h2 className="text-6xl sm:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 via-white to-zinc-500">
                         {formatCurrency(stats.totalPending)}
                     </h2>
                     <p className="text-sm font-semibold text-emerald-400">
@@ -162,14 +162,14 @@ export default async function RpsWalletPage() {
 
                 {/* Places Directory */}
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150 relative">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-bold flex items-center gap-2">
-                            <Building2 className="w-5 h-5 text-indigo-400" />
+                    <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                        <h3 className="text-xl font-bold flex items-center gap-2">
+                            <Building2 className="w-6 h-6 text-indigo-400" />
                             Mis Sucursales ({stats.placesCount})
                         </h3>
                     </div>
 
-                    <div className="grid gap-3">
+                    <div className="grid sm:grid-cols-2 gap-4">
                         {places.map((place: any) => (
                             <Link
                                 key={place.businessId}
