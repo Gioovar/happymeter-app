@@ -260,12 +260,35 @@ export async function inviteMember(formData: FormData) {
             const inviterName = userSettings?.businessName || 'El Administrador'
             const teamName = userSettings?.businessName || 'HappyMeter Team'
 
-            // Send "You've been added to a new team" email (Using sendTeamAddedEmail or similar)
+            // If the role is offline (OPERATOR/HOSTESS), find their PIN to send in the email
+            let accessPin: string | undefined = undefined;
+            if (role === 'OPERATOR' || role === 'HOSTESS') {
+               // Get their accessPin from any existing membership to reuse or just generate one and save it to the new membership
+               // Currently, 'accessCode' is stored in TeamMember
+               const existingMemberships = await prisma.teamMember.findMany({
+                   where: { userId: existingClerkUser.id, accessCode: { not: null } }
+               });
+               if (existingMemberships.length > 0 && existingMemberships[0].accessCode) {
+                   accessPin = existingMemberships[0].accessCode;
+               } else {
+                   // Generate a new PIN for this member specifically if they didn't have one
+                   accessPin = Math.floor(100000 + Math.random() * 900000).toString();
+               }
+
+               // Update the newly created membership with this PIN so it's consistent
+               await prisma.teamMember.updateMany({
+                   where: { userId: existingClerkUser.id, ownerId: targetOwnerId },
+                   data: { accessCode: accessPin, isOffline: true }
+               });
+            }
+
+            // Send "You've been added to a new team" email with the PIN
             await sendTeamAddedEmail(
                 email,
                 teamName,
                 role,
-                inviterName
+                inviterName,
+                accessPin
             )
 
             revalidatePath('/dashboard/team')

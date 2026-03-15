@@ -177,7 +177,8 @@ export async function sendTeamAddedEmail(
     to: string,
     teamName: string,
     role: string,
-    managerName: string
+    managerName: string,
+    pin?: string
 ) {
     if (!to) return
 
@@ -187,15 +188,35 @@ export async function sendTeamAddedEmail(
             to: [to],
             subject: `🚀 Has sido unido al equipo de ${teamName}`,
             html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h1 style="color: #4f46e5;">¡Bienvenido al Equipo!</h1>
-                    <p>Hola,</p>
-                    <p><strong>${managerName}</strong> te ha agregado directamente al equipo <strong>${teamName}</strong> con el rol de <strong>${role}</strong>.</p>
-                    <p>Ya puedes acceder a tu panel con tu cuenta existente.</p>
-                    <div style="margin: 30px 0;">
-                        <a href="${process.env.NEXT_PUBLIC_APP_URL}/ops/login" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                            Acceder al Portal
-                        </a>
+                <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0a0a0a; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); color: #ffffff;">
+                    
+                    <div style="padding: 40px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">Bienvenido a <span style="color: #8b5cf6;">${teamName}</span></h1>
+                    </div>
+
+                    <div style="padding: 40px;">
+                        <p style="color: #a3a3a3; font-size: 16px; line-height: 24px;">Hola,</p>
+                        <p style="color: #e5e5e5; font-size: 16px; line-height: 24px;"><strong>${managerName}</strong> te ha agregado oficialmente a su equipo en HappyMeter bajo el rol de <strong style="color: #8b5cf6; text-transform: uppercase; font-size: 14px; letter-spacing: 0.5px;">${role}</strong>.</p>
+                        
+                        ${pin ? `
+                        <div style="margin: 30px 0; padding: 24px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; text-align: center;">
+                            <p style="color: #a3a3a3; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px 0; font-weight: 600;">TU PIN DE ACCESO</p>
+                            <div style="font-family: monospace; font-size: 36px; font-weight: 800; color: #ffffff; letter-spacing: 6px;">${pin}</div>
+                            <p style="color: #737373; font-size: 13px; margin: 12px 0 0 0;">Usa este código en la app de Operaciones para tu Check-In.</p>
+                        </div>
+                        ` : ''}
+
+                        <p style="color: #a3a3a3; font-size: 15px; line-height: 24px;">Tu cuenta ya estaba registrada, por lo que puedes acceder directamente usando tus credenciales de siempre o tu PIN operativo.</p>
+
+                        <div style="margin: 40px 0; text-align: center;">
+                            <a href="${process.env.NEXT_PUBLIC_APP_URL}/ops/login" style="display: inline-block; background-color: #ffffff; color: #000000; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; transition: all 0.2s ease;">
+                                Iniciar Sesión en el Portal
+                            </a>
+                        </div>
+                    </div>
+
+                    <div style="background-color: #111111; padding: 24px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <p style="color: #525252; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} HappyMeter. Todos los derechos reservados.</p>
                     </div>
                 </div>
             `
