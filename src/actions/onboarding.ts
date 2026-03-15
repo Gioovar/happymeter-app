@@ -10,6 +10,7 @@ export async function completeOnboarding(formData: FormData) {
 
     const businessName = formData.get('businessName') as string
     const industry = formData.get('industry') as string
+    const subcategories = formData.getAll('subcategories') as string[]
     const phone = formData.get('phone') as string
     const instagram = formData.get('instagram') as string
     const facebook = formData.get('facebook') as string
@@ -31,6 +32,7 @@ export async function completeOnboarding(formData: FormData) {
         update: {
             businessName,
             industry,
+            subcategories,
             phone,
             socialLinks,
             whatsappContact,
@@ -44,6 +46,7 @@ export async function completeOnboarding(formData: FormData) {
             userId,
             businessName,
             industry,
+            subcategories,
             phone,
             socialLinks,
             whatsappContact,

@@ -8,6 +8,57 @@ import { completeOnboarding } from '@/actions/onboarding'
 import { upload } from '@vercel/blob/client'
 import { useDashboardRouter } from '@/hooks/useDashboardRouter'
 
+const BUSINESS_CATEGORIES = [
+  {
+    id: 'restaurante',
+    label: 'Restaurante',
+    subcategories: [
+      'Restaurante Casual', 'Restaurante Gourmet', 'Restaurante Familiar', 
+      'Restaurante Temático', 'Fast Food', 'Cafetería', 'Pizzería', 
+      'Taquería', 'Marisquería'
+    ]
+  },
+  {
+    id: 'bar_nightlife',
+    label: 'Bar / Nightlife',
+    subcategories: [
+      'Bar', 'Bar de Coctelería', 'Bar Deportivo', 'Terraza Bar', 
+      'Rooftop', 'Antro / Discoteca', 'Club Nocturno', 'Speakeasy', 
+      'Pub', 'Cantina', 'Karaoke Bar'
+    ]
+  },
+  {
+    id: 'entretenimiento',
+    label: 'Entretenimiento',
+    subcategories: [
+      'Beach Club', 'Day Club', 'Pool Party Club', 'Club Electrónico', 
+      'Sala de Eventos', 'Foro de Conciertos', 'Centro de Entretenimiento'
+    ]
+  },
+  {
+    id: 'hospitalidad',
+    label: 'Hospitalidad',
+    subcategories: [
+      'Hotel', 'Hotel Boutique', 'Resort', 'Hostal', 'Glamping'
+    ]
+  },
+  {
+    id: 'comercio',
+    label: 'Comercio',
+    subcategories: ['Retail', 'Boutique', 'Supermercado', 'Conveniencia', 'Otro Comercio']
+  },
+  {
+    id: 'servicios',
+    label: 'Servicios',
+    subcategories: ['Spa', 'Salón de Belleza', 'Barbería', 'Gimnasio', 'Clínica', 'Otro Servicio']
+  },
+  {
+    id: 'otro',
+    label: 'Otro',
+    subcategories: ['Otro']
+  }
+]
+
 export default function OnboardingPage() {
     const { push: rootPush } = useDashboardRouter()
     const [step, setStep] = useState(1)
@@ -19,7 +70,8 @@ export default function OnboardingPage() {
         googleReviewUrl: '',
         instagram: '',
         facebook: '',
-        industry: 'restaurant',
+        industry: '',
+        subcategories: [] as string[],
         logoUrl: '',
         bannerUrl: ''
     })
@@ -56,7 +108,11 @@ export default function OnboardingPage() {
         try {
             const data = new FormData()
             Object.entries(formData).forEach(([key, value]) => {
-                data.append(key, value)
+                if (key === 'subcategories' && Array.isArray(value)) {
+                    value.forEach(sub => data.append('subcategories', sub))
+                } else {
+                    data.append(key, value as string)
+                }
             })
 
 
@@ -138,24 +194,53 @@ export default function OnboardingPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">Industria</label>
-                                        <select
-                                            value={formData.industry}
-                                            onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                                            className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl p-4 text-white focus:border-violet-500 transition-colors outline-none appearance-none"
-                                        >
-                                            <option value="restaurant">Restaurante / Bar</option>
-                                            <option value="retail">Comercio / Retail</option>
-                                            <option value="services">Servicios</option>
-                                            <option value="hotel">Hotelería</option>
-                                            <option value="other">Otro</option>
-                                        </select>
+                                        <label className="block text-sm font-medium text-gray-300 mb-3">Tipo de negocio</label>
+                                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                                            {BUSINESS_CATEGORIES.map(cat => (
+                                                <button
+                                                    key={cat.id}
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({ ...prev, industry: cat.id, subcategories: [] }))}
+                                                    className={`p-3 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/50 ${formData.industry === cat.id ? 'bg-violet-600 border-violet-500 text-white' : 'bg-[#1a1a1a] border-white/10 text-gray-400 hover:border-white/30'}`}
+                                                >
+                                                    {cat.label}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
+
+                                    {formData.industry && (
+                                        <div className="mt-4 animate-in fade-in slide-in-from-top-2">
+                                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                                ¿Qué tipo de {BUSINESS_CATEGORIES.find(c => c.id === formData.industry)?.label.toLowerCase()}?
+                                            </label>
+                                            <p className="text-xs text-gray-500 mb-3">Puedes seleccionar más de una opción.</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {BUSINESS_CATEGORIES.find(c => c.id === formData.industry)?.subcategories.map(sub => (
+                                                    <button
+                                                        key={sub}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                subcategories: prev.subcategories.includes(sub)
+                                                                    ? prev.subcategories.filter(s => s !== sub)
+                                                                    : [...prev.subcategories, sub]
+                                                            }))
+                                                        }}
+                                                        className={`px-4 py-2 rounded-full border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/50 ${formData.subcategories.includes(sub) ? 'bg-violet-600 border-violet-500 text-white' : 'bg-[#1a1a1a] border-white/10 text-gray-400 hover:border-white/30 hover:bg-white/5'}`}
+                                                    >
+                                                        {sub}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setStep(2)}
-                                    disabled={!formData.businessName}
+                                    disabled={!formData.businessName || !formData.industry || formData.subcategories.length === 0}
                                     className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Continuar

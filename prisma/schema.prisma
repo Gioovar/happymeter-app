@@ -95,6 +95,7 @@ model UserSettings {
   phoneVerifiedAt            DateTime?
   hasSeenTour                Boolean                     @default(false)
   industry                   String?                     @default("restaurant")
+  subcategories              String[]                    @default([])
   stripeCustomerId           String?                     @unique
   stripeSubscriptionId       String?                     @unique
   subscriptionPeriodEnd      DateTime?
