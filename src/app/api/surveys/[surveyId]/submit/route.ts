@@ -46,7 +46,7 @@ export async function POST(
                 where: { surveyId: surveyId }
             })
 
-            if (isLimitReached(currentCount, FREE_PLAN_LIMITS.MAX_SURVEY_RESPONSES, ownerSettings.plan)) {
+            if (isLimitReached(currentCount, FREE_PLAN_LIMITS.MAX_SURVEY_RESPONSES, ownerSettings.plan, ownerSettings.createdAt)) {
                 return new NextResponse("Has alcanzado el límite de respuestas para el Plan Gratuito (50). Actualiza tu plan para recibir más.", { status: 403 })
             }
         }

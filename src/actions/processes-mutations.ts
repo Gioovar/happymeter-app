@@ -57,12 +57,12 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
 
         // 1. Check Zone Count
         const existingZones = await prisma.processZone.count({ where: { userId: targetUserId } })
-        if (isLimitReached(existingZones, FREE_PLAN_LIMITS.MAX_PROCESS_FLOWS, userSettings.plan)) {
+        if (isLimitReached(existingZones, FREE_PLAN_LIMITS.MAX_PROCESS_FLOWS, userSettings.plan, userSettings.createdAt)) {
             throw new Error("Límite de flujos alcanzado (Plan Gratuito: 1). Actualiza tu plan.")
         }
 
-        if (userSettings.plan === 'FREE' && data.tasks.length > FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED) {
-            throw new Error("Límite de tareas alcanzado (Plan Gratuito: 1 tarea por flujo).")
+        if (isLimitReached(data.tasks.length, FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED, userSettings.plan, userSettings.createdAt)) {
+            throw new Error(`Límite de tareas alcanzado (Plan Gratuito: ${FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED} tarea(s) por flujo).`)
         }
     }
 
@@ -155,8 +155,8 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
 
         // LIMIT CHECK (Tasks)
         const userSettings = await prisma.userSettings.findUnique({ where: { userId: existingZone.userId } })
-        if (userSettings && userSettings.plan === 'FREE') {
-            const { FREE_PLAN_LIMITS } = await import('@/lib/limits')
+        if (userSettings) {
+            const { isLimitReached, FREE_PLAN_LIMITS } = await import('@/lib/limits')
 
             // Count current tasks
             const currentTaskCount = await prisma.processTask.count({ where: { zoneId: data.zoneId } })
@@ -172,7 +172,7 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
                 }
             }
 
-            if (newTotal > FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED) {
+            if (isLimitReached(newTotal, FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED, userSettings.plan, userSettings.createdAt)) {
                 return { success: false, error: `Límite de tareas excedido (Plan Gratuito: ${FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED}). Elimina tareas antes de agregar nuevas.` };
             }
         }
