@@ -30,7 +30,7 @@ import { useRouter } from "next/navigation"
 
 interface ProcessZoneCardProps {
     zone: any // Typed properly in real app
-    branchSlug: string
+    branchSlug?: string
     branchId: string
 }
 
@@ -99,7 +99,7 @@ export function ProcessZoneCard({ zone, branchSlug, branchId }: ProcessZoneCardP
                 </div>
             </div>
 
-            <Link href={`/dashboard/${branchSlug}/processes/${zone.id}`} className="block relative z-10">
+            <Link href={branchSlug ? `/dashboard/${branchSlug}/processes/${zone.id}` : `/dashboard/processes/${zone.id}`} className="block relative z-10">
                 <h4 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">{zone.name}</h4>
                 <p className="text-sm text-gray-400 line-clamp-2 mb-6 min-h-[40px]">{zone.description || "Zona operativa sin descripción detallada."}</p>
 

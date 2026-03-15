@@ -36,7 +36,7 @@ const metadataSchema = z.object({
 
 interface ProcessFlowFormProps {
     branchId: string
-    branchSlug: string
+    branchSlug?: string
     initialData?: any // Typed properly
     onSuccess?: () => void
     onlyMetadata?: boolean // New prop to hide tasks
@@ -133,7 +133,7 @@ export function ProcessFlowForm({ branchId, branchSlug, initialData, onSuccess, 
             if (onSuccess) {
                 onSuccess()
             } else {
-                router.push(`/dashboard/${branchSlug}/processes`)
+                router.push(branchSlug ? `/dashboard/${branchSlug}/processes` : `/dashboard/processes`)
             }
             router.refresh()
         } catch (error) {
