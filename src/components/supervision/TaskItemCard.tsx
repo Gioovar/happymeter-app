@@ -174,7 +174,7 @@ export function TaskItemCard({ task, employee, mode }: TaskItemCardProps) {
                     {/* Action Buttons */}
                     <div className="grid grid-cols-3 gap-3 mt-8">
                         <Button
-                            onClick={() => router.push(`/dashboard/${branchSlug}/chat?with=${employee.name}`)}
+                            onClick={() => router.push(branchSlug ? `/dashboard/${branchSlug}/chat?with=${employee.name}` : `/dashboard/team/chat?with=${employee.name}`)}
                             className="bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 border border-white/10 h-12 rounded-xl flex items-center justify-center transition-all"
                             title="Chat Interno"
                         >

@@ -698,7 +698,7 @@ export async function getDailyTaskReport(dateStr?: string, branchId?: string) {
             } else if (startOfDay.getTime() === todayStart.getTime() && task.limitTime) {
                 const limitVal = getAdjustedTimeValue(task.limitTime);
                 const currentVal = getAdjustedTimeValue(
-                    `${mexicoNow.getUTCHours().toString().padStart(2, '0')}:${mexicoNow.getUTCMinutes().toString().padStart(2, '0')}`
+                    `${mexicoNow.getHours().toString().padStart(2, '0')}:${mexicoNow.getMinutes().toString().padStart(2, '0')}`
                 );
 
                 if (currentVal > limitVal) {

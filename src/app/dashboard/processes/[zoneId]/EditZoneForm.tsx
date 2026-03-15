@@ -108,7 +108,7 @@ export default function EditZoneForm({ zone, teamMembers, pendingInvitations }: 
                 return;
             }
 
-            await updateProcessZoneWithTasks({
+            const response = await updateProcessZoneWithTasks({
                 zoneId: zone.id,
                 name,
                 description,
@@ -116,11 +116,17 @@ export default function EditZoneForm({ zone, teamMembers, pendingInvitations }: 
                 tasks: payloadTasks
             });
 
+            if (response && response.success === false) {
+                 toast.error(response.error || "Asegúrate de tener límite de tareas disponible.");
+                 setIsSubmitting(false);
+                 return;
+            }
+
             toast.success("Zona actualizada correctamente");
             router.refresh();
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error("Error al guardar cambios.");
+            toast.error(error.message || "Error al guardar cambios.");
         } finally {
             setIsSubmitting(false);
         }

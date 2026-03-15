@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.happypromoters.app',
-  appName: 'Happy RPS',
+  appId: 'com.happymeters.opsapp',
+  appName: 'Happy OPS',
   webDir: 'out',
   server: {
     url: 'https://www.happymeters.com/rps',
