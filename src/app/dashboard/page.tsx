@@ -27,12 +27,9 @@ export default function DashboardPage() {
     const branchSlug = typeof params?.slug === 'string' ? params.slug : undefined
     const isBranchMode = !!branchId || !!branchSlug
 
-    // If user has chains AND is not viewing a specific branch -> Show Master Dashboard
-    // MODIFIED: Only show Master Dashboard if there are MULTIPLE branches.
     // Single-branch businesses should go directly to the standard dashboard.
+    // Master Dashboard will sum up all data and show it here, removing forced redirect.
     const activeChain = chains[0]
-    const hasMultipleBranches = activeChain?.branches?.length > 1
-    const showMasterDashboard = chains.length > 0 && !isBranchMode && hasMultipleBranches
 
     // SABOTAGE SAFEGUARD: Check for pending checkout cookie
     useEffect(() => {
@@ -63,22 +60,12 @@ export default function DashboardPage() {
         }
     }, [])
 
-    useEffect(() => {
-        if (showMasterDashboard) {
-            router.replace('/dashboard/chains')
-        }
-    }, [showMasterDashboard, router])
-
     if (loadingSurveys && loadingAnalytics) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
                 <HappyLoader size="lg" text="Cargando tu dashboard..." />
             </div>
         )
-    }
-
-    if (showMasterDashboard) {
-        return <HappyLoader size="lg" text="Cargando tus sucursales..." />
     }
 
     // Resolve Branch Name for Standard Dashboard View

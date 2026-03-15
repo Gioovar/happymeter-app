@@ -8,12 +8,17 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { currentUser } from "@clerk/nextjs/server"
-import { getFloorPlans, getDashboardReservations } from "@/actions/reservations"
+import { getFloorPlans, getDashboardReservations, getOtherBranchSchedules } from "@/actions/reservations"
 import { ReservationCalendar } from "@/components/dashboard/reservations/ReservationCalendar"
 import { NewReservationButton } from "@/components/dashboard/reservations/NewReservationButton"
 import { ReservationsList } from "@/components/dashboard/reservations/ReservationsList"
+import OccupancyRadarWidget from '@/components/dashboard/OccupancyRadarWidget'
+import ActiveTablesWidget from '@/components/dashboard/ActiveTablesWidget'
 import { prisma } from "@/lib/prisma"
 import { ReservationLinkButton } from "@/components/dashboard/reservations/ReservationLinkButton"
+import ReservationSetupModal from "@/components/dashboard/reservations/ReservationSetupModal"
+import { ReservationModeToggle } from "@/components/dashboard/reservations/ReservationModeToggle"
+import { ReservationScheduleDialog } from "@/components/dashboard/reservations/ReservationScheduleDialog"
 
 import { getActiveBusinessId } from "@/lib/tenant"
 
@@ -40,8 +45,12 @@ export default async function ReservationsPage() {
 
     // Fetch User Settings for Reservation Config
     const userSettings = await prisma.userSettings.findUnique({
-        where: { userId: effectiveUserId }
+        where: { userId: effectiveUserId },
+        select: { createdAt: true, plan: true, reservationSettings: true }
     })
+
+    // Fetch other branches for schedule dialog
+    const otherBranches = await getOtherBranchSchedules(effectiveUserId)
 
     // Fetch reservations for calendar
     const reservationsResult = await getDashboardReservations()
@@ -118,29 +127,12 @@ export default async function ReservationsPage() {
 
     const occupancyPercentage = Math.min(100, Math.round((stats.personasHoy / totalCapacity) * 100))
 
-    if (!floorPlans || floorPlans.length === 0) {
-        return (
-            <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center space-y-6">
-                <div className="bg-zinc-800/50 p-6 rounded-full ring-1 ring-white/10">
-                    <Settings className="w-12 h-12 text-amber-500" />
-                </div>
-                <div className="space-y-2 max-w-md">
-                    <h1 className="text-2xl font-bold text-white">Configura tu Espacio</h1>
-                    <p className="text-gray-400">
-                        Antes de gestionar reservas, necesitas diseñar el plano de tu restaurante.
-                        Agrega mesas, barras y define la capacidad.
-                    </p>
-                </div>
-                <Link
-                    href="/dashboard/reservations/setup"
-                    className="bg-gradient-to-r from-amber-500 to-orange-600 px-8 py-3 rounded-xl font-bold text-white shadow-lg shadow-orange-900/20 hover:scale-105 transition-all flex items-center gap-2"
-                >
-                    <Settings className="w-5 h-5" />
-                    Comenzar Configuración
-                </Link>
-            </div>
-        )
-    }
+    const hasTables = floorPlans && floorPlans.some((fp: any) => fp.tables && fp.tables.length > 0);
+    const simpleModeActive = (userSettings?.reservationSettings as any)?.simpleMode === true;
+    const isConfigured = hasTables || simpleModeActive;
+    
+    // We will use a popup for setup if not configured instead of a full block.
+    // Allow the dashboard to render, let ReservationSetupModal handle the blocking/unconfigured state.
 
     return (
         <div className="space-y-8">
@@ -149,15 +141,24 @@ export default async function ReservationsPage() {
                     <h1 className="text-3xl font-bold text-white tracking-tight">Reservaciones</h1>
                     <p className="text-gray-400 mt-2">Gestiona tu agenda, capacidad y horarios.</p>
                 </div>
-                <div className="flex flex-wrap gap-3 w-full md:w-auto">
+                <div className="flex flex-wrap gap-3 w-full md:w-auto items-center">
+                    <ReservationModeToggle currentMode={userSettings?.reservationSettings?.simpleMode ? 'SIMPLE' : 'ADVANCED'} branchId={effectiveUserId} />
+
                     {program && <ReservationLinkButton programId={program.id} />}
+
+                    <ReservationScheduleDialog
+                        isSimpleMode={userSettings?.reservationSettings?.simpleMode === true}
+                        branchId={effectiveUserId}
+                        currentSchedule={(userSettings?.reservationSettings as any)?.availability}
+                        otherBranches={otherBranches}
+                    />
 
                     <Link
                         href="/dashboard/reservations/setup"
                         className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2.5 rounded-xl font-medium text-sm text-white transition-all flex items-center gap-2"
                     >
-                        <Settings className="w-4 h-4" />
-                        Configuración
+                        <Settings className="w-4 h-4 text-amber-500 font-bold" />
+                        Mesas (Avanzado)
                     </Link>
 
                     {/* NEW RESERVATION BUTTON CLIENT COMPONENT */}
@@ -210,6 +211,12 @@ export default async function ReservationsPage() {
                 </div>
             </div>
 
+            {/* Real-Time Ops */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-8">
+                <OccupancyRadarWidget />
+                <ActiveTablesWidget />
+            </div>
+
             {/* Agenda View */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Upcoming List (Client Component with Dialog Interaction) */}
@@ -220,7 +227,7 @@ export default async function ReservationsPage() {
                     {/* NEW CALENDAR WIDGET */}
                     <ReservationCalendar reservations={reservations} />
 
-                    {/* Capacity (Mini) */}
+                    {/* Capacity (Mini) - Maintained for quick reference or replaced entirely by Ops Widgets */}
                     <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
                         <h3 className="text-sm font-bold text-white mb-4">Capacidad Hoy</h3>
                         <div>
@@ -237,8 +244,10 @@ export default async function ReservationsPage() {
                         </div>
                     </div>
                 </div>
-
             </div>
+
+            {/* Modal de Configuración (Popup) */}
+            <ReservationSetupModal isOpen={!isConfigured} setupLink="/dashboard/reservations/setup" branchId={effectiveUserId} />
         </div>
     )
 }

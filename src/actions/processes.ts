@@ -582,13 +582,28 @@ export async function getDailyTaskReport(dateStr?: string, branchId?: string) {
     const activeContextId = await getActiveBusinessId()
     const effectiveContextId = activeContextId || userId
 
-    // 1. Fetch All Relevant Tasks (User's Zones filtered by branchId)
-    // We fetch ALL tasks for the user in the specified branch
+    // Fetch owned branches in case this is a franchise master context
+    const myBranches = await prisma.chainBranch.findMany({
+        where: { chain: { ownerId: effectiveContextId } },
+        select: { branchId: true }
+    });
+    const myBranchIds = myBranches.map(b => b.branchId);
+
+    // 1. Fetch All Relevant Tasks (User's Zones + their Branches' Zones)
+    // If a specific branchId is provided (e.g., viewing a specific branch dashboard), filter by it.
+    // Otherwise, show zones for the effectiveContextId AND all their branches.
+    const whereClause = branchId
+        ? { userId: branchId } // or { branchId: branchId } depending on schema, but usually zone.userId = branchUserId
+        : {
+            OR: [
+                { userId: effectiveContextId },
+                { branchId: effectiveContextId }, // Legacy fallback
+                { userId: { in: myBranchIds } }
+            ]
+        };
+
     const zones = await prisma.processZone.findMany({
-        where: {
-            userId: effectiveContextId,
-            ...(branchId ? { branchId } : {})
-        },
+        where: whereClause,
         include: {
             assignedStaff: {
                 include: {

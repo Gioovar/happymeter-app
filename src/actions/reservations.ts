@@ -79,9 +79,21 @@ export async function getFloorPlans(branchId?: string) {
             })
         }
 
-        // Fetch all floor plans
+        // Fetch owned branches in case this is a franchise master context
+        const myBranches = await prisma.chainBranch.findMany({
+            where: { chain: { ownerId: effectiveUserId } },
+            select: { branchId: true }
+        });
+        const myBranchIds = myBranches.map(b => b.branchId);
+
+        // Fetch all floor plans for owner and branches
         let floorPlans = await prisma.floorPlan.findMany({
-            where: { userId: effectiveUserId },
+            where: {
+                OR: [
+                    { userId: effectiveUserId },
+                    { userId: { in: myBranchIds } }
+                ]
+            },
             include: { tables: true },
             orderBy: { createdAt: 'asc' }
         })
@@ -497,9 +509,20 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
         const activeContextId = await getActiveBusinessId()
         const effectiveContextId = activeContextId || userId
 
-        // Find floor plans owned by user
+        const myBranches = await prisma.chainBranch.findMany({
+            where: { chain: { ownerId: effectiveContextId } },
+            select: { branchId: true }
+        });
+        const myBranchIds = myBranches.map(b => b.branchId);
+
+        // Find floor plans owned by user or their branches
         const floorPlans = await prisma.floorPlan.findMany({
-            where: { userId: effectiveContextId },
+            where: {
+                OR: [
+                    { userId: effectiveContextId },
+                    { userId: { in: myBranchIds } }
+                ]
+            },
             select: { id: true }
         })
 
@@ -531,7 +554,8 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
                 },
                 OR: [
                     { table: { floorPlanId: { in: floorPlanIds } } },
-                    { userId: effectiveContextId }
+                    { userId: effectiveContextId },
+                    { userId: { in: myBranchIds } }
                 ]
             },
             include: {
