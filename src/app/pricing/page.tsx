@@ -241,8 +241,8 @@ export default function PricingPage() {
             </div>
 
             <div className="relative z-10 max-w-7xl mx-auto px-6 py-24">
-                <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition">
-                    <ArrowLeft className="w-4 h-4" /> Volver al Dashboard
+                <Link href={userId ? "/dashboard" : "/"} className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition">
+                    <ArrowLeft className="w-4 h-4" /> {userId ? "Volver al Dashboard" : "Volver al Inicio"}
                 </Link>
 
                 <div className="text-center max-w-3xl mx-auto mb-10">
