@@ -19,6 +19,18 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
+    // Handle mobile menu scroll lock
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.style.overflow = 'unset'
+        }
+        return () => {
+            document.body.style.overflow = 'unset'
+        }
+    }, [isOpen])
+
     const NavLink = ({ href, children, isNew }: { href: string; children: React.ReactNode; isNew?: boolean }) => (
         <Link
             href={href}
@@ -36,15 +48,18 @@ export default function Navbar() {
     )
 
     return (
-        <header
-            className={cn(
-                "fixed top-0 w-full z-50 transition-all duration-500",
-                scrolled
-                    ? "bg-[#050505]/70 backdrop-blur-2xl border-b border-white/5 py-3 shadow-[0_0_40px_-10px_rgba(139,92,246,0.1)]"
-                    : "bg-transparent py-5"
-            )}
-        >
-            <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <>
+            <header
+                className={cn(
+                    "fixed top-0 w-full z-[9999] transition-all duration-500",
+                    isOpen
+                        ? "bg-[#050505] py-3"
+                        : scrolled
+                            ? "bg-[#050505]/70 backdrop-blur-2xl border-b border-white/5 py-3 shadow-[0_0_40px_-10px_rgba(139,92,246,0.1)]"
+                            : "bg-transparent py-5"
+                )}
+            >
+                <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
 
                 {/* Logo */}
                 <Link href="/" className="relative z-50 hover:opacity-90 transition-opacity" onClick={() => setIsOpen(false)}>
@@ -84,9 +99,11 @@ export default function Navbar() {
                 </button>
             </div>
 
+            </header>
+
             {/* Mobile Menu Overlay */}
             <div className={cn(
-                "fixed inset-0 bg-[#050505] z-40 md:hidden transition-transform duration-300 ease-in-out pt-32 px-6",
+                "fixed inset-0 w-full h-[100dvh] bg-[#050505] z-[9998] md:hidden transition-transform duration-300 ease-in-out pt-32 px-6 overflow-y-auto",
                 isOpen ? "translate-x-0" : "translate-x-full"
             )}>
                 <div className="flex flex-col gap-8">
@@ -122,6 +139,6 @@ export default function Navbar() {
                     </div>
                 </div>
             </div>
-        </header>
+        </>
     )
 }
