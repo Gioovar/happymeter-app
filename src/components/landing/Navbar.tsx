@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { Menu, X, ChevronDown, Sparkles } from 'lucide-react'
 import BrandLogo from '@/components/BrandLogo'
@@ -9,6 +10,11 @@ import { cn } from '@/lib/utils'
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     // Handle scroll effect
     useEffect(() => {
@@ -51,12 +57,10 @@ export default function Navbar() {
         <>
             <header
                 className={cn(
-                    "fixed top-0 w-full z-[9999] transition-all duration-500",
-                    isOpen
-                        ? "bg-[#050505] py-3"
-                        : scrolled
-                            ? "bg-[#050505]/70 backdrop-blur-2xl border-b border-white/5 py-3 shadow-[0_0_40px_-10px_rgba(139,92,246,0.1)]"
-                            : "bg-transparent py-5"
+                    "fixed top-0 w-full z-[8000] transition-all duration-500",
+                    scrolled
+                        ? "bg-[#050505]/70 backdrop-blur-2xl border-b border-white/5 py-3 shadow-[0_0_40px_-10px_rgba(139,92,246,0.1)]"
+                        : "bg-transparent py-5"
                 )}
             >
                 <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -101,44 +105,63 @@ export default function Navbar() {
 
             </header>
 
-            {/* Mobile Menu Overlay */}
-            <div className={cn(
-                "fixed inset-0 w-full h-[100dvh] bg-[#050505] z-[9998] md:hidden transition-transform duration-300 ease-in-out pt-32 px-6 overflow-y-auto",
-                isOpen ? "translate-x-0" : "translate-x-full"
-            )}>
-                <div className="flex flex-col gap-8">
-                    <div className="space-y-6">
-                        <Link href="/pricing" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
-                            Precios
-                        </Link>
-                        <Link href="/blog" onClick={() => setIsOpen(false)} className="flex items-center gap-3 text-2xl font-bold text-white hover:text-violet-400">
-                            Blog
-                            <span className="px-2 py-0.5 text-xs bg-violet-600 rounded-full text-white">NEW</span>
-                        </Link>
-                        <Link href="/blog/guia-digitalizar-feedback" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
-                            Tutoriales
-                        </Link>
-                        <Link href="/creators" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
-                            Únete
-                        </Link>
+            </header>
 
-                        <Link href="mailto:soporte@happymeters.com" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
-                            Ayuda y Soporte
+            {/* Mobile Menu Portal Overlay */}
+            {mounted && createPortal(
+                <div className={cn(
+                    "fixed top-0 left-0 w-[100vw] h-[100vh] bg-black z-[9999] md:hidden transition-transform duration-300 ease-in-out overflow-y-auto block",
+                    isOpen ? "translate-x-0" : "translate-x-full"
+                )}>
+                    {/* Header inside Overlay */}
+                    <div className="flex items-center justify-between px-6 py-5">
+                        <Link href="/" className="relative z-50 hover:opacity-90 transition-opacity" onClick={() => setIsOpen(false)}>
+                            <BrandLogo />
                         </Link>
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
+                            aria-label="Cerrar Menu"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
                     </div>
 
-                    <div className="h-px bg-white/10" />
+                    <div className="flex flex-col gap-8 px-6 pt-10 pb-20">
+                        <div className="space-y-6">
+                            <Link href="/pricing" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
+                                Precios
+                            </Link>
+                            <Link href="/blog" onClick={() => setIsOpen(false)} className="flex items-center gap-3 text-2xl font-bold text-white hover:text-violet-400">
+                                Blog
+                                <span className="px-2 py-0.5 text-xs bg-violet-600 rounded-full text-white">NEW</span>
+                            </Link>
+                            <Link href="/blog/guia-digitalizar-feedback" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
+                                Tutoriales
+                            </Link>
+                            <Link href="/creators" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
+                                Únete
+                            </Link>
 
-                    <div className="space-y-4">
-                        <Link href="/sign-in?intent=view_pricing" onClick={() => setIsOpen(false)} className="block w-full py-4 text-center text-gray-400 font-medium hover:text-white">
-                            Iniciar Sesión
-                        </Link>
-                        <Link href="/sign-up?intent=view_pricing" onClick={() => setIsOpen(false)} className="block w-full py-4 text-center bg-white text-black font-bold rounded-xl active:scale-95 transition-transform">
-                            Crear Cuenta Gratis
-                        </Link>
+                            <Link href="mailto:soporte@happymeters.com" onClick={() => setIsOpen(false)} className="block text-2xl font-bold text-white hover:text-violet-400">
+                                Ayuda y Soporte
+                            </Link>
+                        </div>
+
+                        <div className="h-px bg-white/10" />
+
+                        <div className="space-y-4">
+                            <Link href="/sign-in?intent=view_pricing" onClick={() => setIsOpen(false)} className="block w-full py-4 text-center text-gray-400 font-medium hover:text-white">
+                                Iniciar Sesión
+                            </Link>
+                            <Link href="/sign-up?intent=view_pricing" onClick={() => setIsOpen(false)} className="block w-full py-4 text-center bg-white text-black font-bold rounded-xl active:scale-95 transition-transform">
+                                Crear Cuenta Gratis
+                            </Link>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </div>,
+                document.body
+            )}
         </>
     )
 }
