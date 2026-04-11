@@ -423,52 +423,106 @@ export default function RpsGlobalLoginPortal() {
                                     </button>
                                 </div>
 
-                                {/* PIN Input with shake animation */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1 text-center block mb-2">PIN de Acceso</label>
+                                {/* PIN Input with shake animation — 4 individual boxes */}
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] text-center block">
+                                        PIN de Acceso
+                                    </label>
                                     <style>{`
                                         @keyframes shake {
                                             0%,100%{transform:translateX(0)}
-                                            15%{transform:translateX(-8px)}
-                                            30%{transform:translateX(8px)}
-                                            45%{transform:translateX(-6px)}
-                                            60%{transform:translateX(6px)}
+                                            15%{transform:translateX(-10px)}
+                                            30%{transform:translateX(10px)}
+                                            45%{transform:translateX(-7px)}
+                                            60%{transform:translateX(7px)}
                                             75%{transform:translateX(-4px)}
                                             90%{transform:translateX(4px)}
                                         }
                                         .pin-shake { animation: shake 0.55s cubic-bezier(.36,.07,.19,.97) both; }
-                                        @keyframes pulse-border {
-                                            0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0);}
-                                            50%{box-shadow:0 0 0 4px rgba(99,102,241,0.3);}
+                                        @keyframes dot-pop {
+                                            0%{transform:scale(0);opacity:0}
+                                            60%{transform:scale(1.3)}
+                                            100%{transform:scale(1);opacity:1}
                                         }
-                                        .pin-success-border { animation: pulse-border 0.8s ease-out; }
+                                        .dot-animate { animation: dot-pop 0.2s ease-out forwards; }
+                                        @keyframes pulse-success {
+                                            0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}
+                                            50%{box-shadow:0 0 0 8px rgba(16,185,129,0.15)}
+                                        }
+                                        .pin-success-glow { animation: pulse-success 0.7s ease-out; }
                                     `}</style>
-                                    <Input
+
+                                    {/* Hidden actual input */}
+                                    <input
                                         type="password"
                                         inputMode="numeric"
                                         pattern="[0-9]*"
                                         maxLength={4}
-                                        placeholder="••••"
                                         value={pin}
                                         onChange={(e) => {
                                             setPin(e.target.value.replace(/[^0-9]/g, ''))
                                             if (error) setError(null)
                                         }}
-                                        className={`h-16 border-2 text-white placeholder:text-zinc-600 rounded-2xl transition-all duration-200 font-mono text-3xl tracking-[1em] text-center
-                                            ${ pinShake ? 'pin-shake border-red-500/70 bg-red-500/10' :
-                                               pinSuccess ? 'pin-success-border border-emerald-500/70 bg-emerald-500/10' :
-                                               'bg-black/50 border-white/10 focus:bg-black focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50'
-                                            }`}
                                         disabled={isLoading}
                                         autoFocus
+                                        className="absolute opacity-0 w-0 h-0 pointer-events-none"
+                                        id="pin-hidden-input"
+                                        aria-label="PIN de acceso"
                                     />
-                                    {/* Auto-submit hint */}
-                                    {pin.length === 4 && !isLoading && (
-                                        <p className="text-[11px] text-indigo-400/80 text-center animate-in fade-in duration-200">
-                                            Presiona Entrar o la tecla ↵
-                                        </p>
-                                    )}
+
+                                    {/* Visual 4-box PIN display */}
+                                    <div
+                                        className={`flex items-center justify-center gap-3 ${pinShake ? 'pin-shake' : ''}`}
+                                        onClick={() => document.getElementById('pin-hidden-input')?.focus()}
+                                        role="button"
+                                        tabIndex={-1}
+                                        aria-label="Toca para ingresar tu PIN"
+                                    >
+                                        {[0, 1, 2, 3].map((i) => {
+                                            const isFilled = i < pin.length
+                                            const isActive = i === pin.length && !isLoading
+                                            return (
+                                                <div
+                                                    key={i}
+                                                    className={`
+                                                        relative w-16 h-16 rounded-2xl flex items-center justify-center
+                                                        border-2 transition-all duration-200
+                                                        ${pinSuccess
+                                                            ? 'border-emerald-500/80 bg-emerald-500/10 pin-success-glow'
+                                                            : pinShake
+                                                            ? 'border-red-500/70 bg-red-500/10'
+                                                            : isFilled
+                                                            ? 'border-indigo-500/80 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
+                                                            : isActive
+                                                            ? 'border-indigo-400/60 bg-white/5 shadow-[0_0_0_3px_rgba(99,102,241,0.15)]'
+                                                            : 'border-white/10 bg-white/3'
+                                                        }
+                                                    `}
+                                                >
+                                                    {/* Active cursor blink */}
+                                                    {isActive && !isFilled && (
+                                                        <span className="w-0.5 h-6 bg-indigo-400 rounded-full animate-pulse" />
+                                                    )}
+                                                    {/* Filled dot */}
+                                                    {isFilled && (
+                                                        <span className={`dot-animate w-3.5 h-3.5 rounded-full ${
+                                                            pinSuccess ? 'bg-emerald-400' : 'bg-indigo-400'
+                                                        }`} />
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+
+                                    {/* Helper text */}
+                                    <p className="text-[11px] text-zinc-600 text-center">
+                                        {pin.length === 4 && !isLoading
+                                            ? <span className="text-indigo-400/80">✓ Presiona Entrar para continuar</span>
+                                            : `${4 - pin.length} dígito${4 - pin.length !== 1 ? 's' : ''} restante${4 - pin.length !== 1 ? 's' : ''}`
+                                        }
+                                    </p>
                                 </div>
+
 
                                 {/* Submit Button — premium states */}
                                 <Button
