@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
@@ -10,22 +10,29 @@ import "./main.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#8b5cf6',
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.happymeters.com'),
   title: "HappyMeter | Medición de Satisfacción con IA",
   description: "La plataforma definitiva para gestionar encuestas de satisfacción, lealtad de clientes y métricas de felicidad en tiempo real.",
-  themeColor: "#8b5cf6",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "HappyMeter",
   },
   icons: {
-    icon: "/happymeter_logo.png", // Fallback to existing logo
+    icon: "/happymeter_logo.png",
     apple: "/happymeter_logo.png",
   },
   openGraph: {
-    images: '/og-image.png', // Assuming you might have one or will want one
+    images: '/og-image.png',
   }
 };
 
