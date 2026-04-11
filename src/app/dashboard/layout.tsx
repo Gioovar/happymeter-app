@@ -13,6 +13,8 @@ import { DashboardProvider } from '@/context/DashboardContext'
 import { NotificationProvider } from '@/context/NotificationContext'
 import SuspendedOverlay from '@/components/common/SuspendedOverlay'
 
+export const dynamic = 'force-dynamic'
+
 import { processReferralCookie } from '@/lib/referral-service'
 
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard'

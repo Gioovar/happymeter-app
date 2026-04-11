@@ -8,6 +8,8 @@ import SuspendedOverlay from '@/components/common/SuspendedOverlay'
 
 import StaffMobileNav from '@/components/staff/StaffMobileNav'
 
+export const dynamic = 'force-dynamic'
+
 export default async function StaffLayout({
     children,
 }: {

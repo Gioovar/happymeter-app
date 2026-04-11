@@ -7,6 +7,8 @@ import AdminSidebar from '@/components/admin/AdminSidebar'
 import { ShieldCheck } from 'lucide-react'
 import { UserButton } from '@clerk/nextjs'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminLayout({
     children,
 }: {

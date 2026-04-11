@@ -5,6 +5,8 @@ import OpsHeader from "./OpsHeader"
 import { getOpsSession } from "@/lib/ops-auth"
 import OpsPushInitializer from "@/components/ops/OpsPushInitializer"
 
+export const dynamic = 'force-dynamic'
+
 export default async function OpsLayout({
     children,
 }: {

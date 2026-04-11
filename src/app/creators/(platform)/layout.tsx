@@ -2,6 +2,8 @@ import CreatorSidebar from '@/components/CreatorSidebar'
 
 import { auth } from '@clerk/nextjs/server'
 
+export const dynamic = 'force-dynamic'
+
 export default async function CreatorLayout({
     children,
 }: {
