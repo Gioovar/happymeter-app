@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Lock, ShieldCheck, Sparkles, AlertCircle, User, Mail, Phone, UploadCloud, Loader2 } from 'lucide-react'
+import { ArrowRight, Lock, ShieldCheck, Sparkles, AlertCircle, User, Phone, UploadCloud, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -28,6 +28,10 @@ export default function RpsGlobalLoginPortal() {
     const [promoterData, setPromoterData] = useState<{ name?: string, email?: string, avatarUrl?: string | null } | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    // PIN UX states
+    const [pinShake, setPinShake] = useState(false)
+    const [pinSuccess, setPinSuccess] = useState(false)
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -126,6 +130,7 @@ export default function RpsGlobalLoginPortal() {
 
         if (pin.length !== 4 || isNaN(Number(pin))) {
             setError("El PIN debe ser de 4 dígitos.")
+            triggerShake()
             return
         }
 
@@ -133,16 +138,33 @@ export default function RpsGlobalLoginPortal() {
         try {
             const verifyRes = await verifyGlobalPromoterPin(phone, pin)
             if (verifyRes.success) {
+                // Haptic feedback on success (mobile)
+                if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50)
+                setPinSuccess(true)
                 await createGlobalPromoterSession(phone)
+                // Keep loading active — navigate without resetting state
                 router.push(`/rps/wallet`)
+                // Intentionally NOT calling setIsLoading(false) on success
+                return
             } else {
-                setError(verifyRes.error || "PIN Incorrecto.")
+                // Haptic feedback on error (mobile)
+                if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([80, 40, 80])
+                setError(verifyRes.error || "PIN Incorrecto. Intenta de nuevo.")
+                setPin('')
+                triggerShake()
             }
         } catch (err) {
-            setError("Ocurrió un error al verificar la seguridad.")
+            setError("Error de conexión. Intenta de nuevo.")
+            setPin('')
+            triggerShake()
         } finally {
-            setIsLoading(false)
+            if (!pinSuccess) setIsLoading(false)
         }
+    }
+
+    const triggerShake = () => {
+        setPinShake(true)
+        setTimeout(() => setPinShake(false), 600)
     }
 
     return (
@@ -376,6 +398,7 @@ export default function RpsGlobalLoginPortal() {
 
                         {step === 'enter_pin' && (
                             <form onSubmit={handleEnterPin} className="space-y-6 animate-in slide-in-from-right-4">
+                                {/* Profile card */}
                                 <div className="p-4 bg-white/5 border border-white/10 rounded-xl mb-6 flex items-center justify-between">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex flex-col items-center justify-center shrink-0 border border-indigo-500/30 overflow-hidden relative">
@@ -392,15 +415,34 @@ export default function RpsGlobalLoginPortal() {
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => setStep('search')}
-                                        className="text-[10px] uppercase font-bold text-indigo-400 hover:text-indigo-300 px-2 py-1 bg-indigo-500/10 rounded-md transition-colors"
+                                        onClick={() => { setStep('search'); setPin(''); setError(null) }}
+                                        disabled={isLoading}
+                                        className="text-[10px] uppercase font-bold text-indigo-400 hover:text-indigo-300 px-2 py-1 bg-indigo-500/10 rounded-md transition-colors disabled:opacity-40"
                                     >
                                         Cambiar
                                     </button>
                                 </div>
 
+                                {/* PIN Input with shake animation */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1 text-center block mb-2">PIN de Acceso</label>
+                                    <style>{`
+                                        @keyframes shake {
+                                            0%,100%{transform:translateX(0)}
+                                            15%{transform:translateX(-8px)}
+                                            30%{transform:translateX(8px)}
+                                            45%{transform:translateX(-6px)}
+                                            60%{transform:translateX(6px)}
+                                            75%{transform:translateX(-4px)}
+                                            90%{transform:translateX(4px)}
+                                        }
+                                        .pin-shake { animation: shake 0.55s cubic-bezier(.36,.07,.19,.97) both; }
+                                        @keyframes pulse-border {
+                                            0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0);}
+                                            50%{box-shadow:0 0 0 4px rgba(99,102,241,0.3);}
+                                        }
+                                        .pin-success-border { animation: pulse-border 0.8s ease-out; }
+                                    `}</style>
                                     <Input
                                         type="password"
                                         inputMode="numeric"
@@ -408,30 +450,65 @@ export default function RpsGlobalLoginPortal() {
                                         maxLength={4}
                                         placeholder="••••"
                                         value={pin}
-                                        onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
-                                        className="h-16 bg-black/50 border-white/10 text-white placeholder:text-zinc-600 focus:bg-black focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 rounded-2xl transition-all font-mono text-3xl tracking-[1em] text-center"
+                                        onChange={(e) => {
+                                            setPin(e.target.value.replace(/[^0-9]/g, ''))
+                                            if (error) setError(null)
+                                        }}
+                                        className={`h-16 border-2 text-white placeholder:text-zinc-600 rounded-2xl transition-all duration-200 font-mono text-3xl tracking-[1em] text-center
+                                            ${ pinShake ? 'pin-shake border-red-500/70 bg-red-500/10' :
+                                               pinSuccess ? 'pin-success-border border-emerald-500/70 bg-emerald-500/10' :
+                                               'bg-black/50 border-white/10 focus:bg-black focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50'
+                                            }`}
                                         disabled={isLoading}
                                         autoFocus
                                     />
+                                    {/* Auto-submit hint */}
+                                    {pin.length === 4 && !isLoading && (
+                                        <p className="text-[11px] text-indigo-400/80 text-center animate-in fade-in duration-200">
+                                            Presiona Entrar o la tecla ↵
+                                        </p>
+                                    )}
                                 </div>
 
+                                {/* Submit Button — premium states */}
                                 <Button
                                     type="submit"
                                     disabled={isLoading || pin.length !== 4}
-                                    className="w-full h-14 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-2xl text-[15px] shadow-[0_0_40px_rgba(99,102,241,0.2)] hover:shadow-[0_0_50px_rgba(99,102,241,0.4)] transition-all group/btn"
+                                    className={`w-full h-14 font-bold rounded-2xl text-[15px] transition-all duration-300 relative overflow-hidden
+                                        ${ pinSuccess
+                                            ? 'bg-emerald-500 hover:bg-emerald-500 shadow-[0_0_40px_rgba(16,185,129,0.4)] cursor-default'
+                                            : isLoading
+                                            ? 'bg-indigo-600 cursor-wait shadow-[0_0_30px_rgba(99,102,241,0.3)]'
+                                            : 'bg-indigo-500 hover:bg-indigo-600 shadow-[0_0_40px_rgba(99,102,241,0.2)] hover:shadow-[0_0_50px_rgba(99,102,241,0.4)] group/btn'
+                                        }`}
                                 >
-                                    {isLoading ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                            <span>Verificando...</span>
+                                    {/* Background shimmer while loading */}
+                                    {isLoading && !pinSuccess && (
+                                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_1.5s_infinite] translate-x-[-100%]" style={{animation:'shimmer 1.5s infinite',backgroundSize:'200% 100%'}} />
+                                    )}
+
+                                    {pinSuccess ? (
+                                        <div className="flex items-center justify-center gap-2 animate-in zoom-in-75 duration-300">
+                                            <CheckCircle2 className="w-5 h-5" />
+                                            <span>¡Acceso Concedido!</span>
+                                        </div>
+                                    ) : isLoading ? (
+                                        <div className="flex items-center justify-center gap-3">
+                                            <div className="w-5 h-5 border-[3px] border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span className="tracking-wide">Validando acceso...</span>
                                         </div>
                                     ) : (
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center justify-center gap-2">
                                             <span>Entrar</span>
                                             <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                                         </div>
                                     )}
                                 </Button>
+
+                                {/* Blocking overlay while loading to prevent any interaction */}
+                                {isLoading && (
+                                    <div className="fixed inset-0 z-[200] cursor-wait" aria-hidden="true" />
+                                )}
                             </form>
                         )}
                     </CardContent>
