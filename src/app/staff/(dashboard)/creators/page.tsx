@@ -5,6 +5,8 @@ import StatusToggle from '@/components/staff/StatusToggle'
 import PendingCreatorCard from '@/components/staff/PendingCreatorCard'
 import CreatorListTable from '@/components/staff/CreatorListTable'
 
+export const dynamic = 'force-dynamic'
+
 export default async function StaffCreatorsPage() {
 
     // Fetch Pending first
