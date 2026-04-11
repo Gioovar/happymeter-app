@@ -2,7 +2,7 @@ import { getPublicPromoterPortal, getJefeTeamInfo, getGlobalPromoterWallet, logo
 import { notFound, redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { QRCodeSVG } from "qrcode.react"
-import { Target, Users, DollarSign, Share2, Copy, BarChart3, ArrowUpRight, Calendar, User, Phone, MapPin, ChevronDown, Trophy, Medal, Star, CalendarHeart, Music, LogOut, Sparkles, Building2 } from "lucide-react"
+import { Target, Users, DollarSign, Share2, Copy, BarChart3, ArrowUpRight, Calendar, User, Phone, MapPin, ChevronDown, Trophy, Medal, Star, CalendarHeart, Music, LogOut, Building2 } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
@@ -56,7 +56,7 @@ export default async function PromoterPortal({ params }: { params: { slug: strin
         return notFound()
     }
 
-    const { name, businessName, logoUrl, stats, upcomingReservations, upcomingEvents, phone, aiCoachTip, role, id: promoterId } = result.data
+    const { name, businessName, stats, upcomingReservations, upcomingEvents, phone, aiCoachTip, role } = result.data
     const { gamification } = stats
 
     const walletResponse = await getGlobalPromoterWallet(sessionCookie)

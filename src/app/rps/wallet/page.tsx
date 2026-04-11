@@ -1,7 +1,7 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { getGlobalPromoterWallet, logoutGlobalPromoter } from "@/actions/promoters"
-import { ShieldCheck, CalendarCheck, DollarSign, Wallet2, Sparkles, Building2, ChevronRight, LogOut, ArrowRight, User } from "lucide-react"
+import { ShieldCheck, CalendarCheck, DollarSign, Wallet2, Building2, ChevronRight, LogOut } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import RpsPushInitializer from "@/components/rps/RpsPushInitializer"
