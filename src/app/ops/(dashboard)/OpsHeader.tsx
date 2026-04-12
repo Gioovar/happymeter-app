@@ -61,43 +61,46 @@ export default function OpsHeader() {
 
     return (
         <>
-            {/* Header Bar */}
-            <header className="h-20 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl flex items-center justify-between px-6 sticky top-0 z-50">
-                <button
-                    onClick={() => allMemberships.length > 1 && setShowBranchSwitcher(true)}
-                    className={`group relative flex items-center gap-3 px-4 py-2 rounded-full border transition-all duration-300 ${allMemberships.length > 1
-                        ? 'bg-white/5 border-white/10 hover:border-violet-500/50 hover:bg-violet-500/5 shadow-lg'
-                        : 'bg-transparent border-transparent cursor-default'
-                        }`}
-                >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-                        <ShieldCheck className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex flex-col items-start translate-y-[1px]">
-                        <h1 className="font-black text-[10px] text-violet-400 uppercase tracking-[0.2em] leading-none mb-1">Sucursal Activa</h1>
-                        <div className="flex items-center gap-1.5">
-                            <p className="text-sm font-bold text-white tracking-tight">{branchName}</p>
-                            {allMemberships.length > 1 && (
-                                <ChevronDown className="w-3.5 h-3.5 text-gray-500 group-hover:text-violet-400 transition-colors" />
-                            )}
-                        </div>
-                    </div>
-                </button>
-
-                <div className="flex items-center gap-3">
-                    <Link
-                        href="/ops/chat"
-                        className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-slate-200 transition-all duration-300 relative group"
-                    >
-                        <MessageSquare className="w-5 h-5 transition-transform group-hover:scale-110" />
-                    </Link>
-                    <NotificationBell memberId={currentMembershipId || ''} />
+            {/* Header Bar — safe area respetada */}
+            <header className="border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-xl sticky top-0 z-50"
+                style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+                <div className="h-16 flex items-center justify-between px-5">
                     <button
-                        onClick={() => setIsOpen(true)}
-                        className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-slate-200 transition-all duration-300"
+                        onClick={() => allMemberships.length > 1 && setShowBranchSwitcher(true)}
+                        className={`group relative flex items-center gap-3 px-4 py-2 rounded-full border transition-all duration-300 ${allMemberships.length > 1
+                            ? 'bg-white/5 border-white/10 hover:border-violet-500/50 hover:bg-violet-500/5 shadow-lg'
+                            : 'bg-transparent border-transparent cursor-default'
+                            }`}
                     >
-                        <Menu className="w-6 h-6" />
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                            <ShieldCheck className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex flex-col items-start translate-y-[1px]">
+                            <h1 className="font-black text-[10px] text-violet-400 uppercase tracking-[0.2em] leading-none mb-1">Sucursal Activa</h1>
+                            <div className="flex items-center gap-1.5">
+                                <p className="text-sm font-bold text-white tracking-tight">{branchName}</p>
+                                {allMemberships.length > 1 && (
+                                    <ChevronDown className="w-3.5 h-3.5 text-gray-500 group-hover:text-violet-400 transition-colors" />
+                                )}
+                            </div>
+                        </div>
                     </button>
+
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href="/ops/chat"
+                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-slate-200 transition-all duration-300 relative group"
+                        >
+                            <MessageSquare className="w-4 h-4 transition-transform group-hover:scale-110" />
+                        </Link>
+                        <NotificationBell memberId={currentMembershipId || ''} />
+                        <button
+                            onClick={() => setIsOpen(true)}
+                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-slate-200 transition-all duration-300"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -177,9 +180,10 @@ export default function OpsHeader() {
                         onClick={() => setIsOpen(false)}
                     />
 
-                    {/* Menu Content */}
-                    <div className="relative w-3/4 max-w-xs bg-slate-900 h-full border-l border-white/10 p-6 flex flex-col shadow-2xl">
-                        <div className="flex items-center justify-between mb-8">
+                    {/* Menu Content — safe area en el panel lateral */}
+                    <div className="relative w-3/4 max-w-xs bg-slate-900 h-full border-l border-white/10 flex flex-col shadow-2xl"
+                        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+                        <div className="flex items-center justify-between p-6 pt-4 mb-2">
                             <span className="text-white font-bold text-lg">Menu</span>
                             <button
                                 onClick={() => setIsOpen(false)}

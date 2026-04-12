@@ -5,11 +5,17 @@ const config: CapacitorConfig = {
   appName: 'Happy OPS',
   webDir: 'out',
   server: {
-    url: 'https://www.happymeters.com/rps',
+    url: 'https://www.happymeters.com/ops',
+    cleartext: false,
   },
   plugins: {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
+    },
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: "#050505",
+      showSpinner: false,
     }
   }
 };
