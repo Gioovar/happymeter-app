@@ -65,9 +65,8 @@ export default function TaskCaptureClient({ task }: TaskCaptureClientProps) {
             });
 
             toast.success("Evidencia enviada correctamente");
-
             router.push('/ops/tasks');
-            router.refresh();
+            // No router.refresh() aquí — conflicta con router.push y causa re-renders del server component actual
 
         } catch (error: any) {
             console.error(error);

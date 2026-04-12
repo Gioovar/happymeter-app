@@ -51,8 +51,14 @@ export default async function TaskCapturePage({ params }: { params: { taskId: st
     }
 
     // IF COMPLETED -> Show Review & Chat UI
-    const chatData = await getTaskChat(params.taskId);
+    let chatData: { messages: any[] } | null = null;
+    try {
+        chatData = await getTaskChat(params.taskId);
+    } catch (e) {
+        console.error('[TaskCapturePage] getTaskChat error:', e);
+    }
     const currentUserId = session.member?.id || session.userId;
+
 
     return (
         <div className="flex flex-col min-h-screen bg-black pb-12">
