@@ -8,6 +8,8 @@ import { getTaskChat } from '@/actions/task-chat';
 import TaskChat from '@/components/supervision/TaskChat';
 import { getOpsSession } from '@/lib/ops-auth';
 
+export const dynamic = 'force-dynamic'
+
 export default async function OpsTaskDetailPage({ params, searchParams }: { params: { taskId: string }, searchParams: { evidenceId?: string } }) {
     const session = await getOpsSession();
     if (!session.isAuthenticated) return redirect('/ops/login');
@@ -17,21 +19,33 @@ export default async function OpsTaskDetailPage({ params, searchParams }: { para
     if (!data) return notFound();
 
     const { task, currentEvidence, history } = data;
-    const chatData = await getTaskChat(params.taskId);
+
+    // Extrae solo IDs primitivos — Next.js NO puede serializar objetos Prisma complejos (JSON fields, Dates) en closures de Server Actions
+    const evidenceIdForAction = currentEvidence?.id ?? null;
+    const taskIdForAction = task.id;
+
+    // getTaskChat puede fallar si la migración no se ha aplicado en producción — lo manejamos silenciosamente
+    let chatData: { messages: any[] } | null = null;
+    try {
+        chatData = await getTaskChat(params.taskId);
+    } catch (e) {
+        console.error('[OpsTaskDetailPage] getTaskChat failed (table may not exist in DB yet):', e);
+    }
 
     // Determine the current user's ID for the chat (member ID if offline staff acting as supervisor, or userId for owner)
     const currentUserId = session.member?.id || session.userId;
 
     async function handleValidation(formData: FormData) {
         'use server';
+        if (!evidenceIdForAction) return;
         const status = formData.get('status') as 'APPROVED' | 'REJECTED';
         const note = formData.get('note') as string;
-        if (!currentEvidence) return;
 
-        await validateEvidence(currentEvidence.id, status, note);
-        revalidatePath(`/ops/supervision/task/${task.id}`);
+        await validateEvidence(evidenceIdForAction, status, note);
+        revalidatePath(`/ops/supervision/task/${taskIdForAction}`);
         revalidatePath(`/ops/supervision`);
     }
+
 
     return (
         <div className="space-y-6 pb-12">
