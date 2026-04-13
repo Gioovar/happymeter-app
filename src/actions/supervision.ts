@@ -403,6 +403,12 @@ export async function getOpsSupervisionTasks() {
     const session = await getOpsSession();
     if (!session.isAuthenticated) return null;
 
+    // RBAC: Block if user is a restricted role
+    if (session.member && !['ADMIN', 'SUPERVISOR'].includes(session.member.role)) {
+        console.warn(`[Supervision] Acceso denegado para rol: ${session.member.role}`);
+        return null;
+    }
+
     const targetOwnerId = session.member?.ownerId || session.userId;
     if (!targetOwnerId) return [];
 
@@ -485,6 +491,12 @@ export async function getOpsSupervisionTasks() {
 export async function getOpsTaskDetails(taskId: string, evidenceId?: string) {
     const session = await getOpsSession();
     if (!session.isAuthenticated) return null;
+
+    // RBAC: Block if user is a restricted role
+    if (session.member && !['ADMIN', 'SUPERVISOR'].includes(session.member.role)) {
+        console.warn(`[Supervision Details] Acceso denegado para rol: ${session.member.role}`);
+        return null;
+    }
 
     const targetOwnerId = session.member?.ownerId || session.userId;
 

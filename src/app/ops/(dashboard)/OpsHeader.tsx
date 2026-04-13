@@ -18,7 +18,7 @@ interface Membership {
     }
 }
 
-export default function OpsHeader() {
+export default function OpsHeader({ role }: { role?: string }) {
     const [isOpen, setIsOpen] = useState(false)
     const [showBranchSwitcher, setShowBranchSwitcher] = useState(false)
     const [branchName, setBranchName] = useState<string>('Panel Operativo')
@@ -27,6 +27,10 @@ export default function OpsHeader() {
     const pathname = usePathname()
     const router = useRouter()
     const { signOut } = useClerk()
+    
+    // RBAC: Only Supervisors and Admins should see Supervision features
+    // In OPS, typically Owner gets passed without role or we can check if it's undefined
+    const isSupervisorOrAdmin = role === 'SUPERVISOR' || role === 'ADMIN' || !role;
 
     const handleLogout = async () => {
         try {
@@ -243,17 +247,19 @@ export default function OpsHeader() {
                                 Mis Tareas
                             </Link>
 
-                            <Link
-                                href="/ops/supervision"
-                                onClick={() => setIsOpen(false)}
-                                className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname.startsWith('/ops/supervision')
-                                    ? 'bg-indigo-500/10 text-indigo-400 font-medium'
-                                    : 'text-slate-300 hover:bg-white/5'
-                                    }`}
-                            >
-                                <ShieldCheck className="w-5 h-5" />
-                                Supervisión
-                            </Link>
+                            {isSupervisorOrAdmin && (
+                                <Link
+                                    href="/ops/supervision"
+                                    onClick={() => setIsOpen(false)}
+                                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname.startsWith('/ops/supervision')
+                                        ? 'bg-indigo-500/10 text-indigo-400 font-medium'
+                                        : 'text-slate-300 hover:bg-white/5'
+                                        }`}
+                                >
+                                    <ShieldCheck className="w-5 h-5" />
+                                    Supervisión
+                                </Link>
+                            )}
 
                             <Link
                                 href="/ops/chat"

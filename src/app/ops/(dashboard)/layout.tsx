@@ -54,7 +54,7 @@ export default async function OpsLayout({
             <OpsPushInitializer userId={member?.userId || null} memberId={member?.id || ''} />
 
             {/* Mobile Header (Client Component) */}
-            <OpsHeader />
+            <OpsHeader role={member?.role} />
 
             {/* Main Content */}
             <main className="flex-1 p-4 pb-24">
