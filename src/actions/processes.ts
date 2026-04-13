@@ -304,68 +304,75 @@ export async function getOpsTasks() {
 
     // 1. Check for Team Memberships (Staff View)
     if (member) {
-        const memberIds = [member.id];
-        // We include EDITOR in the restricted list now
-        const isRestrictedRole = ['OPERATOR', 'HOSTESS', 'OBSERVER', 'EDITOR'].includes(member.role);
+        // Only ADMIN and SUPERVISOR have full visibility. Everyone else is restricted.
+        const isRestrictedRole = !['ADMIN', 'SUPERVISOR'].includes(member.role);
         
         console.log(`[getOpsTasks] User: ${member.name}, Role: ${member.role}, Restricted: ${isRestrictedRole}`);
 
-        // STRICT FILTERING: 
-        // 1. Get zones that have tasks assigned to ME or to NO ONE (unassigned)
-        // 2. OR Zones where I am the manager (but even then, we will filter the tasks inside)
-        
-        const zones = await prisma.processZone.findMany({
+        const baseZoneWhere = {
+            OR: [
+                { userId: member.ownerId },
+                { branchId: member.ownerId }
+            ]
+        };
+
+        const evidenceInclude = {
             where: {
-                OR: [
-                    { userId: member.ownerId },
-                    { branchId: member.ownerId }
-                ],
-                // We keep the zones that have at least one task for me OR an unassigned task
-                // OR zones where I am the manager
-                OR: [
-                    { assignedStaffId: member.id },
-                    {
-                        tasks: {
-                            some: {
-                                OR: [
-                                    { assignedStaffId: member.id },
-                                    { assignedStaffId: null }
-                                ],
-                                days: { has: dayOfWeek }
-                            }
+                submittedAt: {
+                    gte: todayStart,
+                    lte: todayEnd
+                }
+            },
+            take: 10,
+            orderBy: { submittedAt: 'desc' as const }
+        };
+
+        let zones = [];
+
+        if (isRestrictedRole) {
+            // STRICT FILTERING: Employee only sees zones with tasks assigned to them
+            // and ONLY those specific tasks.
+            zones = await prisma.processZone.findMany({
+                where: {
+                    ...baseZoneWhere,
+                    tasks: {
+                        some: {
+                            assignedStaffId: member.id,
+                            days: { has: dayOfWeek }
                         }
                     }
-                ]
-            },
-            include: {
-                tasks: {
-                    where: {
-                        days: { has: dayOfWeek },
-                        OR: [
-                            { assignedStaffId: member.id },
-                            // If user is ADMIN or SUPERVISOR, they also see UNASSIGNED tasks
-                            // If they are OPERATOR/EDITOR/etc, they ONLY see their own (as requested)
-                            ...(!isRestrictedRole ? [{ assignedStaffId: null }] : [])
-                        ]
-                    },
-                    include: {
-                        evidences: {
-                            where: {
-                                submittedAt: {
-                                    gte: todayStart,
-                                    lte: todayEnd
-                                }
-                            },
-                            take: 10,
-                            orderBy: { submittedAt: 'desc' }
+                },
+                include: {
+                    tasks: {
+                        where: {
+                            assignedStaffId: member.id,
+                            days: { has: dayOfWeek }
+                        },
+                        include: {
+                            evidences: evidenceInclude
                         }
                     }
                 }
-            }
-        });
+            });
+        } else {
+            // ADMIN/SUPERVISOR VIEW: Full visibility of the branch
+            zones = await prisma.processZone.findMany({
+                where: baseZoneWhere,
+                include: {
+                    tasks: {
+                        where: {
+                            days: { has: dayOfWeek }
+                        },
+                        include: {
+                            evidences: evidenceInclude
+                        }
+                    }
+                }
+            });
+        }
 
-        // Filter out zones with no tasks after the strict filter
-        let allZones = zones.filter(z => z.tasks.length > 0);
+        // Filter out zones with no tasks
+        let allZones = zones.filter((z: any) => z.tasks.length > 0);
 
         // Sort tasks within each zone
         allZones.forEach((zone: any) => {
@@ -429,10 +436,7 @@ export async function getOpsTasks() {
                 ...(shouldFilterOwnerTasks ? {
                     tasks: {
                         some: {
-                            OR: [
-                                { assignedStaffId: userId },
-                                { assignedStaffId: null }
-                            ],
+                            assignedStaffId: userId,
                             days: { has: dayOfWeek }
                         }
                     }
@@ -443,10 +447,7 @@ export async function getOpsTasks() {
                     where: {
                         days: { has: dayOfWeek },
                         ...(shouldFilterOwnerTasks ? {
-                            OR: [
-                                { assignedStaffId: userId },
-                                { assignedStaffId: null }
-                            ]
+                            assignedStaffId: userId
                         } : {})
                     },
                     include: {
@@ -458,7 +459,7 @@ export async function getOpsTasks() {
                                 }
                             },
                             take: 10,
-                            orderBy: { submittedAt: 'desc' }
+                            orderBy: { submittedAt: 'desc' as const }
                         }
                     }
                 }
