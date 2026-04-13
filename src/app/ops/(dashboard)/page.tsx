@@ -2,9 +2,14 @@ import Link from "next/link"
 import { QrCode, History, LogOut, CheckCircle2 } from "lucide-react"
 import { getStaffPerformanceMetrics } from "@/actions/ops-analytics"
 import StaffPerformanceCharts from "@/components/ops/StaffPerformanceCharts"
+import { getOpsSession } from "@/lib/ops-auth"
 
 export default async function OpsPage() {
     const metrics = await getStaffPerformanceMetrics()
+    const { member } = await getOpsSession()
+    
+    // RBAC: Only Supervisors and Admins should see Supervision features
+    const isSupervisorOrAdmin = member?.role === 'SUPERVISOR' || member?.role === 'ADMIN' || !member?.role;
 
     return (
         <div className="flex flex-col gap-6">
@@ -66,17 +71,19 @@ export default async function OpsPage() {
                 </Link>
 
                 {/* SUPERVISION BUTTON */}
-                <Link href="/ops/supervision" className="group relative overflow-hidden bg-gradient-to-br from-indigo-700/80 to-[#16161e] border border-indigo-500/20 rounded-3xl p-6 transition-all active:scale-95 hover:bg-slate-900 shadow-md">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-indigo-500/10 w-12 h-12 rounded-2xl flex items-center justify-center">
-                            <CheckCircle2 className="w-6 h-6 text-indigo-400 group-hover:text-white transition-colors" />
+                {isSupervisorOrAdmin && (
+                    <Link href="/ops/supervision" className="group relative overflow-hidden bg-gradient-to-br from-indigo-700/80 to-[#16161e] border border-indigo-500/20 rounded-3xl p-6 transition-all active:scale-95 hover:bg-slate-900 shadow-md">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-indigo-500/10 w-12 h-12 rounded-2xl flex items-center justify-center">
+                                <CheckCircle2 className="w-6 h-6 text-indigo-400 group-hover:text-white transition-colors" />
+                            </div>
+                            <div className="text-left">
+                                <h3 className="text-lg font-bold text-white">Supervisión</h3>
+                                <p className="text-indigo-200/50 text-sm">Validar tareas del personal</p>
+                            </div>
                         </div>
-                        <div className="text-left">
-                            <h3 className="text-lg font-bold text-white">Supervisión</h3>
-                            <p className="text-indigo-200/50 text-sm">Validar tareas del personal</p>
-                        </div>
-                    </div>
-                </Link>
+                    </Link>
+                )}
             </div>
         </div>
     )
