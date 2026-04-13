@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { getPublicLoyaltyProgramInfo } from "@/actions/loyalty"
 import { NextResponse } from "next/server"

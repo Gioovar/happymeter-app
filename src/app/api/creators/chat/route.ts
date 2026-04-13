@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server'
 import { getGeminiModel } from '@/lib/gemini'
 import { currentUser } from '@clerk/nextjs/server'

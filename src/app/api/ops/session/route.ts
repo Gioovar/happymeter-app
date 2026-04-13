@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server'
 import { getOpsSession } from '@/lib/ops-auth'
 import { auth } from '@clerk/nextjs/server'
