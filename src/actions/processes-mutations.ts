@@ -341,6 +341,7 @@ export async function assignTask(taskId: string, staffId: string | null) {
         }
     }
 
+    revalidatePath('/ops/tasks');
     revalidatePath(`/dashboard/processes/${task.zoneId}`);
     return { success: true };
 }
