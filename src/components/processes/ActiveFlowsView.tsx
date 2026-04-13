@@ -44,28 +44,52 @@ export default function ActiveFlowsView({ zones }: ActiveFlowsViewProps) {
                             </div>
 
                             <div className="space-y-3">
-                                {zone.tasks?.map((task: any) => (
-                                    <div key={task.id} className="bg-white/5 rounded-xl p-4 flex items-center justify-between group hover:bg-white/10 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-lg bg-cyan-900/20 flex items-center justify-center text-cyan-400">
-                                                {task.limitTime ? <Clock className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-white group-hover:text-cyan-400 transition-colors">{task.title}</h4>
-                                                <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                                                    {task.limitTime && (
-                                                        <span className="flex items-center gap-1 text-orange-400">
-                                                            <AlertCircle className="w-3 h-3" />
-                                                            Límite: {task.limitTime}
+                                {zone.tasks?.map((task: any) => {
+                                    const latestEvidence = task.evidences?.[0];
+                                    const isDone = !!latestEvidence;
+                                    const isAwaitingReview = isDone && latestEvidence.validationStatus === 'PENDING';
+                                    const isApproved = isDone && latestEvidence.validationStatus === 'APPROVED';
+                                    const isRejected = isDone && latestEvidence.validationStatus === 'REJECTED';
+
+                                    return (
+                                        <div key={task.id} className="bg-white/5 rounded-xl p-4 flex items-center justify-between group hover:bg-white/10 transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isDone ? (isApproved ? 'bg-green-500/10 text-green-400' : isRejected ? 'bg-red-500/10 text-red-400' : 'bg-yellow-500/10 text-yellow-400') : 'bg-cyan-900/20 text-cyan-400'}`}>
+                                                    {isDone ? (
+                                                        latestEvidence.fileUrl ? (
+                                                            <div className="w-full h-full rounded-lg overflow-hidden border border-white/10">
+                                                                <img src={latestEvidence.fileUrl} className="w-full h-full object-cover" alt="Task" />
+                                                            </div>
+                                                        ) : <CheckCircle2 className="w-5 h-5" />
+                                                    ) : task.limitTime ? <Clock className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-white group-hover:text-cyan-400 transition-colors flex items-center gap-2">
+                                                        {task.title}
+                                                        {isAwaitingReview && <Badge variant="outline" className="text-[10px] h-4 bg-yellow-500/10 text-yellow-400 border-yellow-500/20">Review</Badge>}
+                                                    </h4>
+                                                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                                        {task.limitTime && (
+                                                            <span className="flex items-center gap-1 text-orange-400">
+                                                                <AlertCircle className="w-3 h-3" />
+                                                                Límite: {task.limitTime}
+                                                            </span>
+                                                        )}
+                                                        <span>•</span>
+                                                        <span className={isDone ? (isApproved ? 'text-green-500' : isRejected ? 'text-red-500' : 'text-yellow-500') : 'text-gray-500'}>
+                                                            {isApproved ? 'Aprobada' : isRejected ? 'Rechazada' : isAwaitingReview ? 'En Revisión' : 'Pendiente'}
                                                         </span>
-                                                    )}
-                                                    <span>•</span>
-                                                    <span>{task.frequency || 'Diario'}</span>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="outline" className="text-[10px] border-white/10 text-gray-400">
+                                                    {task.assignedStaffName || 'Sin Asignar'}
+                                                </Badge>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 {(!zone.tasks || zone.tasks.length === 0) && (
                                     <p className="text-sm text-center text-gray-500 py-4 italic">Esta zona no tiene tareas asignadas.</p>
                                 )}

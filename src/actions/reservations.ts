@@ -79,20 +79,10 @@ export async function getFloorPlans(branchId?: string) {
             })
         }
 
-        // Fetch owned branches in case this is a franchise master context
-        const myBranches = await prisma.chainBranch.findMany({
-            where: { chain: { ownerId: effectiveUserId } },
-            select: { branchId: true }
-        });
-        const myBranchIds = myBranches.map(b => b.branchId);
-
-        // Fetch all floor plans for owner and branches
+        // Fetch all floor plans for the specifically active branch context
         let floorPlans = await prisma.floorPlan.findMany({
             where: {
-                OR: [
-                    { userId: effectiveUserId },
-                    { userId: { in: myBranchIds } }
-                ]
+                userId: effectiveUserId
             },
             include: { tables: true },
             orderBy: { createdAt: 'asc' }
@@ -509,19 +499,13 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
         const activeContextId = await getActiveBusinessId()
         const effectiveContextId = activeContextId || userId
 
-        const myBranches = await prisma.chainBranch.findMany({
-            where: { chain: { ownerId: effectiveContextId } },
-            select: { branchId: true }
-        });
-        const myBranchIds = myBranches.map(b => b.branchId);
+        // Forcing STRICT Branch isolation as per architectural rule
+        // The effectiveContextId represents the Active Branch ID.
 
-        // Find floor plans owned by user or their branches
+        // Find floor plans owned by this specific branch context
         const floorPlans = await prisma.floorPlan.findMany({
             where: {
-                OR: [
-                    { userId: effectiveContextId },
-                    { userId: { in: myBranchIds } }
-                ]
+                userId: effectiveContextId
             },
             select: { id: true }
         })
@@ -529,22 +513,8 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
         const floorPlanIds = floorPlans.map(fp => fp.id)
 
         // Date Range: Start of month to End of month (plus buffer)
-        // For simplicity, let's just fetch ALL future reservations or a 3-month window
         const start = new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1)
         const end = new Date(monthDate.getFullYear(), monthDate.getMonth() + 2, 0)
-
-        console.log("Fetching reservations for user:", userId)
-        console.log("FloorPlans:", floorPlanIds)
-        console.log("Date Range:", start, end)
-
-        // Fetch reservations via tables
-        // Since Reservation is linked to Table, we need to query through Tables or if there's a direct Reservation model?
-        // Let's check schema. Usually: Reservation -> Table -> FloorPlan -> User
-        // Or Reservation -> User directly?
-        // Based on `getProgramFloorPlan` query context: `tables: { include: { reservations: ... } }`
-
-
-        // ... (inside getDashboardReservations)
 
         const reservations = await prisma.reservation.findMany({
             where: {
@@ -554,8 +524,7 @@ export async function getDashboardReservations(monthDate: Date = new Date()) {
                 },
                 OR: [
                     { table: { floorPlanId: { in: floorPlanIds } } },
-                    { userId: effectiveContextId },
-                    { userId: { in: myBranchIds } }
+                    { userId: effectiveContextId }
                 ]
             },
             include: {

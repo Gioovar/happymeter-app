@@ -801,11 +801,7 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
                                     disabled={isSavingPhone || phoneInput.length < 10}
                                     className="w-full py-3.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
-                                    {isSavingPhone ? (
-                                        <>Enviando...</>
-                                    ) : (
-                                        <>Enviar Mensaje de Prueba y Confirmar</>
-                                    )}
+                                    {isSavingPhone ? 'Enviando...' : 'Enviar Mensaje de Prueba y Confirmar'}
                                 </button>
 
                                 <button

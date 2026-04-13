@@ -50,10 +50,14 @@ export async function createPromoter(data: {
 
         if (existing) return { success: false, error: "El código/link ya existe" }
 
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const effectiveContextId = activeContextId || ownerId
+
         const promoter = await prisma.promoterProfile.create({
             data: {
                 ...data,
-                businessId: ownerId,
+                businessId: effectiveContextId,
             }
         })
 
@@ -76,7 +80,9 @@ export async function getPromoters(userIdOverride?: string) {
         const { userId: authUserId } = await auth()
         if (!authUserId) return { success: false, promoters: [] }
 
-        const targetUserId = userIdOverride || authUserId
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const targetUserId = userIdOverride || activeContextId || authUserId
 
         const promoters = await prisma.promoterProfile.findMany({
             where: {
@@ -108,8 +114,12 @@ export async function deletePromoter(id: string) {
         const { userId: ownerId } = await auth()
         if (!ownerId) return { success: false, error: "No autorizado" }
 
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const effectiveContextId = activeContextId || ownerId
+
         await prisma.promoterProfile.delete({
-            where: { id, businessId: ownerId }
+            where: { id, businessId: effectiveContextId }
         })
 
         revalidatePath('/dashboard/[branchSlug]/reservations/rps', 'page')
@@ -125,8 +135,12 @@ export async function updatePromoter(id: string, data: any) {
         const { userId: ownerId } = await auth()
         if (!ownerId) return { success: false, error: "No autorizado" }
 
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const effectiveContextId = activeContextId || ownerId
+
         await prisma.promoterProfile.update({
-            where: { id, businessId: ownerId },
+            where: { id, businessId: effectiveContextId },
             data
         })
 
@@ -143,8 +157,12 @@ export async function getPromoterAnalytics(promoterId?: string, dateRange?: { fr
         const { userId: ownerId } = await auth()
         if (!ownerId) return { success: false, stats: null }
 
+        const { getActiveBusinessId } = await import('@/lib/tenant')
+        const activeContextId = await getActiveBusinessId()
+        const effectiveContextId = activeContextId || ownerId
+
         const where: any = {
-            promoter: { businessId: ownerId }
+            promoter: { businessId: effectiveContextId }
         }
 
         if (promoterId) {

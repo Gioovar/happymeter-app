@@ -9,11 +9,12 @@ import { CreatePromoterModal } from "@/components/dashboard/reservations/CreateP
 import { AssignLeadModal } from "@/components/dashboard/reservations/AssignLeadModal"
 import { Card, CardContent } from "@/components/ui/card"
 
-export default async function PromotersPage() {
-    const context = await getDashboardContext()
+export default async function PromotersPage({ params }: { params: { branchSlug: string } }) {
+    const context = await getDashboardContext(params.branchSlug)
     if (!context) return null
 
-    const { promoters } = await getPromoters() as { promoters: any[] }
+    // Forcing STRICT Branch isolation as per architectural rule
+    const { promoters } = await getPromoters(context.userId) as { promoters: any[] }
     const chains = await getChainDetails()
 
     // Fetch Loyalty Program for link generation

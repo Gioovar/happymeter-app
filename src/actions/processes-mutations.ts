@@ -366,3 +366,53 @@ export async function updateProcessTask(data: UpdateTaskPayload) {
     revalidatePath(`/dashboard/processes/${task.zoneId}`);
     return { success: true };
 }
+
+interface CreateProcessTaskPayload {
+    zoneId: string;
+    title: string;
+    description?: string;
+    limitTime?: string;
+    evidenceType: ProcessEvidenceType;
+    days: string[];
+}
+
+export async function createProcessTask(data: CreateProcessTaskPayload) {
+    const { userId } = await auth();
+    if (!userId) throw new Error("No autorizado");
+
+    const zone = await prisma.processZone.findUnique({
+        where: { id: data.zoneId }
+    });
+
+    if (!zone) throw new Error("Zona no encontrada");
+
+    const hasAccess = await verifyZoneAccess(zone.userId, userId);
+    if (!hasAccess) throw new Error("No autorizado");
+
+    // LIMIT CHECK (Tasks)
+    const userSettings = await prisma.userSettings.findUnique({ where: { userId: zone.userId } })
+    if (userSettings) {
+        const { isLimitReached, FREE_PLAN_LIMITS } = await import('@/lib/limits')
+
+        // Count current tasks
+        const currentTaskCount = await prisma.processTask.count({ where: { zoneId: data.zoneId } })
+
+        if (isLimitReached(currentTaskCount + 1, FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED, userSettings.plan, userSettings.createdAt)) {
+            throw new Error(`Límite de tareas excedido (Plan Gratuito: ${FREE_PLAN_LIMITS.MAX_PROCESS_TASKS_ASSIGNED}). Actualiza tu plan o elimina tareas.`);
+        }
+    }
+
+    await prisma.processTask.create({
+        data: {
+            zoneId: data.zoneId,
+            title: data.title,
+            description: data.description,
+            limitTime: (data.limitTime === "" || data.limitTime === null) ? null : data.limitTime,
+            evidenceType: data.evidenceType,
+            days: data.days
+        }
+    });
+
+    revalidatePath(`/dashboard/processes/${data.zoneId}`);
+    return { success: true };
+}

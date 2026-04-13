@@ -1,27 +1,32 @@
 import { useState, useEffect } from 'react'
 import { urlBase64ToUint8Array } from '@/lib/utils'
 import { PushNotifications, Token, ActionPerformed } from '@capacitor/push-notifications'
+import { FCM } from '@capacitor-community/fcm'
 import { Capacitor } from '@capacitor/core'
 import { useRouter } from 'next/navigation'
 
-export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT' | 'RPS', userIdOrCustomerId: string | null) {
+export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT' | 'RPS', userIdOrCustomerId: string | null, memberId?: string | null) {
     const [permission, setPermission] = useState<NotificationPermission>('default')
     const [subscription, setSubscription] = useState<PushSubscription | null>(null)
     const router = useRouter()
 
+    const hasAnyId = !!(userIdOrCustomerId || memberId);
+
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            if (Capacitor.isNativePlatform()) {
-                initCapacitorPush()
-            } else if ('serviceWorker' in navigator && 'PushManager' in window) {
-                setPermission(Notification.permission)
-                registerServiceWorker()
+            if (hasAnyId) {
+                if (Capacitor.isNativePlatform()) {
+                    initCapacitorPush()
+                } else if ('serviceWorker' in navigator && 'PushManager' in window) {
+                    setPermission(Notification.permission)
+                    registerServiceWorker()
+                }
             }
         }
-    }, [userIdOrCustomerId])
+    }, [userIdOrCustomerId, memberId])
 
     const initCapacitorPush = async () => {
-        if (!userIdOrCustomerId) return; // Wait until we know who is logged in
+        if (!hasAnyId) return;
 
         let permStatus = await PushNotifications.checkPermissions();
 
@@ -37,23 +42,38 @@ export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT' | 'RP
         setPermission('granted')
 
         PushNotifications.addListener('registration', async (token: Token) => {
-            console.log('Push registration success, token: ' + token.value);
+            console.log('APNs registration success, token: ' + token.value);
+            
+            let fcmToken = token.value;
+            
+            // On iOS, we need the FCM token, not the APNs token
+            if (Capacitor.getPlatform() === 'ios') {
+                try {
+                    const result = await FCM.getToken();
+                    fcmToken = result.token;
+                    console.log('FCM token obtained: ' + fcmToken);
+                } catch (err) {
+                    console.error("Failed to get FCM token, falling back to APNs token", err)
+                }
+            }
+
             // Send token to our server
             try {
                 await fetch('/api/users/device-token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        token: token.value,
+                        token: fcmToken,
                         platform: Capacitor.getPlatform(),
                         appType: appType,
                         userId: appType === 'OPS' ? userIdOrCustomerId : undefined,
+                        memberId: appType === 'OPS' ? memberId : undefined,
                         customerId: appType === 'LOYALTY' ? userIdOrCustomerId : undefined,
                         globalPromoterId: appType === 'RPS' ? userIdOrCustomerId : undefined
                     })
                 });
             } catch (err) {
-                console.error("Failed to send native push token to server", err)
+                console.error("Failed to send push token to server", err)
             }
         });
 
@@ -69,12 +89,9 @@ export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT' | 'RP
 
         PushNotifications.addListener('pushNotificationReceived', (notification) => {
             console.log('Native Push received: ' + JSON.stringify(notification));
-            // Show toast or local alert if needed
         });
 
         PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
-            console.log('Native Push action performed: ' + JSON.stringify(notification));
-            // Deep Linking Handler
             const route = notification.notification.data.route;
             if (route) {
                 router.push(route);
@@ -91,7 +108,7 @@ export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT' | 'RP
             const sub = await registration.pushManager.getSubscription()
             setSubscription(sub)
 
-            if (sub && userIdOrCustomerId) {
+            if (sub && (userIdOrCustomerId || memberId)) {
                 await saveWebSubscription(sub)
             }
         } catch (error) {
@@ -105,7 +122,7 @@ export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT' | 'RP
         } else {
             const result = await Notification.requestPermission()
             setPermission(result)
-            if (result === 'granted' && userIdOrCustomerId) {
+            if (result === 'granted' && hasAnyId) {
                 await subscribeUserWeb()
             }
         }
@@ -127,7 +144,6 @@ export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT' | 'RP
     }
 
     const saveWebSubscription = async (sub: PushSubscription) => {
-        // Legacy Web Push config (Optional: refactor to use the new DeviceToken schema)
         await fetch('/api/notifications/subscription', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -140,3 +156,4 @@ export function usePushNotifications(appType: 'OPS' | 'LOYALTY' | 'CLIENT' | 'RP
 
     return { permission, askPermission, subscription }
 }
+

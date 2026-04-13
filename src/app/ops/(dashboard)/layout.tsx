@@ -51,7 +51,7 @@ export default async function OpsLayout({
 
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-            <OpsPushInitializer userId={member?.userId || ''} />
+            <OpsPushInitializer userId={member?.userId || null} memberId={member?.id || ''} />
 
             {/* Mobile Header (Client Component) */}
             <OpsHeader />

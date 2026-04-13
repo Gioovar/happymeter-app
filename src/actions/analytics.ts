@@ -48,41 +48,12 @@ export async function getSurveyAnalytics(surveyId: string, dateRange: DateRange,
         throw new Error("Unauthorized")
     }
 
+    // Extracted from our unified logic to ensure ZERO data bleed across franchise branches
+    const { getActiveBusinessId } = await import('@/lib/tenant')
+    const activeContextId = await getActiveBusinessId()
+    
     // Determine the "Effective User ID"
-    let targetUserId = userId;
-
-    // If an override is requested (e.g. looking at a specific branch)
-    if (overrideUserId && overrideUserId !== userId) {
-        // SECURITY CHECK: Ensure the authenticated `userId` OWNS the `overrideUserId` (which represents a Branch)
-        // OR the user is a TeamMember of the target user.
-        const isOwner = await prisma.chain.findFirst({
-            where: {
-                ownerId: userId,
-                branches: {
-                    some: {
-                        branchId: overrideUserId
-                    }
-                }
-            }
-        });
-
-        // Check if invited as TeamMember
-        const isTeamMember = await prisma.teamMember.findUnique({
-            where: {
-                userId_ownerId: {
-                    userId: userId,
-                    ownerId: overrideUserId
-                }
-            }
-        });
-
-        if (!isOwner && !isTeamMember) {
-            console.warn(`[Security] User ${userId} attempted to access analytics for ${overrideUserId} without ownership or team membership.`);
-            throw new Error("Unauthorized Access to Branch Data");
-        }
-
-        targetUserId = overrideUserId;
-    }
+    const targetUserId = activeContextId || userId;
 
     const start = dateRange?.from ? dateRange.from.toISOString() : new Date(0).toISOString()
     const end = dateRange?.to ? dateRange.to.toISOString() : new Date().toISOString()

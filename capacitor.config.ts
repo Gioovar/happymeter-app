@@ -7,6 +7,7 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://www.happymeters.com/ops',
     cleartext: false,
+    allowNavigation: ['www.happymeters.com', 'happymeter.vercel.app']
   },
   plugins: {
     PushNotifications: {

@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { ShieldCheck, Menu, X, CheckSquare, ScanLine, LogOut, Home, User, ChevronDown, Building2, Store, ChevronRight, MessageSquare } from 'lucide-react'
-import { SignOutButton } from '@clerk/nextjs'
+import { SignOutButton, useClerk } from '@clerk/nextjs'
 import BrandLogo from '@/components/BrandLogo'
 import { cn } from '@/lib/utils'
 import NotificationBell from './NotificationBell'
+import { logoutOps } from '@/actions/team'
 
 interface Membership {
     id: string
@@ -25,6 +26,26 @@ export default function OpsHeader() {
     const [allMemberships, setAllMemberships] = useState<Membership[]>([])
     const pathname = usePathname()
     const router = useRouter()
+    const { signOut } = useClerk()
+
+    const handleLogout = async () => {
+        try {
+            // 1. Clear OPS Cookies first (Most important for this app)
+            await logoutOps()
+            // 2. Clear Clerk Session (Optional/May fail for PIN users)
+            try {
+                await signOut()
+            } catch (e) {
+                console.warn('Clerk signOut skipped or failed:', e)
+            }
+            // 3. Hard redirect to ensure clean state on native app
+            window.location.href = '/ops/login'
+        } catch (error) {
+            console.error('Error during logout:', error)
+            await logoutOps()
+            window.location.href = '/ops/login'
+        }
+    }
 
     useEffect(() => {
         // Fetch branch name and all memberships from API
@@ -181,8 +202,11 @@ export default function OpsHeader() {
                     />
 
                     {/* Menu Content — safe area en el panel lateral */}
-                    <div className="relative w-3/4 max-w-xs bg-slate-900 h-full border-l border-white/10 flex flex-col shadow-2xl"
-                        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+                    <div className="relative w-3/4 max-w-xs bg-[#0f1115] h-full border-l border-white/10 flex flex-col shadow-2xl overflow-hidden"
+                        style={{ 
+                            paddingTop: 'env(safe-area-inset-top, 20px)',
+                            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 40px)' 
+                        }}>
                         <div className="flex items-center justify-between p-6 pt-4 mb-2">
                             <span className="text-white font-bold text-lg">Menu</span>
                             <button
@@ -270,13 +294,14 @@ export default function OpsHeader() {
                             </Link>
                         </nav>
 
-                        <div className="pt-6 border-t border-white/10">
-                            <SignOutButton redirectUrl="/ops/login">
-                                <button className="w-full flex items-center gap-3 p-3 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors">
-                                    <LogOut className="w-5 h-5" />
-                                    Cerrar Sesión
-                                </button>
-                            </SignOutButton>
+                        <div className="mt-auto pt-6 border-t border-white/10">
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-3 p-4 text-rose-400 hover:bg-rose-500/10 rounded-2xl transition-colors font-bold"
+                            >
+                                <LogOut className="w-5 h-5" />
+                                Cerrar Sesión
+                            </button>
                         </div>
                     </div>
                 </div>

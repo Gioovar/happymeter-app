@@ -8,7 +8,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 export default async function PromoterDashboardPage({ params }: { params: { promoterId: string, branchSlug: string } }) {
-    const context = await getDashboardContext()
+    const context = await getDashboardContext(params.branchSlug)
     if (!context) return null
 
     const promoter = await prisma.promoterProfile.findUnique({

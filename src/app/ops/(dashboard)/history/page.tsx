@@ -55,7 +55,8 @@ export default async function OpsHistoryPage() {
             subtitle: t.task.zone.name,
             date: t.submittedAt.toISOString(),
             image: t.fileUrl,
-            status: (t as any).validationStatus || 'PENDING'
+            status: t.validationStatus || 'PENDING',
+            note: t.supervisorNote
         }))
     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 

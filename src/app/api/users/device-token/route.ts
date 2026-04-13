@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 export async function POST(req: Request) {
     try {
         const body = await req.json()
-        const { token, platform, userId, customerId, globalPromoterId, appType } = body
+        const { token, platform, userId, memberId, customerId, globalPromoterId, appType } = body
 
         if (!token || !platform || !appType) {
             return new NextResponse("Missing required fields (token, platform, appType)", { status: 400 })
@@ -17,6 +17,7 @@ export async function POST(req: Request) {
                 platform,
                 appType,
                 userId: userId || null, // Keep null if not provided
+                memberId: memberId || null,
                 customerId: customerId || null,
                 globalPromoterId: globalPromoterId || null,
                 isActive: true,
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
                 platform,
                 appType,
                 userId: userId || null,
+                memberId: memberId || null,
                 customerId: customerId || null,
                 globalPromoterId: globalPromoterId || null,
                 isActive: true,
@@ -40,3 +42,4 @@ export async function POST(req: Request) {
         return new NextResponse("Internal Server Error", { status: 500 })
     }
 }
+

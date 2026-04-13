@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { History, Tag, User, Clock, Image as ImageIcon, CheckCircle2, Video, X } from "lucide-react";
+import { History, Tag, User, Clock, Image as ImageIcon, CheckCircle2, Video, X, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -14,6 +14,7 @@ interface HistoryItem {
     date: Date | string;
     image: string | null;
     status: string;
+    note?: string | null;
 }
 
 export default function HistoryList({ items }: { items: HistoryItem[] }) {
@@ -64,10 +65,12 @@ export default function HistoryList({ items }: { items: HistoryItem[] }) {
                                 <div className="flex gap-2 mt-2">
                                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${record.status === 'APPROVED' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
                                             record.status === 'REJECTED' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                                'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                                                record.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                                    'bg-slate-500/10 text-slate-400 border-white/10'
                                         }`}>
                                         {record.status === 'APPROVED' ? 'APROBADO' :
-                                            record.status === 'REJECTED' ? 'RECHAZADO' : 'EN REVISIÓN'}
+                                            record.status === 'REJECTED' ? 'RECHAZADO' :
+                                                record.status === 'PENDING' ? 'EN REVISIÓN' : 'OTRO'}
                                     </span>
                                 </div>
                             )}
@@ -145,6 +148,18 @@ export default function HistoryList({ items }: { items: HistoryItem[] }) {
                                                     {selectedItem.status === 'APPROVED' ? 'APROBADO' :
                                                         selectedItem.status === 'REJECTED' ? 'RECHAZADO' : 'EN REVISIÓN'}
                                                 </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedItem.note && (
+                                        <div className="flex items-start gap-3 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
+                                            <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0">
+                                                <MessageSquare className="w-4 h-4 text-indigo-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Nota del Supervisor</p>
+                                                <p className="text-sm text-slate-300 italic leading-relaxed">"{selectedItem.note}"</p>
                                             </div>
                                         </div>
                                     )}

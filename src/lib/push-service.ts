@@ -38,38 +38,44 @@ if (!admin.apps.length) {
     }
 }
 
-export async function sendPushNotification(userId: string, payload: PushPayload) {
+export async function sendPushNotification(id: string, payload: PushPayload) {
     try {
         // --- 1. WEB PUSH NOTIFICATIONS (PWA) ---
+        // For Web Push, we still primarily use userId as it's linked to the Service Worker
         const subscriptions = await prisma.pushSubscription.findMany({
-            where: { userId }
+            where: { userId: id }
         })
 
-        if (subscriptions.length === 0) return
-
-        const notifications = subscriptions.map(sub => {
-            return webpush.sendNotification(
-                {
-                    endpoint: sub.endpoint,
-                    keys: sub.keys as any
-                },
-                JSON.stringify(payload)
-            ).catch(async (err) => {
-                if (err.statusCode === 410 || err.statusCode === 404) {
-                    // Subscription expired or gone, delete it
-                    await prisma.pushSubscription.delete({ where: { id: sub.id } })
-                }
-                console.error('Push error:', err)
+        if (subscriptions.length > 0) {
+            const notifications = subscriptions.map(sub => {
+                return webpush.sendNotification(
+                    {
+                        endpoint: sub.endpoint,
+                        keys: sub.keys as any
+                    },
+                    JSON.stringify(payload)
+                ).catch(async (err) => {
+                    if (err.statusCode === 410 || err.statusCode === 404) {
+                        await prisma.pushSubscription.delete({ where: { id: sub.id } })
+                    }
+                    console.error('Push error:', err)
+                })
             })
-        })
-
-        await Promise.all(notifications)
+            await Promise.all(notifications)
+        }
 
         // --- 2. NATIVE PUSH NOTIFICATIONS (FCM) ---
-        if (!admin.apps.length) return; // Skip if Firebase is not initialized
+        if (!admin.apps.length) return;
 
+        // Search by userId OR memberId (Universal search for OPS)
         const deviceTokens = await prisma.deviceToken.findMany({
-            where: { userId, isActive: true },
+            where: { 
+                OR: [
+                    { userId: id },
+                    { memberId: id }
+                ],
+                isActive: true 
+            },
             select: { token: true, id: true }
         });
 

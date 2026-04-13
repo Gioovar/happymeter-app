@@ -425,71 +425,30 @@ export async function getLoyaltyProgram(userId: string) {
         const activeContextId = await getActiveBusinessId()
         const effectiveContextId = activeContextId || userId
 
-        // 1. Fetch Owned Branches
-        const myBranches = await prisma.chainBranch.findMany({
-            where: { chain: { ownerId: effectiveContextId } },
-            select: { branchId: true }
-        });
-        const branchIds = myBranches.map(b => b.branchId);
+        // Forcing STRICT Branch isolation as per architectural rule
+        // The effectiveContextId represents the Active Branch ID.
 
-        // Target IDs will be Context Owner + All Branches
-        const targetUserIds = [effectiveContextId, ...branchIds];
-
-        // 2. Fetch primary program (Owner's program, or fallback to first branch's program)
+        // Fetch primary program for this specific branch
         let primaryProgram = await prisma.loyaltyProgram.findFirst({
             where: { userId: effectiveContextId },
             include: {
                 rewards: { where: { isActive: true }, orderBy: { costInVisits: 'asc' } },
                 promotions: { where: { isActive: true }, orderBy: { createdAt: 'desc' } },
                 rules: { where: { isActive: true } },
-                tiers: { orderBy: { order: 'asc' } }
+                tiers: { orderBy: { order: 'asc' } },
+                _count: {
+                    select: {
+                        customers: true,
+                        visits: true,
+                        redemptions: true
+                    }
+                }
             }
         });
-
-        // 3. Fallback to branch program if owner has none
-        if (!primaryProgram && branchIds.length > 0) {
-            primaryProgram = await prisma.loyaltyProgram.findFirst({
-                where: { userId: { in: branchIds } },
-                include: {
-                    rewards: { where: { isActive: true }, orderBy: { costInVisits: 'asc' } },
-                    promotions: { where: { isActive: true }, orderBy: { createdAt: 'desc' } },
-                    rules: { where: { isActive: true } },
-                    tiers: { orderBy: { order: 'asc' } }
-                }
-            });
-        }
 
         if (!primaryProgram) return null;
 
-        // 4. Fetch Aggregate Counts across ALL target programs
-        // Summing up counts using the aggregate query for customers, visits, redemptions across all locations
-        // To do this, we need all Program IDs associated to these Users
-        const targetPrograms = await prisma.loyaltyProgram.findMany({
-            where: { userId: { in: targetUserIds } },
-            select: { id: true }
-        });
-        const programIds = targetPrograms.map(p => p.id);
-
-        let totalCustomers = 0;
-        let totalVisits = 0;
-        let totalRedemptions = 0;
-
-        if (programIds.length > 0) {
-            totalCustomers = await prisma.loyaltyCustomer.count({ where: { programId: { in: programIds } } });
-            totalVisits = await prisma.loyaltyVisit.count({ where: { programId: { in: programIds } } });
-            totalRedemptions = await prisma.loyaltyRedemption.count({ where: { programId: { in: programIds } } });
-        }
-
-        // Return the primary program shape, but override the _count with our aggregated totals
-        return {
-            ...primaryProgram,
-            isAggregated: programIds.length > 1, // Let front-end know this is a Master view
-            _count: {
-                customers: totalCustomers,
-                visits: totalVisits,
-                redemptions: totalRedemptions
-            }
-        }
+        return primaryProgram
 
     } catch (error) {
         return null

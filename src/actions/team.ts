@@ -1017,3 +1017,12 @@ export async function toggleTeamMemberStatus(memberId: string, isActive: boolean
         return { success: false, error: error.message }
     }
 }
+
+export async function logoutOps() {
+    const cookieStore = await cookies()
+    cookieStore.delete('operator_session')
+    cookieStore.delete('ops_context_id')
+    revalidatePath('/ops')
+    return { success: true }
+}
+

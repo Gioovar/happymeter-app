@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Clock, CheckCircle2, Camera, Video, AlertTriangle, Upload, X, UserPlus, User, Pencil, ChevronRight, Search, Filter } from 'lucide-react'
+import { ArrowLeft, Clock, CheckCircle2, Camera, Video, AlertTriangle, Upload, X, UserPlus, User, Pencil, ChevronRight, Search, Filter, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -17,11 +17,13 @@ import ProcessHistoryView from './ProcessHistoryView'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import AssignTaskDialog from './AssignTaskDialog'
 import EditTaskDialog from './EditTaskDialog'
+import CreateTaskDialog from './CreateTaskDialog'
 import TaskHistoryDialog from './TaskHistoryDialog'
 import TaskCamera from '@/components/ops/TaskCamera'
 // @ts-ignore
 import { upload } from '@vercel/blob/client'
 import { ProcessFlowForm } from './ProcessFlowForm'
+import ValidationDialog from './ValidationDialog'
 
 interface Task {
     id: string
@@ -75,11 +77,16 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null)
     const [isEditZoneOpen, setIsEditZoneOpen] = useState(false)
+    const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
 
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
     const [taskForHistory, setTaskForHistory] = useState<Task | null>(null)
 
     const [evidenceComment, setEvidenceComment] = useState('')
+
+    // Validation States
+    const [isValidatingTask, setIsValidatingTask] = useState<any | null>(null)
+    const [validationEvidence, setValidationEvidence] = useState<any | null>(null)
 
     // --- Search & Filter State ---
     const [searchQuery, setSearchQuery] = useState('')
@@ -330,15 +337,26 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                             </h1>
                             <p className="text-gray-400 text-sm">{activeZone.description || 'Lista de tareas operativas'}</p>
                         </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setIsEditZoneOpen(true)}
-                            className="bg-white/5 border-white/10 hover:bg-white/10 text-white gap-2 h-10 px-4 rounded-xl"
-                        >
-                            <Pencil className="w-4 h-4" />
-                            <span className="hidden sm:inline">Editar Zona y Tareas</span>
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => setIsCreateTaskOpen(true)}
+                                className="bg-cyan-600 hover:bg-cyan-700 text-white gap-2 h-10 px-4 rounded-xl shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span className="hidden sm:inline font-medium">Sumar Tarea</span>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsEditZoneOpen(true)}
+                                className="bg-white/5 border-white/10 hover:bg-white/10 text-white gap-2 h-10 px-4 rounded-xl hidden md:flex"
+                            >
+                                <Pencil className="w-4 h-4" />
+                                <span>Editar Zona</span>
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
@@ -450,8 +468,14 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                                     key={task.id}
                                     className={`group relative bg-[#111] border border-white/10 rounded-xl p-4 hover:border-cyan-500/30 transition-all cursor-pointer overflow-hidden flex flex-col md:flex-row md:items-center gap-4 ${task.evidences?.[0] ? 'opacity-75' : ''}`}
                                     onClick={() => {
-                                        setTaskForHistory(task)
-                                        setHistoryDialogOpen(true)
+                                        if (task.evidences?.[0] && branchId) {
+                                            // Show validation if supervisor
+                                            setIsValidatingTask(task)
+                                            setValidationEvidence(task.evidences[0])
+                                        } else {
+                                            setTaskForHistory(task)
+                                            setHistoryDialogOpen(true)
+                                        }
                                     }}
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -540,6 +564,21 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                                                     {assignedStaff ? 'Reasignar' : 'Asignar'} <UserPlus className="w-3.5 h-3.5" />
                                                 </Button>
                                             </div>
+                                        )}
+
+                                        {task.evidences?.[0] && task.evidences[0].validationStatus === 'PENDING' && (
+                                            <Button
+                                                size="sm"
+                                                variant="default"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setIsValidatingTask(task)
+                                                    setValidationEvidence(task.evidences[0])
+                                                }}
+                                                className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold text-xs gap-1 h-8"
+                                            >
+                                                Ver Evidencia
+                                            </Button>
                                         )}
                                     </div>
                                 </div>
@@ -788,6 +827,24 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                 </DialogContent>
             </Dialog>
 
+            {/* Validation Dialog for Supervisor */}
+            <ValidationDialog
+                isOpen={!!isValidatingTask}
+                onClose={() => {
+                    setIsValidatingTask(null)
+                    setValidationEvidence(null)
+                }}
+                task={isValidatingTask ? {
+                    id: isValidatingTask.id,
+                    title: isValidatingTask.title,
+                    zoneName: activeZone.name
+                } : null}
+                evidence={validationEvidence}
+                onSuccess={() => {
+                    router.refresh()
+                }}
+            />
+
             {/* Assignment Dialog */}
             <AssignTaskDialog
                 open={assignDialogOpen}
@@ -865,6 +922,16 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                     )}
                 </DialogContent>
             </Dialog>
+
+            {/* Create Task Dialog */}
+            {activeZone && (
+                <CreateTaskDialog
+                    open={isCreateTaskOpen}
+                    onOpenChange={setIsCreateTaskOpen}
+                    zoneId={activeZone.id}
+                    onSuccess={() => router.refresh()}
+                />
+            )}
 
         </div>
     )

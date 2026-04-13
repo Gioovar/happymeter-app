@@ -349,6 +349,11 @@ export async function validateEvidence(evidenceId: string, status: 'APPROVED' | 
         console.error("[validateEvidence] Failed to send push notification:", pushError);
     }
 
+    // Revalidate paths for real-time updates
+    revalidatePath('/dashboard/processes');
+    revalidatePath('/ops/tasks');
+    revalidatePath('/ops/history');
+
     return { success: true };
 }
 

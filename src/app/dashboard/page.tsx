@@ -1,35 +1,18 @@
 'use client'
 
 import { useAuth } from '@clerk/nextjs'
-import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useDashboard } from '@/context/DashboardContext'
 import { toast } from 'sonner'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import HappyLoader from '@/components/HappyLoader'
-import DashboardView from '@/components/dashboard/DashboardView'
 
 export default function DashboardPage() {
-    const { userId, isLoaded } = useAuth()
+    const { isLoaded } = useAuth()
     const router = useRouter()
-    const params = useParams()
-    const searchParams = useSearchParams()
 
     // Access Global Dashboard State
-    const {
-        chains,
-        loadingSurveys,
-        loadingAnalytics,
-        activeContextName
-    } = useDashboard()
-
-    // --- LOGIC: Master Dashboard vs Branch Dashboard ---
-    const branchId = searchParams.get('branchId')
-    const branchSlug = typeof params?.slug === 'string' ? params.slug : undefined
-    const isBranchMode = !!branchId || !!branchSlug
-
-    // Single-branch businesses should go directly to the standard dashboard.
-    // Master Dashboard will sum up all data and show it here, removing forced redirect.
-    const activeChain = chains[0]
+    const { branchId } = useDashboard()
 
     // SABOTAGE SAFEGUARD: Check for pending checkout cookie
     useEffect(() => {
@@ -57,30 +40,18 @@ export default function DashboardPage() {
             params.set('plan', pendingPlan)
             if (pendingInterval) params.set('interval', pendingInterval)
             window.location.href = `/pricing?${params.toString()}`
+            return;
         }
-    }, [])
 
-    if (loadingSurveys && loadingAnalytics) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
-                <HappyLoader size="lg" text="Cargando tu dashboard..." />
-            </div>
-        )
-    }
-
-    // Resolve Branch Name for Standard Dashboard View
-    let resolvedBranchName = activeContextName
-    if (!resolvedBranchName && branchId) {
-        const foundBranch = chains.flatMap(c => c.branches).find(b => b.branchId === branchId)
-        if (foundBranch) {
-            resolvedBranchName = foundBranch.name || foundBranch.branch.businessName || 'Sucursal'
+        // If no checkout pending, proceed to unified architecture routing
+        if (isLoaded && branchId) {
+            router.replace(`/dashboard/${branchId}`)
         }
-    }
+    }, [isLoaded, branchId, router])
 
     return (
-        <DashboardView
-            branchName={resolvedBranchName}
-            isBranchMode={isBranchMode}
-        />
+        <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
+            <HappyLoader size="lg" text="Cargando entorno..." />
+        </div>
     )
 }

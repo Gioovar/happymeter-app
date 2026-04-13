@@ -1,8 +1,8 @@
 'use server'
-
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { getOpsSession } from '@/lib/ops-auth'
 
 export async function completeTour() {
     const { userId } = await auth()
@@ -17,35 +17,50 @@ export async function completeTour() {
         }
     })
 
-
     revalidatePath('/dashboard')
 }
 
 export async function updateUserProfile(data: { phone: string, photoUrl: string, name: string, jobTitle: string }) {
-    const { userId } = await auth()
-    if (!userId) throw new Error('Unauthorized')
+    const session = await getOpsSession()
+    
+    if (!session.isAuthenticated || !session.member) {
+        throw new Error('No autorizado')
+    }
 
-    await prisma.userSettings.upsert({
-        where: { userId },
-        update: {
-            phone: data.phone,
-            photoUrl: data.photoUrl,
-            // @ts-ignore
-            fullName: data.name, // Correctly mapping to fullName
+    // 1. Update TeamMember (Universal for Staff and Admin in OPS context)
+    await prisma.teamMember.update({
+        where: { id: session.member.id },
+        data: {
+            name: data.name,
             jobTitle: data.jobTitle,
-            isOnboarded: true
-        },
-        create: {
-            userId,
             phone: data.phone,
-            photoUrl: data.photoUrl,
-            // @ts-ignore
-            fullName: data.name,
-            jobTitle: data.jobTitle,
-            isOnboarded: true
+            photoUrl: data.photoUrl
         }
     })
+
+    // 2. If Clerk User, update UserSettings as well (Primary profile)
+    if (session.userId) {
+        await prisma.userSettings.upsert({
+            where: { userId: session.userId },
+            update: {
+                phone: data.phone,
+                photoUrl: data.photoUrl,
+                fullName: data.name,
+                jobTitle: data.jobTitle,
+                isOnboarded: true
+            },
+            create: {
+                userId: session.userId,
+                phone: data.phone,
+                photoUrl: data.photoUrl,
+                fullName: data.name,
+                jobTitle: data.jobTitle,
+                isOnboarded: true
+            }
+        })
+    }
 
     revalidatePath('/ops')
     return { success: true }
 }
+
