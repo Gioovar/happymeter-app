@@ -114,6 +114,13 @@ model UserSettings {
   logoUrl                    String?
   whatsappContact            String?
   extraSurveys               Int                         @default(0)
+  
+  // Feature Flags for Modular Plans
+  hasLoyalty                 Boolean                     @default(false)
+  hasProcesses               Boolean                     @default(false)
+  hasReservations            Boolean                     @default(false)
+  hasDigitalMenu             Boolean                     @default(false)
+
   reservationSettings        Json?
   defaultCommissionPerPerson Float                       @default(0)
   weeklyGoalAttendees        Int?                        @default(50)

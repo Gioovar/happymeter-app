@@ -106,7 +106,15 @@ export async function getDashboardContext(branchSlug?: string) {
         // We fetch settings to get the real business name if possible, or fallback
         const settings = await prisma.userSettings.findUnique({
             where: { userId },
-            select: { businessName: true, plan: true, subscriptionStatus: true }
+            select: { 
+                businessName: true, 
+                plan: true, 
+                subscriptionStatus: true,
+                hasLoyalty: true,
+                hasProcesses: true,
+                hasReservations: true,
+                hasDigitalMenu: true
+            }
         });
 
         return {
@@ -115,6 +123,12 @@ export async function getDashboardContext(branchSlug?: string) {
             name: settings?.businessName || 'Mi Negocio',
             plan: settings?.plan || 'FREE',
             subscriptionStatus: settings?.subscriptionStatus || 'ACTIVE',
+            features: {
+                hasLoyalty: settings?.hasLoyalty || false,
+                hasProcesses: settings?.hasProcesses || false,
+                hasReservations: settings?.hasReservations || false,
+                hasDigitalMenu: settings?.hasDigitalMenu || false
+            },
             params: { branchSlug }
         }
     }
@@ -129,7 +143,15 @@ export async function getDashboardContext(branchSlug?: string) {
         },
         include: {
             branch: {
-                select: { businessName: true, plan: true, subscriptionStatus: true }
+                select: { 
+                    businessName: true, 
+                    plan: true, 
+                    subscriptionStatus: true,
+                    hasLoyalty: true,
+                    hasProcesses: true,
+                    hasReservations: true,
+                    hasDigitalMenu: true
+                }
             }
         }
     });
@@ -140,7 +162,13 @@ export async function getDashboardContext(branchSlug?: string) {
             isBranch: true,
             name: branch.branch.businessName || branch.name || branchSlug,
             plan: branch.branch.plan,
-            subscriptionStatus: branch.branch.subscriptionStatus, // Passing the status
+            subscriptionStatus: branch.branch.subscriptionStatus, 
+            features: {
+                hasLoyalty: branch.branch.hasLoyalty || false,
+                hasProcesses: branch.branch.hasProcesses || false,
+                hasReservations: branch.branch.hasReservations || false,
+                hasDigitalMenu: branch.branch.hasDigitalMenu || false
+            },
             params: { branchSlug }
         };
     }

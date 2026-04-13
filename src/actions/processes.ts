@@ -310,121 +310,160 @@ export async function getOpsTasks() {
         // Strict Context: Use ONLY the member ID from the session (which respects the cookie)
         // Do NOT fetch all memberships for the user, as that breaks the branch context isolation.
         const memberIds = [member.id];
+        const isRestricted = ['OPERATOR', 'HOSTESS', 'OBSERVER'].includes(member.role);
 
-        console.log(`[getOpsTasks] Context Member found. ID:`, memberIds);
+        console.log(`[getOpsTasks] Role: ${member.role}, Restricted: ${isRestricted}`);
 
-        // Strategy: Fetch zones in two separate queries for clarity and correctness
-        // 1. Zones where I am the manager (assignedStaffId) - I see ALL tasks
-        // 2. Zones where I have specific task assignments - I see ONLY those tasks
+        let allZones = [];
 
-        const zonesWhereManager = await prisma.processZone.findMany({
-            where: {
-                OR: [
-                    { userId: member.ownerId },
-                    { branchId: member.ownerId }
-                ],
-                assignedStaffId: { in: memberIds }
-            },
-            include: {
-                tasks: {
-                    where: {
-                        days: { has: dayOfWeek }
-                    },
-                    include: {
-                        evidences: {
-                            where: {
-                                submittedAt: {
-                                    gte: todayStart,
-                                    lte: todayEnd
-                                }
-                            },
-                            take: 10,
-                            orderBy: { submittedAt: 'desc' }
+        if (isRestricted) {
+            // RESTRICTED VIEW: Only see zones where I have SPECIFIC tasks assigned
+            // AND only see those specific tasks.
+            allZones = await prisma.processZone.findMany({
+                where: {
+                    OR: [
+                        { userId: member.ownerId },
+                        { branchId: member.ownerId }
+                    ],
+                    tasks: {
+                        some: {
+                            assignedStaffId: { in: memberIds },
+                            days: { has: dayOfWeek }
                         }
-                    }
-                }
-            }
-        });
-
-        const zonesWithAssignedTasks = await prisma.processZone.findMany({
-            where: {
-                OR: [
-                    { userId: member.ownerId },
-                    { branchId: member.ownerId }
-                ],
-                tasks: {
-                    some: {
-                        assignedStaffId: { in: memberIds },
-                        days: { has: dayOfWeek }
                     }
                 },
-                // Exclude zones where I am already the manager
-                AND: [
-                    {
-                        OR: [
-                            { assignedStaffId: null },
-                            { NOT: { assignedStaffId: { in: memberIds } } }
-                        ]
-                    }
-                ]
-            },
-            include: {
-                tasks: {
-                    where: {
-                        assignedStaffId: { in: memberIds },
-                        days: { has: dayOfWeek }
-                    },
-                    include: {
-                        evidences: {
-                            where: {
-                                submittedAt: {
-                                    gte: todayStart,
-                                    lte: todayEnd
-                                }
-                            },
-                            take: 10,
-                            orderBy: { submittedAt: 'desc' }
+                include: {
+                    tasks: {
+                        where: {
+                            assignedStaffId: { in: memberIds },
+                            days: { has: dayOfWeek }
+                        },
+                        include: {
+                            evidences: {
+                                where: {
+                                    submittedAt: {
+                                        gte: todayStart,
+                                        lte: todayEnd
+                                    }
+                                },
+                                take: 10,
+                                orderBy: { submittedAt: 'desc' }
+                            }
                         }
                     }
                 }
-            }
-        });
-
-        // 3. Zones that are completely unassigned (Cualquiera puede completar)
-        const unassignedZones = await prisma.processZone.findMany({
-            where: {
-                OR: [
-                    { userId: member.ownerId },
-                    { branchId: member.ownerId }
-                ],
-                assignedStaffId: null
-            },
-            include: {
-                tasks: {
-                    where: {
-                        assignedStaffId: null, // Only unassigned tasks
-                        days: { has: dayOfWeek }
-                    },
-                    include: {
-                        evidences: {
-                            where: {
-                                submittedAt: {
-                                    gte: todayStart,
-                                    lte: todayEnd
-                                }
-                            },
-                            take: 10,
-                            orderBy: { submittedAt: 'desc' }
+            });
+        } else {
+            // ADMIN/SUPERVISOR VIEW: Full visibility
+            // 1. Zones where I am the manager (assignedStaffId) - I see ALL tasks
+            const zonesWhereManager = await prisma.processZone.findMany({
+                where: {
+                    OR: [
+                        { userId: member.ownerId },
+                        { branchId: member.ownerId }
+                    ],
+                    assignedStaffId: { in: memberIds }
+                },
+                include: {
+                    tasks: {
+                        where: {
+                            days: { has: dayOfWeek }
+                        },
+                        include: {
+                            evidences: {
+                                where: {
+                                    submittedAt: {
+                                        gte: todayStart,
+                                        lte: todayEnd
+                                    }
+                                },
+                                take: 10,
+                                orderBy: { submittedAt: 'desc' }
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
 
-        const validUnassignedZones = unassignedZones.filter(z => z.tasks.length > 0);
+            // 2. Zones where I have specific task assignments - I see ONLY those tasks
+            const zonesWithAssignedTasks = await prisma.processZone.findMany({
+                where: {
+                    OR: [
+                        { userId: member.ownerId },
+                        { branchId: member.ownerId }
+                    ],
+                    tasks: {
+                        some: {
+                            assignedStaffId: { in: memberIds },
+                            days: { has: dayOfWeek }
+                        }
+                    },
+                    // Exclude zones where I am already the manager
+                    AND: [
+                        {
+                            OR: [
+                                { assignedStaffId: null },
+                                { NOT: { assignedStaffId: { in: memberIds } } }
+                            ]
+                        }
+                    ]
+                },
+                include: {
+                    tasks: {
+                        where: {
+                            assignedStaffId: { in: memberIds },
+                            days: { has: dayOfWeek }
+                        },
+                        include: {
+                            evidences: {
+                                where: {
+                                    submittedAt: {
+                                        gte: todayStart,
+                                        lte: todayEnd
+                                    }
+                                },
+                                take: 10,
+                                orderBy: { submittedAt: 'desc' }
+                            }
+                        }
+                    }
+                }
+            });
 
-        // Combine all result sets
-        const allZones = [...zonesWhereManager, ...zonesWithAssignedTasks, ...validUnassignedZones];
+            // 3. Zones that are completely unassigned (Cualquiera puede completar)
+            const unassignedZones = await prisma.processZone.findMany({
+                where: {
+                    OR: [
+                        { userId: member.ownerId },
+                        { branchId: member.ownerId }
+                    ],
+                    assignedStaffId: null
+                },
+                include: {
+                    tasks: {
+                        where: {
+                            assignedStaffId: null, // Only unassigned tasks
+                            days: { has: dayOfWeek }
+                        },
+                        include: {
+                            evidences: {
+                                where: {
+                                    submittedAt: {
+                                        gte: todayStart,
+                                        lte: todayEnd
+                                    }
+                                },
+                                take: 10,
+                                orderBy: { submittedAt: 'desc' }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const validUnassignedZones = unassignedZones.filter(z => z.tasks.length > 0);
+            allZones = [...zonesWhereManager, ...zonesWithAssignedTasks, ...validUnassignedZones];
+        }
 
         // Sort tasks within each zone
         allZones.forEach((zone: any) => {

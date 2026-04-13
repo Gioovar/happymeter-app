@@ -161,7 +161,15 @@ export async function updateTenantPlan(userId: string, newPlan: string) {
     }
 }
 
-export async function updateTenantSubscription(userId: string, data: { plan: string, maxBranches: number, extraSurveys: number }) {
+export async function updateTenantSubscription(userId: string, data: { 
+    plan: string, 
+    maxBranches: number, 
+    extraSurveys: number,
+    hasLoyalty?: boolean,
+    hasProcesses?: boolean,
+    hasReservations?: boolean,
+    hasDigitalMenu?: boolean
+}) {
     try {
         await verifyAdmin()
 
@@ -172,7 +180,11 @@ export async function updateTenantSubscription(userId: string, data: { plan: str
             data: {
                 plan: data.plan,
                 maxBranches: data.maxBranches,
-                extraSurveys: data.extraSurveys
+                extraSurveys: data.extraSurveys,
+                hasLoyalty: data.hasLoyalty ?? false,
+                hasProcesses: data.hasProcesses ?? false,
+                hasReservations: data.hasReservations ?? false,
+                hasDigitalMenu: data.hasDigitalMenu ?? false
             }
         })
 

@@ -36,7 +36,7 @@ export default function ModeSelector() {
 
     return (
         <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-full border border-white/10 shadow-lg overflow-x-auto max-w-full no-scrollbar">
-            {MODES.map((mode) => {
+            {MODES.filter(m => m.id === 'surveys' || checkModuleAccess(m.id)).map((mode) => {
                 const isActive = activeMode === mode.id;
                 const Icon = mode.icon;
                 const isLocked = !checkModuleAccess(mode.id);

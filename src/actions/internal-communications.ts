@@ -76,7 +76,8 @@ export async function sendInternalMessage(formData: FormData) {
             title: `💬 ${senderName}`,
             body: content.length > 50 ? content.substring(0, 47) + '...' : content,
             appType: 'OPS',
-            userId: pushTargetUserId,
+            userId: teamMember?.userId || undefined,
+            memberId: receiverId,
             route: `/ops/chat?with=${effectiveSenderId}`
         });
     } catch (pushErr) {
@@ -340,7 +341,8 @@ export async function createInternalNotification(
             title: title || "🔔 Tienes una alerta",
             body: body,
             appType: 'OPS', // Defaulting to OPS context for internal notifications
-            userId: pushTargetUserId,
+            userId: teamMember?.userId || undefined,
+            memberId: targetUserId,
             route: actionUrl || undefined
         });
     } catch (pushErr) {

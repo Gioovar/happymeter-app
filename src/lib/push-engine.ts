@@ -25,6 +25,7 @@ export interface PushMessageParams {
     body: string;
     appType: AppType;
     userId?: string; // For Staff/Owner (Ops App)
+    memberId?: string; // For offline Staff (Ops App)
     customerId?: string; // For Customers (Loyalty App)
     programId?: string; // If related to a specific loyalty program
     campaignId?: string; // If triggered by a mass campaign
@@ -33,12 +34,23 @@ export interface PushMessageParams {
 }
 
 export async function sendNativePush(params: PushMessageParams) {
-    try {
-        const { title, body, appType, userId, customerId, programId, campaignId, route, extraData } = params;
+    const {
+        title,
+        body,
+        appType,
+        userId,
+        memberId,
+        customerId,
+        programId,
+        campaignId,
+        route,
+        extraData
+    } = params;
 
+    try {
         // 1. Validate Target
-        if (!userId && !customerId) {
-            console.error("[PUSH ENGINE] No target specified (userId or customerId missing).");
+        if (!userId && !customerId && !memberId) {
+            console.error("[PUSH ENGINE] No target specified (userId, customerId or memberId missing).");
             return { success: false, error: "No target specified" };
         }
 
@@ -47,8 +59,11 @@ export async function sendNativePush(params: PushMessageParams) {
             where: {
                 appType,
                 isActive: true,
-                ...(userId ? { userId } : {}),
-                ...(customerId ? { customerId } : {}),
+                OR: [
+                    userId ? { userId } : undefined,
+                    memberId ? { memberId } : undefined,
+                    customerId ? { customerId } : undefined,
+                ].filter((item): item is { userId: string } | { memberId: string } | { customerId: string } => !!item)
             }
         });
 
@@ -129,6 +144,7 @@ export async function sendNativePush(params: PushMessageParams) {
                 programId,
                 customerId,
                 userId,
+                memberId,
                 campaignId,
                 status: response.successCount > 0 ? "DELIVERED" : "FAILED",
                 metadata: {

@@ -65,8 +65,12 @@ export default async function DashboardLayout({
                         isOnboarded: true,
                         createdAt: true,
                         subscriptionStatus: true,
+                        hasLoyalty: true,
+                        hasProcesses: true,
+                        hasReservations: true,
+                        hasDigitalMenu: true,
                         // @ts-ignore
-                        fullName: true, // Fetch Data
+                        fullName: true,
                     }
                 })
             ])

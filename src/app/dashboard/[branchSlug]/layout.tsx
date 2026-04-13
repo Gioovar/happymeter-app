@@ -23,6 +23,7 @@ export default async function BranchDashboardLayout({
             branchSlug={params.branchSlug}
             initialPlan={context.plan}
             dbSubscriptionStatus={context.subscriptionStatus || undefined}
+            features={(context as any).features}
         >
             {children}
         </DashboardProvider>

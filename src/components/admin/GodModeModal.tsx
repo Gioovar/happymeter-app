@@ -18,6 +18,10 @@ interface GodModeModalProps {
         plan: string
         maxBranches?: number
         extraSurveys?: number
+        hasLoyalty?: boolean
+        hasProcesses?: boolean
+        hasReservations?: boolean
+        hasDigitalMenu?: boolean
     }
 }
 
@@ -46,11 +50,17 @@ export default function GodModeModal({ isOpen, onClose, tenant }: GodModeModalPr
     // UI State mimicking SalesContent
     const [plan, setPlan] = useState<'GROWTH' | 'POWER' | 'CHAIN' | 'ENTERPRISE'>(
         (tenant.plan === 'GROWTH' || tenant.plan === 'POWER' || tenant.plan === 'CHAIN' || tenant.plan === 'ENTERPRISE')
-            ? tenant.plan
+            ? tenant.plan as any
             : 'GROWTH'
     )
     const [quantity, setQuantity] = useState(tenant.maxBranches || 1)
-    const [selectedAddons, setSelectedAddons] = useState<string[]>([])
+    const [selectedAddons, setSelectedAddons] = useState<string[]>(() => {
+        const addons = []
+        if (tenant.hasLoyalty) addons.push('loyalty')
+        if (tenant.hasProcesses) addons.push('processes')
+        if (tenant.hasReservations) addons.push('reservations')
+        return addons
+    })
     // We keep extra surveys separate as a bonus override
     const [extraSurveys, setExtraSurveys] = useState(tenant.extraSurveys || 0)
 
@@ -66,7 +76,11 @@ export default function GodModeModal({ isOpen, onClose, tenant }: GodModeModalPr
             await updateTenantSubscription(tenant.userId, {
                 plan: plan,
                 maxBranches: quantity,
-                extraSurveys: extraSurveys
+                extraSurveys: extraSurveys,
+                hasLoyalty: selectedAddons.includes('loyalty'),
+                hasProcesses: selectedAddons.includes('processes'),
+                hasReservations: selectedAddons.includes('reservations'),
+                hasDigitalMenu: selectedAddons.includes('loyalty') // By Default menu comes with loyalty for now
             })
             toast.success(`Plan ${plan} asignado a ${tenant.businessName || 'Usuario'}`)
             router.refresh()

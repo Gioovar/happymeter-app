@@ -88,10 +88,14 @@ interface DashboardContextType {
     userCreatedAt?: string | Date
     checkFeature: (feature: string) => boolean
     checkModuleAccess: (module: string) => boolean
-    activeContextName?: string
-    activeContextRole?: string
     activeContextBannerUrl?: string | null
     basePath: string
+    features: {
+        hasLoyalty: boolean
+        hasProcesses: boolean
+        hasReservations: boolean
+        hasDigitalMenu: boolean
+    }
 }
 
 const defaultStats: StatsData = {
@@ -110,7 +114,12 @@ const defaultStats: StatsData = {
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)
 
 // Add branchId to Props
-export function DashboardProvider({ children, branchId, branchSlug, initialPlan = 'FREE', userCreatedAt, dbSubscriptionStatus, userRole = 'USER', activeContextName, activeContextRole, activeContextBannerUrl }: {
+export function DashboardProvider({ children, branchId, branchSlug, initialPlan = 'FREE', userCreatedAt, dbSubscriptionStatus, userRole = 'USER', activeContextName, activeContextRole, activeContextBannerUrl, features = {
+    hasLoyalty: false,
+    hasProcesses: false,
+    hasReservations: false,
+    hasDigitalMenu: false
+} }: {
     children: React.ReactNode,
     branchId?: string,
     branchSlug?: string,
@@ -120,7 +129,13 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
     userRole?: string,
     activeContextName?: string,
     activeContextRole?: string,
-    activeContextBannerUrl?: string | null
+    activeContextBannerUrl?: string | null,
+    features?: {
+        hasLoyalty: boolean
+        hasProcesses: boolean
+        hasReservations: boolean
+        hasDigitalMenu: boolean
+    }
 }) {
     const { userId } = useAuth()
 
@@ -320,10 +335,16 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
             userCreatedAt: createdDate, // Expose calculated date or raw input
             checkFeature,
             checkModuleAccess: (module: string) => {
-                // 1. Paid Plans -> Allow All
+                // 1. Check God Mode Manual Flags FIRST
+                if (module === 'loyalty' && features.hasLoyalty) return true
+                if (module === 'processes' && features.hasProcesses) return true
+                if (module === 'reservations' && features.hasReservations) return true
+                if (module === 'menu' && features.hasDigitalMenu) return true
+
+                // 2. Paid Plans -> Allow All (Standard Tier Logic)
                 if (plan !== 'FREE') return true
 
-                // 2. Free / Trialing Logic
+                // 3. Free / Trialing Logic
                 // If Trialing or Grace (Not Locked) -> Allow All (Full Experience)
                 if (!isLocked) return true
 
@@ -336,7 +357,8 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
             activeContextName,
             activeContextRole,
             activeContextBannerUrl,
-            basePath
+            basePath,
+            features
         }}>
             {children}
         </DashboardContext.Provider>

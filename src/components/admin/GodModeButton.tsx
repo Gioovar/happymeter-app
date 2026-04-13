@@ -11,6 +11,10 @@ interface GodModeButtonProps {
         plan: string
         maxBranches?: number
         extraSurveys?: number
+        hasLoyalty?: boolean
+        hasProcesses?: boolean
+        hasReservations?: boolean
+        hasDigitalMenu?: boolean
     }
 }
 

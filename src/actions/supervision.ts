@@ -330,7 +330,8 @@ export async function validateEvidence(evidenceId: string, status: 'APPROVED' | 
             const staff = await prisma.teamMember.findUnique({
                 where: { id: evidenceData.staffId }
             });
-            if (staff && staff.userId) {
+            
+            if (staff) {
                 const title = status === 'APPROVED' ? "✅ Tarea Aprobada" : "❌ Tarea Rechazada";
                 const body = status === 'APPROVED'
                     ? `¡Buen trabajo! Tu tarea "${evidenceData.task.title}" ha sido aprobada.`
@@ -340,7 +341,8 @@ export async function validateEvidence(evidenceId: string, status: 'APPROVED' | 
                     title,
                     body,
                     appType: 'OPS',
-                    userId: staff.userId,
+                    userId: staff.userId || undefined,
+                    memberId: evidenceData.staffId,
                     route: `/ops/tasks/${evidenceData.taskId}`
                 });
             }

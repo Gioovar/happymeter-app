@@ -25,7 +25,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Esta aplicación requiere acceso a la cámara para escanear los códigos QR de las tarjetas de lealtad de los clientes.</string>
+	<string>Esta aplicación requiere acceso a la cámara para escanear los códigos QR de las tarjetas de lealtad de los clientes y capturar evidencias de tareas.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Esta aplicación requiere acceso al micrófono para grabar audio durante la captura de evidencias de video de las tareas operativas.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Tu ubicación es necesaria para validar que las tareas se realicen en el establecimiento correspondiente.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Tu ubicación es necesaria para validar que las tareas se realicen en el establecimiento correspondiente.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Esta aplicación requiere permiso para guardar fotos en tu galería cuando tomas capturas de los establecimientos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -58,5 +64,11 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 </dict>
 </plist>

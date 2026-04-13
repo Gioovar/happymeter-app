@@ -305,24 +305,39 @@ export async function assignTask(taskId: string, staffId: string | null) {
         }
     });
 
-    // 3. Dispatch Native Push Notification to Staff
+    // 3. Dispatch Native Push + In-App Notification to Staff
     if (staffId) {
         try {
-            // Find staff to get their userId (which binds to DeviceToken)
             const staff = await prisma.teamMember.findUnique({
                 where: { id: staffId }
             });
-            if (staff && staff.userId) {
+
+            if (staff) {
+                // 3a. Send native push (works for staff with OR without Clerk userId)
                 await sendNativePush({
                     title: "📝 Nueva Tarea Asignada",
                     body: `Se te ha asignado la tarea: ${task.title}`,
                     appType: "OPS",
-                    userId: staff.userId,
+                    userId: staff.userId || undefined,
+                    memberId: staff.id,
                     route: `/ops/tasks/${task.id}`
+                });
+
+                // 3b. Create in-app notification so the bell icon shows the red dot
+                await prisma.internalNotification.create({
+                    data: {
+                        userId: staffId,
+                        branchId: task.zone.userId,
+                        title: '📝 Nueva Tarea Asignada',
+                        body: `Se te ha asignado: ${task.title}`,
+                        type: 'TASK_REMINDER',
+                        actionUrl: `/ops/tasks/${task.id}`,
+                        isRead: false
+                    }
                 });
             }
         } catch (pushErr) {
-            console.error("[assignTask] Failed to send push:", pushErr);
+            console.error("[assignTask] Failed to send push/notification:", pushErr);
         }
     }
 
@@ -413,6 +428,94 @@ export async function createProcessTask(data: CreateProcessTaskPayload) {
         }
     });
 
+
     revalidatePath(`/dashboard/processes/${data.zoneId}`);
     return { success: true };
 }
+
+/**
+ * Detecta tareas vencidas sin evidencia y envía notificaciones de alerta
+ * al staff asignado y al manager/dueño.
+ */
+export async function notifyMissedTasks(ownerId: string) {
+    const mexicoTime = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const todayName = dayNames[mexicoTime.getDay()];
+    const todayStart = new Date(mexicoTime.getFullYear(), mexicoTime.getMonth(), mexicoTime.getDate());
+
+    const zones = await prisma.processZone.findMany({
+        where: { userId: ownerId },
+        include: {
+            tasks: {
+                where: {
+                    assignedStaffId: { not: null },
+                    limitTime: { not: null },
+                    days: { has: todayName }
+                },
+                include: {
+                    assignedTo: true,
+                    evidences: {
+                        where: { submittedAt: { gte: todayStart } }
+                    }
+                }
+            }
+        }
+    });
+
+    const missed: string[] = [];
+
+    for (const zone of zones) {
+        for (const task of zone.tasks) {
+            if (!task.limitTime || !task.assignedTo) continue;
+
+            const [hours, minutes] = task.limitTime.split(':').map(Number);
+            const limitDate = new Date(mexicoTime);
+            limitDate.setHours(hours, minutes, 0, 0);
+
+            if (mexicoTime > limitDate && task.evidences.length === 0) {
+                const staff = task.assignedTo;
+
+                // Notify staff: in-app bell
+                try {
+                    await prisma.internalNotification.create({
+                        data: {
+                            userId: staff.id,
+                            branchId: zone.userId,
+                            title: '⚠️ Tarea Vencida',
+                            body: `"${task.title}" venció a las ${task.limitTime}. Envía tu evidencia.`,
+                            type: 'WARNING',
+                            actionUrl: `/ops/tasks/${task.id}`,
+                            isRead: false
+                        }
+                    });
+                    await sendNativePush({
+                        title: '⚠️ Tarea Vencida',
+                        body: `"${task.title}" venció a las ${task.limitTime}. Envía tu evidencia.`,
+                        appType: 'OPS',
+                        userId: staff.userId || undefined,
+                        memberId: staff.id,
+                        route: `/ops/tasks/${task.id}`
+                    });
+                } catch (e) { console.error('[notifyMissedTasks] staff push error:', e); }
+
+                // Notify owner: dashboard bell
+                try {
+                    await prisma.notification.create({
+                        data: {
+                            userId: ownerId,
+                            type: 'WARNING',
+                            title: '⚠️ Tarea No Realizada',
+                            message: `${staff.name || 'Staff'} no completó "${task.title}" (venció a las ${task.limitTime}).`,
+                            meta: { taskId: task.id, staffId: staff.id }
+                        }
+                    });
+                } catch (e) { console.error('[notifyMissedTasks] owner notification error:', e); }
+
+                missed.push(task.title);
+            }
+        }
+    }
+
+    return { success: true, missedCount: missed.length, missed };
+}
+

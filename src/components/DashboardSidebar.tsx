@@ -39,6 +39,13 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
     const { getUrl, basePath: routerBasePath } = useDashboardRouter()
 
     const activeMode = getActiveMode(pathname)
+    const { checkModuleAccess } = useDashboard()
+    
+    // Safety: If the current mode is disabled, we show nothing or it will be redirected
+    if (activeMode !== 'surveys' && !checkModuleAccess(activeMode)) {
+        return <div className="p-4 text-xs text-gray-500 italic">Módulo no disponible</div>
+    }
+
     const currentModeItems = NAVIGATION_CONFIG[activeMode] || []
 
     // Filter items based on allowedRoles
@@ -712,7 +719,7 @@ export default function DashboardSidebar({
                                 />
                                 <div className="absolute top-full left-0 right-0 mt-3 bg-[#18181b] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top p-1.5">
                                     <div className="grid gap-1">
-                                        {MODES.map((mode) => {
+                                        {MODES.filter(m => m.id === 'surveys' || checkModuleAccess(m.id)).map((mode) => {
                                             const isActive = getActiveMode(pathname) === mode.id
                                             const Icon = mode.icon
                                             return (

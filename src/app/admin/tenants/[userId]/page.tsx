@@ -18,7 +18,6 @@ async function getTenantDetails(userId: string) {
 
     if (!user) return null
 
-    // Fetch surveys and responses to calculate detailed stats
     const surveys = await prisma.survey.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
@@ -34,6 +33,10 @@ async function getTenantDetails(userId: string) {
                 select: { responses: true }
             }
         }
+    })
+
+    const teamCount = await prisma.teamMember.count({
+        where: { ownerId: userId }
     })
 
     const totalResponses = surveys.reduce((acc, s) => acc + s._count.responses, 0)
@@ -56,7 +59,7 @@ async function getTenantDetails(userId: string) {
         })
     })
 
-    return { user, surveys, totalResponses, emailCount: uniqueEmails.size, phoneCount: uniquePhones.size }
+    return { user, surveys, totalResponses, emailCount: uniqueEmails.size, phoneCount: uniquePhones.size, teamCount }
 }
 
 export default async function TenantDetailPage({ params }: { params: Promise<{ userId: string }> }) {
@@ -67,7 +70,7 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ u
         return <div className="p-12 text-white">Usuario no encontrado</div>
     }
 
-    const { user, surveys, totalResponses, emailCount, phoneCount } = data
+    const { user, surveys, totalResponses, emailCount, phoneCount, teamCount } = data
 
     return (
         <div className="space-y-8 max-w-6xl mx-auto">
@@ -114,7 +117,11 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ u
                                 businessName: user.businessName,
                                 plan: user.plan || 'FREE',
                                 maxBranches: user.maxBranches,
-                                extraSurveys: user.extraSurveys
+                                extraSurveys: user.extraSurveys,
+                                hasLoyalty: user.hasLoyalty,
+                                hasProcesses: user.hasProcesses,
+                                hasReservations: user.hasReservations,
+                                hasDigitalMenu: user.hasDigitalMenu
                             }} />
                             <ImpersonateButton userId={user.userId} name={user.businessName || 'Tenant'} />
                         </div>
@@ -173,10 +180,27 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ u
                         <div className="p-2 bg-purple-500/20 rounded-lg">
                             <MapPin className="w-5 h-5 text-purple-500" />
                         </div>
-                        <span className="text-gray-400 font-medium">Locations</span>
+                        <span className="text-gray-400 font-medium">Sucursales</span>
                     </div>
-                    <p className="text-3xl font-bold text-white">1</p>
+                    <p className="text-3xl font-bold text-white">{user.maxBranches}</p>
                 </div>
+                <div className="bg-[#111] border border-white/10 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-amber-500/20 rounded-lg">
+                            <History className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <span className="text-gray-400 font-medium">Team Size (Staff)</span>
+                    </div>
+                    <p className="text-3xl font-bold text-white">{teamCount}</p>
+                </div>
+            </div>
+
+            {/* Modules Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <ModuleStatusCard name="Lealtad" active={user.hasLoyalty} icon={<TrendingUp className="w-4 h-4" />} />
+                <ModuleStatusCard name="Procesos" active={user.hasProcesses} icon={<CheckCircle className="w-4 h-4" />} />
+                <ModuleStatusCard name="Reservas" active={user.hasReservations} icon={<Calendar className="w-4 h-4" />} />
+                <ModuleStatusCard name="Menú Digital" active={user.hasDigitalMenu} icon={<Globe className="w-4 h-4" />} />
             </div>
 
             {/* Surveys List Table */}
@@ -244,6 +268,20 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ u
                         )}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    )
+}
+
+function ModuleStatusCard({ name, active, icon }: { name: string, active: boolean, icon: React.ReactNode }) {
+    return (
+        <div className={`p-4 rounded-xl border flex items-center gap-3 ${active ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-white/5 border-white/10 text-gray-500'}`}>
+            <div className={`p-2 rounded-lg ${active ? 'bg-green-500/20' : 'bg-white/5'}`}>
+                {icon}
+            </div>
+            <span className="font-bold text-sm tracking-tight">{name}</span>
+            <div className="ml-auto">
+                {active ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4 opacity-30" />}
             </div>
         </div>
     )
