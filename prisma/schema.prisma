@@ -114,6 +114,13 @@ model UserSettings {
   logoUrl                    String?
   whatsappContact            String?
   extraSurveys               Int                         @default(0)
+  
+  // Feature Flags for Modular Plans
+  hasLoyalty                 Boolean                     @default(false)
+  hasProcesses               Boolean                     @default(false)
+  hasReservations            Boolean                     @default(false)
+  hasDigitalMenu             Boolean                     @default(false)
+
   reservationSettings        Json?
   defaultCommissionPerPerson Float                       @default(0)
   weeklyGoalAttendees        Int?                        @default(50)
@@ -238,6 +245,7 @@ model TeamMember {
   assignedZones ProcessZone[]
   owner         UserSettings  @relation("OwnerOf", fields: [ownerId], references: [userId], onDelete: Cascade)
   user          UserSettings? @relation("MemberOf", fields: [userId], references: [userId], onDelete: Cascade)
+  deviceTokens  DeviceToken[]
 
   @@unique([userId, ownerId])
   @@index([ownerId])
@@ -568,6 +576,7 @@ model DeviceToken {
   userId           String?
   customerId       String?
   globalPromoterId String?
+  memberId         String?
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -575,10 +584,12 @@ model DeviceToken {
   user           UserSettings?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
   customer       LoyaltyCustomer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
   globalPromoter GlobalPromoter?  @relation(fields: [globalPromoterId], references: [id], onDelete: Cascade)
+  member         TeamMember?      @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([customerId])
   @@index([globalPromoterId])
+  @@index([memberId])
   @@index([token])
 }
 
