@@ -115,12 +115,14 @@ export default function OnboardingPage() {
                 }
             })
 
-
-            await completeOnboarding(data)
+            const result = await completeOnboarding(data)
+            if (!result.success) {
+                throw new Error(result.error);
+            }
             toast.success('¡Negocio configurado correctamente!')
             rootPush('/dashboard')
-        } catch (error) {
-            toast.error('Error al guardar la información. Inténtalo de nuevo.')
+        } catch (error: any) {
+            toast.error(`Error al guardar: ${error.message}`)
             console.error(error)
         } finally {
             setIsLoading(false)
