@@ -178,6 +178,10 @@ export function DashboardProvider({ children, branchId, branchSlug, initialPlan 
         }
     }
 
+    // --- OVERRIDE FOR FREE TESTING ---
+    isLocked = false;
+    subscriptionStatus = 'ACTIVE';
+
     // Feature Gating Logic
     const checkFeature = (feature: string): boolean => {
         // 1. If Locked, NO features are accessible (except via settings which is handled by guard)

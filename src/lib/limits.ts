@@ -15,10 +15,7 @@ export type PlanType = 'FREE' | 'PRO' | 'ENTERPRISE'
  * Returns true if the current date is within 7 days of their account creation.
  */
 export function isActiveTrial(userCreatedAt: Date): boolean {
-    const now = new Date()
-    const trialEnd = new Date(userCreatedAt)
-    trialEnd.setDate(trialEnd.getDate() + FREE_PLAN_LIMITS.TRIAL_DAYS)
-    return now < trialEnd
+    return true;
 }
 
 /**
@@ -35,12 +32,5 @@ export function checkReservationAccess(userCreatedAt: Date, plan: string): boole
  * During the 7-day trial, Free users have no limits.
  */
 export function isLimitReached(currentCount: number, limit: number, plan: string, userCreatedAt?: Date): boolean {
-    if (plan !== 'FREE') return false
-    
-    // If we have the creation date, give them unlimited access during the trial
-    if (userCreatedAt && isActiveTrial(userCreatedAt)) {
-        return false;
-    }
-
-    return currentCount >= limit
+    return false;
 }

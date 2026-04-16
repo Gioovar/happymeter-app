@@ -23,16 +23,10 @@ export default function SubscriptionGuard({ children }: { children: React.ReactN
 
     // Check if trial is expired
     let isTrialExpired = false
-    if (plan === 'FREE' && userCreatedAt) {
-        const start = new Date(userCreatedAt).getTime()
-        const trialDuration = 7 * 24 * 60 * 60 * 1000 // 7 Days
-        const end = start + trialDuration
-        const now = new Date().getTime()
 
-        if (now > end) {
-            isTrialExpired = true
-        }
-    }
+
+    // isTrialExpired is always false for testing.
+
 
     // 1. Identify which module we are in
     let currentModule = 'surveys'
