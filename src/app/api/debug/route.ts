@@ -1,20 +1,18 @@
 import { NextResponse } from "next/server";
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
     try {
-        const phone = "+525574131657";
-        const customers = await prisma.loyaltyCustomer.findMany({
-            where: {
-                OR: [
-                    { phone: phone },
-                    { phone: "5574131657" },
-                    { phone: "+52 55 7413 1657" }
-                ]
-            },
-            include: {
-                program: { select: { businessName: true } }
-            }
+        const authData = await auth();
+        const user = await currentUser();
+        const settings = authData.userId ? await prisma.userSettings.findUnique({ where: { userId: authData.userId } }) : null;
+        
+        return NextResponse.json({
+            status: 'OK',
+            auth: { userId: authData.userId },
+            user: { email: user?.emailAddresses[0]?.emailAddress },
+            settings: { found: !!settings }
         });
         return NextResponse.json(customers);
     } catch (e: any) {

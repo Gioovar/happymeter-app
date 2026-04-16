@@ -209,13 +209,13 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId,
                             currentAddress={branch.address || null}
                         />
                         <EditBranchDialog
-                            branchId={branch.branch.userId}
-                            currentName={branch.name || branch.branch.businessName || ""}
-                            currentCountry={branch.branch.state || undefined}
+                            branchId={branch.branch?.userId || branch.id}
+                            currentName={branch.name || branch.branch?.businessName || ""}
+                            currentCountry={branch.branch?.state || undefined}
                         />
                         <DeleteBranchDialog
-                            branchId={branch.branch.userId}
-                            branchName={branch.name || branch.branch.businessName || "Sucursal"}
+                            branchId={branch.branch?.userId || branch.id}
+                            branchName={branch.name || branch.branch?.businessName || "Sucursal"}
                         />
                     </div>
                 )}
@@ -228,9 +228,9 @@ export default function BranchCard({ branch, isCurrent, isOwner = true, ownerId,
                             </div>
                             <div>
                                 <h3 className={`text-xl font-bold tracking-tight mb-0.5 ${theme.titleGradient}`}>
-                                    {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.branch.businessName || branch.name || 'Sucursal')}
+                                    {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.branch?.businessName || branch.name || 'Sucursal')}
                                 </h3>
-                                {branch.branch.state ? (
+                                {branch.branch?.state ? (
                                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
                                         <span className="w-1 h-1 rounded-full bg-gray-600" />
                                         {branch.branch.state}

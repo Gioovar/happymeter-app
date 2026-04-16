@@ -337,7 +337,7 @@ export default function DashboardSidebar({
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-sm font-bold leading-tight group-hover:text-violet-200">
-                                            {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.branch.businessName || branch.name || 'Sucursal')}
+                                            {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.branch?.businessName || branch.name || 'Sucursal')}
                                         </span>
                                         <span className="text-[10px] text-gray-500 group-hover:text-gray-400">
                                             {branchSlug === bSlug ? "Gestionando ahora" : "Administrar"}

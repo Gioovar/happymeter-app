@@ -202,9 +202,8 @@ export default function NotificationsBell({ align = 'right', currentBranchId }: 
                                                 // We are in Chain View, find the branch name
                                                 // Iterate over all chains and their branches
                                                 for (const chain of chains) {
-                                                    const branch = chain.branches.find(b => b.branchId === notif.meta.branchId)
                                                     if (branch) {
-                                                        branchName = branch.name || branch.branch.businessName || "Sucursal"
+                                                        branchName = branch.name || branch.branch?.businessName || "Sucursal"
                                                         break
                                                     }
                                                 }

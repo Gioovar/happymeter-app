@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation'
 import { Search, MoreHorizontal, Edit, Trash2, Shield, ExternalLink, Loader2, Zap } from 'lucide-react'
 import { updateTenantPlan } from '@/actions/admin'
 import { cn } from '@/lib/utils'
-import GodModeModal from './GodModeModal'
-
 interface Tenant {
     id: string
     userId: string
@@ -112,13 +110,6 @@ export default function TenantsTable({ initialTenants }: { initialTenants: Tenan
                                             )}>
                                                 {tenant.plan}
                                             </span>
-                                            <button
-                                                onClick={() => setEditingTenant(tenant)}
-                                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-orange-500/20 rounded text-gray-500 hover:text-orange-500 transition"
-                                                title="God Mode Edit"
-                                            >
-                                                <Zap className="w-3 h-3" />
-                                            </button>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-center text-gray-300">
@@ -155,15 +146,6 @@ export default function TenantsTable({ initialTenants }: { initialTenants: Tenan
                     </div>
                 )}
             </div>
-
-            {/* God Mode Modal */}
-            {editingTenant && (
-                <GodModeModal
-                    isOpen={!!editingTenant}
-                    onClose={() => setEditingTenant(null)}
-                    tenant={editingTenant}
-                />
-            )}
         </>
     )
 }

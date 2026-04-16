@@ -125,15 +125,13 @@ export default async function ChainsPage() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-                    {ownedChain.branches.map((branch) => (
                         <BranchCard
                             key={branch.id}
                             branch={branch}
-                            isCurrent={branch.branch.userId === user.id}
+                            isCurrent={branch.branch?.userId === user.id}
                             isOwner={isOwner}
                             ownerId={ownedChain.ownerId}
                         />
-                    ))}
 
                     {/* Add Branch Ghost Card (Visible only to owner) */}
                     {isOwner && (

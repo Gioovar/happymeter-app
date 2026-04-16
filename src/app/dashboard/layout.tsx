@@ -24,7 +24,8 @@ export default async function DashboardLayout({
 }: {
     children: React.ReactNode
 }) {
-    const { userId, redirectToSignIn } = await auth()
+    const authData = await auth()
+    const { userId } = authData
     const clerkUser = await currentUser()
 
     // Sanitize User Data for Client Component (Avoid Serialization Error)
@@ -33,11 +34,13 @@ export default async function DashboardLayout({
         firstName: clerkUser.firstName,
         lastName: clerkUser.lastName,
         imageUrl: clerkUser.imageUrl,
-        emailAddresses: clerkUser.emailAddresses.map(e => ({ emailAddress: e.emailAddress })),
+        emailAddresses: (clerkUser.emailAddresses || []).map(e => ({ emailAddress: e.emailAddress })),
         primaryEmailAddressId: clerkUser.primaryEmailAddressId
     } : null
 
-    if (!userId) return redirectToSignIn()
+    if (!userId) {
+        redirect('/sign-in')
+    }
 
     // Process Attribution
     await processReferralCookie(userId)
@@ -79,16 +82,25 @@ export default async function DashboardLayout({
 
     // TEAM MEMBER BYPASS & INVITATION CHECK
     // Fetch ALL memberships for this user to support Multi-Tenant
-    const memberships = await prisma.teamMember.findMany({
-        where: { userId, isActive: true },
-        include: { owner: { select: { businessName: true, isActive: true, bannerUrl: true } } }
-    })
+    let memberships: any[] = []
+    let personalSettings: any = null
 
-    // Check if the user is a direct business owner themselves
-    const personalSettings = await prisma.userSettings.findUnique({
-        where: { userId },
-        select: { hasSeenTour: true, role: true, plan: true, isActive: true, isOnboarded: true, createdAt: true, subscriptionStatus: true, businessName: true, fullName: true, bannerUrl: true }
-    })
+    try {
+        const [fetchedMemberships, fetchedPersonalSettings] = await Promise.all([
+            prisma.teamMember.findMany({
+                where: { userId, isActive: true },
+                include: { owner: { select: { businessName: true, isActive: true, bannerUrl: true } } }
+            }),
+            prisma.userSettings.findUnique({
+                where: { userId },
+                select: { hasSeenTour: true, role: true, plan: true, isActive: true, isOnboarded: true, createdAt: true, subscriptionStatus: true, businessName: true, fullName: true, bannerUrl: true }
+            })
+        ])
+        memberships = fetchedMemberships
+        personalSettings = fetchedPersonalSettings
+    } catch (error) {
+        console.error('Failed to fetch memberships or settings in layout:', error)
+    }
 
     // Determine all active business contexts
     const businessContexts = []
@@ -130,15 +142,19 @@ export default async function DashboardLayout({
     const membership = memberships.find(m => m.ownerId === activeContextId)
 
     // If NOT a member, check if they have a PENDING invitation to redirect them
-    if (!membership) {
-        const userEmail = clerkUser?.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId)?.emailAddress || clerkUser?.emailAddresses[0]?.emailAddress
-        if (userEmail) {
-            const pendingInvite = await prisma.teamInvitation.findFirst({
-                where: { email: userEmail }
-            })
-            if (pendingInvite) {
-                redirect(`/join-team?token=${pendingInvite.token}`)
+    if (!membership && clerkUser) {
+        try {
+            const userEmail = clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId)?.emailAddress || clerkUser.emailAddresses[0]?.emailAddress
+            if (userEmail) {
+                const pendingInvite = await prisma.teamInvitation.findFirst({
+                    where: { email: userEmail }
+                })
+                if (pendingInvite) {
+                    redirect(`/join-team?token=${pendingInvite.token}`)
+                }
             }
+        } catch (error) {
+            console.error('Error checking pending invitations:', error)
         }
     }
 
@@ -177,25 +193,32 @@ export default async function DashboardLayout({
     }
 
     // Check if user has any chain association
-    const ownedChain = await prisma.chain.findFirst({
-        where: { ownerId: userId }
-    })
-    const hasChain = !!ownedChain
+    let hasChain = false
+    try {
+        const ownedChain = await prisma.chain.findFirst({
+            where: { ownerId: userId }
+        })
+        hasChain = !!ownedChain
+    } catch (error) {
+        console.error('Error checking chains:', error)
+    }
 
     // WAITER/OPERATOR PROTECTION: 
     // If user has no settings (not an owner) but IS a team member with OPERATOR role,
     // they should ONLY be allowing in /ops. Redirect them.
     if (!realRole || realRole === 'USER') { // Basic Check
-        const member = await prisma.teamMember.findFirst({
-            where: { userId }
-        })
-        if (member && (member.role as string) === 'OPERATOR') {
-            // ...
-            // We need to ensure we don't redirect if we are already in /ops (but this is /dashboard layout so it's safe)
-            const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
-            if (!userSettings) {
-                redirect('/ops')
+        try {
+            const member = await prisma.teamMember.findFirst({
+                where: { userId }
+            })
+            if (member && (member.role as string) === 'OPERATOR') {
+                const userSettings = await prisma.userSettings.findUnique({ where: { userId } })
+                if (!userSettings) {
+                    redirect('/ops')
+                }
             }
+        } catch (error) {
+            console.error('Error checking operator membership:', error)
         }
     }
 
@@ -238,11 +261,11 @@ export default async function DashboardLayout({
             branchId={activeContextId}
             userRole={realRole}
             initialPlan={checkedSettings?.plan || 'FREE'}
-            userCreatedAt={checkedSettings?.createdAt?.toISOString()}
-            dbSubscriptionStatus={checkedSettings?.subscriptionStatus || undefined}
-            activeContextName={activeContext?.name}
-            activeContextRole={activeContext?.role}
-            activeContextBannerUrl={(activeContext as any)?.bannerUrl}
+            userCreatedAt={checkedSettings?.createdAt?.toISOString() || null}
+            dbSubscriptionStatus={checkedSettings?.subscriptionStatus || null}
+            activeContextName={activeContext?.name || null}
+            activeContextRole={activeContext?.role || null}
+            activeContextBannerUrl={(activeContext as any)?.bannerUrl || null}
         >
             <NotificationProvider>
                 <GiftCelebration userId={userId} />
@@ -254,7 +277,7 @@ export default async function DashboardLayout({
                             userRole={realRole}
                             hasChain={hasChain}
                             userPlan={userPlan}
-                            user={userData ? { ...userData, fullName: (settings as any)?.fullName, businessName: (settings as any)?.businessName, createdAt: (settings as any)?.createdAt?.toISOString() } : null}
+                            user={userData ? { ...userData, fullName: (settings as any)?.fullName, businessName: (settings as any)?.businessName, createdAt: (settings as any)?.createdAt?.toISOString() || null } : null}
                             isOwnContext={activeContextId === userId}
                         // We will let Sidebar handle resolutions or passing slug
                         />

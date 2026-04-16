@@ -138,9 +138,9 @@ export async function getDashboardContext(branchSlug?: string) {
         return {
             userId: branch.branchId,
             isBranch: true,
-            name: branch.branch.businessName || branch.name || branchSlug,
-            plan: branch.branch.plan,
-            subscriptionStatus: branch.branch.subscriptionStatus, // Passing the status
+            name: branch.branch?.businessName || branch.name || branchSlug,
+            plan: branch.branch?.plan || 'FREE',
+            subscriptionStatus: branch.branch?.subscriptionStatus || 'ACTIVE', // Passing the status
             params: { branchSlug }
         };
     }

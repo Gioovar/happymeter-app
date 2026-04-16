@@ -142,7 +142,7 @@ export default async function DashboardChainsPage() {
                             <BranchCard
                                 key={branch.id}
                                 branch={branch}
-                                isCurrent={branch.branch.userId === user.id}
+                                isCurrent={branch.branch?.userId === user.id}
                                 isOwner={isOwner}
                                 ownerId={ownedChain.ownerId}
                                 metrics={metrics ? {

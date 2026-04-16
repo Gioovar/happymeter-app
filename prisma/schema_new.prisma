@@ -1,0 +1,1464 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Survey {
+  id             String     @id @default(cuid())
+  userId         String
+  title          String
+  description    String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  bannerUrl      String?
+  googleMapsUrl  String?
+  hexColor       String?    @default("#8b5cf6")
+  socialConfig   Json?
+  alertConfig    Json?
+  recoveryConfig Json?
+  isActive       Boolean    @default(true)
+  type           SurveyType @default(SATISFACTION)
+  questions      Question[]
+  responses      Response[]
+
+  @@index([userId])
+}
+
+model Question {
+  id       String   @id @default(uuid())
+  surveyId String
+  text     String
+  type     String
+  options  Json?
+  order    Int
+  required Boolean  @default(true)
+  answers  Answer[]
+  survey   Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([surveyId])
+}
+
+model Response {
+  id               String        @id @default(uuid())
+  surveyId         String
+  createdAt        DateTime      @default(now())
+  customerName     String?
+  customerEmail    String?
+  customerPhone    String?
+  customerBirthday DateTime?
+  photo            String?
+  customerSource   String?
+  answers          Answer[]
+  survey           Survey        @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  issueTickets     IssueTicket[]
+  branchId         String? // NEW: To track which branch generated this global franchise response
+  branch           UserSettings? @relation("BranchResponses", fields: [branchId], references: [userId], onDelete: SetNull)
+
+  reservationId String?      @unique // Link exactly which reservation provoked this response
+  reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+
+  @@index([surveyId, createdAt])
+  @@index([customerPhone])
+  @@index([branchId])
+}
+
+model Answer {
+  id         String   @id @default(uuid())
+  responseId String
+  questionId String
+  value      String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  @@index([responseId])
+  @@index([questionId])
+}
+
+model UserSettings {
+  id                         String                      @id @default(uuid())
+  userId                     String                      @unique
+  plan                       String                      @default("FREE")
+  maxSurveys                 Int                         @default(3)
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  businessName               String?
+  isOnboarded                Boolean                     @default(false)
+  phone                      String?
+  socialLinks                Json?
+  isPhoneVerified            Boolean                     @default(false)
+  phoneVerifiedAt            DateTime?
+  hasSeenTour                Boolean                     @default(false)
+  industry                   String?                     @default("restaurant")
+  subcategories              String[]                    @default([])
+  stripeCustomerId           String?                     @unique
+  stripeSubscriptionId       String?                     @unique
+  subscriptionPeriodEnd      DateTime?
+  subscriptionStatus         String?
+  gameConfig                 Json?
+  role                       UserRole                    @default(USER)
+  notificationPreferences    Json?
+  city                       String?
+  state                      String?
+  photoUrl                   String?
+  jobTitle                   String?
+  maxBranches                Int                         @default(1)
+  isActive                   Boolean                     @default(true)
+  bannerUrl                  String?
+  googleReviewUrl            String?
+  logoUrl                    String?
+  whatsappContact            String?
+  extraSurveys               Int                         @default(0)
+  reservationSettings        Json?
+  defaultCommissionPerPerson Float                       @default(0)
+  weeklyGoalAttendees        Int?                        @default(50)
+  monthlyGoalAttendees       Int?                        @default(200)
+  
+  // B2B Referral Program
+  referredByPromoterPhone    String? // Link to a GlobalPromoter who referred this business
+
+  reservations               Reservation[]               @relation("BusinessReservations")
+  fullName                   String?
+  affiliateProfile           AffiliateProfile?
+  ownedChains                Chain[]
+  branchOf                   ChainBranch[]
+  floorPlans                 FloorPlan[]
+  loyaltyProgram             LoyaltyProgram?
+  menuPromotions             MenuPromotion[]
+  branchProcessZones         ProcessZone[]               @relation("ProcessZoneBranch")
+  ownedProcessZones          ProcessZone[]               @relation("ProcessZoneOwner")
+  productCategories          ProductCategory[]
+  pushSubscriptions          PushSubscription[]
+  deviceTokens               DeviceToken[]
+  notificationLogs           NotificationLog[]
+  representativeProfile      RepresentativeProfile?
+  teamMembers                TeamMember[]                @relation("OwnerOf")
+  memberships                TeamMember[]                @relation("MemberOf")
+  promoterProfiles           PromoterProfile[]           @relation("BusinessPromoters")
+  Product                    Product[]
+  issueTickets               IssueTicket[]
+  restaurantHealthScores     RestaurantHealthScore[]
+  reputationScores           RestaurantReputationScore[]
+  growthOpportunities        AIGrowthOpportunity[]
+  marketingCampaigns         AIMarketingCampaign[]
+  resolvedIssues             ResolvedIssue[]
+  branchResponses            Response[]                  @relation("BranchResponses")
+  branchTickets              IssueTicket[]               @relation("BranchTickets")
+  PromoterEvent              PromoterEvent[]
+}
+
+model FloorPlan {
+  id             String       @id @default(uuid())
+  userId         String
+  name           String       @default("Main Floor")
+  width          Int          @default(800)
+  height         Int          @default(600)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  isConfigured   Boolean      @default(false)
+  physicalHeight Float?       @default(10)
+  physicalWidth  Float?       @default(10)
+  user           UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  tables         Table[]
+
+  @@index([userId])
+}
+
+model Table {
+  id               String        @id @default(uuid())
+  floorPlanId      String
+  label            String
+  x                Float
+  y                Float
+  width            Float         @default(60)
+  height           Float         @default(60)
+  type             String
+  capacity         Int           @default(4)
+  rotation         Float         @default(0)
+  points           Json?
+  reservationPrice Float?        @default(0)
+  reservations     Reservation[]
+  floorPlan        FloorPlan     @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+
+  @@index([floorPlanId])
+}
+
+model Reservation {
+  id            String   @id @default(uuid())
+  tableId       String?
+  customerName  String
+  customerPhone String?
+  customerEmail String?
+  partySize     Int
+  date          DateTime
+  status        String   @default("CONFIRMED")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  duration      Int      @default(120)
+  actualGuests  Int? // Added for Happy Hostess accurate tracking
+  commissionEarned Float? // The calculated payout for this res (Base + Surge)
+  guestType     String?  @default("NEW") // "NEW", "RETURNING", "VIP"
+
+  userId       String?
+  promoterId   String?
+  settlementId String?
+
+  table      Table?              @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  user       UserSettings?       @relation("BusinessReservations", fields: [userId], references: [userId], onDelete: Cascade)
+  promoter   PromoterProfile?    @relation("PromoterReservations", fields: [promoterId], references: [id])
+  settlement PromoterSettlement? @relation(fields: [settlementId], references: [id], onDelete: SetNull)
+  response   Response?
+
+  @@index([tableId])
+  @@index([date])
+  @@index([promoterId])
+  @@index([settlementId])
+}
+
+model TeamMember {
+  id            String        @id @default(uuid())
+  userId        String?
+  ownerId       String
+  role          TeamRole
+  joinedAt      DateTime      @default(now())
+  isActive      Boolean       @default(true)
+  accessCode    String?       @unique
+  name          String?
+  isOffline     Boolean       @default(false)
+  jobTitle      String?
+  phone         String?
+  photoUrl      String?
+  assignedTasks ProcessTask[]
+  assignedZones ProcessZone[]
+  owner         UserSettings  @relation("OwnerOf", fields: [ownerId], references: [userId], onDelete: Cascade)
+  user          UserSettings? @relation("MemberOf", fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([userId, ownerId])
+  @@index([ownerId])
+  @@index([userId])
+}
+
+model SystemSettings {
+  id                 String   @id @default("global")
+  maintenanceMode    Boolean  @default(false)
+  allowNewSignups    Boolean  @default(true)
+  globalAnnouncement String?
+  updatedAt          DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  adminId   String
+  action    String
+  details   Json?
+  createdAt DateTime @default(now())
+  entity    String?
+  entityId  String?
+  ipAddress String?
+}
+
+model Coupon {
+  id        String     @id @default(uuid())
+  code      String     @unique
+  type      CouponType
+  value     Float
+  maxUses   Int?
+  usedCount Int        @default(0)
+  expiresAt DateTime?
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+}
+
+model AffiliateProfile {
+  id              String               @id @default(uuid())
+  userId          String               @unique
+  code            String               @unique
+  paypalEmail     String?
+  balance         Float                @default(0)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  status          String               @default("ACTIVE")
+  commissionRate  Float                @default(40.0)
+  assignedAdminId String?
+  notes           String?
+  audienceSize    String?
+  contentStrategy String?
+  instagram       String?
+  niche           String?
+  tiktok          String?
+  youtube         String?
+  facebook        String?
+  otherSocials    String?
+  whatsapp        String?
+  stripeConnectId String?              @unique
+  avgRating       Float                @default(0)
+  reviewCount     Int                  @default(0)
+  twitch          String?
+  chats           AdminChat[]
+  user            UserSettings         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  commissions     Commission[]
+  achievements    CreatorAchievement[]
+  reviews         CreatorReview[]
+  clicks          LinkClick[]
+  payouts         Payout[]
+  visits          PlaceVisit[]
+  referrals       Referral[]
+}
+
+model Referral {
+  id               String                 @id @default(uuid())
+  affiliateId      String?
+  referredUserId   String                 @unique
+  status           ReferralStatus         @default(LEAD)
+  createdAt        DateTime               @default(now())
+  convertedAt      DateTime?
+  leadEmail        String?
+  leadName         String?
+  socialLink       String?
+  representativeId String?
+  affiliate        AffiliateProfile?      @relation(fields: [affiliateId], references: [id])
+  representative   RepresentativeProfile? @relation(fields: [representativeId], references: [id])
+}
+
+model Commission {
+  id          String           @id @default(uuid())
+  affiliateId String
+  amount      Float
+  description String
+  status      CommissionStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  affiliate   AffiliateProfile @relation(fields: [affiliateId], references: [id])
+}
+
+model Payout {
+  id          String           @id @default(uuid())
+  affiliateId String
+  amount      Float
+  status      String
+  createdAt   DateTime         @default(now())
+  affiliate   AffiliateProfile @relation(fields: [affiliateId], references: [id])
+}
+
+model LinkClick {
+  id          String           @id @default(uuid())
+  affiliateId String
+  createdAt   DateTime         @default(now())
+  ipAddress   String?
+  userAgent   String?
+  affiliate   AffiliateProfile @relation(fields: [affiliateId], references: [id])
+
+  @@index([affiliateId])
+  @@index([createdAt])
+}
+
+model BrandAsset {
+  id        String   @id @default(uuid())
+  name      String
+  url       String
+  type      String
+  createdAt DateTime @default(now())
+}
+
+model Sale {
+  id        String   @id @default(uuid())
+  userId    String
+  plan      String
+  amount    Float
+  currency  String   @default("USD")
+  status    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model ChatThread {
+  id        String        @id @default(uuid())
+  userId    String
+  title     String        @default("Nuevo Chat")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String     @id @default(uuid())
+  threadId  String
+  role      String
+  content   String
+  createdAt DateTime   @default(now())
+  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+}
+
+model AIInsight {
+  id        String   @id @default(uuid())
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  source    String?
+  isActive  Boolean  @default(true)
+
+  @@index([userId])
+}
+
+model Place {
+  id                   String       @id @default(uuid())
+  name                 String
+  description          String?
+  address              String?
+  coverImage           String?
+  contactName          String?
+  contactPhone         String?
+  agreementDetails     String?
+  isActive             Boolean      @default(true)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  scheduleConfig       Json?
+  contentGallery       Json?
+  contentIdeas         String?
+  exampleContentUrl    String?
+  exampleLinks         Json?
+  requiredDeliverables String?
+  visits               PlaceVisit[]
+}
+
+model PlaceVisit {
+  id          String           @id @default(uuid())
+  placeId     String
+  creatorId   String
+  visitDate   DateTime
+  status      String           @default("PENDING")
+  evidenceUrl String?
+  createdAt   DateTime         @default(now())
+  metrics     Json?
+  review      CreatorReview?
+  creator     AffiliateProfile @relation(fields: [creatorId], references: [id])
+  place       Place            @relation(fields: [placeId], references: [id])
+
+  @@index([placeId])
+  @@index([creatorId])
+}
+
+model Achievement {
+  id                  String               @id @default(uuid())
+  name                String
+  description         String
+  icon                String
+  level               Int                  @default(1)
+  type                String
+  threshold           Float
+  metricKey           String?
+  rewardAmount        Float                @default(0)
+  isActive            Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  instructions        String?
+  creatorAchievements CreatorAchievement[]
+}
+
+model CreatorAchievement {
+  id            String           @id @default(uuid())
+  creatorId     String
+  achievementId String
+  awardedAt     DateTime         @default(now())
+  isPaid        Boolean          @default(false)
+  evidenceUrl   String?
+  status        String           @default("APPROVED")
+  submittedAt   DateTime?
+  achievement   Achievement      @relation(fields: [achievementId], references: [id])
+  creator       AffiliateProfile @relation(fields: [creatorId], references: [id])
+
+  @@unique([creatorId, achievementId])
+}
+
+model CreatorReview {
+  id        String           @id @default(uuid())
+  visitId   String           @unique
+  creatorId String
+  rating    Int
+  comment   String?
+  createdAt DateTime         @default(now())
+  creator   AffiliateProfile @relation(fields: [creatorId], references: [id])
+  visit     PlaceVisit       @relation(fields: [visitId], references: [id])
+}
+
+model AdminChat {
+  id        String             @id @default(uuid())
+  creatorId String
+  adminId   String?
+  status    String             @default("OPEN")
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  creator   AffiliateProfile   @relation(fields: [creatorId], references: [id])
+  messages  AdminChatMessage[]
+}
+
+model AdminChatMessage {
+  id             String    @id @default(uuid())
+  chatId         String
+  senderId       String
+  content        String
+  createdAt      DateTime  @default(now())
+  isRead         Boolean   @default(false)
+  attachmentType String?
+  attachmentUrl  String?
+  chat           AdminChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+}
+
+model TeamInvitation {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  inviterId String
+  role      TeamRole @default(OBSERVER)
+  jobTitle  String?
+  name      String?
+  phone     String?
+  meta      Json?
+
+  @@unique([email, inviterId])
+}
+
+model PushSubscription {
+  id               String          @id @default(uuid())
+  userId           String?
+  globalPromoterId String?
+  endpoint         String
+  keys             Json
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  user             UserSettings?   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  globalPromoter   GlobalPromoter? @relation(fields: [globalPromoterId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([globalPromoterId])
+}
+
+model DeviceToken {
+  id               String   @id @default(uuid())
+  token            String   @unique
+  platform         String // "iOS", "Android", "Web"
+  appType          String // "OPS", "LOYALTY", "CLIENT", "RPS"
+  userId           String?
+  customerId       String?
+  globalPromoterId String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user           UserSettings?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  customer       LoyaltyCustomer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  globalPromoter GlobalPromoter?  @relation(fields: [globalPromoterId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([globalPromoterId])
+  @@index([token])
+}
+
+model RepresentativeProfile {
+  id             String                     @id @default(uuid())
+  userId         String                     @unique
+  state          String
+  commissionRate Float                      @default(15.0)
+  balance        Float                      @default(0)
+  isActive       Boolean                    @default(false)
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  referralCode   String?                    @unique
+  experience     String?
+  phone          String?
+  photoUrl       String?
+  socialLink     String?
+  status         String                     @default("PENDING")
+  referrals      Referral[]
+  commissions    RepresentativeCommission[]
+  payouts        RepresentativePayout[]
+  user           UserSettings               @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  leads          SellerLead[]
+}
+
+model RepresentativeCommission {
+  id               String                @id @default(uuid())
+  representativeId String
+  amount           Float
+  description      String
+  status           CommissionStatus      @default(PENDING)
+  sourceSaleId     String?
+  createdAt        DateTime              @default(now())
+  representative   RepresentativeProfile @relation(fields: [representativeId], references: [id], onDelete: Cascade)
+
+  @@index([representativeId])
+}
+
+model RepresentativePayout {
+  id               String                @id @default(uuid())
+  representativeId String
+  amount           Float
+  status           String
+  note             String?
+  createdAt        DateTime              @default(now())
+  processedAt      DateTime?
+  representative   RepresentativeProfile @relation(fields: [representativeId], references: [id], onDelete: Cascade)
+
+  @@index([representativeId])
+}
+
+model SellerLead {
+  id               String                @id @default(uuid())
+  representativeId String
+  businessName     String
+  contactName      String?
+  phone            String?
+  email            String?
+  address          String?
+  status           String                @default("NEW")
+  notes            String?
+  scheduledVisit   DateTime?
+  lastContactedAt  DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  representative   RepresentativeProfile @relation(fields: [representativeId], references: [id], onDelete: Cascade)
+
+  @@index([representativeId])
+  @@index([status])
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  slug        String   @unique
+  coverImage  String?
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  modules     Module[]
+
+  @@index([slug])
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  order       Int      @default(0)
+  courseId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lessons     Lesson[]
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+}
+
+model Lesson {
+  id          String               @id @default(cuid())
+  title       String
+  slug        String
+  videoUrl    String
+  content     String?
+  duration    Int?
+  order       Int                  @default(0)
+  moduleId    String
+  published   Boolean              @default(true)
+  description String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  module      Module               @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress    UserLessonProgress[]
+
+  @@unique([moduleId, slug])
+  @@index([moduleId])
+}
+
+model UserLessonProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime @default(now())
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+}
+
+model LoyaltyProgram {
+  id                   String                @id @default(uuid())
+  userId               String                @unique
+  businessName         String
+  description          String?
+  logoUrl              String?
+  themeColor           String                @default("#8b5cf6")
+  cardDesign           String                @default("SIMPLE")
+  isActive             Boolean               @default(true)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  pointsPercentage     Float                 @default(5.0)
+  enableFirstVisitGift Boolean               @default(false)
+  firstVisitGiftText   String?               @default("¡Un regalo de bienvenida!")
+  customers            LoyaltyCustomer[]
+  events               LoyaltyEvent[]
+  notifications        LoyaltyNotification[]
+  user                 UserSettings          @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  promotions           LoyaltyPromotion[]
+  redemptions          LoyaltyRedemption[]
+  rewards              LoyaltyReward[]
+  rules                LoyaltyRule[]
+  tiers                LoyaltyTier[]
+  visits               LoyaltyVisit[]
+
+  // Geofencing Features
+  latitude         Float?
+  geofenceRadius   Int               @default(3000)
+  isGeofenceActive Boolean           @default(false)
+  campaigns        LoyaltyCampaign[]
+  notificationLogs NotificationLog[]
+}
+
+model LoyaltyCampaign {
+  id                String            @id @default(uuid())
+  programId         String
+  name              String
+  triggerType       String            @default("PROMO") // PROMO, EXPIRING, REWARD
+  message           String
+  schedule          Json? // Define active days/hours
+  segmentationRules Json? // Filter logic (VIP, inactive, distance)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  program           LoyaltyProgram    @relation(fields: [programId], references: [id], onDelete: Cascade)
+  notificationLogs  NotificationLog[]
+
+  @@index([programId])
+}
+
+model NotificationLog {
+  id         String   @id @default(uuid())
+  title      String
+  body       String
+  appType    String   @default("LOYALTY") // OPS, LOYALTY, CLIENT
+  programId  String?
+  customerId String?
+  userId     String? // For internal staff/ops pushes
+  campaignId String?
+  status     String   @default("SENT") // SENT, DELIVERED, OPENED, CONVERTED
+  metadata   Json? // Deep links, etc.
+  createdAt  DateTime @default(now())
+
+  program  LoyaltyProgram?  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  customer LoyaltyCustomer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user     UserSettings?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  campaign LoyaltyCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([programId])
+  @@index([customerId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model LoyaltyPromotion {
+  id          String         @id @default(uuid())
+  programId   String
+  imageUrl    String
+  title       String?
+  description String?
+  terms       String?
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  program     LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+}
+
+model LoyaltyReward {
+  id           String              @id @default(uuid())
+  programId    String
+  name         String
+  description  String?
+  costInVisits Int
+  imageUrl     String?
+  isActive     Boolean             @default(true)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  costInPoints Int                 @default(0)
+  redemptions  LoyaltyRedemption[]
+  program      LoyaltyProgram      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  rules        LoyaltyRule[]
+
+  @@index([programId])
+}
+
+model LoyaltyCustomer {
+  id                     String              @id @default(uuid())
+  programId              String
+  phone                  String
+  name                   String?
+  email                  String?
+  joinDate               DateTime            @default(now())
+  totalVisits            Int                 @default(0)
+  currentVisits          Int                 @default(0)
+  lastVisitDate          DateTime?
+  magicToken             String?             @unique
+  tierId                 String?
+  averageRating          Float               @default(0)
+  ratingCount            Int                 @default(0)
+  currentPoints          Float               @default(0)
+  totalPoints            Float               @default(0)
+  birthday               DateTime?
+  isPhoneVerified        Boolean             @default(false)
+  otpCode                String?
+  otpExpiresAt           DateTime?
+  username               String?
+  clerkUserId            String?
+  lastNotificationReadAt DateTime?
+  photoUrl               String?
+  program                LoyaltyProgram      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  tier                   LoyaltyTier?        @relation(fields: [tierId], references: [id])
+  events                 LoyaltyEvent[]
+  redemptions            LoyaltyRedemption[]
+  visits                 LoyaltyVisit[]
+  productReviews         ProductReview[]
+  deviceTokens           DeviceToken[]
+  notificationLogs       NotificationLog[]
+
+  @@unique([programId, phone])
+  @@index([programId])
+}
+
+model LoyaltyNotification {
+  id        String         @id @default(uuid())
+  programId String
+  title     String
+  message   String
+  createdAt DateTime       @default(now())
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+}
+
+model LoyaltyVisit {
+  id           String          @id @default(uuid())
+  programId    String
+  customerId   String
+  staffId      String?
+  visitDate    DateTime        @default(now())
+  comment      String?
+  rating       Int?
+  pointsEarned Float           @default(0)
+  spendAmount  Float           @default(0)
+  customer     LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  program      LoyaltyProgram  @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+  @@index([customerId])
+}
+
+model LoyaltyRedemption {
+  id             String          @id @default(uuid())
+  programId      String
+  customerId     String
+  rewardId       String
+  staffId        String?
+  redeemedAt     DateTime        @default(now())
+  redemptionCode String          @unique @default(uuid())
+  status         String          @default("PENDING")
+  evidenceUrl    String?
+  customer       LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  program        LoyaltyProgram  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  reward         LoyaltyReward   @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+  @@index([customerId])
+}
+
+model LoyaltyTier {
+  id             String            @id @default(uuid())
+  programId      String
+  name           String
+  order          Int
+  requiredVisits Int
+  benefits       String?
+  color          String            @default("#cccccc")
+  requiredPoints Int               @default(0)
+  customers      LoyaltyCustomer[]
+  program        LoyaltyProgram    @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+}
+
+model LoyaltyRule {
+  id               String         @id @default(uuid())
+  programId        String
+  name             String
+  trigger          String
+  conditions       Json
+  rewardId         String?
+  pointsMultiplier Float          @default(1.0)
+  isActive         Boolean        @default(true)
+  program          LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  reward           LoyaltyReward? @relation(fields: [rewardId], references: [id])
+}
+
+model LoyaltyEvent {
+  id         String          @id @default(uuid())
+  programId  String
+  customerId String
+  type       String
+  metadata   Json?
+  createdAt  DateTime        @default(now())
+  customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  program    LoyaltyProgram  @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+  @@index([customerId])
+}
+
+model ProcessZone {
+  id              String        @id @default(uuid())
+  userId          String
+  name            String
+  description     String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  assignedStaffId String?
+  branchId        String?
+  tasks           ProcessTask[]
+  assignedStaff   TeamMember?   @relation(fields: [assignedStaffId], references: [id])
+  branch          UserSettings? @relation("ProcessZoneBranch", fields: [branchId], references: [userId])
+  user            UserSettings  @relation("ProcessZoneOwner", fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([branchId])
+  @@index([assignedStaffId])
+}
+
+model ProcessTask {
+  id              String              @id @default(uuid())
+  zoneId          String
+  title           String
+  description     String?
+  limitTime       String?
+  evidenceType    ProcessEvidenceType
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  days            String[]            @default([])
+  assignedStaffId String?
+  evidences       ProcessEvidence[]
+  chat            ProcessTaskChat?
+  assignedStaff   TeamMember?         @relation(fields: [assignedStaffId], references: [id])
+  zone            ProcessZone         @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  @@index([zoneId])
+  @@index([assignedStaffId])
+}
+
+model ProcessEvidence {
+  id               String                @id @default(uuid())
+  taskId           String
+  staffId          String?
+  fileUrl          String
+  capturedAt       DateTime
+  submittedAt      DateTime              @default(now())
+  status           ProcessEvidenceStatus @default(PENDING)
+  comments         String?
+  aiAnalysis       Json?
+  supervisorNote   String?
+  validatedAt      DateTime?
+  validatedBy      String?
+  validationStatus String                @default("PENDING")
+  latitude         Float?
+  longitude        Float?
+  task             ProcessTask           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([staffId])
+  @@index([status])
+  @@index([validationStatus])
+}
+
+model ProcessTaskChat {
+  id        String                 @id @default(uuid())
+  taskId    String                 @unique
+  task      ProcessTask            @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  messages  ProcessTaskChatMessage[]
+
+  @@index([taskId])
+}
+
+model ProcessTaskChatMessage {
+  id        String          @id @default(uuid())
+  chatId    String
+  chat      ProcessTaskChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId  String          // Could be a User, a TeamMember, or "SYSTEM"
+  role      String          // 'SUPERVISOR', 'STAFF', 'SYSTEM'
+  content   String
+  createdAt DateTime        @default(now())
+
+  @@index([chatId])
+}
+
+model ProcessTemplate {
+  id          String                @id @default(uuid())
+  name        String
+  description String?
+  category    String
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  tasks       ProcessTemplateTask[]
+}
+
+model ProcessTemplateTask {
+  id               String              @id @default(uuid())
+  templateId       String
+  title            String
+  description      String?
+  defaultLimitTime String?
+  evidenceType     ProcessEvidenceType @default(PHOTO)
+  isRequired       Boolean             @default(true)
+  days             String[]            @default([])
+  template         ProcessTemplate     @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+}
+
+model Chain {
+  id                       String        @id @default(uuid())
+  name                     String
+  ownerId                  String
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+  logoUrl                  String?
+  slug                     String?       @unique
+  masterQrUrl              String?
+  franchiseReservationMode Boolean       @default(false)
+  owner                    UserSettings  @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
+  branches                 ChainBranch[]
+
+  @@index([ownerId])
+}
+
+model ChainBranch {
+  id                     String       @id @default(uuid())
+  chainId                String
+  branchId               String
+  name                   String?
+  slug                   String?
+  order                  Int          @default(0)
+  createdAt              DateTime     @default(now())
+  reservationType        String?      @default("INTERNAL") // INTERNAL, EXTERNAL
+  externalReservationUrl String?
+  address                String?
+  branch                 UserSettings @relation(fields: [branchId], references: [userId], onDelete: Cascade)
+  chain                  Chain        @relation(fields: [chainId], references: [id], onDelete: Cascade)
+
+  @@unique([chainId, branchId])
+  @@index([branchId])
+}
+
+model ProductCategory {
+  id            String               @id @default(uuid())
+  userId        String
+  name          String
+  order         Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  products      Product[]
+  user          UserSettings         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  subCategories ProductSubCategory[]
+
+  @@index([userId])
+}
+
+model ProductSubCategory {
+  id         String          @id @default(uuid())
+  categoryId String
+  name       String
+  order      Int             @default(0)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  products   Product[]
+  category   ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
+}
+
+model Product {
+  id              String              @id @default(uuid())
+  userId          String
+  categoryId      String
+  name            String
+  description     String?
+  price           Float
+  imageUrl        String?
+  isActive        Boolean             @default(true)
+  order           Int                 @default(0)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  subCategoryId   String?
+  isFeatured      Boolean             @default(false)
+  highlightedNote String?
+  size            Float?
+  unit            String?
+  category        ProductCategory     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subCategory     ProductSubCategory? @relation(fields: [subCategoryId], references: [id])
+  user            UserSettings        @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  reviews         ProductReview[]
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([subCategoryId])
+}
+
+model MenuPromotion {
+  id        String       @id @default(uuid())
+  userId    String
+  title     String?
+  imageUrl  String
+  isActive  Boolean      @default(true)
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      UserSettings @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ProductReview {
+  id         String           @id @default(uuid())
+  productId  String
+  customerId String?
+  rating     Int
+  comment    String?
+  createdAt  DateTime         @default(now())
+  customer   LoyaltyCustomer? @relation(fields: [customerId], references: [id])
+  product    Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([customerId])
+}
+
+model InternalMessage {
+  id          String   @id @default(uuid())
+  content     String
+  senderId    String
+  receiverId  String
+  branchId    String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  attachments Json?
+
+  @@index([branchId])
+  @@index([receiverId])
+  @@index([senderId, receiverId])
+}
+
+model InternalNotification {
+  id        String   @id @default(uuid())
+  userId    String
+  branchId  String
+  title     String
+  body      String
+  type      String
+  actionUrl String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([branchId])
+  @@index([isRead])
+}
+
+enum SurveyType {
+  SATISFACTION
+  STAFF
+}
+
+enum UserRole {
+  USER
+  STAFF
+  SUPER_ADMIN
+  ADMIN
+  REPRESENTATIVE
+}
+
+enum TeamRole {
+  ADMIN
+  EDITOR
+  SUPERVISOR
+  OBSERVER
+  OPERATOR
+  HOSTESS
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+  TRIAL
+}
+
+enum ReferralStatus {
+  LEAD
+  CONVERTED
+}
+
+enum PromoterCommissionType {
+  PER_PERSON
+  PERCENTAGE
+}
+
+enum PromoterRole {
+  RP
+  JEFE_RP
+}
+
+model PromoterProfile {
+  id              String                 @id @default(uuid())
+  businessId      String
+  userId          String?
+  name            String
+  phone           String?
+  email           String?
+  slug            String                 @unique
+  pin             String? // 4-digit PIN for access
+  pinSetAt        DateTime? // Tracks when the PIN was configured
+  commissionType  PromoterCommissionType @default(PER_PERSON)
+  commissionValue Float                  @default(0)
+  branchId        String?
+  isActive        Boolean                @default(true)
+  rpScore         Float                  @default(5.0) // Average rating 1 to 5
+  totalReviews    Int                    @default(0) // Total distinct reviews received in this branch
+  role            PromoterRole           @default(RP)
+  leaderId        String? // For hierarchy: Which JEFE_RP manages this RP?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  reservations   Reservation[]        @relation("PromoterReservations")
+  settlements    PromoterSettlement[]
+  business       UserSettings         @relation("BusinessPromoters", fields: [businessId], references: [userId], onDelete: Cascade)
+  globalPromoter GlobalPromoter?      @relation(fields: [userId], references: [phone])
+  
+  // Hierarchy Relations
+  leader         PromoterProfile?     @relation("LeaderTeam", fields: [leaderId], references: [id], onDelete: SetNull)
+  teamMembers    PromoterProfile[]    @relation("LeaderTeam")
+
+  @@index([businessId])
+  @@index([branchId])
+}
+
+model GlobalPromoter {
+  id            String   @id @default(uuid())
+  phone         String   @unique
+  pin           String?
+  name          String?
+  email         String?
+  avatarUrl     String?
+  bankAccount   String?
+  globalRpScore Float    @default(5.0) // Aggregated Global score
+  totalReviews  Int      @default(0)
+  
+  // B2B Referral Program
+  agreedToB2BReferral Boolean @default(false)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  profiles          PromoterProfile[]
+  deviceTokens      DeviceToken[]
+  pushSubscriptions PushSubscription[]
+}
+
+model PromoterSettlement {
+  id         String    @id @default(uuid())
+  promoterId String
+  amount     Float
+  startDate  DateTime
+  endDate    DateTime
+  status     String    @default("PENDING")
+  paidAt     DateTime?
+  notes      String?
+  createdAt  DateTime  @default(now())
+
+  promoter     PromoterProfile @relation(fields: [promoterId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+
+  @@index([promoterId])
+}
+
+model PromoterEvent {
+  id              String   @id @default(uuid())
+  businessId      String
+  name            String
+  description     String?  @db.Text
+  date            DateTime
+  imageUrl        String?
+  isActive        Boolean  @default(true)
+  boostCommission Float? // Surge Pricing: Extra commission
+  isBoostActive   Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  business UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+enum CommissionStatus {
+  PENDING
+  PAID
+}
+
+enum ProcessEvidenceType {
+  PHOTO
+  VIDEO
+  BOTH
+}
+
+enum ProcessEvidenceStatus {
+  ON_TIME
+  DELAYED
+  PENDING
+  ISSUE_REPORTED
+}
+
+model IssueTicket {
+  id              String   @id @default(cuid())
+  businessId      String   @map("user_id") // Links to User (Business Owner)
+  responseId      String?  @map("response_id") // Optional link to the survey Response
+  title           String? // Made optional since AI might just output a summary
+  description     String? // Made optional
+  status          String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  severity        String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  urgency         String   @default("MEDIUM") // For AI inspector grading
+  category        String   @default("General") // AI categorization (Cleanliness, Food, Service)
+  customerName    String?
+  customerPhone   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  resolutionNotes String?  @db.Text
+  aiSummary       String?  @db.Text
+  aiContext       String?  @db.Text // AI extracted raw context
+  isRecurring     Boolean  @default(false)
+
+  branchId String? // NEW: Branch scope for tickets
+  branch   UserSettings? @relation("BranchTickets", fields: [branchId], references: [userId], onDelete: SetNull)
+
+  user     UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+  response Response?    @relation(fields: [responseId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, status])
+  @@index([branchId])
+}
+
+model RestaurantHealthScore {
+  id                      String   @id @default(cuid())
+  businessId              String   @map("user_id") // Links to UserSettings
+  score                   Int
+  status                  String // Excellent, Good, Warning, Critical
+  customerExperienceScore Int
+  serviceQualityScore     Int
+  internalOpsScore        Int
+  businessActivityScore   Int
+  loyaltyScore            Int
+  aiExplanation           String?  @db.Text
+  aiRecommendations       Json?
+  createdAt               DateTime @default(now())
+
+  user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
+}
+
+model RestaurantReputationScore {
+  id               String   @id @default(cuid())
+  businessId       String   @map("user_id") // Links to UserSettings
+  generalScore     Float
+  serviceScore     Float
+  foodScore        Float
+  ambianceScore    Float
+  cleanlinessScore Float
+  speedScore       Float
+  trend            String // Up, Down, Stable
+  createdAt        DateTime @default(now())
+
+  user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
+}
+
+model AIGrowthOpportunity {
+  id          String   @id @default(cuid())
+  businessId  String   @map("user_id") // Links to UserSettings
+  title       String
+  description String   @db.Text
+  type        String // Retention, Acquisition, Operations, Feedback
+  status      String   @default("NEW") // NEW, REVIEWED, ACTIONED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user               UserSettings          @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+  marketingCampaigns AIMarketingCampaign[]
+
+  @@index([businessId, status])
+}
+
+model AIMarketingCampaign {
+  id                 String   @id @default(cuid())
+  businessId         String   @map("user_id") // Links to UserSettings
+  opportunityId      String? // Optional link to the growth opportunity that spawned it
+  name               String
+  objective          String
+  targetAudience     String
+  promotionalMessage String   @db.Text
+  recommendedChannel String // Push, Email, In-App
+  status             String   @default("DRAFT") // DRAFT, APPROVED, ACTIVE, COMPLETED
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user        UserSettings         @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+  opportunity AIGrowthOpportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, status])
+}
+
+model ResolvedIssue {
+  id              String   @id @default(cuid())
+  businessId      String   @map("user_id") // Links to UserSettings
+  issueSummary    String   @db.Text // AI-generated summary of the problem
+  originalContext String?  @db.Text // E.g: "Found in Survey ID xyz from last week"
+  status          String   @default("RESOLVED") // RESOLVED, IGNORED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user UserSettings @relation(fields: [businessId], references: [userId], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
+}
