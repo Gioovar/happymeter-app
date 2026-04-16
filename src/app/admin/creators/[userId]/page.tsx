@@ -8,7 +8,7 @@ import {
     TrendingUp, Calendar, CreditCard, ExternalLink,
     ArrowUpRight, AlertCircle
 } from 'lucide-react'
-import ImpersonateButton from '@/components/admin/ImpersonateButton'
+
 import AdminChatWindow from '@/components/admin/AdminChatWindow'
 import CommissionEditor from '@/components/admin/CommissionEditor'
 
@@ -73,7 +73,6 @@ export default async function CreatorDetailPage({ params }: { params: Promise<{ 
                             <p className="text-3xl font-bold text-white mb-4">${creator.balance.toFixed(2)}</p>
 
                             <div className="flex gap-2 justify-end flex-wrap">
-                                <ImpersonateButton userId={creator.userId} name={creator.code} type="creator" />
                                 <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition">
                                     Ajustar
                                 </button>
