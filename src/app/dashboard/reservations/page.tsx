@@ -17,7 +17,6 @@ import ActiveTablesWidget from '@/components/dashboard/ActiveTablesWidget'
 import { prisma } from "@/lib/prisma"
 import { ReservationLinkButton } from "@/components/dashboard/reservations/ReservationLinkButton"
 import ReservationSetupModal from "@/components/dashboard/reservations/ReservationSetupModal"
-import { ReservationModeToggle } from "@/components/dashboard/reservations/ReservationModeToggle"
 import { ReservationScheduleDialog } from "@/components/dashboard/reservations/ReservationScheduleDialog"
 
 import { getActiveBusinessId } from "@/lib/tenant"
@@ -142,8 +141,6 @@ export default async function ReservationsPage() {
                     <p className="text-gray-400 mt-2">Gestiona tu agenda, capacidad y horarios.</p>
                 </div>
                 <div className="flex flex-wrap gap-3 w-full md:w-auto items-center">
-                    <ReservationModeToggle currentMode={userSettings?.reservationSettings?.simpleMode ? 'SIMPLE' : 'ADVANCED'} branchId={effectiveUserId} />
-
                     {program && <ReservationLinkButton programId={program.id} />}
 
                     <ReservationScheduleDialog
@@ -152,14 +149,6 @@ export default async function ReservationsPage() {
                         currentSchedule={(userSettings?.reservationSettings as any)?.availability}
                         otherBranches={otherBranches}
                     />
-
-                    <Link
-                        href="/dashboard/reservations/setup"
-                        className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2.5 rounded-xl font-medium text-sm text-white transition-all flex items-center gap-2"
-                    >
-                        <Settings className="w-4 h-4 text-amber-500 font-bold" />
-                        Mesas (Avanzado)
-                    </Link>
 
                     {/* NEW RESERVATION BUTTON CLIENT COMPONENT */}
                     <NewReservationButton
