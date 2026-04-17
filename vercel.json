@@ -11,6 +11,10 @@
         {
             "path": "/api/cron/health-index",
             "schedule": "0 8 * * *"
+        },
+        {
+            "path": "/api/cron/check-late-tasks",
+            "schedule": "*/30 * * * *"
         }
     ]
 }
