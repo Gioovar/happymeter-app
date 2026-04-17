@@ -21,7 +21,6 @@ import {
     Trash2,
     Zap,
     RotateCw,
-    Shield,
 } from 'lucide-react'
 import Link from 'next/link'
 import ExtraSurveyUpsellModal from '@/components/ExtraSurveyUpsellModal'
@@ -161,10 +160,6 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
         if (checkLimits()) {
             navigateTo('createPrompt')
         }
-    }
-
-    const handleCreateStaffSurvey = () => {
-        push(`${getUrl('createPrompt')}?mode=anonymous`)
     }
 
     const handleDelete = async (id: string) => {
@@ -607,14 +602,6 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
 
                                     </div>
                                 ))}
-
-                                <div 
-                                    onClick={handleCreateStaffSurvey} 
-                                    className="cursor-pointer self-start bg-[#111] hover:bg-[#1a1a1a] border border-white/10 rounded-[20px] p-5 flex items-center gap-4 transition-all duration-300 hover:border-violet-500/30 w-full shadow-lg"
-                                >
-                                    <Shield className="w-6 h-6 text-gray-300" />
-                                    <span className="font-bold text-white text-lg">Buzón Staff</span>
-                                </div>
                             </div>
                         ) : (
                             <div className="rounded-3xl bg-white/5 border border-white/5 p-12 text-center">
