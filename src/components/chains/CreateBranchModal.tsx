@@ -163,7 +163,7 @@ export default function CreateBranchModal({ chainId, isFirstChain = false, trigg
                                     required
                                 />
                                 <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs">
-                                    ℹ️ Tu negocio actual se convertirá en la <strong>Sucursal Principal</strong>.
+                                    ℹ️ Tu negocio actual <strong>permanecerá como Sucursal Principal</strong>. El nombre que ingresas aquí es el de la <strong>Marca/Cadena</strong> que agrupa todas tus sucursales.
                                 </div>
                             </div>
                         ) : (

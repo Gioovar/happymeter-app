@@ -305,8 +305,11 @@ export async function getTaskDetails(taskId: string, evidenceId?: string, target
 }
 
 export async function validateEvidence(evidenceId: string, status: 'APPROVED' | 'REJECTED', note?: string) {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const session = await getOpsSession();
+    if (!session.isAuthenticated) throw new Error("Unauthorized");
+
+    const validatorId = session.userId || session.member?.id;
+    if (!validatorId) throw new Error("Unauthorized: no valid identity");
 
     // Verify owner logic skipped for brevity, should assume middleware/RLS or check zone owner here
 
@@ -316,7 +319,7 @@ export async function validateEvidence(evidenceId: string, status: 'APPROVED' | 
             validationStatus: status,
             supervisorNote: note,
             validatedAt: new Date(),
-            validatedBy: userId
+            validatedBy: validatorId
         }
     });
 

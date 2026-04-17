@@ -39,27 +39,14 @@ export async function createChain(name: string) {
         // Limit Check
         const settings = await prisma.userSettings.findUnique({
             where: { userId: user.id },
-            select: { maxBranches: true }
+            select: { maxBranches: true, businessName: true }
         })
 
         const ownedChainsCount = await prisma.chain.count({
             where: { ownerId: user.id }
         })
 
-        // If we treat "Chains" as "Branches" for the owner (since each chain has a main branch)
-        // or if we just count total branches across all chains.
-        // Let's simplify: 1 Chain = 1 "Main Branch". 
-        // Real check is Total Branches Owned.
-
         const limit = settings?.maxBranches ?? 1
-
-        // For createChain, we are creating the FIRST branch of a new chain.
-        // Effectively, if I have 1 chain with 1 branch, I have 1 branch.
-        // If I create another chain, I have 2 branches total.
-
-        // Let's count total branches owned directly or indirectly
-        // Actually "createChain" creates a NEW chain. 
-        // Logic: Can I create a new chain? Yes, if I haven't hit my limit of "Business Units".
 
         // STRICT CHECK: Count all branches where I am the effective owner via Chain
         const totalBranchesOwned = await prisma.chainBranch.count({
@@ -79,7 +66,8 @@ export async function createChain(name: string) {
             }
         })
 
-        const branchName = name || 'Sucursal 1';
+        // Use the original business name for the first branch, NOT the chain/brand name
+        const branchName = settings?.businessName || 'Sucursal Principal';
         const safeName = branchName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15);
 
         await prisma.chainBranch.create({
@@ -115,12 +103,16 @@ export async function addBranch(chainId: string, data: { name: string, email?: s
             throw new Error('Unauthorized to add branch to this chain')
         }
 
-        // Auto-Rename "Sede Principal" to Chain Name if it exists (Legacy Fix)
+        // Legacy fix: if original branch was incorrectly named "Sede Principal", restore businessName
         const mainBranch = chain.branches.find(b => b.name === 'Sede Principal')
         if (mainBranch) {
+            const ownerSettings = await prisma.userSettings.findUnique({
+                where: { userId: mainBranch.branchId },
+                select: { businessName: true }
+            })
             await prisma.chainBranch.update({
                 where: { id: mainBranch.id },
-                data: { name: chain.name } // Rename to Business Name
+                data: { name: ownerSettings?.businessName || 'Sucursal Principal' }
             })
         }
 
