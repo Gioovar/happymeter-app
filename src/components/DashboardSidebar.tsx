@@ -18,7 +18,6 @@ import { DashboardRoutes, RouteKey } from '@/config/routes'
 import SalesModal from '@/components/plans/SalesModal'
 import CreateBranchModal from './chains/CreateBranchModal'
 import InviteMemberModal from '@/components/team/InviteMemberModal'
-import UserProfile from './dashboard/UserProfile'
 import FeatureGuard from '@/components/common/FeatureGuard'
 import TrialCountdown from '@/components/dashboard/TrialCountdown'
 
@@ -657,13 +656,6 @@ export default function DashboardSidebar({
                 )}
             </div>
 
-            <div className="p-4 border-t border-white/10 bg-[#111]">
-                <UserProfile
-                    user={user}
-                    plan={userPlan}
-                    onUpgrade={() => setIsSalesModalOpen(true)}
-                />
-            </div>
         </>
     )
 
