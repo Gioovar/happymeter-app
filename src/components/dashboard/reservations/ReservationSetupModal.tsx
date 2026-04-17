@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Settings, PlayCircle, Store, LayoutGrid, CalendarRange, Loader2, Info, Clock, Check } from 'lucide-react'
+import { Settings, PlayCircle, Store, CalendarRange, Loader2, Info, Clock, Check } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -144,24 +144,6 @@ export default function ReservationSetupModal({ isOpen, setupLink, branchId }: R
                                 </div>
                             </button>
 
-                            <button
-                                disabled={isUpdating}
-                                onClick={() => window.location.href = setupLink}
-                                className="w-full group bg-black hover:bg-[#111] border border-white/10 hover:border-amber-500/50 rounded-2xl p-5 text-left transition-all duration-300 relative overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-amber-600/0 via-amber-600/5 to-amber-600/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="flex items-start gap-4 relative z-10">
-                                    <div className="p-3 bg-amber-500/10 rounded-xl shrink-0">
-                                        <LayoutGrid className="w-6 h-6 text-amber-500 group-hover:scale-110 transition-transform" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-lg text-white mb-1 group-hover:text-amber-200 transition-colors">Reserva Avanzada</h3>
-                                        <p className="text-sm text-gray-400 leading-relaxed">
-                                            Dibuja tu plano y permite que los clientes visualicen tu salón y reserven mesas específicas con anticipación.
-                                        </p>
-                                    </div>
-                                </div>
-                            </button>
                         </div>
 
                         <div className="mt-6 flex justify-center">
