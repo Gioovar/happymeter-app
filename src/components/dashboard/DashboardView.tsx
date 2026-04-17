@@ -158,7 +158,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
 
     const handleCreateSurvey = () => {
         if (checkLimits()) {
-            navigateTo('createPrompt')
+            push(`${getUrl('createPrompt')}?mode=anonymous`)
         }
     }
 
@@ -377,7 +377,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
                                 <Plus className="w-5 h-5 relative z-10" />
-                                <span className="relative z-10 hidden md:inline">Nueva Encuesta</span>
+                                <span className="relative z-10 hidden md:inline">Crear Buzón Staff</span>
                             </button>
                         </div>
                     </div>
