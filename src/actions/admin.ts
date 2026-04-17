@@ -16,7 +16,8 @@ async function verifyAdmin() {
     // TEMPORARY: Allow current user for development if role check is not robust yet
     // In production, strictly check:
     const dbUser = await prisma.userSettings.findUnique({
-        where: { userId: user.id }
+        where: { userId: user.id },
+        select: { role: true }
     })
 
     // We treat 'SUPER_ADMIN' or specific email as God Mode
@@ -64,13 +65,20 @@ export async function getClients(query?: string) {
             }
         })
 
-        // Enhance with actual branch count
-        // We need to count how many branches (chainBranch) belong to chains owned by this user
-        const enhancedUsers = await Promise.all(users.map(async (u) => {
-            const branchCount = await prisma.chainBranch.count({
-                where: { chain: { ownerId: u.userId } }
-            })
-            return { ...u, branchCount }
+        // Single query: fetch all chains + branch counts for all users at once
+        const userIds = users.map(u => u.userId)
+        const chains = await prisma.chain.findMany({
+            where: { ownerId: { in: userIds } },
+            select: { ownerId: true, _count: { select: { branches: true } } }
+        })
+        const branchCountMap = chains.reduce((acc, c) => {
+            acc[c.ownerId] = (acc[c.ownerId] || 0) + c._count.branches
+            return acc
+        }, {} as Record<string, number>)
+
+        const enhancedUsers = users.map(u => ({
+            ...u,
+            branchCount: branchCountMap[u.userId] || 0
         }))
 
         return enhancedUsers
@@ -117,23 +125,44 @@ export async function getTenants() {
             }
         })
 
-        const tenants = await Promise.all(users.map(async (u) => {
-            const [surveyCount, responseCount] = await Promise.all([
-                prisma.survey.count({ where: { userId: u.userId } }),
-                prisma.response.count({ where: { survey: { userId: u.userId } } })
-            ])
+        const tenantIds = users.map(u => u.userId)
 
-            return {
-                id: u.id,
-                userId: u.userId,
-                businessName: u.businessName,
-                plan: u.plan,
-                industry: u.industry || 'Unknown',
-                createdAt: u.createdAt,
-                stats: {
-                    surveys: surveyCount,
-                    responses: responseCount
-                }
+        // 2 queries instead of N*2 queries
+        const surveys = await prisma.survey.findMany({
+            where: { userId: { in: tenantIds } },
+            select: { id: true, userId: true }
+        })
+        const surveyIds = surveys.map(s => s.id)
+        const responseGroups = surveyIds.length > 0
+            ? await prisma.response.groupBy({
+                by: ['surveyId'],
+                where: { surveyId: { in: surveyIds } },
+                _count: { id: true }
+            })
+            : []
+
+        const surveyCountByUser: Record<string, number> = {}
+        const surveyUserMap: Record<string, string> = {}
+        for (const s of surveys) {
+            surveyCountByUser[s.userId] = (surveyCountByUser[s.userId] || 0) + 1
+            surveyUserMap[s.id] = s.userId
+        }
+        const responseCountByUser: Record<string, number> = {}
+        for (const rg of responseGroups) {
+            const userId = surveyUserMap[rg.surveyId]
+            if (userId) responseCountByUser[userId] = (responseCountByUser[userId] || 0) + rg._count.id
+        }
+
+        const tenants = users.map(u => ({
+            id: u.id,
+            userId: u.userId,
+            businessName: u.businessName,
+            plan: u.plan,
+            industry: u.industry || 'Unknown',
+            createdAt: u.createdAt,
+            stats: {
+                surveys: surveyCountByUser[u.userId] || 0,
+                responses: responseCountByUser[u.userId] || 0
             }
         }))
 

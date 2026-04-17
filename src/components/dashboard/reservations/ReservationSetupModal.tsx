@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Settings, PlayCircle, Store, CalendarRange, Loader2, Info, Clock, Check } from 'lucide-react'
@@ -23,6 +24,7 @@ export default function ReservationSetupModal({ isOpen, setupLink, branchId }: R
     // Usually forced setup modals block interaction or are persistent.
     // Let's make it persistent (cannot close easily) or re-opens? 
     // For good UX, we allow closing but it shows every time the page loads if empty.
+    const router = useRouter()
     const [open, setOpen] = useState(isOpen)
     const [step, setStep] = useState<'intro' | 'select-mode' | 'hours'>('intro')
     const [isUpdating, setIsUpdating] = useState(false)
@@ -65,7 +67,7 @@ export default function ReservationSetupModal({ isOpen, setupLink, branchId }: R
 
             if (res.success) {
                 toast.success('Modo Sencillo activado')
-                window.location.reload()
+                router.refresh()
             } else {
                 toast.error(res.error || "Error al configurar el modo")
                 setIsUpdating(false)

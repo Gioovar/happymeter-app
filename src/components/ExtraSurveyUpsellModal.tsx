@@ -45,7 +45,7 @@ export default function ExtraSurveyUpsellModal({ isOpen, onClose, currentPlanNam
             })
 
             // Force refresh of the page/context to update limits
-            window.location.reload()
+            router.refresh()
             onClose()
 
         } catch (error: any) {

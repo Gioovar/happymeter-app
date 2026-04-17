@@ -5,8 +5,6 @@ import { Share2, Copy, Loader2, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { getReportShareLink } from '@/actions/analytics'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
 import { format } from 'date-fns'
 
 interface ShareButtonProps {
@@ -56,6 +54,11 @@ export default function ShareButton({ surveyId, surveyTitle, publicToken, classN
             setShowMenu(false)
 
             await new Promise(resolve => setTimeout(resolve, 500))
+
+            const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+                import('jspdf'),
+                import('html2canvas')
+            ])
 
             const pdf = new jsPDF({
                 orientation: 'portrait',

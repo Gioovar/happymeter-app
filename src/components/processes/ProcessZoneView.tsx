@@ -859,7 +859,7 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                             initialData={activeZone}
                             onSuccess={() => {
                                 setIsEditZoneOpen(false);
-                                window.location.reload(); // Refresh to catch changes immediately
+                                router.refresh()
                             }}
                         />
                     )}

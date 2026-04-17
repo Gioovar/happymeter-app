@@ -89,7 +89,7 @@ export function LoyaltyDashboard({ userId, program }: LoyaltyDashboardProps) {
 
                             if (res.success) {
                                 toast.success("Programa creado!")
-                                window.location.reload()
+                                router.refresh()
                             } else {
                                 toast.error(res.error || "Error al crear programa")
                             }

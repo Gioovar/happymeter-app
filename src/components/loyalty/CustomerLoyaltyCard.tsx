@@ -9,6 +9,7 @@ import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy
 import { InstallPwa } from "@/components/pwa/InstallPwa"
 import { cn } from "@/lib/utils"
 import { useClerk, useUser } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -44,6 +45,7 @@ interface CustomerLoyaltyCardProps {
 }
 
 export function CustomerLoyaltyCard({ customer, filterType = "all", children, className, onEditProfile, businessName }: CustomerLoyaltyCardProps) {
+    const router = useRouter()
     const { user } = useUser()
     const { signOut, openUserProfile } = useClerk()
     const { program, visits, currentVisits } = customer
@@ -124,7 +126,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
             const res = await unlockReward(customer.id, rewardId)
             if (res.success) {
                 toast.success("¡Premio desbloqueado! Muestra el código al personal.")
-                window.location.reload()
+                router.refresh()
             } else {
                 toast.error(res.error || "No tienes suficientes visitas/puntos")
             }

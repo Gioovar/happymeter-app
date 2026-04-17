@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Loader2, CreditCard } from 'lucide-react'
 import { toast } from 'sonner' // Assuming you have sonner or use your toast lib
 
@@ -21,6 +22,7 @@ export default function PortalButton({
     showSync = true,
     onClick
 }: PortalButtonProps) {
+    const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
 
     const handlePortal = async () => {
@@ -62,7 +64,7 @@ export default function PortalButton({
 
             const data = await res.json()
             toast.success(`Suscripción sincronizada: ${data.plan}`)
-            window.location.reload()
+            router.refresh()
         } catch (error: any) {
             console.error(error)
             toast.error(`Error: ${error.message}`) // Show specific error

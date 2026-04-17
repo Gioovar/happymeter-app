@@ -11,8 +11,6 @@ import { es } from 'date-fns/locale'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
 import { DateRangePicker } from '@/components/DateRangePicker'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
 import { getSurveyAnalytics, getPublicSurveyAnalytics } from '@/actions/analytics'
 import ShareButton from './ShareButton'
 import HappyLoader from '@/components/HappyLoader'
@@ -240,6 +238,11 @@ export default function AIProcessManual({ surveyId, surveyTitle, initialIndustry
             toast.info("Generando reporte completo...", { duration: 3000 })
 
             await new Promise(resolve => setTimeout(resolve, 500))
+
+            const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+                import('jspdf'),
+                import('html2canvas')
+            ])
 
             const pdf = new jsPDF({
                 orientation: 'portrait',

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Html5Qrcode } from "html5-qrcode"
 import { toast } from "sonner"
 import { validateVisitScan, logCustomerVisit, redeemReward } from "@/actions/loyalty"
@@ -17,6 +18,7 @@ interface StaffScannerProps {
 }
 
 export function StaffScanner({ staffId, branchId }: StaffScannerProps) {
+    const router = useRouter()
     const [scanResult, setScanResult] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
     const [scannerError, setScannerError] = useState<string | null>(null)
@@ -461,7 +463,7 @@ export function StaffScanner({ staffId, branchId }: StaffScannerProps) {
                             document.documentElement.classList.remove("qr-scanner-active");
                             document.body.classList.remove("qr-scanner-active");
                             setIsNativeScanner(false);
-                            window.location.reload(); // Force refresh to bring web UI back completely
+                            router.refresh()
                         }}
                         className="pointer-events-auto mt-12 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-8 py-3 rounded-full font-bold shadow-lg flex items-center gap-2"
                     >
