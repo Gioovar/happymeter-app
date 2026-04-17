@@ -382,29 +382,29 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {stats.map((stat, idx) => (
-                            <div key={idx} className={`relative group p-6 rounded-3xl bg-[#0F0F0F] border ${stat.border} hover:border-white/20 transition-all duration-300 hover:-translate-y-1 shadow-2xl overflow-hidden`}>
+                            <div key={idx} className={`relative group p-4 rounded-2xl bg-[#0F0F0F] border ${stat.border} hover:border-white/20 transition-all duration-300 hover:-translate-y-1 shadow-xl overflow-hidden`}>
                                 <LaserBorder color={stat.laserColor} maskClass="bg-[#0F0F0F]" />
-                                <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full bg-gradient-to-br ${stat.color} opacity-20 blur-[50px] group-hover:opacity-30 transition-opacity`} />
+                                <div className={`absolute -right-10 -top-10 w-24 h-24 rounded-full bg-gradient-to-br ${stat.color} opacity-20 blur-[40px] group-hover:opacity-30 transition-opacity`} />
 
                                 <div className="relative z-10 flex flex-col justify-between h-full">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className={`p-3 rounded-2xl ${stat.bg}`}>
-                                            <stat.icon className={`w-6 h-6 text-white`} />
+                                    <div className="flex justify-between items-center mb-2">
+                                        <div className={`p-2 rounded-xl ${stat.bg}`}>
+                                            <stat.icon className={`w-5 h-5 text-white`} />
                                         </div>
-                                        <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${stat.trend === 'up' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                                        <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${stat.trend === 'up' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
                                             {stat.change}
                                             {stat.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <h3 className="text-4xl font-bold text-white mb-1 tracking-tight">{stat.value}</h3>
-                                        <p className="text-sm text-gray-400 font-medium">{stat.label}</p>
+                                    <div className="flex items-baseline gap-2 mt-1">
+                                        <h3 className="text-3xl font-bold text-white tracking-tight">{stat.value}</h3>
+                                        <p className="text-xs text-gray-400 font-medium">{stat.label}</p>
                                     </div>
 
-                                    <div className="h-1 w-full bg-white/5 rounded-full mt-6 overflow-hidden">
+                                    <div className="h-1 w-full bg-white/5 rounded-full mt-3 overflow-hidden">
                                         <div className={`h-full w-[70%] bg-gradient-to-r ${stat.color} rounded-full`} />
                                     </div>
                                 </div>
