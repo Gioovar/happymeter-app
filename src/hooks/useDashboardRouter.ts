@@ -4,7 +4,7 @@ import { DashboardRoutes, RouteKey } from '@/config/routes'
 const RESERVED_SEGMENTS = new Set([
     'chains', 'chat', 'reports', 'achievements', 'help', 'settings', 'responses',
     'create', 'edit', 'reservations', 'processes', 'games', 'loyalty',
-    'supervision', 'analytics', 'campaigns', 'academy', 'team', 'tickets', 'team-chat'
+    'supervision', 'analytics', 'campaigns', 'team', 'tickets', 'team-chat'
 ])
 
 /**
