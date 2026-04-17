@@ -128,7 +128,7 @@ export async function markMessagesAsRead(branchId: string, senderId: string, cur
 export async function getInternalNotifications(userId: string, branchId?: string) {
     if (!userId) return []
 
-    return await prisma.internalNotification.findMany({
+    const dbNotifications = await prisma.internalNotification.findMany({
         where: {
             userId,
             ...(branchId ? { branchId } : {}),
@@ -136,6 +136,37 @@ export async function getInternalNotifications(userId: string, branchId?: string
         },
         orderBy: { createdAt: 'desc' }
     })
+
+    try {
+        const { getOpsTasks } = await import('@/actions/processes')
+        const opsData = await getOpsTasks()
+        let virtualNotifications: any[] = []
+
+        if (opsData && opsData.zones) {
+            const pendingTasks = opsData.zones.flatMap((zone: any) =>
+                zone.tasks
+                    .filter((task: any) => task.evidences.length === 0)
+                    .map((task: any) => ({ ...task, zoneName: zone.name }))
+            )
+
+            virtualNotifications = pendingTasks.map((task: any) => ({
+                id: `task-${task.id}`,
+                title: `Falta evidencia: ${task.title}`,
+                body: `Tarea asignada en: ${task.zoneName}`,
+                type: 'TASK_REMINDER',
+                actionUrl: `/ops/tasks/${task.id}`,
+                isRead: false,
+                createdAt: new Date(),
+                isVirtualTask: true
+            }))
+        }
+
+        return [...dbNotifications, ...virtualNotifications]
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    } catch (err) {
+        console.error("Error appending virtual tasks to notifications", err)
+        return dbNotifications
+    }
 }
 
 /**

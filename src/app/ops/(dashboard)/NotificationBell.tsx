@@ -31,7 +31,9 @@ export default function NotificationBell({ memberId, branchId }: { memberId: str
     const unreadCount = notifications.length
 
     const handleAction = async (notif: any) => {
-        await markInternalNotificationRead(notif.id)
+        if (!notif.isVirtualTask) {
+            await markInternalNotificationRead(notif.id)
+        }
         setIsOpen(false)
         fetchNotifications()
         if (notif.actionUrl) {
