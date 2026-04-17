@@ -162,12 +162,6 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
         }
     }
 
-    const handleCreateStaffSurvey = () => {
-        if (checkLimits()) {
-            push(`${getUrl('createPrompt')}?mode=anonymous`)
-        }
-    }
-
     const handleDelete = async (id: string) => {
         if (!window.confirm("¿Estás seguro de eliminar esta encuesta?")) return;
 
@@ -608,13 +602,6 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
 
                                     </div>
                                 ))}
-
-                                <div onClick={handleCreateStaffSurvey} className="cursor-pointer group rounded-3xl border-2 border-dashed border-white/10 hover:border-violet-500/40 hover:bg-violet-500/5 transition duration-300 flex flex-col items-center justify-center p-8 min-h-[400px]">
-                                    <div className="w-16 h-16 rounded-full bg-white/5 group-hover:bg-violet-500/20 flex items-center justify-center mb-4 transition duration-500 group-hover:scale-110">
-                                        <Plus className="w-8 h-8 text-gray-400 group-hover:text-violet-400" />
-                                    </div>
-                                    <span className="font-bold text-gray-300 group-hover:text-white">Crear Buzón Staff</span>
-                                </div>
                             </div>
                         ) : (
                             <div className="rounded-3xl bg-white/5 border border-white/5 p-12 text-center">
