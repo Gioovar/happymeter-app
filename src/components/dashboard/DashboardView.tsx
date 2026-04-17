@@ -164,9 +164,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
     }
 
     const handleCreateStaffSurvey = () => {
-        if (checkLimits()) {
-            push(`${getUrl('createPrompt')}?mode=anonymous`)
-        }
+        push(`${getUrl('createPrompt')}?mode=anonymous`)
     }
 
     const handleDelete = async (id: string) => {
