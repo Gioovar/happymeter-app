@@ -1,4 +1,5 @@
 import { getOpsTaskDetails, validateEvidence } from '@/actions/supervision';
+import { ValidationButtons } from '@/components/supervision/ValidationButtons';
 import { ArrowLeft, Clock, Calendar, CheckCircle2, XCircle, UserCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -130,26 +131,7 @@ export default async function OpsTaskDetailPage({ params, searchParams }: { para
                                     placeholder="Instrucciones para mejorar..."
                                 />
                             </div>
-                            <div className="flex gap-3">
-                                <button
-                                    type="submit"
-                                    name="status"
-                                    value="REJECTED"
-                                    className="flex-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 active:scale-95"
-                                >
-                                    <XCircle className="w-5 h-5" />
-                                    Rechazar
-                                </button>
-                                <button
-                                    type="submit"
-                                    name="status"
-                                    value="APPROVED"
-                                    className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 active:scale-95"
-                                >
-                                    <CheckCircle2 className="w-5 h-5" />
-                                    Aprobar
-                                </button>
-                            </div>
+                            <ValidationButtons variant="ops" />
                         </form>
                     ) : (
                         <div className={`p-4 rounded-2xl border ${currentEvidence.validationStatus === 'APPROVED' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20'

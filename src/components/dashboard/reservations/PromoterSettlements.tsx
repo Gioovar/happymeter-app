@@ -13,20 +13,26 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CheckCircle2, Clock, DollarSign } from "lucide-react"
+import { CheckCircle2, Clock, DollarSign, Loader2 } from "lucide-react"
 import { markSettlementAsPaid } from "@/actions/promoters"
 import { toast } from "sonner"
 
 export function PromoterSettlements({ initialSettlements, promoterId }: { initialSettlements: any[], promoterId: string }) {
     const [settlements, setSettlements] = useState(initialSettlements)
+    const [payingId, setPayingId] = useState<string | null>(null)
 
     const handleMarkAsPaid = async (id: string) => {
-        const res = await markSettlementAsPaid(id)
-        if (res.success) {
-            setSettlements(prev => prev.map(s => s.id === id ? { ...s, status: 'PAID', paidAt: new Date() } : s))
-            toast.success('Liquidación marcada como pagada')
-        } else {
-            toast.error(res.error)
+        setPayingId(id)
+        try {
+            const res = await markSettlementAsPaid(id)
+            if (res.success) {
+                setSettlements(prev => prev.map(s => s.id === id ? { ...s, status: 'PAID', paidAt: new Date() } : s))
+                toast.success('Liquidación marcada como pagada')
+            } else {
+                toast.error(res.error)
+            }
+        } finally {
+            setPayingId(null)
         }
     }
 
@@ -79,10 +85,12 @@ export function PromoterSettlements({ initialSettlements, promoterId }: { initia
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                className="text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 h-7 text-[10px]"
+                                                disabled={payingId === s.id}
+                                                className="text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 h-7 text-[10px] flex items-center gap-1"
                                                 onClick={() => handleMarkAsPaid(s.id)}
                                             >
-                                                PAGAR
+                                                {payingId === s.id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                                                {payingId === s.id ? "..." : "PAGAR"}
                                             </Button>
                                         )}
                                         {s.status === 'PAID' && (

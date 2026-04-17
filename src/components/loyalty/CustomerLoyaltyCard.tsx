@@ -5,7 +5,7 @@ import { createPortal } from "react-dom"
 import { QRCodeSVG } from "qrcode.react"
 import { unlockReward, getMemberLoyaltyPrograms, getLoyaltyNotifications, markNotificationsAsRead, getCustomerReservations } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar, Bell, QrCode, Trophy } from "lucide-react"
+import { Star, Gift, Check, Lock, ChevronRight, Menu, CreditCard, Sparkles, Copy, X, User, LogOut, Wallet, Calendar, Bell, QrCode, Trophy, Loader2 } from "lucide-react"
 import { InstallPwa } from "@/components/pwa/InstallPwa"
 import { cn } from "@/lib/utils"
 import { useClerk, useUser } from "@clerk/nextjs"
@@ -115,16 +115,21 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
     // Find current unlocked rewards (pending redemption)
     const pendingRedemptions = customer.redemptions ? customer.redemptions.filter((r: any) => r.status === 'PENDING') : []
 
-    const handleUnlock = async (rewardId: string) => {
-        if (customer.currentPoints < 0 && customer.currentVisits < 0) return // Basic check
+    const [unlockingRewardId, setUnlockingRewardId] = useState<string | null>(null)
 
-        // Optimistic UI could go here
-        const res = await unlockReward(customer.id, rewardId)
-        if (res.success) {
-            toast.success("¡Premio desbloqueado! Muestra el código al personal.")
-            window.location.reload()
-        } else {
-            toast.error(res.error || "No tienes suficientes visitas/puntos")
+    const handleUnlock = async (rewardId: string) => {
+        if (customer.currentPoints < 0 && customer.currentVisits < 0) return
+        setUnlockingRewardId(rewardId)
+        try {
+            const res = await unlockReward(customer.id, rewardId)
+            if (res.success) {
+                toast.success("¡Premio desbloqueado! Muestra el código al personal.")
+                window.location.reload()
+            } else {
+                toast.error(res.error || "No tienes suficientes visitas/puntos")
+            }
+        } finally {
+            setUnlockingRewardId(null)
         }
     }
 
@@ -623,9 +628,11 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                                     e.stopPropagation()
                                                     handleUnlock(reward.id)
                                                 }}
-                                                className="w-full bg-violet-600 hover:bg-violet-700 text-white rounded-xl p-3 font-bold text-xs uppercase shadow-lg shadow-violet-500/20 transition-all active:scale-95"
+                                                disabled={unlockingRewardId === reward.id}
+                                                className="w-full bg-violet-600 hover:bg-violet-700 text-white rounded-xl p-3 font-bold text-xs uppercase shadow-lg shadow-violet-500/20 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                             >
-                                                Desbloquear Recompensa
+                                                {unlockingRewardId === reward.id && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                                {unlockingRewardId === reward.id ? "Desbloqueando..." : "Desbloquear Recompensa"}
                                             </button>
                                         ) : (
                                             // Locked State

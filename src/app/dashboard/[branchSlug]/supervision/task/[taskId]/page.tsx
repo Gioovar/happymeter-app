@@ -1,5 +1,6 @@
 import { getTaskDetails, validateEvidence } from '@/actions/supervision';
 import AIAnalysisPanel from '@/components/supervision/AIAnalysisPanel';
+import { ValidationButtons } from '@/components/supervision/ValidationButtons';
 import { ArrowLeft, Clock, Calendar, CheckCircle2, XCircle, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -91,26 +92,7 @@ export default async function TaskDetailPage({ params, searchParams }: { params:
                                             placeholder="Escribe una observación para el empleado..."
                                         />
                                     </div>
-                                    <div className="flex gap-4">
-                                        <button
-                                            type="submit"
-                                            name="status"
-                                            value="APPROVED"
-                                            className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <CheckCircle2 className="w-5 h-5" />
-                                            Aprobar Tarea
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            name="status"
-                                            value="REJECTED"
-                                            className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <XCircle className="w-5 h-5" />
-                                            Rechazar
-                                        </button>
-                                    </div>
+                                    <ValidationButtons variant="dashboard" />
                                 </form>
                             ) : (
                                 <div className={`p-4 rounded-xl border ${currentEvidence.validationStatus === 'APPROVED' ? 'bg-emerald-500/10 border-emerald-500/20' :

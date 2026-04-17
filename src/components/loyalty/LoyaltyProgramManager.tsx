@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { createLoyaltyProgram, addLoyaltyReward } from "@/actions/loyalty"
 import { toast } from "sonner"
-import { Plus, Save, Gift, Trophy, QrCode } from "lucide-react"
+import { Plus, Gift, Trophy, QrCode, Loader2 } from "lucide-react"
 
 interface LoyaltyProgramManagerProps {
     userId: string
@@ -11,51 +12,59 @@ interface LoyaltyProgramManagerProps {
 }
 
 export function LoyaltyProgramManager({ userId, existingProgram }: LoyaltyProgramManagerProps) {
+    const router = useRouter()
     const [program, setProgram] = useState(existingProgram)
 
     // Create Form State
     const [businessName, setBusinessName] = useState(existingProgram?.businessName || "")
     const [description, setDescription] = useState(existingProgram?.description || "")
     const [color, setColor] = useState(existingProgram?.themeColor || "#8b5cf6")
+    const [creatingProgram, setCreatingProgram] = useState(false)
 
     // Reward Form State
     const [isAddingReward, setIsAddingReward] = useState(false)
     const [rewardName, setRewardName] = useState("")
     const [rewardCost, setRewardCost] = useState(5)
+    const [savingReward, setSavingReward] = useState(false)
 
     const handleCreateProgram = async () => {
-        const res = await createLoyaltyProgram({
-            userId,
-            businessName,
-            description,
-            themeColor: color
-        })
-        if (res.success) {
-            setProgram(res.program)
-            toast.success("Programa de lealtad creado!")
-        } else {
-            toast.error("Error al crear el programa")
+        setCreatingProgram(true)
+        try {
+            const res = await createLoyaltyProgram({
+                userId,
+                businessName,
+                description,
+                themeColor: color
+            })
+            if (res.success) {
+                setProgram(res.program)
+                toast.success("Programa de lealtad creado!")
+            } else {
+                toast.error("Error al crear el programa")
+            }
+        } finally {
+            setCreatingProgram(false)
         }
     }
 
     const handleAddReward = async () => {
         if (!program) return
-        const res = await addLoyaltyReward(program.id, {
-            name: rewardName,
-            costInVisits: rewardCost
-        })
-        if (res.success) {
-            toast.success("Premio agregado")
-            setIsAddingReward(false)
-            setRewardName("")
-            // Ideally re-fetch or update local state manually if not using router refresh
-            // Assuming parent/page handles refresh or we just updated list locally?
-            // Since the action calls revalidatePath, a router.refresh() in parent would be good, 
-            // or we can blindly append to local state for UX if we knew the shape perfectly.
-            // For simplicity, let's reload or assume the page rehydrates.
-            window.location.reload()
-        } else {
-            toast.error("Error al agregar premio")
+        setSavingReward(true)
+        try {
+            const res = await addLoyaltyReward(program.id, {
+                name: rewardName,
+                costInVisits: rewardCost
+            })
+            if (res.success) {
+                toast.success("Premio agregado")
+                setIsAddingReward(false)
+                setRewardName("")
+                router.refresh()
+            } else {
+                toast.error("Error al agregar premio")
+            }
+        } finally {
+            setSavingReward(false)
         }
     }
 
@@ -103,10 +112,11 @@ export function LoyaltyProgramManager({ userId, existingProgram }: LoyaltyProgra
 
                     <button
                         onClick={handleCreateProgram}
-                        disabled={!businessName}
-                        className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-all disabled:opacity-50"
+                        disabled={!businessName || creatingProgram}
+                        className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                        Crear Programa
+                        {creatingProgram && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {creatingProgram ? "Creando..." : "Crear Programa"}
                     </button>
                 </div>
             </div>
@@ -216,9 +226,11 @@ export function LoyaltyProgramManager({ userId, existingProgram }: LoyaltyProgra
                                 </button>
                                 <button
                                     onClick={handleAddReward}
-                                    className="px-3 py-1.5 text-sm bg-slate-900 text-white rounded-md hover:bg-slate-800"
+                                    disabled={savingReward}
+                                    className="px-3 py-1.5 text-sm bg-slate-900 text-white rounded-md hover:bg-slate-800 disabled:opacity-50 flex items-center gap-1.5"
                                 >
-                                    Guardar
+                                    {savingReward && <Loader2 className="w-3 h-3 animate-spin" />}
+                                    {savingReward ? "Guardando..." : "Guardar"}
                                 </button>
                             </div>
                         </div>

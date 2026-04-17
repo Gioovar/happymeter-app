@@ -18,7 +18,7 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Trash2, ExternalLink, QrCode, Share2, Mail, MessageSquare } from "lucide-react"
+import { MoreHorizontal, Trash2, ExternalLink, QrCode, Share2, Mail, MessageSquare, Loader2 } from "lucide-react"
 import { deletePromoter, sendPromoterNotification } from "@/actions/promoters"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
@@ -30,18 +30,24 @@ interface PromotersListProps {
 
 export function PromotersList({ initialPromoters, programId }: PromotersListProps) {
     const [promoters, setPromoters] = useState(initialPromoters)
+    const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [notifyingId, setNotifyingId] = useState<string | null>(null)
     const params = useParams()
     const branchSlug = params?.branchSlug as string
 
     const handleDelete = async (id: string) => {
         if (!confirm('¿Estás seguro de eliminar este RP? Se perderán sus métricas vinculadas.')) return
-
-        const res = await deletePromoter(id)
-        if (res.success) {
-            setPromoters(prev => prev.filter(p => p.id !== id))
-            toast.success('RP eliminado correctamente')
-        } else {
-            toast.error(res.error)
+        setDeletingId(id)
+        try {
+            const res = await deletePromoter(id)
+            if (res.success) {
+                setPromoters(prev => prev.filter(p => p.id !== id))
+                toast.success('RP eliminado correctamente')
+            } else {
+                toast.error(res.error)
+            }
+        } finally {
+            setDeletingId(null)
         }
     }
 
@@ -58,11 +64,16 @@ export function PromotersList({ initialPromoters, programId }: PromotersListProp
     }
 
     const handleSendNotification = async (id: string, type: 'sms' | 'email') => {
-        const res: any = await sendPromoterNotification(id, type)
-        if (res.success) {
-            toast.success(`Notificación enviada por ${type.toUpperCase()}`)
-        } else {
-            toast.error(res?.error || 'Error al enviar notificación')
+        setNotifyingId(id)
+        try {
+            const res: any = await sendPromoterNotification(id, type)
+            if (res.success) {
+                toast.success(`Notificación enviada por ${type.toUpperCase()}`)
+            } else {
+                toast.error(res?.error || 'Error al enviar notificación')
+            }
+        } finally {
+            setNotifyingId(null)
         }
     }
 
@@ -114,8 +125,8 @@ export function PromotersList({ initialPromoters, programId }: PromotersListProp
                                 <TableCell>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-white/10">
-                                                <MoreHorizontal className="h-4 w-4 text-zinc-400" />
+                                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-white/10" disabled={deletingId === promoter.id}>
+                                                {deletingId === promoter.id ? <Loader2 className="h-4 w-4 text-zinc-400 animate-spin" /> : <MoreHorizontal className="h-4 w-4 text-zinc-400" />}
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 text-zinc-300">
@@ -125,11 +136,11 @@ export function PromotersList({ initialPromoters, programId }: PromotersListProp
                                             <DropdownMenuItem onClick={() => copyReservationLink(promoter.slug)} className="hover:bg-white/5 cursor-pointer flex gap-2">
                                                 <ExternalLink className="w-4 h-4" /> Enlace de Reservas (clientes)
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleSendNotification(promoter.id, 'sms')} className="hover:bg-white/5 cursor-pointer flex gap-2">
-                                                <MessageSquare className="w-4 h-4" /> Enviar App (SMS)
+                                            <DropdownMenuItem onClick={() => handleSendNotification(promoter.id, 'sms')} disabled={notifyingId === promoter.id} className="hover:bg-white/5 cursor-pointer flex gap-2">
+                                                {notifyingId === promoter.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />} Enviar App (SMS)
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleSendNotification(promoter.id, 'email')} className="hover:bg-white/5 cursor-pointer flex gap-2">
-                                                <Mail className="w-4 h-4" /> Enviar App (Correo)
+                                            <DropdownMenuItem onClick={() => handleSendNotification(promoter.id, 'email')} disabled={notifyingId === promoter.id} className="hover:bg-white/5 cursor-pointer flex gap-2">
+                                                {notifyingId === promoter.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} Enviar App (Correo)
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
                                                 <Link href={branchSlug ? `/dashboard/${branchSlug}/reservations/rps/${promoter.id}` : `/dashboard/reservations/rps/${promoter.id}`} className="w-full flex gap-2 items-center px-2 py-1.5 hover:bg-white/5 cursor-pointer rounded-sm">
