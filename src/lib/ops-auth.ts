@@ -16,7 +16,7 @@ export async function getOpsSession() {
             const member = await prisma.teamMember.findUnique({
                 where: { id: contextId, userId }, // Ensure the context belongs to the user
                 include: {
-                    owner: { select: { businessName: true } }
+                    owner: { select: { businessName: true, photoUrl: true } }
                 }
             })
             if (member && member.isActive) {
@@ -34,7 +34,7 @@ export async function getOpsSession() {
         const memberships = await prisma.teamMember.findMany({
             where: { userId, isActive: true },
             include: {
-                owner: { select: { businessName: true } }
+                owner: { select: { businessName: true, photoUrl: true } }
             }
         })
 
@@ -78,7 +78,7 @@ export async function getOpsSession() {
         const member = await prisma.teamMember.findUnique({
             where: { accessCode: operatorCookie.value },
             include: {
-                owner: { select: { businessName: true } }
+                owner: { select: { businessName: true, photoUrl: true } }
             }
         })
 

@@ -14,6 +14,7 @@ interface Membership {
     jobTitle: string | null
     owner: {
         businessName: string | null
+        photoUrl?: string | null
     }
 }
 
@@ -21,6 +22,7 @@ export default function OpsHeader() {
     const [isOpen, setIsOpen] = useState(false)
     const [showBranchSwitcher, setShowBranchSwitcher] = useState(false)
     const [branchName, setBranchName] = useState<string>('Panel Operativo')
+    const [branchLogo, setBranchLogo] = useState<string | null>(null)
     const [currentMembershipId, setCurrentMembershipId] = useState<string | null>(null)
     const [allMemberships, setAllMemberships] = useState<Membership[]>([])
     const pathname = usePathname()
@@ -34,6 +36,9 @@ export default function OpsHeader() {
                 if (data?.member?.owner?.businessName) {
                     setBranchName(data.member.owner.businessName)
                     setCurrentMembershipId(data.member.id)
+                }
+                if (data?.member?.owner?.photoUrl) {
+                    setBranchLogo(data.member.owner.photoUrl)
                 }
                 if (data?.allMemberships) {
                     setAllMemberships(data.allMemberships)
@@ -70,8 +75,14 @@ export default function OpsHeader() {
                         : 'bg-transparent border-transparent cursor-default'
                         }`}
                 >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-                        <ShieldCheck className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20 overflow-hidden border border-white/10 shrink-0">
+                        {branchLogo ? (
+                            <img src={branchLogo} alt={branchName} className="w-full h-full object-cover" />
+                        ) : branchName ? (
+                            <span className="text-white font-bold text-xs uppercase">{branchName.charAt(0)}</span>
+                        ) : (
+                            <ShieldCheck className="w-4 h-4 text-white" />
+                        )}
                     </div>
                     <div className="flex flex-col items-start translate-y-[1px]">
                         <h1 className="font-black text-[10px] text-violet-400 uppercase tracking-[0.2em] leading-none mb-1">Sucursal Activa</h1>
@@ -135,10 +146,16 @@ export default function OpsHeader() {
                                         )}
                                     >
                                         <div className={cn(
-                                            "w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-105",
-                                            isActive ? "bg-white/20" : "bg-[#1a1c22] border border-white/5"
+                                            "w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-105 overflow-hidden border shrink-0",
+                                            isActive ? "bg-white/20 border-white/10" : "bg-[#1a1c22] border-white/5"
                                         )}>
-                                            <Store className={cn("w-5 h-5", isActive ? "text-white" : "text-gray-500")} />
+                                            {membership.owner?.photoUrl ? (
+                                                <img src={membership.owner.photoUrl} alt={bName} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className={cn("font-black text-sm uppercase", isActive ? "text-white" : "text-gray-400")}>
+                                                    {bName.charAt(0)}
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className={cn("font-bold tracking-tight truncate", isActive ? "text-white" : "text-gray-300")}>
