@@ -176,7 +176,7 @@ function ClientRow({ user, onUpdate }: { user: any, onUpdate: () => void }) {
                         <Button
                             variant="secondary"
                             size="sm"
-                            className="h-8 bg-white/5 hover:bg-white/10 border border-white/10 text-xs"
+                            className="h-8 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs"
                             onClick={() => setEditing(true)}
                         >
                             <Zap className="w-3 h-3 mr-2 text-violet-400" />
