@@ -608,17 +608,26 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                     </div>
                                 ))}
 
-                                <div 
-                                    onClick={handleCreateStaffSurvey} 
-                                    className="cursor-pointer self-start bg-[#111] hover:bg-[#1a1a1a] border border-white/10 rounded-[20px] p-5 flex items-center gap-4 transition-all duration-300 hover:border-violet-500/30 w-full shadow-lg"
-                                >
-                                    <Shield className="w-6 h-6 text-gray-300" />
-                                    <span className="font-bold text-white text-lg">Buzón Staff</span>
-                                </div>
+                                {!surveys.some((s: any) => s.type === 'STAFF' || s.title?.toLowerCase().includes('staff') || s.title?.toLowerCase().includes('emplead')) && (
+                                    <div 
+                                        onClick={handleCreateStaffSurvey} 
+                                        className="cursor-pointer self-start bg-[#111] hover:bg-[#1a1a1a] border border-white/10 rounded-[20px] p-5 flex items-center gap-4 transition-all duration-300 hover:border-violet-500/30 w-full shadow-lg"
+                                    >
+                                        <Shield className="w-6 h-6 text-gray-300" />
+                                        <span className="font-bold text-white text-lg">Buzón Staff</span>
+                                    </div>
+                                )}
                             </div>
                         ) : (
-                            <div className="rounded-3xl bg-white/5 border border-white/5 p-12 text-center">
-                                <p>No hay encuestas aún.</p>
+                            <div className="rounded-3xl bg-white/5 border border-white/5 p-12 flex flex-col items-center justify-center gap-4">
+                                <p className="text-gray-400">No hay encuestas aún.</p>
+                                <div 
+                                    onClick={handleCreateStaffSurvey} 
+                                    className="cursor-pointer bg-[#111] hover:bg-[#1a1a1a] border border-white/10 rounded-xl px-5 py-3 flex items-center gap-3 transition-all duration-300 hover:border-violet-500/30 shadow-lg"
+                                >
+                                    <Shield className="w-5 h-5 text-gray-300" />
+                                    <span className="font-bold text-white text-sm">Crear Buzón Staff</span>
+                                </div>
                             </div>
                         )}
                     </div>
