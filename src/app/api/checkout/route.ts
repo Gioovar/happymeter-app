@@ -111,6 +111,20 @@ export async function POST(req: Request) {
             }
             // 3. Apply the coupon - OVERRIDING existing discounts because this one is huge
             discounts = [{ coupon: COUPON_ID }]
+        } else if (promoCode === 'VIP-GTRENDY' && user.emailAddresses?.[0]?.emailAddress === 'gtrendy2017@gmail.com') {
+            const COUPON_ID = 'VIP-GTRENDY-100'
+            try {
+                await stripe.coupons.retrieve(COUPON_ID)
+            } catch (err) {
+                console.log('Creating VIP-GTRENDY coupon...')
+                await stripe.coupons.create({
+                    id: COUPON_ID,
+                    percent_off: 100,
+                    duration: 'forever',
+                    name: 'VIP Super Admin (100% OFF)'
+                })
+            }
+            discounts = [{ coupon: COUPON_ID }]
         }
 
         // Check for affiliate cookie
