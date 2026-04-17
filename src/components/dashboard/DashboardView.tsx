@@ -608,7 +608,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                     </div>
                                 ))}
 
-                                {!surveys.some((s: any) => s.type === 'STAFF' || s.title?.toLowerCase().includes('staff') || s.title?.toLowerCase().includes('emplead')) && (
+                                {!surveys.some((s: any) => s.type === 'STAFF' || s.title?.toLowerCase().includes('staff') || s.title?.toLowerCase().includes('emplead') || s.title?.toLowerCase().includes('buzón') || s.title?.toLowerCase().includes('anónimo')) && (
                                     <div 
                                         onClick={handleCreateStaffSurvey} 
                                         className="cursor-pointer self-start bg-[#111] hover:bg-[#1a1a1a] border border-white/10 rounded-[20px] p-5 flex items-center gap-4 transition-all duration-300 hover:border-violet-500/30 w-full shadow-lg"
