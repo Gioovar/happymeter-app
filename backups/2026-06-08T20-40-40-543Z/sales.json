@@ -1,0 +1,29 @@
+[
+  {
+    "id": "eea05ce6-980d-47fa-a38f-fec2a1f8f747",
+    "userId": "user_37XJ8NZWuXL5ueSJ6Psk0NZ5BEE",
+    "plan": "GROWTH_MONTHLY",
+    "amount": 499,
+    "currency": "mxn",
+    "status": "COMPLETED",
+    "createdAt": "2025-12-30T20:44:12.111Z"
+  },
+  {
+    "id": "d4da1d1c-a470-45d5-8da2-69031fda2d80",
+    "userId": "user_37SspAObOBtCtERjB21CReDLSdb",
+    "plan": "GROWTH",
+    "amount": 499,
+    "currency": "mxn",
+    "status": "COMPLETED",
+    "createdAt": "2025-12-31T01:10:44.782Z"
+  },
+  {
+    "id": "10cc7664-edfc-4946-b6b9-e195383a2b5a",
+    "userId": "user_3ACYB1vHOSTB73GoG8vsPSMUQN1",
+    "plan": "GROWTH",
+    "amount": 499,
+    "currency": "mxn",
+    "status": "COMPLETED",
+    "createdAt": "2026-03-10T06:21:22.041Z"
+  }
+]

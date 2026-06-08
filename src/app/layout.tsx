@@ -6,6 +6,7 @@ import { esES } from '@clerk/localizations'
 import { Toaster } from 'sonner'
 import { Analytics } from "@vercel/analytics/react"
 import "./main.css";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -75,30 +76,32 @@ export default function RootLayout({
         }
       }}
     >
-      <html lang="es" suppressHydrationWarning className="bg-[#0a0a0a]">
-        <body className={`${inter.className} bg-[#0a0a0a] text-white min-h-screen`}>
-          {children}
-          <Toaster 
-            position="top-center" 
-            theme="dark" 
-            richColors 
-            closeButton 
-            toastOptions={{
-              className: "font-sans border border-white/10 shadow-2xl backdrop-blur-xl bg-black/80 rounded-2xl p-4 gap-3 items-start",
-              classNames: {
-                toast: "group-[.toaster]:bg-black/90 group-[.toaster]:text-white group-[.toaster]:border-white/10 group-[.toaster]:shadow-2xl group-[.toaster]:backdrop-blur-xl",
-                title: "text-base font-semibold group-[.toaster]:text-white",
-                description: "text-sm group-[.toaster]:text-gray-400 mt-1",
-                actionButton: "bg-white text-black font-bold px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors",
-                cancelButton: "bg-white/10 text-white font-medium px-4 py-2 rounded-lg hover:bg-white/20 transition-colors",
-                success: "group-[.toaster]:bg-[#031d10] group-[.toaster]:border-green-500/30 group-[.toaster]:text-green-500",
-                error: "group-[.toaster]:bg-[#1d0303] group-[.toaster]:border-red-500/30 group-[.toaster]:text-red-500",
-                info: "group-[.toaster]:bg-[#03131d] group-[.toaster]:border-blue-500/30 group-[.toaster]:text-blue-500",
-                warning: "group-[.toaster]:bg-[#1d1503] group-[.toaster]:border-yellow-500/30 group-[.toaster]:text-yellow-500",
-              }
-            }}
-          />
-          <Analytics />
+      <html lang="es" suppressHydrationWarning className="dark">
+        <body className={`${inter.className} bg-background text-foreground transition-colors duration-300 min-h-screen`}>
+          <ThemeProvider>
+            {children}
+            <Toaster 
+              position="top-center" 
+              theme="dark" 
+              richColors 
+              closeButton 
+              toastOptions={{
+                className: "font-sans border border-white/10 shadow-2xl backdrop-blur-xl bg-black/80 rounded-2xl p-4 gap-3 items-start",
+                classNames: {
+                  toast: "group-[.toaster]:bg-black/90 group-[.toaster]:text-white group-[.toaster]:border-white/10 group-[.toaster]:shadow-2xl group-[.toaster]:backdrop-blur-xl",
+                  title: "text-base font-semibold group-[.toaster]:text-white",
+                  description: "text-sm group-[.toaster]:text-gray-400 mt-1",
+                  actionButton: "bg-white text-black font-bold px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors",
+                  cancelButton: "bg-white/10 text-white font-medium px-4 py-2 rounded-lg hover:bg-white/20 transition-colors",
+                  success: "group-[.toaster]:bg-[#031d10] group-[.toaster]:border-green-500/30 group-[.toaster]:text-green-500",
+                  error: "group-[.toaster]:bg-[#1d0303] group-[.toaster]:border-red-500/30 group-[.toaster]:text-red-500",
+                  info: "group-[.toaster]:bg-[#03131d] group-[.toaster]:border-blue-500/30 group-[.toaster]:text-blue-500",
+                  warning: "group-[.toaster]:bg-[#1d1503] group-[.toaster]:border-yellow-500/30 group-[.toaster]:text-yellow-500",
+                }
+              }}
+            />
+            <Analytics />
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

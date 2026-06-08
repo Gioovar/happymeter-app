@@ -12,6 +12,7 @@ import { UserButton } from '@clerk/nextjs'
 import { DashboardProvider } from '@/context/DashboardContext'
 import { NotificationProvider } from '@/context/NotificationContext'
 import SuspendedOverlay from '@/components/common/SuspendedOverlay'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 import { processReferralCookie } from '@/lib/referral-service'
 
@@ -261,17 +262,17 @@ export default async function DashboardLayout({
             branchId={activeContextId}
             userRole={realRole}
             initialPlan={checkedSettings?.plan || 'FREE'}
-            userCreatedAt={checkedSettings?.createdAt?.toISOString() || null}
-            dbSubscriptionStatus={checkedSettings?.subscriptionStatus || null}
+            userCreatedAt={checkedSettings?.createdAt?.toISOString() || undefined}
+            dbSubscriptionStatus={checkedSettings?.subscriptionStatus || undefined}
             activeContextName={activeContext?.name || null}
-            activeContextRole={activeContext?.role || null}
+            activeContextRole={activeContext?.role || undefined}
             activeContextBannerUrl={(activeContext as any)?.bannerUrl || null}
         >
             <NotificationProvider>
                 <GiftCelebration userId={userId} />
-                <div className="flex min-h-screen bg-[#0a0a0a]">
+                <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
 
-                    <Suspense fallback={<div className="w-64 bg-[#111] h-screen border-r border-white/10 hidden md:flex" />}>
+                    <Suspense fallback={<div className="w-64 bg-card h-screen border-r border-border hidden md:flex" />}>
                         <DashboardSidebar
                             isCreator={!!affiliateProfile}
                             userRole={realRole}
@@ -292,16 +293,17 @@ export default async function DashboardLayout({
                                 {businessContexts.length > 1 && (
                                     <BusinessSelector contexts={businessContexts} activeContextId={activeContextId} />
                                 )}
-                                <div className="bg-[#111] border border-white/10 rounded-full px-4 py-2 flex items-center gap-4 shadow-xl">
+                                <ThemeToggle />
+                                <div className="bg-card border border-border rounded-full px-4 py-2 flex items-center gap-4 shadow-xl">
                                     <div className="text-right hidden lg:block">
-                                        <p className="text-xs text-gray-400 font-medium">Conectado como</p>
+                                        <p className="text-xs text-muted-foreground font-medium">Conectado como</p>
                                     </div>
                                     <UserButton
                                         afterSignOutUrl="/"
                                         appearance={{
                                             elements: {
                                                 userButtonBox: "flex flex-row-reverse",
-                                                userButtonOuterIdentifier: "text-white font-bold text-sm",
+                                                userButtonOuterIdentifier: "text-foreground font-bold text-sm",
                                             }
                                         }}
                                         showName

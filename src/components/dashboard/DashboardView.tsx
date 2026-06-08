@@ -262,7 +262,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
     const isLoading = loadingSurveys || loadingAnalytics
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-violet-500/30 overflow-x-hidden">
+        <div className="min-h-screen bg-background text-foreground selection:bg-violet-500/30 overflow-x-hidden transition-colors duration-300">
 
             <ExtraSurveyUpsellModal
                 isOpen={upsellModalOpen}
@@ -270,10 +270,10 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                 currentPlanName={(statsData.plan || 'FREE').replace('_', ' ')}
             />
 
-            <div className={`fixed top-4 right-4 z-[60] flex items-center gap-3 px-4 py-3 bg-[#0a0a0a]/90 backdrop-blur-md border border-white/5 rounded-2xl shadow-2xl transition-all duration-500 ${isLoading ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
+            <div className={`fixed top-4 right-4 z-[60] flex items-center gap-3 px-4 py-3 bg-background/90 backdrop-blur-md border border-border rounded-2xl shadow-2xl transition-all duration-500 ${isLoading ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
                 <div className="relative w-10 h-10 flex items-center justify-center">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-violet-500 via-fuchsia-500 to-transparent animate-spin [animation-duration:1s]" />
-                    <div className="absolute inset-[2px] rounded-full bg-[#0a0a0a]" />
+                    <div className="absolute inset-[2px] rounded-full bg-background" />
                     <div className="relative w-7 h-7 animate-pulse">
                         <Image
                             src="/logo-loading.png"
@@ -285,7 +285,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                 </div>
 
                 <div className="flex flex-col">
-                    <span className="text-xs font-bold text-white tracking-wide">Actualizando</span>
+                    <span className="text-xs font-bold text-foreground tracking-wide">Actualizando</span>
                     <span className="text-xs text-violet-400 font-medium">{branchName ? `Sincronizando ${branchName}...` : 'Sincronizando datos...'}</span>
                 </div>
             </div>
@@ -325,16 +325,16 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
 
             <main className="relative z-10 max-w-[1600px] mx-auto grid grid-cols-1 gap-8 pb-12">
                 <div className="lg:col-span-12 space-y-8">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/5">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
                         <div className="space-y-2">
                             <div className="flex flex-col gap-2">
-                                <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-gray-400">
+                                <h1 className="text-4xl md:text-5xl font-bold text-foreground">
                                     {getGreeting()}, Bienvenido.
                                     <br className="md:hidden" />
                                 </h1>
                                 <div className="flex flex-col items-start gap-1">
-                                    <p className="text-gray-400 text-sm font-medium">
-                                        Administrando: <span className="text-white font-bold">{
+                                    <p className="text-muted-foreground text-sm font-medium">
+                                        Administrando: <span className="text-foreground font-bold">{
                                             (() => {
                                                 if (branchName) return branchName;
                                                 const match = typeof document !== 'undefined' ? document.cookie.match(/happy_active_business=([^;]+)/) : null;
@@ -349,7 +349,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                             })()
                                         }</span>
                                     </p>
-                                    <p className="text-gray-500 text-xs">
+                                    <p className="text-muted-foreground text-xs">
                                         Gestiona tus encuestas de satisfacción.
                                     </p>
                                 </div>
@@ -360,7 +360,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                             {isBranchMode && (
                                 <Link
                                     href="/chains"
-                                    className="p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition text-gray-400 hover:text-white"
+                                    className="p-2.5 rounded-xl bg-card border border-border hover:bg-accent transition text-muted-foreground hover:text-foreground"
                                     title="Volver a Cadenas"
                                 >
                                     <ArrowRight className="w-5 h-5 rotate-180" />
@@ -369,7 +369,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                             <button
                                 onClick={handleRefresh}
                                 disabled={isRefreshing}
-                                className={`p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition text-gray-400 hover:text-white ${isRefreshing ? 'animate-spin' : ''}`}
+                                className={`p-2.5 rounded-xl bg-card border border-border hover:bg-accent transition text-muted-foreground hover:text-foreground ${isRefreshing ? 'animate-spin' : ''}`}
                                 title="Recargar datos"
                             >
                                 <RotateCw className="w-5 h-5" />
@@ -389,8 +389,8 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {stats.map((stat, idx) => (
-                            <div key={idx} className={`relative group p-4 rounded-2xl bg-[#0F0F0F] border ${stat.border} hover:border-white/20 transition-all duration-300 hover:-translate-y-1 shadow-xl overflow-hidden`}>
-                                <LaserBorder color={stat.laserColor} maskClass="bg-[#0F0F0F]" />
+                            <div key={idx} className={`relative group p-4 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 shadow-xl overflow-hidden`}>
+                                <LaserBorder color={stat.laserColor} maskClass="bg-card" />
                                 <div className={`absolute -right-10 -top-10 w-24 h-24 rounded-full bg-gradient-to-br ${stat.color} opacity-20 blur-[40px] group-hover:opacity-30 transition-opacity`} />
 
                                 <div className="relative z-10 flex flex-col justify-between h-full">
@@ -405,8 +405,8 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                     </div>
 
                                     <div className="flex items-baseline gap-2 mt-1">
-                                        <h3 className="text-3xl font-bold text-white tracking-tight">{stat.value}</h3>
-                                        <p className="text-xs text-gray-400 font-medium">{stat.label}</p>
+                                        <h3 className="text-3xl font-bold text-foreground tracking-tight">{stat.value}</h3>
+                                        <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
                                     </div>
 
                                     <div className="h-1 w-full bg-white/5 rounded-full mt-3 overflow-hidden">
@@ -418,17 +418,17 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                     </div>
 
                     <div className="grid grid-cols-1 gap-6">
-                        <div className="rounded-3xl bg-[#0F0F0F] border border-white/5 p-1 relative overflow-hidden group flex flex-col">
+                        <div className="rounded-3xl bg-card border border-border p-1 relative overflow-hidden group flex flex-col">
                             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-                            <div className="relative z-10 bg-[#0a0a0a] rounded-[20px] p-6 flex flex-col flex-1 min-h-[350px]">
+                            <div className="relative z-10 bg-background rounded-[20px] p-6 flex flex-col flex-1 min-h-[350px]">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-lg font-bold flex items-center gap-2">
                                         <BarChart3 className="w-5 h-5 text-violet-500" />
                                         Análisis de Tendencias
                                     </h3>
                                     <div className="flex gap-2">
-                                        <button className="px-3 py-1 rounded-lg bg-white/5 text-xs text-gray-400 hover:text-white transition">7D</button>
-                                        <button className="px-3 py-1 rounded-lg bg-white/10 text-xs text-white font-bold transition">30D</button>
+                                        <button className="px-3 py-1 rounded-lg bg-accent text-xs text-muted-foreground hover:text-foreground transition">7D</button>
+                                        <button className="px-3 py-1 rounded-lg bg-primary text-xs text-primary-foreground font-bold transition">30D</button>
                                     </div>
                                 </div>
 
@@ -454,11 +454,11 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
 
                     <div className="space-y-6 mt-6">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
+                            <h2 className="text-2xl font-bold flex items-center gap-2 text-foreground">
                                 Mis Encuestas
-                                <span className="text-sm font-normal text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">{surveys.length}</span>
+                                <span className="text-sm font-normal text-muted-foreground bg-accent px-2 py-0.5 rounded-full">{surveys.length}</span>
                             </h2>
-                            <Link href={getUrl('home') as string} className="text-sm text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1 transition">
+                            <Link href={getUrl('home') as string} className="text-sm text-violet-500 hover:text-violet-600 font-bold flex items-center gap-1 transition">
                                 Ver todas <ArrowRight className="w-4 h-4" />
                             </Link>
                         </div>
@@ -466,19 +466,19 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                         {loadingSurveys ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {[1, 2, 3].map((i) => (
-                                    <div key={i} className="h-48 rounded-2xl bg-[#0F0F0F] border border-white/5 animate-pulse" />
+                                    <div key={i} className="h-48 rounded-2xl bg-card border border-border animate-pulse" />
                                 ))}
                             </div>
                         ) : displayedSurveys.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {displayedSurveys.map((survey) => (
-                                    <div key={survey.id} className="group relative p-6 rounded-3xl bg-[#0F0F0F] border border-white/5 hover:border-violet-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-violet-900/10 flex flex-col justify-between overflow-hidden">
-                                        <LaserBorder color="violet" maskClass="bg-[#0F0F0F]" />
+                                    <div key={survey.id} className="group relative p-6 rounded-3xl bg-card border border-border hover:border-violet-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-violet-900/10 flex flex-col justify-between overflow-hidden">
+                                        <LaserBorder color="violet" maskClass="bg-card" />
 
                                         <div className="relative z-10 flex flex-col justify-between h-full">
                                             <div className="flex justify-between items-start mb-6">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/10 to-transparent flex items-center justify-center border border-white/5 overflow-hidden relative">
+                                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/10 to-transparent flex items-center justify-center border border-border overflow-hidden relative">
                                                         {survey.bannerUrl ? (
                                                             <div className="relative w-full h-full">
                                                                 <Image
@@ -493,8 +493,8 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-bold text-lg group-hover:text-violet-400 transition line-clamp-1">{survey.title}</h3>
-                                                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                                                        <h3 className="font-bold text-lg group-hover:text-violet-500 transition line-clamp-1 text-foreground">{survey.title}</h3>
+                                                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                                                             <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {survey.responsesCount}</span>
                                                             <span className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3" /> {survey.rating}</span>
                                                         </div>
@@ -504,7 +504,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                                 <div className="relative flex gap-2">
                                                     <button
                                                         onClick={() => openQrModal(survey.id, survey.title)}
-                                                        className="px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300 hover:bg-violet-500/20 transition flex items-center gap-1"
+                                                        className="px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-xs text-violet-600 dark:text-violet-300 hover:bg-violet-500/20 transition flex items-center gap-1"
                                                     >
                                                         <QrCode className="w-3 h-3" /> Descarga tu QR
                                                     </button>
@@ -513,20 +513,20 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                                             e.stopPropagation()
                                                             setMenuOpenId(menuOpenId === survey.id ? null : survey.id)
                                                         }}
-                                                        className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition"
+                                                        className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition"
                                                     >
                                                         <MoreHorizontal className="w-5 h-5" />
                                                     </button>
 
                                                     {menuOpenId === survey.id && (
-                                                        <div className="absolute right-0 top-full mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                                                            <Link href={getUrl('reportDetail', survey.id) as string} className="block px-4 py-3 text-sm hover:bg-white/5 flex items-center gap-2">
+                                                        <div className="absolute right-0 top-full mt-2 w-48 bg-popover border border-border rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                                                            <Link href={getUrl('reportDetail', survey.id) as string} className="block px-4 py-3 text-sm hover:bg-accent flex items-center gap-2 text-foreground">
                                                                 <FileText className="w-4 h-4" /> Reportes
                                                             </Link>
-                                                            <Link href={getUrl('editSurvey', survey.id) as string} className="block px-4 py-3 text-sm hover:bg-white/5 flex items-center gap-2">
+                                                            <Link href={getUrl('editSurvey', survey.id) as string} className="block px-4 py-3 text-sm hover:bg-accent flex items-center gap-2 text-foreground">
                                                                 <Pencil className="w-4 h-4" /> Editar
                                                             </Link>
-                                                            <button onClick={() => handleDelete(survey.id)} className="block w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/5 flex items-center gap-2">
+                                                            <button onClick={() => handleDelete(survey.id)} className="block w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-accent flex items-center gap-2">
                                                                 <Trash2 className="w-4 h-4" /> Eliminar
                                                             </button>
                                                         </div>
@@ -534,10 +534,10 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                                 </div>
                                             </div>
 
-                                            <div className="h-px w-full bg-white/5 mb-6" />
+                                            <div className="h-px w-full bg-border mb-6" />
 
                                             <div className="mb-6">
-                                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Último Feedback</p>
+                                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Último Feedback</p>
 
                                                 {survey.recentFeedbacks.length > 0 ? (
                                                     <div className="space-y-3">
@@ -550,28 +550,28 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                                                     setViewResponsesTitle(survey.title)
                                                                     setViewResponseDetail(feedback.fullResponse)
                                                                 }}
-                                                                className="space-y-1 cursor-pointer group/feedback hover:bg-white/5 p-2 -mx-2 rounded-xl transition-all border border-transparent hover:border-white/5"
+                                                                className="space-y-1 cursor-pointer group/feedback hover:bg-accent p-2 -mx-2 rounded-xl transition-all border border-transparent hover:border-border"
                                                             >
                                                                 <div className="flex items-center gap-2">
                                                                     {survey.title.toLowerCase().includes('staff') ? (
-                                                                        <span className="text-[10px] font-bold text-violet-400 bg-violet-400/10 px-1.5 py-0.5 rounded-full border border-violet-400/20">
+                                                                        <span className="text-[10px] font-bold text-violet-600 bg-violet-500/10 px-1.5 py-0.5 rounded-full border border-violet-500/20">
                                                                             Empleado
                                                                         </span>
                                                                     ) : (
                                                                         renderStars(feedback.rating)
                                                                     )}
-                                                                    <span className="text-xs text-gray-600 ml-auto group-hover/feedback:text-gray-400 transition-colors">
+                                                                    <span className="text-xs text-muted-foreground ml-auto group-hover/feedback:text-foreground transition-colors">
                                                                         {idx === 0 ? 'hace un momento' : feedback.date}
                                                                     </span>
                                                                 </div>
-                                                                <p className="text-sm text-gray-300 line-clamp-1 italic group-hover/feedback:text-white transition-colors">
+                                                                <p className="text-sm text-muted-foreground line-clamp-1 italic group-hover/feedback:text-foreground transition-colors">
                                                                     "{feedback.comment}"
                                                                 </p>
                                                             </div>
                                                         ))}
                                                     </div>
                                                 ) : (
-                                                    <div className="py-2 text-sm text-gray-600 italic">
+                                                    <div className="py-2 text-sm text-muted-foreground italic">
                                                         Esperando respuestas...
                                                     </div>
                                                 )}
@@ -584,20 +584,20 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                                         setViewResponsesTitle(survey.title)
                                                         setViewResponseDetail(null)
                                                     }}
-                                                    className="flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition font-medium"
+                                                    className="flex items-center gap-2 text-sm text-violet-600 hover:text-violet-700 transition font-medium"
                                                 >
                                                     <MessageSquare className="w-4 h-4" /> Ver más respuestas
                                                 </button>
 
-                                                <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                                                    <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold border border-green-500/20">
+                                                <div className="flex items-center justify-between pt-4 border-t border-border">
+                                                    <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold border border-green-500/20">
                                                         {survey.status}
                                                     </span>
 
                                                     <Link
                                                         href={`/s/${survey.id}`}
                                                         target="_blank"
-                                                        className="flex items-center gap-1 text-sm font-bold text-white hover:text-violet-400 transition"
+                                                        className="flex items-center gap-1 text-sm font-bold text-foreground hover:text-violet-600 transition"
                                                     >
                                                         Ver encuesta <ArrowRight className="w-4 h-4" />
                                                     </Link>
@@ -611,22 +611,22 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
                                 {!surveys.some((s: any) => s.type === 'STAFF' || s.title?.toLowerCase().includes('staff') || s.title?.toLowerCase().includes('emplead') || s.title?.toLowerCase().includes('buzón') || s.title?.toLowerCase().includes('anónimo')) && (
                                     <div 
                                         onClick={handleCreateStaffSurvey} 
-                                        className="cursor-pointer self-start bg-[#111] hover:bg-[#1a1a1a] border border-white/10 rounded-[20px] p-5 flex items-center gap-4 transition-all duration-300 hover:border-violet-500/30 w-full shadow-lg"
+                                        className="cursor-pointer self-start bg-card hover:bg-accent border border-border rounded-[20px] p-5 flex items-center gap-4 transition-all duration-300 hover:border-violet-500/30 w-full shadow-lg text-foreground"
                                     >
-                                        <Shield className="w-6 h-6 text-gray-300" />
-                                        <span className="font-bold text-white text-lg">Buzón Staff</span>
+                                        <Shield className="w-6 h-6 text-muted-foreground" />
+                                        <span className="font-bold text-foreground text-lg">Buzón Staff</span>
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <div className="rounded-3xl bg-white/5 border border-white/5 p-12 flex flex-col items-center justify-center gap-4">
-                                <p className="text-gray-400">No hay encuestas aún.</p>
+                            <div className="rounded-3xl bg-card border border-border p-12 flex flex-col items-center justify-center gap-4">
+                                <p className="text-muted-foreground">No hay encuestas aún.</p>
                                 <div 
                                     onClick={handleCreateStaffSurvey} 
-                                    className="cursor-pointer bg-[#111] hover:bg-[#1a1a1a] border border-white/10 rounded-xl px-5 py-3 flex items-center gap-3 transition-all duration-300 hover:border-violet-500/30 shadow-lg"
+                                    className="cursor-pointer bg-card hover:bg-accent border border-border rounded-xl px-5 py-3 flex items-center gap-3 transition-all duration-300 hover:border-violet-500/30 shadow-lg text-foreground"
                                 >
-                                    <Shield className="w-5 h-5 text-gray-300" />
-                                    <span className="font-bold text-white text-sm">Crear Buzón Staff</span>
+                                    <Shield className="w-5 h-5 text-muted-foreground" />
+                                    <span className="font-bold text-foreground text-sm">Crear Buzón Staff</span>
                                 </div>
                             </div>
                         )}
@@ -639,7 +639,7 @@ export default function DashboardView({ branchName, isBranchMode, branchSlug }: 
 
 function LockedAnalyticsPlaceholder() {
     return (
-        <div className="relative w-full h-[300px] flex items-center justify-center bg-[#111] rounded-xl overflow-hidden group cursor-pointer">
+        <div className="relative w-full h-[300px] flex items-center justify-center bg-card border border-border rounded-xl overflow-hidden group cursor-pointer">
             <div className="absolute inset-0 opacity-20 blur-sm pointer-events-none">
                 {/* Fake Chart Lines */}
                 <svg className="w-full h-full text-violet-500" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -650,11 +650,11 @@ function LockedAnalyticsPlaceholder() {
                 <div className="p-3 bg-violet-600/20 rounded-full text-violet-400 mb-2">
                     <Zap className="w-6 h-6 fill-current" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Análisis Avanzado Bloqueado</h3>
-                <p className="text-sm text-gray-400 max-w-xs">
+                <h3 className="text-xl font-bold text-foreground">Análisis Avanzado Bloqueado</h3>
+                <p className="text-sm text-muted-foreground max-w-xs">
                     Actualiza tu plan para ver tendencias, predicciones y análisis detallado de tu negocio.
                 </p>
-                <div className="px-4 py-2 bg-white text-black text-sm font-bold rounded-lg mt-2 group-hover:scale-105 transition-transform">
+                <div className="px-4 py-2 bg-primary text-primary-foreground text-sm font-bold rounded-lg mt-2 group-hover:scale-105 transition-transform">
                     Desbloquear Ahora
                 </div>
             </div>

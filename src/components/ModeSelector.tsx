@@ -35,7 +35,7 @@ export default function ModeSelector() {
     const { checkModuleAccess } = useDashboard();
 
     return (
-        <div className="flex items-center gap-2 bg-[#111] p-1.5 rounded-full border border-white/10 shadow-lg overflow-x-auto max-w-full no-scrollbar">
+        <div className="flex items-center gap-2 bg-card p-1.5 rounded-full border border-border shadow-lg overflow-x-auto max-w-full no-scrollbar transition-colors duration-300">
             {MODES.map((mode) => {
                 const isActive = activeMode === mode.id;
                 const Icon = mode.icon;
@@ -55,8 +55,8 @@ export default function ModeSelector() {
                         className={cn(
                             "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 relative overflow-hidden group whitespace-nowrap",
                             isActive
-                                ? "text-white shadow-md"
-                                : "text-gray-400 hover:text-white hover:bg-white/5",
+                                ? "text-white shadow-md font-semibold"
+                                : "text-muted-foreground hover:text-foreground hover:bg-accent",
                             isLocked && "opacity-70 hover:opacity-100"
                         )}
                     >

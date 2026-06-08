@@ -14,7 +14,6 @@ export async function GET() {
             user: { email: user?.emailAddresses[0]?.emailAddress },
             settings: { found: !!settings }
         });
-        return NextResponse.json(customers);
     } catch (e: any) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }

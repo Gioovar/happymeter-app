@@ -45,7 +45,15 @@ export async function GET() {
             for (const membership of memberships) {
                 const branch = await prisma.chainBranch.findFirst({
                     where: { branchId: membership.ownerId },
-                    select: { name: true, slug: true, logoUrl: true }
+                    select: {
+                        name: true,
+                        slug: true,
+                        branch: {
+                            select: {
+                                logoUrl: true
+                            }
+                        }
+                    }
                 })
 
                 console.log(`[OPS SESSION] Membership ${membership.id} - ownerId: ${membership.ownerId}, branch name: ${branch?.name}, slug: ${branch?.slug}`)
@@ -58,7 +66,7 @@ export async function GET() {
                     jobTitle: membership.jobTitle,
                     owner: {
                         businessName: displayName,
-                        photoUrl: branch?.logoUrl || membership.owner.photoUrl
+                        photoUrl: branch?.branch?.logoUrl || membership.owner.photoUrl
                     }
                 })
             }
@@ -67,7 +75,15 @@ export async function GET() {
         // Check if current member's owner is a branch
         const currentBranch = await prisma.chainBranch.findFirst({
             where: { branchId: session.member.ownerId },
-            select: { name: true, slug: true, logoUrl: true }
+            select: {
+                name: true,
+                slug: true,
+                branch: {
+                    select: {
+                        logoUrl: true
+                    }
+                }
+            }
         })
 
         console.log('[OPS SESSION] Current branch:', currentBranch)
@@ -84,7 +100,7 @@ export async function GET() {
                 jobTitle: session.member.jobTitle || 'Personal',
                 owner: {
                     businessName: displayName,
-                    photoUrl: currentBranch?.logoUrl || session.member.owner.photoUrl
+                    photoUrl: currentBranch?.branch?.logoUrl || session.member.owner.photoUrl
                 }
             },
             allMemberships,

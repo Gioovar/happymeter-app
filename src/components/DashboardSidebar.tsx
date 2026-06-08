@@ -104,7 +104,7 @@ function SidebarNav({ setIsMobileOpen }: { setIsMobileOpen: (val: boolean) => vo
                             "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                             isActive
                                 ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20"
-                                : "text-gray-400 hover:text-white hover:bg-white/5",
+                                : "text-muted-foreground hover:text-foreground hover:bg-accent",
                             isLocked && "opacity-70"
                         )}
                     >
@@ -161,7 +161,7 @@ export default function DashboardSidebar({
 
     const SidebarContent = () => (
         <>
-            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#111]">
+            <div className="p-6 border-b border-border flex justify-between items-center bg-card transition-colors duration-300">
                 <div>
                     <Link href={routerBasePath} className="block hover:opacity-90 transition-opacity">
                         <BrandLogo className="mb-1" />
@@ -196,7 +196,7 @@ export default function DashboardSidebar({
                                 <span className="bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 text-violet-200 text-[10px] font-bold px-2 py-0.5 rounded-full border border-violet-500/30 max-w-[200px] truncate shadow-sm uppercase tracking-wider" title={displayName}>
                                     {displayName}
                                 </span>
-                                <p className="text-[11px] text-gray-400 font-medium tracking-wide">
+                                <p className="text-[11px] text-muted-foreground font-medium tracking-wide">
                                     {roleLabel} ({userPlan === 'FREE' ? 'Gratuito' : 'Pro'})
                                 </p>
                             </div>
@@ -222,7 +222,7 @@ export default function DashboardSidebar({
 
                 <button
                     onClick={() => toggleMobileMenu(false)}
-                    className="md:hidden p-2 text-gray-400 hover:text-white"
+                    className="md:hidden p-2 text-muted-foreground hover:text-foreground"
                 >
                     <X className="w-6 h-6" />
                 </button>
@@ -239,31 +239,31 @@ export default function DashboardSidebar({
                             className="relative group w-full mb-3 rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-violet-900/20"
                         >
                             {/* Main Background */}
-                            <div className="relative w-full h-full bg-[#050505] rounded-xl px-4 py-3 flex items-center gap-4 group-hover:bg-[#0a0a0a] transition-colors border border-white/5">
+                            <div className="relative w-full h-full bg-card rounded-xl px-4 py-3 flex items-center gap-4 group-hover:bg-accent transition-colors border border-border">
 
                                 {/* Strong Left Glow Line (Active Laser) */}
                                 <div className="absolute left-0 top-0 bottom-0 w-1.5 z-10 overflow-hidden rounded-l-xl">
                                     <div className="absolute inset-0 bg-gradient-to-b from-violet-600 via-fuchsia-400 to-violet-600 bg-[length:100%_200%] animate-pulse" />
                                 </div>
 
-                                <div className="relative z-10 p-2.5 bg-[#1a1a1a] rounded-xl border border-white/5 group-hover:border-violet-500/30 transition-colors ml-1">
+                                <div className="relative z-10 p-2.5 bg-secondary rounded-xl border border-border group-hover:border-violet-500/30 transition-colors ml-1">
                                     <Image
                                         src="/happy-ai-logo.png"
                                         alt="AI Logo"
                                         width={20}
                                         height={20}
-                                        className="w-5 h-5 object-contain brightness-0 invert opacity-90"
+                                        className="w-5 h-5 object-contain dark:brightness-0 dark:invert opacity-90"
                                     />
                                 </div>
 
                                 <div className="relative z-10 flex flex-col justify-center">
                                     <div className="flex flex-col leading-none mb-1">
-                                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-violet-300 transition-colors">Asistente</span>
-                                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-violet-300 transition-colors">Corporativo</span>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-violet-300 transition-colors">Asistente</span>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-violet-300 transition-colors">Corporativo</span>
                                     </div>
                                     <div className="flex flex-col leading-none">
-                                        <span className="text-sm font-bold text-white">Consultar</span>
-                                        <span className="text-sm font-bold text-white">Estrategia</span>
+                                        <span className="text-sm font-bold text-foreground">Consultar</span>
+                                        <span className="text-sm font-bold text-foreground">Estrategia</span>
                                     </div>
                                 </div>
 
@@ -280,10 +280,10 @@ export default function DashboardSidebar({
                         onClick={() => toggleMobileMenu(false)}
                         className={cn(
                             "relative group w-full mb-6 mx-0 rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]",
-                            (pathname as string) === '/dashboard/team/chat' ? "bg-emerald-600/10 shadow-lg shadow-emerald-900/20" : "hover:bg-white/5"
+                            (pathname as string) === '/dashboard/team/chat' ? "bg-emerald-600/10 shadow-lg shadow-emerald-900/20" : "hover:bg-accent"
                         )}
                     >
-                        <div className="relative w-full px-4 py-2.5 flex items-center gap-3 border border-white/5 rounded-xl">
+                        <div className="relative w-full px-4 py-2.5 flex items-center gap-3 border border-border rounded-xl">
                             {/* Subtler Left Glow Line (Emerald) */}
                             <div className={cn(
                                 "absolute left-0 top-1 bottom-1 w-1 z-10 overflow-hidden rounded-full transition-opacity duration-500",
@@ -293,27 +293,27 @@ export default function DashboardSidebar({
                             </div>
 
                             <div className={cn(
-                                "relative z-10 p-1.5 rounded-lg border border-white/5 transition-colors",
-                                (pathname as string) === '/dashboard/team/chat' ? "bg-emerald-600 text-white" : "bg-[#1a1a1a] text-emerald-500 group-hover:border-emerald-500/30"
+                                "relative z-10 p-1.5 rounded-lg border border-border transition-colors",
+                                (pathname as string) === '/dashboard/team/chat' ? "bg-emerald-600 text-white" : "bg-secondary text-emerald-500 group-hover:border-emerald-500/30"
                             )}>
                                 <Users className="w-4 h-4" />
                             </div>
 
                             <div className="relative z-10 flex flex-col justify-center min-w-0">
-                                <span className="text-xs font-bold text-white truncate">Chat con Empleados</span>
-                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-none mt-0.5 group-hover:text-emerald-400/70">Centro de Mensajería</span>
+                                <span className="text-xs font-bold text-foreground truncate">Chat con Empleados</span>
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none mt-0.5 group-hover:text-emerald-400/70">Centro de Mensajería</span>
                             </div>
 
                             <div className="ml-auto relative z-10">
                                 <MessageSquare className={cn(
-                                    "w-4 h-4 transition-all",
-                                    (pathname as string) === '/dashboard/team/chat' ? "text-emerald-400" : "text-gray-600 group-hover:text-emerald-500"
-                                )} />
+                                        "w-4 h-4 transition-all",
+                                        (pathname as string) === '/dashboard/team/chat' ? "text-emerald-400" : "text-muted-foreground group-hover:text-emerald-500"
+                                    )} />
                             </div>
                         </div>
                     </Link>
 
-                    <p className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Selecciona una Sucursal</p>
+                    <p className="px-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Selecciona una Sucursal</p>
 
                     {chains.length > 0 && chains[0].branches.length > 0 ? (
                         chains[0].branches.map((branch) => {
@@ -324,8 +324,8 @@ export default function DashboardSidebar({
                                     href={`/dashboard/${bSlug}`}
                                     onClick={() => toggleMobileMenu(false)}
                                     className={cn(
-                                        "flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-violet-500/30 text-gray-300 hover:text-white transition-all group shadow-sm hover:shadow-lg hover:shadow-violet-900/10",
-                                        branchSlug === bSlug && "bg-violet-600/10 border-violet-500/50 text-white"
+                                        "flex items-center gap-3 px-3 py-3 rounded-xl bg-card border border-border hover:bg-accent hover:border-violet-500/30 text-muted-foreground hover:text-foreground transition-all group shadow-sm hover:shadow-lg hover:shadow-violet-900/10",
+                                        branchSlug === bSlug && "bg-violet-600/10 border-violet-500/50 text-foreground"
                                     )}
                                 >
                                     <div className={cn(
@@ -335,10 +335,10 @@ export default function DashboardSidebar({
                                         <Store className="w-5 h-5" />
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-bold leading-tight group-hover:text-violet-200">
+                                        <span className="text-sm font-bold leading-tight group-hover:text-violet-500">
                                             {(branch.name && branch.name !== 'Sede Principal') ? branch.name : (branch.branch?.businessName || branch.name || 'Sucursal')}
                                         </span>
-                                        <span className="text-[10px] text-gray-500 group-hover:text-gray-400">
+                                        <span className="text-[10px] text-muted-foreground group-hover:text-muted-foreground">
                                             {branchSlug === bSlug ? "Gestionando ahora" : "Administrar"}
                                         </span>
                                     </div>
@@ -351,7 +351,7 @@ export default function DashboardSidebar({
                             <Link
                                 href={branchSlug ? `/dashboard/${branchSlug}` : '/dashboard'}
                                 onClick={() => toggleMobileMenu(false)}
-                                className="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-violet-500/30 text-gray-300 hover:text-white transition-all group shadow-sm"
+                                className="flex items-center gap-3 px-3 py-3 rounded-xl bg-card border border-border hover:bg-accent hover:border-violet-500/30 text-muted-foreground hover:text-foreground transition-all group shadow-sm"
                             >
                                 <div className="p-2 rounded-lg bg-gradient-to-br from-violet-600/20 to-indigo-600/20 text-violet-400 group-hover:text-white transition-colors">
                                     <Store className="w-5 h-5" />
@@ -360,14 +360,14 @@ export default function DashboardSidebar({
                                     <span className="text-sm font-bold leading-tight group-hover:text-violet-200">
                                         {user?.businessName || 'Mi Negocio'}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 group-hover:text-gray-400">Panel Principal</span>
+                                    <span className="text-[10px] text-muted-foreground group-hover:text-muted-foreground">Panel Principal</span>
                                 </div>
                             </Link>
-                            <p className="px-2 text-[9px] text-gray-600 uppercase tracking-tighter italic">No tienes otras sucursales configuradas en cadena.</p>
+                            <p className="px-2 text-[9px] text-muted-foreground uppercase tracking-tighter italic">No tienes otras sucursales configuradas en cadena.</p>
                         </div>
                     )}
 
-                    <div className="h-px bg-white/5 my-4" />
+                    <div className="h-px bg-border my-4" />
                     {/* Optional: Add "Create New Branch" button here if desired by user logic, but request was specific about replacing items */}
                 </div>
             ) : (
@@ -397,17 +397,17 @@ export default function DashboardSidebar({
                         <Link
                             href={getUrl('settings') as string}
                             onClick={() => toggleMobileMenu(false)}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group mt-2"
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-accent text-muted-foreground hover:text-foreground transition-all group mt-2"
                         >
                             <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform" />
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-medium text-gray-500 group-hover:text-gray-400 uppercase leading-none">Ajustes</span>
+                                <span className="text-[10px] font-medium text-muted-foreground group-hover:text-muted-foreground uppercase leading-none">Ajustes</span>
                                 <span className="text-xs font-bold leading-tight">Editar Sucursal</span>
                             </div>
                         </Link>
                     </div>
 
-                    <Suspense fallback={<div className="flex-1 p-4"><div className="w-full h-8 bg-white/5 rounded-xl animate-pulse" /></div>}>
+                    <Suspense fallback={<div className="flex-1 p-4"><div className="w-full h-8 bg-accent rounded-xl animate-pulse" /></div>}>
                         <SidebarNav setIsMobileOpen={toggleMobileMenu} />
                     </Suspense>
 
@@ -456,25 +456,25 @@ export default function DashboardSidebar({
                                         </button>
 
                                         {isModeSelectorOpen && (
-                                            <div className="absolute top-full left-0 right-0 mt-2 md:bottom-full md:top-auto md:mt-0 md:mb-2 bg-[#18181b] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top md:origin-bottom">
-                                                <div className="p-2 border-b border-white/5">
+                                            <div className="absolute top-full left-0 right-0 mt-2 md:bottom-full md:top-auto md:mt-0 md:mb-2 bg-popover border border-border rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top md:origin-bottom">
+                                                <div className="p-2 border-b border-border">
                                                     <Link
                                                         href="/dashboard/chains"
                                                         onClick={() => {
                                                             setIsModeSelectorOpen(false)
                                                             toggleMobileMenu(false)
                                                         }}
-                                                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-all group"
+                                                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-all group"
                                                     >
-                                                        <div className="p-1.5 rounded-md bg-white/5">
-                                                            <LayoutDashboard className="w-4 h-4 text-gray-400 group-hover:text-white" />
+                                                        <div className="p-1.5 rounded-md bg-accent">
+                                                            <LayoutDashboard className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                                                         </div>
                                                         <span className="text-sm font-medium">Panel Corporativo</span>
                                                     </Link>
                                                 </div>
 
                                                 <div className="max-h-60 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                                                    <p className="px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sucursales</p>
+                                                    <p className="px-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Sucursales</p>
                                                     {chains.flatMap(c => c.branches).map(branch => (
                                                         <Link
                                                             key={branch.id}
@@ -486,13 +486,13 @@ export default function DashboardSidebar({
                                                             className={cn(
                                                                 "flex items-center gap-2 px-3 py-2 rounded-lg transition-all group",
                                                                 (branch.slug === branchSlug || branch.branchId === branchSlug)
-                                                                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                                                    : "hover:bg-white/5 text-gray-400 hover:text-white"
+                                                                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                                                                    : "hover:bg-accent text-muted-foreground hover:text-foreground"
                                                             )}
                                                         >
                                                             <div className={cn(
                                                                 "w-2 h-2 rounded-full",
-                                                                (branch.slug === branchSlug || branch.branchId === branchSlug) ? "bg-amber-500" : "bg-gray-600 group-hover:bg-gray-500"
+                                                                (branch.slug === branchSlug || branch.branchId === branchSlug) ? "bg-amber-500" : "bg-muted-foreground"
                                                             )} />
                                                             <span className="text-sm font-medium truncate">
                                                                 {branch.name || branch.branch?.businessName || 'Sucursal'}
@@ -554,7 +554,7 @@ export default function DashboardSidebar({
                                         toggleMobileMenu(false)
                                         setIsInviteModalOpen(true)
                                     }}
-                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition-all group text-left"
+                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-accent text-muted-foreground hover:text-foreground transition-all group text-left"
                                 >
                                     <Users className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                     <span className="text-xs font-bold leading-tight">Añadir Miembros</span>
@@ -603,12 +603,12 @@ export default function DashboardSidebar({
                                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all group",
                                 pathname === '/staff'
                                     ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
                             )}
                         >
                             <Shield className="w-5 h-5 group-hover:scale-110 transition-transform" />
                             <div className="flex flex-col">
-                                <span className={cn("text-xs font-medium uppercase", pathname === '/staff' ? "text-white/80" : "text-gray-500")}>Staff Panel</span>
+                                <span className={cn("text-xs font-medium uppercase", pathname === '/staff' ? "text-white/80" : "text-muted-foreground")}>Staff Panel</span>
                                 <span className="text-sm font-bold">Operaciones</span>
                             </div>
                         </Link>
@@ -620,7 +620,7 @@ export default function DashboardSidebar({
                                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all group",
                                 pathname === '/staff/places'
                                     ? "bg-violet-600 text-white shadow-lg"
-                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
                             )}
                         >
                             <Store className="w-5 h-5 group-hover:rotate-12 transition-transform" />
@@ -634,7 +634,7 @@ export default function DashboardSidebar({
                                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all group",
                                 pathname === '/staff/visits'
                                     ? "bg-fuchsia-600 text-white shadow-lg"
-                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
                             )}
                         >
                             <Calendar className="w-5 h-5 group-hover:rotate-12 transition-transform" />
@@ -662,11 +662,11 @@ export default function DashboardSidebar({
     return (
         <>
             {/* Mobile Header */}
-            <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 z-40 transition-all duration-300">
+            <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 z-40 transition-all duration-300">
                 <div className="flex items-center gap-2 flex-1">
                     <button
                         onClick={() => toggleMobileMenu(true)}
-                        className="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors flex-shrink-0"
+                        className="p-2 -ml-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors flex-shrink-0"
                     >
                         <Menu className="w-6 h-6" />
                     </button>
@@ -682,15 +682,15 @@ export default function DashboardSidebar({
                             className={cn(
                                 "w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 shadow-lg group",
                                 isModeSelectorOpen
-                                    ? "bg-[#111] border-violet-500/50 text-white"
-                                    : "bg-[#111] border-white/10 text-gray-300 hover:border-white/20"
+                                    ? "bg-card border-violet-500/50 text-foreground"
+                                    : "bg-card border-border text-muted-foreground hover:border-foreground"
                             )}
                         >
                             <span className="text-xs font-semibold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400 truncate">
                                 Áreas de Trabajo
                             </span>
                             <ChevronDown className={cn(
-                                "w-3 h-3 text-gray-400 transition-transform duration-200 flex-shrink-0",
+                                "w-3 h-3 text-muted-foreground transition-transform duration-200 flex-shrink-0",
                                 isModeSelectorOpen && "rotate-180"
                             )} />
                         </button>
@@ -702,7 +702,7 @@ export default function DashboardSidebar({
                                     className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
                                     onClick={() => setIsModeSelectorOpen(false)}
                                 />
-                                <div className="absolute top-full left-0 right-0 mt-3 bg-[#18181b] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top p-1.5">
+                                <div className="absolute top-full left-0 right-0 mt-3 bg-popover border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top p-1.5">
                                     <div className="grid gap-1">
                                         {MODES.map((mode) => {
                                             const isActive = getActiveMode(pathname) === mode.id
@@ -715,21 +715,21 @@ export default function DashboardSidebar({
                                                     className={cn(
                                                         "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 items-start",
                                                         isActive
-                                                            ? "bg-gradient-to-r from-violet-600/20 to-indigo-600/20 text-white border border-white/5"
-                                                            : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                                                            ? "bg-gradient-to-r from-violet-600/20 to-indigo-600/20 text-foreground border border-border"
+                                                            : "text-muted-foreground hover:text-foreground hover:bg-accent border border-transparent"
                                                     )}
                                                 >
                                                     <div className={cn(
-                                                        "p-2 rounded-lg transition-colors bg-[#0a0a0a] border border-white/5",
-                                                        isActive ? "text-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.3)]" : "text-gray-500 group-hover:text-gray-300"
+                                                        "p-2 rounded-lg transition-colors bg-background border border-border",
+                                                        isActive ? "text-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.3)]" : "text-muted-foreground group-hover:text-foreground"
                                                     )}>
                                                         <Icon className="w-4 h-4" />
                                                     </div>
                                                     <div>
-                                                        <span className={cn("block font-semibold", isActive ? "text-white" : "text-gray-300")}>
+                                                        <span className={cn("block font-semibold", isActive ? "text-foreground" : "text-muted-foreground")}>
                                                             {mode.label}
                                                         </span>
-                                                        <span className="text-[10px] text-gray-500 font-normal">
+                                                        <span className="text-[10px] text-muted-foreground font-normal">
                                                             {mode.label === 'Encuestas' && 'Gestiona tus métricas'}
                                                             {mode.label === 'Lealtad' && 'Premios y clientes'}
                                                             {mode.label === 'Procesos' && 'Flujos y tareas'}
@@ -769,14 +769,14 @@ export default function DashboardSidebar({
                         onClick={() => toggleMobileMenu(false)}
                     />
                     {/* Sidebar container */}
-                    <aside className="absolute inset-y-0 left-0 w-64 bg-[#111] border-r border-white/10 flex flex-col h-full shadow-2xl animate-in slide-in-from-left duration-200">
+                    <aside className="absolute inset-y-0 left-0 w-64 bg-card border-r border-border flex flex-col h-full shadow-2xl animate-in slide-in-from-left duration-200">
                         <SidebarContent />
                     </aside>
                 </div>
             )}
 
             {/* Desktop Sidebar */}
-            <aside className="w-64 bg-[#111] border-r border-white/10 flex-col h-screen sticky top-0 hidden md:flex z-50">
+            <aside className="w-64 bg-card border-r border-border flex-col h-screen sticky top-0 hidden md:flex z-50">
                 <SidebarContent />
             </aside>
             <CommandCenter />
