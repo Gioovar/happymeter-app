@@ -36,6 +36,7 @@ interface CreateZonePayload {
         limitTime?: string; // "HH:MM"
         days?: string[]; // ["Mon", "Tue", ...]
         evidenceType: ProcessEvidenceType;
+        assignedStaffId?: string; // Add assignedStaffId support
     }[]
 }
 
@@ -79,7 +80,8 @@ export async function createProcessZoneWithTasks(data: CreateZonePayload) {
                     description: task.description,
                     limitTime: task.limitTime || null,
                     days: task.days || [],
-                    evidenceType: task.evidenceType
+                    evidenceType: task.evidenceType,
+                    assignedStaffId: task.assignedStaffId || null
                 }))
             }
         }
@@ -133,6 +135,7 @@ interface UpdateZonePayload {
         days?: string[];
         evidenceType: ProcessEvidenceType;
         deleted?: boolean; // Flag to delete
+        assignedStaffId?: string; // Add assignedStaffId support
     }[]
 }
 
@@ -205,7 +208,8 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
                             description: task.description,
                             limitTime: task.limitTime || null,
                             days: task.days || [],
-                            evidenceType: task.evidenceType
+                            evidenceType: task.evidenceType,
+                            assignedStaffId: task.assignedStaffId || null
                         }
                     });
                 } else if (!task.deleted) {
@@ -217,7 +221,8 @@ export async function updateProcessZoneWithTasks(data: UpdateZonePayload) {
                             description: task.description,
                             limitTime: task.limitTime || null,
                             days: task.days || [],
-                            evidenceType: task.evidenceType
+                            evidenceType: task.evidenceType,
+                            assignedStaffId: task.assignedStaffId || null
                         }
                     });
                 }

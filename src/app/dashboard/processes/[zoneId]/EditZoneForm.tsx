@@ -22,6 +22,7 @@ type TaskUI = {
     evidenceType: ProcessEvidenceType;
     days?: string[];
     deleted?: boolean;
+    assignedStaffId?: string;
 };
 
 export default function EditZoneForm({ zone, teamMembers, pendingInvitations }: { zone: any, teamMembers: any[], pendingInvitations?: any[] }) {
@@ -45,12 +46,13 @@ export default function EditZoneForm({ zone, teamMembers, pendingInvitations }: 
             description: t.description || '',
             limitTime: t.limitTime || '',
             evidenceType: t.evidenceType,
-            days: t.days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            days: t.days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            assignedStaffId: t.assignedStaffId || ''
         }))
     );
 
     const addTask = () => {
-        setTasks([...tasks, { title: '', description: '', limitTime: '', evidenceType: ProcessEvidenceType.PHOTO, days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }]);
+        setTasks([...tasks, { title: '', description: '', limitTime: '', evidenceType: ProcessEvidenceType.PHOTO, days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], assignedStaffId: '' }]);
     };
 
     const removeTask = (index: number) => {
@@ -440,6 +442,30 @@ export default function EditZoneForm({ zone, teamMembers, pendingInvitations }: 
                                                     <Layers className="w-3 h-3" />
                                                     Ambas
                                                 </button>
+                                            </div>
+
+                                            <div className="mt-3">
+                                                <label className="text-xs text-gray-500 mb-1 block">Asignar a personal</label>
+                                                <select
+                                                    value={task.assignedStaffId || ''}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === '_INVITE_') {
+                                                            setIsInviteOpen(true);
+                                                        } else {
+                                                            updateTask(index, 'assignedStaffId', val);
+                                                        }
+                                                    }}
+                                                    className="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all cursor-pointer"
+                                                >
+                                                    <option value="">Sin asignar</option>
+                                                    {teamMembers?.map(member => (
+                                                        <option key={member.id} value={member.id}>{member.name}</option>
+                                                    ))}
+                                                    <option value="_INVITE_" className="font-bold text-indigo-400 bg-indigo-950/30">
+                                                        + Invitar Empleado
+                                                    </option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
