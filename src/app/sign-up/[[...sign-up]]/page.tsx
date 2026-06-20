@@ -5,7 +5,7 @@ import BrandLogo from "@/components/BrandLogo";
 import { useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getPublicLoyaltyProgramInfo } from "@/actions/loyalty";
-import { Sparkles, Mail, Phone, ArrowLeft, Loader2 } from "lucide-react";
+import { Mail, Phone, ArrowLeft, Loader2 } from "lucide-react";
 // import { dark } from "@clerk/themes"; // Removing dark theme
 import { esES } from "@clerk/localizations";
 
@@ -103,11 +103,8 @@ export default function Page() {
                 </div>
 
                 <div className="absolute bottom-12 left-12 right-12 text-white">
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="w-8 h-8 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center">
-                            <Sparkles className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="font-semibold tracking-wide uppercase text-sm">HappyMeters</span>
+                    <div className="mb-6">
+                        <BrandLogo variant="light" size="lg" />
                     </div>
                     <h1 className="text-4xl font-bold mb-4 leading-tight">
                         Eleva la experiencia de tus clientes al siguiente nivel.
