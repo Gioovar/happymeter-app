@@ -10,6 +10,7 @@ import { compressImage } from '@/lib/image-compression'
 import AlertSettings from '@/components/AlertSettings'
 import RecoverySettings from '@/components/RecoverySettings'
 import HappyLoader from '@/components/HappyLoader'
+import { getPrefillData } from '@/actions/settings'
 
 type QuestionType = 'EMOJI' | 'TEXT' | 'RATING' | 'SELECT' | 'YES_NO'
 
@@ -47,8 +48,9 @@ export default function EditSurveyView({ surveyId, backLink = '/dashboard' }: Ed
         facebook: ''
     })
     const [recoveryConfig, setRecoveryConfig] = useState<any>(null)
-
     const [questions, setQuestions] = useState<Question[]>([])
+    const [isPrefilled, setIsPrefilled] = useState(false)
+    const [prefillPhone, setPrefillPhone] = useState('')
 
     useEffect(() => {
         const fetchSurvey = async () => {
@@ -79,6 +81,51 @@ export default function EditSurveyView({ surveyId, backLink = '/dashboard' }: Ed
                             options: q.options,
                             required: q.required
                         })))
+                    }
+
+                    // Prefill empty fields from business context
+                    if (data.userId) {
+                        try {
+                            const resPrefill = await getPrefillData(data.userId)
+                            if (resPrefill && resPrefill.success) {
+                                let didPrefillAny = false
+
+                                if (!data.bannerUrl && resPrefill.bannerUrl) {
+                                    setBannerUrl(resPrefill.bannerUrl)
+                                    setBannerPreview(resPrefill.bannerUrl)
+                                    didPrefillAny = true
+                                }
+                                if (!data.googleMapsUrl && resPrefill.googleReviewUrl) {
+                                    setGoogleMapsUrl(resPrefill.googleReviewUrl)
+                                    didPrefillAny = true
+                                }
+                                if ((!data.hexColor || data.hexColor === '#8b5cf6') && resPrefill.themeColor && resPrefill.themeColor !== '#8b5cf6') {
+                                    setHexColor(resPrefill.themeColor)
+                                    didPrefillAny = true
+                                }
+                                if (!data.socialConfig || (!data.socialConfig.instagram && !data.socialConfig.facebook)) {
+                                    if (resPrefill.socialLinks?.instagram || resPrefill.socialLinks?.facebook) {
+                                        setSocialConfig({
+                                            enabled: true,
+                                            instagram: resPrefill.socialLinks.instagram || '',
+                                            facebook: resPrefill.socialLinks.facebook || ''
+                                        })
+                                        didPrefillAny = true
+                                    }
+                                }
+
+                                const contactPhone = resPrefill.whatsappContact || resPrefill.phone
+                                if (contactPhone) {
+                                    setPrefillPhone(contactPhone)
+                                }
+
+                                if (didPrefillAny) {
+                                    setIsPrefilled(true)
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error fetching prefill data for edit:', e)
+                        }
                     }
                 } else {
                     alert('Error al cargar la encuesta')
@@ -247,6 +294,12 @@ export default function EditSurveyView({ surveyId, backLink = '/dashboard' }: Ed
             <main className="max-w-3xl mx-auto px-6 py-4 space-y-8">
                 {activeTab === 'edit' ? (
                     <form onSubmit={handleSubmit} className="space-y-8">
+                        {isPrefilled && (
+                            <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-sm text-violet-300 flex items-center gap-2 animate-in fade-in duration-300">
+                                <Sparkles className="w-4 h-4 text-violet-400 shrink-0 animate-pulse" />
+                                <span>Datos precargados desde tu negocio. Puedes modificarlos si lo necesitas.</span>
+                            </div>
+                        )}
 
                         {/* Banner Upload Section */}
                         <section className="space-y-4">
@@ -615,7 +668,7 @@ export default function EditSurveyView({ surveyId, backLink = '/dashboard' }: Ed
                         }}
                     />
                 ) : (
-                    <AlertSettings surveyId={surveyId} />
+                    <AlertSettings surveyId={surveyId} prefillPhone={prefillPhone} />
                 )}
             </main>
         </div>

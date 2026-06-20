@@ -15,11 +15,13 @@ interface AlertConfig {
 export default function AlertSettings({
     surveyId,
     initialConfig,
-    onChange
+    onChange,
+    prefillPhone
 }: {
     surveyId?: string
     initialConfig?: AlertConfig
     onChange?: (config: AlertConfig) => void
+    prefillPhone?: string
 }) {
     const [config, setConfig] = useState<AlertConfig>(initialConfig || {
         enabled: false,
@@ -36,7 +38,7 @@ export default function AlertSettings({
         if (surveyId && !initialConfig) {
             fetchConfig()
         }
-    }, [surveyId])
+    }, [surveyId, prefillPhone])
 
     // Propagate changes if onChange is provided
     useEffect(() => {
@@ -50,10 +52,12 @@ export default function AlertSettings({
             const res = await fetch(`/api/surveys/${surveyId}/alerts`)
             if (res.ok) {
                 const data = await res.json()
+                const phonesList = Array.isArray(data.phones) ? data.phones : []
+                const finalPhones = phonesList.length === 0 && prefillPhone ? [prefillPhone] : phonesList
                 setConfig({
-                    enabled: data.enabled ?? false,
+                    enabled: data.enabled ?? (phonesList.length === 0 && prefillPhone ? true : false),
                     emails: Array.isArray(data.emails) ? data.emails : [],
-                    phones: Array.isArray(data.phones) ? data.phones : [],
+                    phones: finalPhones,
                     threshold: data.threshold ?? 3
                 })
             }

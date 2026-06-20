@@ -2,7 +2,7 @@
 
 import { SettingsForm } from '@/app/dashboard/settings/SettingsForm'
 import PortalButton from '@/app/dashboard/settings/PortalButton'
-import { Settings } from 'lucide-react'
+import { Settings, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import SalesModal from '@/components/plans/SalesModal'
 import InviteMemberModal from '@/components/team/InviteMemberModal'
@@ -11,9 +11,10 @@ interface SettingsViewProps {
     userSettings: any
     branchId?: string
     user?: any
+    isPrefilled?: boolean
 }
 
-export default function SettingsView({ userSettings, branchId, user }: SettingsViewProps) {
+export default function SettingsView({ userSettings, branchId, user, isPrefilled }: SettingsViewProps) {
     const [isSalesModalOpen, setIsSalesModalOpen] = useState(false)
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 
@@ -50,6 +51,13 @@ export default function SettingsView({ userSettings, branchId, user }: SettingsV
                     <h1 className="text-3xl font-bold">Ajustes</h1>
                 </div>
             </div>
+
+            {isPrefilled && (
+                <div className="mb-6 p-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-sm text-violet-300 flex items-center gap-2 animate-in fade-in duration-300">
+                    <Sparkles className="w-4 h-4 text-violet-400 shrink-0 animate-pulse" />
+                    <span>Datos precargados desde tu negocio. Puedes modificarlos si lo necesitas.</span>
+                </div>
+            )}
 
             <div className="bg-[#111] border border-white/10 rounded-2xl p-8 shadow-xl mb-8">
                 <SettingsForm userSettings={userSettings} branchId={branchId} />

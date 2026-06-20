@@ -7,7 +7,7 @@ import { Sparkles, Plus, Trash2, ArrowLeft, Image as ImageIcon, Upload, GripVert
 import Link from 'next/link'
 import Image from 'next/image'
 import { compressImage } from '@/lib/image-compression'
-import { getUserProfile, updatePhoneNumber, sendTestWhatsApp } from '@/actions/settings'
+import { getUserProfile, updatePhoneNumber, sendTestWhatsApp, getPrefillData } from '@/actions/settings'
 import AlertSettings from '@/components/AlertSettings'
 import RecoverySettings from '@/components/RecoverySettings'
 import { useDashboard } from '@/context/DashboardContext'
@@ -82,6 +82,7 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
     const [isSavingPhone, setIsSavingPhone] = useState(false)
     const [isVerifyStep, setIsVerifyStep] = useState(false)
     const [isReadyToPublish, setIsReadyToPublish] = useState(false)
+    const [isPrefilled, setIsPrefilled] = useState(false)
 
     useEffect(() => {
         try {
@@ -93,44 +94,63 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
         } catch (e) { console.error(e) }
     }, [])
 
-    // Pre-fill Banner from Business Settings
+    // Prefill data from active branch or business settings
     useEffect(() => {
-        if (!banner && !bannerPreview) {
-            // First priority: use the active context's provided banner (e.g., if editing the root business)
-            if (activeContextBannerUrl) {
-                setBannerPreview(activeContextBannerUrl)
-                return
-            }
+        const fetchAndPrefill = async () => {
+            try {
+                const res = await getPrefillData(effectiveBranchId)
+                if (res && res.success) {
+                    let hasAnyPrefill = false
 
-            // Fallback for branching logic: check within chains if it's a specific sub-branch
-            if (chains.length > 0 && effectiveBranchId) {
-                const targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === effectiveBranchId || b.slug === effectiveBranchId)
-                if (targetBranch?.branch?.bannerUrl) {
-                    setBannerPreview(targetBranch.branch.bannerUrl)
+                    if (res.bannerUrl) {
+                        setBannerPreview(res.bannerUrl)
+                        hasAnyPrefill = true
+                    }
+                    if (res.googleReviewUrl) {
+                        setGoogleMapsUrl(res.googleReviewUrl)
+                        hasAnyPrefill = true
+                    }
+                    if (res.themeColor) {
+                        setHexColor(res.themeColor)
+                        if (res.themeColor !== '#8b5cf6' && res.themeColor !== '#64748b') {
+                            hasAnyPrefill = true
+                        }
+                    }
+
+                    // Social Config
+                    const hasInstagram = !!res.socialLinks?.instagram
+                    const hasFacebook = !!res.socialLinks?.facebook
+                    if (hasInstagram || hasFacebook) {
+                        setSocialConfig({
+                            enabled: true,
+                            instagram: res.socialLinks?.instagram || '',
+                            facebook: res.socialLinks?.facebook || ''
+                        })
+                        hasAnyPrefill = true
+                    }
+
+                    // Alert Config (WhatsApp Contact or Phone)
+                    const contactPhone = res.whatsappContact || res.phone
+                    if (contactPhone) {
+                        setAlertConfig({
+                            enabled: true,
+                            emails: [],
+                            phones: [contactPhone],
+                            threshold: 3
+                        })
+                        hasAnyPrefill = true
+                    }
+
+                    if (hasAnyPrefill) {
+                        setIsPrefilled(true)
+                    }
                 }
+            } catch (e) {
+                console.error("Error prefilling survey create form:", e)
             }
         }
-    }, [chains, effectiveBranchId, banner, bannerPreview, activeContextBannerUrl])
-
-    // Pre-fill Alert Config defaults
-    useEffect(() => {
-        if (!alertConfig && chains.length > 0 && effectiveBranchId) {
-            let targetBranch = chains.flatMap(c => c.branches).find(b => b.branchId === effectiveBranchId || b.slug === effectiveBranchId)
-
-            const branchUser = targetBranch?.branch
-            // Prefer whatsappContact, fallback to phone
-            const businessPhone = branchUser?.whatsappContact || branchUser?.phone
-
-            if (businessPhone) {
-                setAlertConfig({
-                    enabled: true,
-                    emails: [],
-                    phones: [businessPhone],
-                    threshold: 3
-                })
-            }
-        }
-    }, [chains, effectiveBranchId, alertConfig])
+        fetchAndPrefill()
+    }, [effectiveBranchId])
 
     const [questions, setQuestions] = useState<Question[]>(isAnonymousMode ? TEMPLATE_ANONYMOUS : TEMPLATE_STANDARD)
 
@@ -376,6 +396,12 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
             <main className="max-w-3xl mx-auto px-6 py-4 space-y-8">
                 {activeTab === 'edit' ? (
                     <form onSubmit={handleSubmit} className="space-y-8">
+                        {isPrefilled && (
+                            <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-sm text-violet-300 flex items-center gap-2 animate-in fade-in duration-300">
+                                <Sparkles className="w-4 h-4 text-violet-400 shrink-0 animate-pulse" />
+                                <span>Datos precargados desde tu negocio. Puedes modificarlos si lo necesitas.</span>
+                            </div>
+                        )}
 
                         {/* Banner Upload Section */}
                         <section className="space-y-4">

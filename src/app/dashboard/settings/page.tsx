@@ -15,6 +15,40 @@ export default async function SettingsPage() {
         where: { userId: effectiveUserId }
     })
 
+    // Fallback/prefill logic for branches
+    let displaySettings = userSettings
+    let isPrefilled = false
+    if (effectiveUserId !== userId) {
+        const parentSettings = await prisma.userSettings.findUnique({
+            where: { userId }
+        })
+        if (parentSettings) {
+            displaySettings = {
+                ...parentSettings,
+                ...userSettings,
+                socialLinks: {
+                    instagram: (userSettings?.socialLinks as any)?.instagram || (parentSettings?.socialLinks as any)?.instagram || '',
+                    facebook: (userSettings?.socialLinks as any)?.facebook || (parentSettings?.socialLinks as any)?.facebook || ''
+                },
+                userId: effectiveUserId,
+                plan: userSettings?.plan || parentSettings.plan
+            }
+
+            if (userSettings) {
+                if (!userSettings.logoUrl && parentSettings.logoUrl) isPrefilled = true
+                if (!userSettings.bannerUrl && parentSettings.bannerUrl) isPrefilled = true
+                if (!userSettings.phone && parentSettings.phone) isPrefilled = true
+                const userSocial = userSettings.socialLinks as any
+                const parentSocial = parentSettings.socialLinks as any
+                if ((!userSocial?.instagram && parentSocial?.instagram) || (!userSocial?.facebook && parentSocial?.facebook)) {
+                    isPrefilled = true
+                }
+            } else {
+                isPrefilled = true
+            }
+        }
+    }
+
     const clerkUser = await currentUser()
     const serializedUser = clerkUser ? {
         firstName: clerkUser.firstName,
@@ -22,5 +56,5 @@ export default async function SettingsPage() {
         emailAddresses: clerkUser.emailAddresses.map(e => ({ emailAddress: e.emailAddress }))
     } : null
 
-    return <SettingsView userSettings={userSettings} user={serializedUser} branchId={effectiveUserId} />
+    return <SettingsView userSettings={displaySettings} user={serializedUser} branchId={effectiveUserId} isPrefilled={isPrefilled} />
 }

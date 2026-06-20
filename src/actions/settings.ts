@@ -113,6 +113,90 @@ export async function updateSettings(formData: FormData) {
     }
 }
 
+export async function getPrefillData(branchId?: string) {
+    const { userId } = await auth()
+    if (!userId) throw new Error('Unauthorized')
+
+    const { getActiveBusinessId } = await import('@/lib/tenant')
+    const activeContextId = await getActiveBusinessId()
+    let targetUserId = activeContextId || userId
+
+    if (branchId && branchId !== targetUserId) {
+        // Verify Chain Ownership
+        const branch = await prisma.chainBranch.findFirst({
+            where: {
+                branchId: branchId,
+                chain: { ownerId: userId }
+            }
+        })
+        // Verify Membership
+        const isMember = await prisma.teamMember.findFirst({
+            where: { ownerId: branchId, userId: userId }
+        })
+
+        if (!branch && !isMember && userId !== branchId) {
+            throw new Error('Unauthorized access to branch settings')
+        }
+        targetUserId = branchId
+    }
+
+    const settings = await prisma.userSettings.findUnique({
+        where: { userId: targetUserId }
+    })
+
+    let parentSettings = null
+    if (targetUserId !== userId) {
+        const branchRelation = await prisma.chainBranch.findFirst({
+            where: { branchId: targetUserId },
+            include: { chain: true }
+        })
+        if (branchRelation?.chain?.ownerId) {
+            parentSettings = await prisma.userSettings.findUnique({
+                where: { userId: branchRelation.chain.ownerId }
+            })
+        }
+    }
+
+    const loyaltyProgram = await prisma.loyaltyProgram.findUnique({
+        where: { userId: targetUserId }
+    })
+
+    let parentLoyaltyProgram = null
+    if (!loyaltyProgram && parentSettings) {
+        parentLoyaltyProgram = await prisma.loyaltyProgram.findUnique({
+            where: { userId: parentSettings.userId }
+        })
+    }
+
+    const businessName = settings?.businessName || parentSettings?.businessName || null
+    const logoUrl = settings?.logoUrl || parentSettings?.logoUrl || null
+    const bannerUrl = settings?.bannerUrl || parentSettings?.bannerUrl || null
+    const phone = settings?.phone || parentSettings?.phone || null
+    const whatsappContact = settings?.whatsappContact || parentSettings?.whatsappContact || null
+    const googleReviewUrl = settings?.googleReviewUrl || parentSettings?.googleReviewUrl || null
+
+    const branchSocial = settings?.socialLinks as any
+    const parentSocial = parentSettings?.socialLinks as any
+    const socialLinks = {
+        instagram: branchSocial?.instagram || parentSocial?.instagram || '',
+        facebook: branchSocial?.facebook || parentSocial?.facebook || ''
+    }
+
+    const themeColor = loyaltyProgram?.themeColor || parentLoyaltyProgram?.themeColor || '#8b5cf6'
+
+    return {
+        success: true,
+        businessName,
+        logoUrl,
+        bannerUrl,
+        phone,
+        whatsappContact,
+        googleReviewUrl,
+        socialLinks,
+        themeColor
+    }
+}
+
 export async function getUserProfile() {
     const { userId } = await auth()
     if (!userId) return null
