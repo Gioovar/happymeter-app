@@ -153,7 +153,7 @@ export function ProgramSharedQrModal({ isOpen, onClose, programName, programType
                         /* PRINT PREVIEW */
                         <div className="relative z-10 w-full max-w-sm text-black">
                             <div className="bg-transparent mx-auto w-64 h-64 flex items-center justify-center mb-8">
-                                <QRCodeSVG value={programUrl} size={250} level="H" includeMargin={false} />
+                                <QRCodeSVG ref={qrRef} value={programUrl} size={250} level="H" includeMargin={false} />
                             </div>
                             <h2 className="text-2xl font-bold mb-1">{programName}</h2>
                             <p className="text-gray-500 text-sm uppercase tracking-wider font-medium">
