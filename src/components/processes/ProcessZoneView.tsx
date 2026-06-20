@@ -476,16 +476,43 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                                             <p className="text-sm text-gray-400 line-clamp-1 mb-2">{task.description}</p>
                                         )}
 
-                                        {assignedStaff && (
-                                            <div className="flex items-center gap-2 mt-2">
-                                                <Avatar className="w-6 h-6 border border-white/10">
-                                                    {assignedToPhoto && <AvatarImage src={assignedToPhoto} />}
-                                                    <AvatarFallback className="text-[10px] bg-cyan-600 text-white">
-                                                        {assignedToName?.charAt(0).toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <span className="text-xs text-gray-400">{assignedToName}</span>
+                                        {assignedStaff ? (
+                                            <div className="flex items-center gap-2 mt-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                                                <span className="text-xs text-gray-400">Asignado a:</span>
+                                                <div className="flex items-center gap-1.5 bg-white/5 border border-white/5 pl-1.5 pr-2.5 py-0.5 rounded-full">
+                                                    <Avatar className="w-5 h-5 border border-white/10">
+                                                        {assignedToPhoto && <AvatarImage src={assignedToPhoto} />}
+                                                        <AvatarFallback className="text-[9px] bg-cyan-600 text-white">
+                                                            {assignedToName?.charAt(0).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="text-xs text-white font-medium">{assignedToName}</span>
+                                                </div>
+                                                {!task.evidences?.[0] && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={(e) => openAssignDialog(task, e)}
+                                                        className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/40 px-2 py-0.5 h-6 rounded-md text-xs font-bold"
+                                                    >
+                                                        Editar
+                                                    </Button>
+                                                )}
                                             </div>
+                                        ) : (
+                                            !task.evidences?.[0] ? (
+                                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={(e) => openAssignDialog(task, e)}
+                                                        className="border-dashed border-cyan-500/30 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30 px-3 py-1 h-7 rounded-lg text-xs font-bold flex items-center gap-1.5"
+                                                    >
+                                                        <UserPlus className="w-3.5 h-3.5" />
+                                                        Asignar empleado
+                                                    </Button>
+                                                </div>
+                                            ) : null
                                         )}
                                     </div>
 
@@ -530,14 +557,6 @@ export default function ProcessZoneView({ zones, memberId, branchId }: { zones: 
                                                     title="Editar Tarea"
                                                 >
                                                     <Pencil className="w-3.5 h-3.5" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={(e) => openAssignDialog(task, e)}
-                                                    className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950 p-2 h-auto font-bold text-xs gap-1 hidden md:flex"
-                                                >
-                                                    {assignedStaff ? 'Reasignar' : 'Asignar'} <UserPlus className="w-3.5 h-3.5" />
                                                 </Button>
                                             </div>
                                         )}
