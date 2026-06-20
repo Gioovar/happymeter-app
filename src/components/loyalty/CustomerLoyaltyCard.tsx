@@ -176,16 +176,16 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
             <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[40%] bg-blue-900/30 rounded-full blur-[80px] pointer-events-none" />
 
             {/* Scrollable Content */}
-            <div className="absolute inset-0 overflow-y-auto p-6 pb-32 scrollbar-hide">
+            <div className="absolute inset-0 overflow-y-auto p-4 sm:p-6 pb-28 sm:pb-32 scrollbar-hide">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-8 relative z-10">
-                    <div className="flex items-center gap-3">
+                <div className="flex justify-between items-center mb-6 sm:mb-8 relative z-10">
+                    <div className="flex items-center gap-2 sm:gap-3">
                         {program?.logoUrl ? (
-                            <img src={program.logoUrl} alt={program.businessName} className="w-10 h-10 object-contain rounded-full bg-white/10 p-1" />
+                            <img src={program.logoUrl} alt={program.businessName} className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-full bg-white/10 p-1" />
                         ) : null}
                         <div className="flex-1 min-w-0 pr-4">
-                            <h1 className="text-xl font-bold tracking-tight">{businessName || program?.businessName || "Programa de Lealtad"}</h1>
-                            <p className="text-[10px] text-gray-400 font-medium tracking-widest mt-0.5">MEMBRESÍA DIGITAL</p>
+                            <h1 className="text-lg sm:text-xl font-bold tracking-tight">{businessName || program?.businessName || "Programa de Lealtad"}</h1>
+                            <p className="text-[9px] sm:text-[10px] text-gray-400 font-medium tracking-widest mt-0.5">MEMBRESÍA DIGITAL</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -213,7 +213,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                     {/* PRIMARY CARD (Membership Status) */}
                     <div
                         onClick={() => { if (!isBlocked) setShowQr(!showQr) }}
-                        className="w-full aspect-[1.6] rounded-3xl p-6 relative overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] cursor-pointer group"
+                        className="w-full aspect-[1.6] rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] cursor-pointer group flex flex-col justify-between"
                     >
                         {/* Card Background with customized gradient */}
                         <div className="absolute inset-0 bg-[#16161e] z-0" />
@@ -231,56 +231,56 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
 
                         {/* Block Overlay */}
                         {isBlocked && (
-                            <div className="absolute inset-0 z-30 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 border border-white/5 rounded-3xl">
-                                <Lock className="w-8 h-8 text-white/50 mb-2" />
-                                <span className="text-sm font-bold text-white tracking-widest uppercase">Programa Inactivo</span>
-                                <span className="text-xs text-white/70 mt-1">Contacta al negocio para más detalles.</span>
+                            <div className="absolute inset-0 z-30 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center text-center p-4 sm:p-6 border border-white/5 rounded-3xl">
+                                <Lock className="w-6 h-6 sm:w-8 sm:h-8 text-white/50 mb-2" />
+                                <span className="text-xs sm:text-sm font-bold text-white tracking-widest uppercase">Programa Inactivo</span>
+                                <span className="text-[10px] sm:text-xs text-white/70 mt-1">Contacta al negocio para más detalles.</span>
                             </div>
                         )}
 
                         {/* QR Hint Button (New) */}
                         {!isBlocked && (
-                            <div className="absolute top-6 right-6 z-20">
-                                <div className="p-2 bg-white/10 rounded-full backdrop-blur-md border border-white/10 group-hover:bg-white/20 transition-colors shadow-lg">
-                                    <QrCode className="w-5 h-5 text-white" />
+                            <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+                                <div className="p-1.5 sm:p-2 bg-white/10 rounded-full backdrop-blur-md border border-white/10 group-hover:bg-white/20 transition-colors shadow-lg">
+                                    <QrCode className="w-4 h-4 sm:w-5 h-5 text-white" />
                                 </div>
                             </div>
                         )}
 
                         {/* Chip & Logo */}
-                        <div className="relative z-10 flex justify-between items-start mb-12">
+                        <div className="relative z-10 flex justify-between items-start">
                             <div
-                                className="w-12 h-9 rounded-md shadow-lg flex items-center justify-center relative overflow-hidden"
+                                className="w-9 h-7 sm:w-12 sm:h-9 rounded shadow-lg flex items-center justify-center relative overflow-hidden shrink-0"
                                 style={{
                                     background: `linear-gradient(to right, ${tierColor} 0%, ${tierColor}80 100%)`,
                                     border: `1px solid ${tierColor}`
                                 }}
                             >
-                                <div className="absolute inset-0 border border-black/20 rounded-md" />
+                                <div className="absolute inset-0 border border-black/20 rounded" />
                                 <div className="w-full h-[1px] bg-black/20 absolute top-1/3" />
                                 <div className="w-full h-[1px] bg-black/20 absolute bottom-1/3" />
                                 <div className="h-full w-[1px] bg-black/20 absolute left-1/3" />
                                 <div className="h-full w-[1px] bg-black/20 absolute right-1/3" />
                             </div>
-                            <div className="flex items-center gap-3 opacity-90 pr-12">
-                                <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-[#0a0a0f] border border-white/10 shadow-sm" style={{ color: tierColor }}>
+                            <div className="flex items-center gap-1.5 sm:gap-3 opacity-90 pr-8 sm:pr-12">
+                                <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-1 sm:px-3 sm:py-1.5 rounded-full bg-[#0a0a0f] border border-white/10 shadow-sm" style={{ color: tierColor }}>
                                     {tierName.toUpperCase().includes("MIEMBRO") ? tierName : `MIEMBRO ${tierName}`}
                                 </span>
                             </div>
                         </div>
 
                         {/* Card Number & Details */}
-                        <div className="relative z-10 text-white">
-                            <div className="font-mono text-xl tracking-[0.2em] mb-4 text-shadow-sm flex gap-4 text-white/90">
+                        <div className="relative z-10 text-white mt-auto pt-2">
+                            <div className="font-mono text-base sm:text-xl tracking-[0.2em] mb-2 sm:mb-4 text-shadow-sm flex gap-2 sm:gap-4 text-white/90">
                                 <span>****</span>
                                 <span>****</span>
                                 <span>{customer.magicToken?.slice(0, 4) || "0000"}</span>
                             </div>
                             <div className="flex justify-between items-end">
                                 <div>
-                                    <div className="text-[10px] text-gray-400 uppercase mb-1 font-medium">Titular</div>
-                                    <div className="font-medium tracking-wide text-lg capitalize">{customer.name || "Miembro"}</div>
-                                    <div className="text-[11px] text-gray-400/80 mt-0.5 font-medium">
+                                    <div className="text-[8px] sm:text-[10px] text-gray-400 uppercase mb-0.5 sm:mb-1 font-medium">Titular</div>
+                                    <div className="font-medium tracking-wide text-sm sm:text-lg capitalize line-clamp-1 max-w-[120px] sm:max-w-[180px]">{customer.name || "Miembro"}</div>
+                                    <div className="text-[9px] sm:text-[11px] text-gray-400/80 mt-0.5 font-medium">
                                         {program?.pointsPercentage
                                             ? `${customer.currentPoints || 0} Puntos`
                                             : `${customer.visits?.length || customer.totalVisits || 0} Visitas`
@@ -288,10 +288,10 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-[10px] text-gray-400 uppercase mb-1">Tu Calificación</div>
-                                    <div className="font-bold text-xl flex items-center justify-end gap-1.5">
+                                    <div className="text-[8px] sm:text-[10px] text-gray-400 uppercase mb-0.5 sm:mb-1">Tu Calificación</div>
+                                    <div className="font-bold text-base sm:text-xl flex items-center justify-end gap-1 sm:gap-1.5">
                                         <span>{customer.averageRating ? Number(customer.averageRating).toFixed(1) : "5.0"}</span>
-                                        <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                                        <Star className="w-4 h-4 sm:w-5 h-5 text-yellow-500 fill-yellow-500" />
                                     </div>
                                 </div>
                             </div>
@@ -459,7 +459,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
 
 
                     {/* Action Buttons */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         <button
                             onClick={() => {
                                 const params = new URLSearchParams()
@@ -468,20 +468,20 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                 if (customer.email) params.append("email", customer.email)
                                 window.location.href = `/book/${program.id}?${params.toString()}`
                             }}
-                            className="bg-[#1a1a24] hover:bg-[#20202b] text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] border border-white/5"
+                            className="bg-[#1a1a24] hover:bg-[#20202b] text-white p-3 sm:p-4 rounded-2xl flex flex-col items-center justify-center gap-1 sm:gap-2 transition-all active:scale-[0.98] border border-white/5"
                         >
-                            <Calendar className="w-6 h-6 text-violet-400" />
-                            <span className="text-sm font-bold">Reservar</span>
+                            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-violet-400" />
+                            <span className="text-xs sm:text-sm font-bold">Reservar</span>
                         </button>
 
                         <button
                             onClick={() => setShowDigitalMenu(true)}
-                            className="bg-[#1a1a24] hover:bg-[#20202b] text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] border border-white/5"
+                            className="bg-[#1a1a24] hover:bg-[#20202b] text-white p-3 sm:p-4 rounded-2xl flex flex-col items-center justify-center gap-1 sm:gap-2 transition-all active:scale-[0.98] border border-white/5"
                         >
-                            <div className="w-6 h-6 rounded-md border-2 border-dashed border-gray-500 flex items-center justify-center">
-                                <span className="text-[10px] font-bold">M</span>
+                            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md border-2 border-dashed border-gray-500 flex items-center justify-center">
+                                <span className="text-[8px] sm:text-[10px] font-bold">M</span>
                             </div>
-                            <span className="text-sm font-bold">Menú</span>
+                            <span className="text-xs sm:text-sm font-bold">Menú</span>
                         </button>
                     </div>
 
@@ -506,7 +506,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                         </div>
                     )}
 
-                    <div className="text-sm text-gray-400 px-2 font-medium">Tus Recompensas</div>
+                    <div className="text-xs sm:text-sm text-gray-400 px-1 sm:px-2 font-medium">Tus Recompensas</div>
 
                     <div className="space-y-4">
                         {displayedRewards.length === 0 && (
@@ -539,7 +539,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                     key={reward.id}
                                     onClick={() => setSelectedReward(reward)}
                                     className={cn(
-                                        "relative overflow-hidden rounded-2xl border bg-[#12121a] p-4 transition-all duration-300 cursor-pointer hover:bg-white/5 active:scale-[0.98]",
+                                        "relative overflow-hidden rounded-2xl border bg-[#12121a] p-3 sm:p-4 transition-all duration-300 cursor-pointer hover:bg-white/5 active:scale-[0.98]",
                                         isSystemGift ? "border-purple-500/50 bg-purple-900/10 hover:bg-purple-900/20" : "border-white/5",
                                         pending ? "border-yellow-500/50 bg-yellow-900/10 hover:bg-yellow-900/20" : ""
                                     )}
@@ -550,27 +550,27 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                         </div>
                                     )}
 
-                                    <div className="flex gap-4 items-center relative z-10">
+                                    <div className="flex gap-3 sm:gap-4 items-center relative z-10">
                                         <div className={cn(
-                                            "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                                            "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors",
                                             isLocked ? "bg-white/5 text-gray-500" :
                                                 pending ? "bg-yellow-500/20 text-yellow-500" :
                                                     isSystemGift ? "bg-purple-500/20 text-purple-400 border border-purple-500/30 shadow-[0_0_15px_-5px_#a855f7]" :
                                                         "bg-violet-500/20 text-violet-400"
                                         )}>
-                                            {pending ? <Trophy className="w-6 h-6 animate-pulse" /> : <Gift className={cn("w-6 h-6", isSystemGift && "animate-pulse")} />}
+                                            {pending ? <Trophy className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" /> : <Gift className={cn("w-5 h-5 sm:w-6 sm:h-6", isSystemGift && "animate-pulse")} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <h3 className={cn("font-bold truncate pr-2",
+                                            <div className="flex justify-between items-start mb-0.5 sm:mb-1">
+                                                <h3 className={cn("font-bold truncate pr-2 text-sm sm:text-base",
                                                     pending ? "text-yellow-500" :
-                                                        isSystemGift ? "text-white text-lg" : "text-white"
+                                                        isSystemGift ? "text-purple-300" : "text-white"
                                                 )}>
                                                     {reward.name}
                                                 </h3>
-                                                {isLocked && <Lock className="w-4 h-4 text-gray-500 shrink-0 mt-1" />}
+                                                {isLocked && <Lock className="w-3.5 h-3.5 text-gray-500 shrink-0 mt-0.5" />}
                                             </div>
-                                            <p className="text-xs text-gray-400 mb-2">
+                                            <p className="text-[10px] sm:text-xs text-gray-400 mb-1.5 sm:mb-2">
                                                 {isSystemGift ? "¡Tu regalo de bienvenida!" : requirementText}
                                             </p>
 
@@ -589,7 +589,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                     </div>
 
                                     {/* ACTIONS */}
-                                    <div className="mt-4 relative z-20">
+                                    <div className="mt-3 sm:mt-4 relative z-20">
                                         {isBlocked ? (
                                             <div className="text-center">
                                                 <div className="flex items-center justify-center gap-2 text-red-400/80 text-xs font-bold py-2 uppercase tracking-wide">
@@ -611,10 +611,10 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                                         toast.error("Error: Código de canje no encontrado")
                                                     }
                                                 }}
-                                                className="w-full bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-3 flex items-center justify-center gap-2 transition-all active:scale-95 group"
+                                                className="w-full bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-2.5 sm:p-3 flex items-center justify-center gap-2 transition-all active:scale-95 group"
                                             >
                                                 <Sparkles className="w-4 h-4 text-yellow-500 group-hover:scale-110 transition-transform" />
-                                                <span className="text-xs font-bold text-yellow-500 uppercase tracking-wide">CÓDIGO DE CANJE GENERADO</span>
+                                                <span className="text-[10px] sm:text-xs font-bold text-yellow-500 uppercase tracking-wide">CÓDIGO DE CANJE GENERADO</span>
                                             </button>
                                         ) : customer.redemptions?.some((r: any) => r.rewardId === reward.id && r.status === 'REDEEMED') ? (
                                             // Redeemed State (Prioritized over Unlocked)
@@ -631,7 +631,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                                     handleUnlock(reward.id)
                                                 }}
                                                 disabled={unlockingRewardId === reward.id}
-                                                className="w-full bg-violet-600 hover:bg-violet-700 text-white rounded-xl p-3 font-bold text-xs uppercase shadow-lg shadow-violet-500/20 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                                className="w-full bg-violet-600 hover:bg-violet-700 text-white rounded-xl p-2.5 sm:p-3 font-bold text-[10px] sm:text-xs uppercase shadow-lg shadow-violet-500/20 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                             >
                                                 {unlockingRewardId === reward.id && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                                                 {unlockingRewardId === reward.id ? "Desbloqueando..." : "Desbloquear Recompensa"}
@@ -639,7 +639,7 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
                                         ) : (
                                             // Locked State
                                             <div className="text-center">
-                                                <div className="flex items-center justify-center gap-2 text-gray-500 text-xs font-medium py-2">
+                                                <div className="flex items-center justify-center gap-2 text-gray-500 text-[10px] sm:text-xs font-medium py-1.5 sm:py-2">
                                                     <Lock className="w-3 h-3" />
                                                     <span>{requirementText}</span>
                                                 </div>
@@ -654,12 +654,12 @@ export function CustomerLoyaltyCard({ customer, filterType = "all", children, cl
             </div>
 
             {/* FLOATING QR BUTTON (Bottom) */}
-            <div className="absolute bottom-6 left-0 right-0 z-30 px-6 flex justify-center pointer-events-none">
+            <div className="absolute bottom-4 sm:bottom-6 left-0 right-0 z-30 px-4 sm:px-6 flex justify-center pointer-events-none">
                 <button
                     onClick={() => { setRedeemQrData(null); setShowQr(true); }}
-                    className="pointer-events-auto bg-gradient-to-r from-orange-500 to-pink-500 text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 hover:scale-105 transition-transform active:scale-95 border-2 border-white/20 text-sm tracking-wide"
+                    className="pointer-events-auto bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold shadow-2xl flex items-center gap-2 sm:gap-3 hover:scale-105 transition-transform active:scale-95 border-2 border-white/20 text-xs sm:text-sm tracking-wide shrink-0"
                 >
-                    <QrCode className="w-5 h-5" />
+                    <QrCode className="w-4 h-4 sm:w-5 h-5" />
                     MOSTRAR MI CÓDIGO
                 </button>
             </div>

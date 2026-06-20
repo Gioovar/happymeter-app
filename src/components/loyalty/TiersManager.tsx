@@ -26,7 +26,13 @@ export default function TiersManager({ programId, tiers }: TiersManagerProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Form State
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        name: string
+        requiredVisits: number | ""
+        requiredPoints: number | ""
+        color: string
+        order: number | ""
+    }>({
         name: "",
         requiredVisits: 5,
         requiredPoints: 1000,
@@ -64,14 +70,24 @@ export default function TiersManager({ programId, tiers }: TiersManagerProps) {
 
     const handleSubmit = async () => {
         if (!formData.name) return toast.error("El nombre es requerido")
+        if (formData.requiredVisits === "") return toast.error("Ingresa las visitas requeridas")
+        if (formData.requiredPoints === "") return toast.error("Ingresa los puntos requeridos")
+        if (formData.order === "") return toast.error("Ingresa la prioridad")
 
         setIsSubmitting(true)
         try {
             let res
+            const submitData = {
+                name: formData.name,
+                requiredVisits: Number(formData.requiredVisits),
+                requiredPoints: Number(formData.requiredPoints),
+                color: formData.color,
+                order: Number(formData.order)
+            }
             if (editingTier) {
-                res = await updateLoyaltyTier(programId, editingTier.id, formData)
+                res = await updateLoyaltyTier(programId, editingTier.id, submitData)
             } else {
-                res = await createLoyaltyTier(programId, formData)
+                res = await createLoyaltyTier(programId, submitData)
             }
 
             if (res.success) {
@@ -192,7 +208,13 @@ export default function TiersManager({ programId, tiers }: TiersManagerProps) {
                                     id="visits"
                                     type="number"
                                     value={formData.requiredVisits}
-                                    onChange={(e) => setFormData({ ...formData, requiredVisits: parseInt(e.target.value) || 0 })}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setFormData({ 
+                                            ...formData, 
+                                            requiredVisits: val === "" ? "" : (isNaN(parseInt(val)) ? "" : parseInt(val)) 
+                                        });
+                                    }}
                                     className="bg-white/5 border-white/10 text-white"
                                 />
                             </div>
@@ -202,7 +224,13 @@ export default function TiersManager({ programId, tiers }: TiersManagerProps) {
                                     id="points"
                                     type="number"
                                     value={formData.requiredPoints}
-                                    onChange={(e) => setFormData({ ...formData, requiredPoints: parseInt(e.target.value) || 0 })}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setFormData({ 
+                                            ...formData, 
+                                            requiredPoints: val === "" ? "" : (isNaN(parseInt(val)) ? "" : parseInt(val)) 
+                                        });
+                                    }}
                                     className="bg-white/5 border-white/10 text-white"
                                 />
                             </div>
@@ -232,7 +260,13 @@ export default function TiersManager({ programId, tiers }: TiersManagerProps) {
                                 id="order"
                                 type="number"
                                 value={formData.order}
-                                onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 1 })}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setFormData({ 
+                                        ...formData, 
+                                        order: val === "" ? "" : (isNaN(parseInt(val)) ? "" : parseInt(val)) 
+                                    });
+                                }}
                                 className="bg-white/5 border-white/10 text-white"
                                 placeholder="1 = Nivel más bajo"
                             />

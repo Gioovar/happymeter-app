@@ -230,9 +230,11 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
                 </div>
 
                 {/* RIGHT: PREVIEW */}
-                <div>
-                    <h3 className="text-lg font-bold text-white mb-4 lg:hidden">Vista previa de tu programa de lealtad</h3>
-                    <div className="bg-[#050505] rounded-[40px] border-[8px] border-[#222] shadow-2xl relative overflow-hidden flex flex-col max-w-[340px] sm:max-w-[400px] mx-auto w-full h-[600px] lg:h-full">
+                <div className="flex flex-col items-center justify-center lg:h-full gap-4 w-full min-h-0">
+                    <h3 className="text-lg font-bold text-white mb-2 lg:hidden">Vista previa de tu programa de lealtad</h3>
+                    
+                    {/* Simulated smartphone frame */}
+                    <div className="bg-[#050505] rounded-[40px] border-[8px] border-[#222] shadow-2xl relative overflow-hidden flex flex-col aspect-[9/16] h-[500px] sm:h-[580px] lg:h-full max-h-[65vh] lg:max-h-[660px] w-auto max-w-full mx-auto shrink-0">
                         {/* Fake Status Bar */}
                         <div className="h-12 bg-black flex justify-between items-center px-6 text-white text-xs font-medium shrink-0 z-20">
                             <span>9:41</span>
@@ -241,23 +243,7 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
                             </div>
                         </div>
 
-                        {/* Controls Overlay */}
-                        <div className="absolute bottom-6 right-6 z-50 flex flex-col gap-2">
-                            <div className="bg-black/60 backdrop-blur-md p-2 rounded-xl border border-white/10 text-center">
-                                <label className="text-[10px] text-gray-400 uppercase font-bold mb-1 block">Simular Visitas</label>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="10"
-                                    value={previewVisits}
-                                    onChange={(e) => setPreviewVisits(parseInt(e.target.value))}
-                                    className="w-32 accent-blue-500"
-                                />
-                                <div className="text-white font-bold text-xs">{previewVisits} Visitas</div>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 bg-black relative overflow-y-auto custom-scrollbar pb-6">
+                        <div className="flex-1 bg-black relative min-h-0 w-full">
                             <CustomerLoyaltyCard
                                 filterType="visits"
                                 customer={{
@@ -278,6 +264,22 @@ export function VisitsLoyaltyView({ userId, program, onBack }: VisitsLoyaltyView
                                 </div>
                             </CustomerLoyaltyCard>
                         </div>
+                    </div>
+
+                    {/* Simulation Controls Panel */}
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-4 w-full max-w-[340px] sm:max-w-[380px] flex flex-col gap-2 shadow-xl shrink-0">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Simular Visitas</span>
+                            <span className="text-xs text-blue-400 font-bold">{previewVisits} Visitas</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="10"
+                            value={previewVisits}
+                            onChange={(e) => setPreviewVisits(parseInt(e.target.value))}
+                            className="w-full accent-blue-500 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                        />
                     </div>
                 </div>
 

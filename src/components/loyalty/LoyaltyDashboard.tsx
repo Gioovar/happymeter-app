@@ -926,7 +926,7 @@ function AdvancedLoyaltyView({ userId, program, onBack, initialTab: propInitialT
                             <X className="w-6 h-6" />
                         </button>
 
-                        <div className="relative w-full max-w-[375px] h-[812px] bg-black rounded-[40px] border-[8px] border-[#222] shadow-2xl overflow-hidden flex flex-col">
+                        <div className="relative w-auto h-full max-h-[85vh] aspect-[9/16] bg-black rounded-[40px] border-[8px] border-[#222] shadow-2xl overflow-hidden flex flex-col mx-auto">
                             {/* Status Bar Mock */}
                             <div className="h-12 bg-black flex justify-between items-center px-6 text-white text-xs font-medium z-10 sticky top-0">
                                 <span>9:41</span>
@@ -942,7 +942,7 @@ function AdvancedLoyaltyView({ userId, program, onBack, initialTab: propInitialT
                                 <span className="text-[10px] font-bold tracking-widest text-gray-500 uppercase">Vista Previa del Cliente (Móvil)</span>
                             </div>
 
-                            <div className="flex-1 bg-black relative">
+                            <div className="flex-1 bg-black relative min-h-0 w-full">
                                 <CustomerLoyaltyCard
                                     customer={{
                                         id: "preview-customer",

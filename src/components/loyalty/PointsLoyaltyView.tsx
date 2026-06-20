@@ -288,9 +288,11 @@ export function PointsLoyaltyView({ userId, program, onBack }: PointsLoyaltyView
                 </div>
 
                 {/* RIGHT: PREVIEW */}
-                <div>
-                    <h3 className="text-lg font-bold text-white mb-4 lg:hidden">Vista previa de tu programa de lealtad</h3>
-                    <div className="bg-[#050505] rounded-[40px] border-[8px] border-[#222] shadow-2xl relative overflow-hidden flex flex-col max-w-[340px] sm:max-w-[400px] mx-auto w-full h-[600px] lg:h-full">
+                <div className="flex flex-col items-center justify-center lg:h-full gap-4 w-full min-h-0">
+                    <h3 className="text-lg font-bold text-white mb-2 lg:hidden">Vista previa de tu programa de lealtad</h3>
+                    
+                    {/* Simulated smartphone frame */}
+                    <div className="bg-[#050505] rounded-[40px] border-[8px] border-[#222] shadow-2xl relative overflow-hidden flex flex-col aspect-[9/16] h-[500px] sm:h-[580px] lg:h-full max-h-[65vh] lg:max-h-[660px] w-auto max-w-full mx-auto shrink-0">
                         {/* Fake Status Bar */}
                         <div className="h-12 bg-black flex justify-between items-center px-6 text-white text-xs font-medium shrink-0 z-20">
                             <span>9:41</span>
@@ -299,23 +301,7 @@ export function PointsLoyaltyView({ userId, program, onBack }: PointsLoyaltyView
                             </div>
                         </div>
 
-                        {/* Controls Overlay */}
-                        <div className="absolute bottom-6 right-6 z-50 flex flex-col gap-2">
-                            <div className="bg-black/80 backdrop-blur-md p-3 rounded-xl border border-white/10 text-center w-40">
-                                <label className="text-[10px] text-gray-400 uppercase font-bold mb-1 block">Simular Gasto ($)</label>
-                                <input
-                                    type="number"
-                                    value={previewSpend}
-                                    onChange={(e) => setPreviewSpend(parseFloat(e.target.value))}
-                                    className="w-full bg-white/10 border border-white/10 rounded-lg px-2 py-1 text-center font-bold text-white mb-2"
-                                />
-                                <div className="text-blue-400 font-bold text-xs flex items-center justify-center gap-1">
-                                    +{calculatedPoints} Puntos
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 bg-black relative overflow-y-auto custom-scrollbar pb-6">
+                        <div className="flex-1 bg-black relative min-h-0 w-full">
                             <CustomerLoyaltyCard
                                 filterType="points"
                                 customer={{
@@ -339,8 +325,25 @@ export function PointsLoyaltyView({ userId, program, onBack }: PointsLoyaltyView
                             </CustomerLoyaltyCard>
                         </div>
                     </div>
+
+                    {/* Simulation Controls Panel */}
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-4 w-full max-w-[340px] sm:max-w-[380px] flex flex-col gap-2 shadow-xl shrink-0">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Simular Gasto ($)</span>
+                            <div className="text-blue-400 font-bold text-xs flex items-center gap-1">
+                                +{calculatedPoints} Puntos
+                            </div>
+                        </div>
+                        <input
+                            type="number"
+                            value={previewSpend}
+                            onChange={(e) => setPreviewSpend(parseFloat(e.target.value))}
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-center font-bold text-white outline-none focus:border-blue-500 transition-colors"
+                        />
+                    </div>
+                    
                     {/* Mobile Only Label */}
-                    <p className="text-center text-xs text-gray-500 mt-4 lg:hidden">
+                    <p className="text-center text-xs text-gray-500 mt-2 lg:hidden">
                         Así verán tus clientes su tarjeta digital.
                     </p>
                 </div>
