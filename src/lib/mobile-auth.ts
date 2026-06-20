@@ -62,29 +62,16 @@ export async function verifyMobileAuth(req: Request): Promise<MobileAuthResult> 
         });
 
         if (!branchContext) {
-            if (process.env.NODE_ENV !== 'production') {
-                const anyBranch = await prisma.chainBranch.findFirst({
-                    include: {
-                        chain: true
-                    }
-                });
-                if (anyBranch) {
-                    businessOwnerId = anyBranch.chain.ownerId;
-                } else {
-                    businessOwnerId = "mock-owner-id";
+            return {
+                isAuthenticated: false,
+                error: {
+                    message: "Acceso denegado: la sucursal no pertenece al negocio especificado",
+                    status: 403
                 }
-            } else {
-                return {
-                    isAuthenticated: false,
-                    error: {
-                        message: "Acceso denegado: la sucursal no pertenece al negocio especificado",
-                        status: 403
-                    }
-                };
-            }
-        } else {
-            businessOwnerId = branchContext.chain.ownerId;
+            };
         }
+
+        businessOwnerId = branchContext.chain.ownerId;
 
         // 3. Validar presencia de Bearer token
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
