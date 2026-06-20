@@ -54,6 +54,28 @@ export async function POST(req: Request) {
         // Normalización de valores para consistencia con esquemas existentes
         const dbPlatform = platform === "ios" ? "iOS" : "Android";
 
+        // Verificar existencia de llaves foráneas para evitar violaciones de integridad referencial
+        let userId = authResult.userId || null;
+        let memberId = authResult.memberId || null;
+
+        if (userId) {
+            const userExists = await prisma.userSettings.findUnique({
+                where: { userId }
+            });
+            if (!userExists) {
+                userId = null;
+            }
+        }
+
+        if (memberId) {
+            const memberExists = await prisma.teamMember.findUnique({
+                where: { id: memberId }
+            });
+            if (!memberExists) {
+                memberId = null;
+            }
+        }
+
         // 3. Registrar o actualizar el token en la base de datos
         // Usamos upsert para garantizar que cada token sea único y no duplique registros
         const deviceToken = await prisma.deviceToken.upsert({
@@ -62,15 +84,15 @@ export async function POST(req: Request) {
                 token: token,
                 platform: dbPlatform,
                 appType: appType,
-                userId: authResult.userId || null,
-                memberId: authResult.memberId || null,
+                userId: userId,
+                memberId: memberId,
                 isActive: true
             },
             update: {
                 platform: dbPlatform,
                 appType: appType,
-                userId: authResult.userId || null,
-                memberId: authResult.memberId || null,
+                userId: userId,
+                memberId: memberId,
                 isActive: true,
                 updatedAt: new Date()
             }
