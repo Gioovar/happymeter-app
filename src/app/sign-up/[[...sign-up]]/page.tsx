@@ -2,7 +2,7 @@
 
 import { SignUp, useSignUp } from "@clerk/nextjs";
 import BrandLogo from "@/components/BrandLogo";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getPublicLoyaltyProgramInfo } from "@/actions/loyalty";
 import { Sparkles, Mail, Phone, ArrowLeft, Loader2 } from "lucide-react";
@@ -11,6 +11,8 @@ import { esES } from "@clerk/localizations";
 
 export default function Page() {
     const searchParams = useSearchParams()
+    const pathname = usePathname()
+    const isContinuation = pathname !== '/sign-up' && pathname !== '/sign-up/'
     const intent = searchParams.get('intent')
     const plan = searchParams.get('plan')
     const interval = searchParams.get('interval')
@@ -18,7 +20,9 @@ export default function Page() {
     const programId = searchParams.get('program_id')
 
     const [programInfo, setProgramInfo] = useState<any>(null)
-    const [view, setView] = useState<'selection' | 'form' | 'phone_entry' | 'email_entry'>('selection')
+    const [view, setView] = useState<'selection' | 'form' | 'phone_entry' | 'email_entry'>(
+        isContinuation ? 'form' : 'selection'
+    )
     const [formValues, setFormValues] = useState<{ phoneNumber?: string; emailAddress?: string }>({})
     const [tempPhone, setTempPhone] = useState('')
     const [tempEmail, setTempEmail] = useState('')
