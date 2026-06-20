@@ -216,7 +216,7 @@ export async function getUserProfile() {
     }
 }
 
-export async function updatePhoneNumber(phone: string) {
+export async function updatePhoneNumber(phone: string, branchId?: string) {
     const { userId } = await auth()
     if (!userId) throw new Error('Unauthorized')
 
@@ -224,19 +224,44 @@ export async function updatePhoneNumber(phone: string) {
         throw new Error('Número inválido')
     }
 
+    const { getActiveBusinessId } = await import('@/lib/tenant')
+    const activeContextId = await getActiveBusinessId()
+    let targetUserId = activeContextId || userId
+
+    if (branchId && branchId !== targetUserId) {
+        // Verify Chain Ownership
+        const branch = await prisma.chainBranch.findFirst({
+            where: {
+                branchId: branchId,
+                chain: { ownerId: userId }
+            }
+        })
+        // Verify Membership
+        const isMember = await prisma.teamMember.findFirst({
+            where: { ownerId: branchId, userId: userId }
+        })
+
+        if (!branch && !isMember && userId !== branchId) {
+            throw new Error('Unauthorized access to branch settings')
+        }
+        targetUserId = branchId
+    }
+
     try {
         await prisma.userSettings.upsert({
-            where: { userId },
+            where: { userId: targetUserId },
             update: {
                 phone,
+                whatsappContact: phone,
                 notificationPreferences: {
                     whatsapp: true, // Force enable
                     email: true
                 }
             },
             create: {
-                userId,
+                userId: targetUserId,
                 phone,
+                whatsappContact: phone,
                 notificationPreferences: {
                     whatsapp: true,
                     email: true

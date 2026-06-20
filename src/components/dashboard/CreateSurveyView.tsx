@@ -83,6 +83,7 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
     const [isVerifyStep, setIsVerifyStep] = useState(false)
     const [isReadyToPublish, setIsReadyToPublish] = useState(false)
     const [isPrefilled, setIsPrefilled] = useState(false)
+    const [existingWhatsapp, setExistingWhatsapp] = useState<string | null>(null)
 
     useEffect(() => {
         try {
@@ -132,6 +133,8 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
                     // Alert Config (WhatsApp Contact or Phone)
                     const contactPhone = res.whatsappContact || res.phone
                     if (contactPhone) {
+                        setExistingWhatsapp(contactPhone)
+                        setPhoneInput(contactPhone)
                         setAlertConfig({
                             enabled: true,
                             emails: [],
@@ -185,7 +188,7 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
     const handleConfirmSuccess = async () => {
         setIsSavingPhone(true)
         try {
-            const res = await updatePhoneNumber(phoneInput)
+            const res = await updatePhoneNumber(phoneInput, effectiveBranchId)
             if (res.success) {
                 setNeedsPhone(false)
                 setIsReadyToPublish(true) // Switch to publish step instead of closing
@@ -795,12 +798,18 @@ export default function CreateSurveyView({ branchId: propBranchId, backLink = '/
                             <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                             </div>
-                            <h3 className="text-2xl font-bold text-white mb-2">¡Un paso más! 🚀</h3>
+                            <h3 className="text-2xl font-bold text-white mb-2">
+                                {existingWhatsapp ? 'Confirma tu WhatsApp' : '¡Un paso más! 🚀'}
+                            </h3>
                             <p className="text-gray-300">
-                                Para asegurarnos de que recibas tus alertas críticas (como reseñas negativas y recomendaciones de IA), necesitamos tu WhatsApp.
+                                {existingWhatsapp
+                                    ? 'Confirma el WhatsApp donde quieres recibir tus alertas.'
+                                    : 'Para asegurarnos de que recibas tus alertas críticas (como reseñas negativas y recomendaciones de IA), necesitamos tu WhatsApp.'}
                             </p>
                             <p className="text-xs text-violet-400 mt-2 font-medium bg-violet-500/10 py-1 px-3 rounded-full inline-block">
-                                Sólo te lo pediremos esta única vez.
+                                {existingWhatsapp
+                                    ? 'Usaremos el WhatsApp registrado de tu negocio. Puedes cambiarlo si deseas usar otro.'
+                                    : 'Sólo te lo pediremos esta única vez.'}
                             </p>
                         </div>
 
