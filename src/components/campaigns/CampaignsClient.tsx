@@ -52,28 +52,42 @@ export default function CampaignsClient({ initialSurveys, branchId, branchName }
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-4 border-b border-white/10 pb-4">
-                <button
-                    onClick={() => setActiveTab('EXPORT')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'EXPORT' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                >
-                    <MessageSquare className="w-4 h-4" />
-                    Exportar VCF y WhatsApp
-                </button>
-                <button
-                    onClick={() => setActiveTab('PUSH')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'PUSH' ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                >
-                    <BellRing className="w-4 h-4" />
-                    Push Nativas (Lealtad)
-                </button>
-                <button
-                    onClick={() => setActiveTab('IA')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'IA' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                >
-                    <Sparkles className="w-4 h-4 fill-indigo-400/50" />
-                    Campañas e Inteligencia
-                </button>
+            <div className="flex">
+                <div className="flex flex-wrap gap-1.5 bg-[#111] p-1.5 rounded-2xl border border-white/5 shadow-inner">
+                    <button
+                        onClick={() => setActiveTab('EXPORT')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+                            activeTab === 'EXPORT'
+                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/20 border border-violet-500/30'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        <MessageSquare className="w-4 h-4" />
+                        Exportar VCF y WhatsApp
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('PUSH')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+                            activeTab === 'PUSH'
+                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/20 border border-violet-500/30'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        <BellRing className="w-4 h-4" />
+                        Push Nativas (Lealtad)
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('IA')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+                            activeTab === 'IA'
+                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/20 border border-violet-500/30'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        <Sparkles className="w-4 h-4 fill-white/20" />
+                        Campañas e Inteligencia
+                    </button>
+                </div>
             </div>
 
             {/* Grid Principal */}
