@@ -7,6 +7,7 @@ interface MobileAuthResult {
     memberId?: string;
     businessId?: string;
     branchId?: string;
+    businessOwnerId?: string;
     error?: {
         message: string;
         status: number;
@@ -46,6 +47,45 @@ export async function verifyMobileAuth(req: Request): Promise<MobileAuthResult> 
             };
         }
 
+        // 3. Validar relación sucursal -> negocio en la base de datos (ChainBranch)
+        // Esto blinda contra accesos cross-tenant y resuelve el Owner ID del negocio
+        let businessOwnerId: string;
+
+        const branchContext = await prisma.chainBranch.findFirst({
+            where: {
+                branchId: branchId,
+                chainId: businessId
+            },
+            include: {
+                chain: true
+            }
+        });
+
+        if (!branchContext) {
+            if (process.env.NODE_ENV !== 'production') {
+                const anyBranch = await prisma.chainBranch.findFirst({
+                    include: {
+                        chain: true
+                    }
+                });
+                if (anyBranch) {
+                    businessOwnerId = anyBranch.chain.ownerId;
+                } else {
+                    businessOwnerId = "mock-owner-id";
+                }
+            } else {
+                return {
+                    isAuthenticated: false,
+                    error: {
+                        message: "Acceso denegado: la sucursal no pertenece al negocio especificado",
+                        status: 403
+                    }
+                };
+            }
+        } else {
+            businessOwnerId = branchContext.chain.ownerId;
+        }
+
         // 3. Validar presencia de Bearer token
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return {
@@ -67,7 +107,8 @@ export async function verifyMobileAuth(req: Request): Promise<MobileAuthResult> 
                 role: 'OPERATOR',
                 memberId: 'dev-member-id-123',
                 businessId,
-                branchId
+                branchId,
+                businessOwnerId
             };
         }
 
@@ -109,7 +150,8 @@ export async function verifyMobileAuth(req: Request): Promise<MobileAuthResult> 
                 userId: decodedPayload.sub,
                 role: decodedPayload.role || 'CLIENT',
                 businessId,
-                branchId
+                branchId,
+                businessOwnerId
             };
         }
 
@@ -122,7 +164,8 @@ export async function verifyMobileAuth(req: Request): Promise<MobileAuthResult> 
                 role: decodedPayload.role || 'OPERATOR',
                 memberId: decodedPayload.memberId,
                 businessId,
-                branchId
+                branchId,
+                businessOwnerId
             };
         }
 
@@ -130,11 +173,12 @@ export async function verifyMobileAuth(req: Request): Promise<MobileAuthResult> 
         if (process.env.NODE_ENV !== 'production') {
             return {
                 isAuthenticated: true,
-                userId: decodedPayload.sub || 'mock-user-id',
-                role: decodedPayload.role || 'OPERATOR',
-                memberId: decodedPayload.memberId || 'mock-member-id',
+                userId: decodedPayload?.sub || 'mock-user-id',
+                role: decodedPayload?.role || 'OPERATOR',
+                memberId: decodedPayload?.memberId || 'mock-member-id',
                 businessId,
-                branchId
+                branchId,
+                businessOwnerId
             };
         }
 
